@@ -1,0 +1,176 @@
+﻿<!doctype html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+		<meta name="apple-mobile-web-app-capable" content="yes">
+		<meta content="yes" name="apple-touch-fullscreen">
+		<style type=text/css>
+			body
+      {
+        background-color: #ebebeb;
+        font-family: -apple-system;
+        font-family: "-apple-system", "Helvetica Neue", "Roboto", "Segoe UI", sans-serif;
+      }
+      .chat-left, .media_left
+      {
+        clear:both;
+        font-size: 10.5pt;
+      }
+      .chat-left div:nth-of-type(1),
+      .media-left div:nth-of-type(1)
+      {
+        float: left;
+      }
+      .chat-left div:nth-of-type(2),
+      .media-left div:nth-of-type(2)
+      {
+        margin: 0 50px 2px 50px;
+        padding: 0px;
+        color: #848484;
+        font-size: 80%;
+        text-align: left;
+      }
+      .chat-left div:nth-of-type(3)
+      {
+        background-color: white;
+        /*float: left;*/
+        margin: 0 50px 10px 50px;
+        padding: 10px 10px 10px 10px;
+        border-radius:8px;
+        text-indent: -12px;
+      }
+      .media-left div:nth-of-type(3)
+      {
+        /*background-color: white;*/
+        /*float: left;*/
+        margin: 0 50px 10px 50px;
+        padding: 10px 10px 10px 10px;
+        /*border-radius:7px;*/
+        text-indent: -12px;
+      }
+
+      .chat-right,
+      .media-right
+      {
+        clear:both;
+        font-size: 80%;
+      }
+      .chat-right div:nth-of-type(1),
+      .media-right div:nth-of-type(1)
+      {
+        float: right;
+      }
+      .chat-right div:nth-of-type(2),
+      .media-right div:nth-of-type(2)
+      {
+        margin: 0px 50px 2px 50px;
+        padding: 0px;
+        color: #848484;
+        font-size: 80%;
+        text-align: right;
+      }
+      .chat-right div:nth-of-type(3)
+      {
+        /*float:right;*/
+        background-color: #b2e281;
+        margin: 0px 50px 10px 50px;
+        padding: 10px 10px 10px 10px;
+        border-radius: 8px;
+      }
+      .media-right div:nth-of-type(3)
+      {
+        float: right;
+        /*background-color: #b2e281;*/
+        /*margin: 0px 50px 10px 50px;*/
+        margin: 0px 0px 10px 50px;
+        padding: 10px 10px 10px 10px;
+        /*border-radius:7px;*/
+      }
+
+      img.avatar
+      {
+        width: 40px;
+        height: 40px;
+        border-radius: 4px;
+      }
+
+      .chat-left .triangle
+      {
+        height: 0px;
+        width: 0px;
+        border-width: 6px;
+        border-style: solid;
+        border-color: transparent white transparent transparent;
+        position: relative;
+        left: -22px;
+        top: 3px;
+      }
+      .chat-right .triangle
+      {
+        height: 0px;
+        width: 0px;
+        border-width: 6px;
+        border-style: solid;
+        border-color: transparent transparent transparent #b2e281;
+        position: relative;
+        right: -22px;
+        top: 3px;
+      }
+
+      .chat-notice
+      {
+        clear: both;
+        font-size: 80%;
+        color: white;
+        text-align: center;
+        margin-top: 15px;
+        margin-bottom: 15px;
+      }
+      .chat-notice span
+      {
+        background-color: #cecece;
+        line-height: 25px;
+        border-radius: 4px;
+        padding: 5px 10px;
+      }
+      
+      audio
+      {
+        max-width: 220px;
+      }
+
+      .image
+      {
+        width:90px;
+        /*transition: all 2s;*/
+        border-radius:8px;
+      }
+
+      .image:hover
+      {
+          cursor: crosshair;
+          /* transform: scale(5); */
+      }
+
+      .dont-break-out
+      {
+        overflow-wrap: break-word;
+        word-wrap: break-word;
+      
+        -ms-word-break: break-all;
+        /*word-break: break-all;*/
+        word-break: break-word;
+        -ms-hyphens: auto;
+        -moz-hyphens: auto;
+        -webkit-hyphens: auto;
+        hyphens: auto;
+      }
+  
+		</style>
+		<title>%%DISPLAYNAME%% - 微信聊天记录</title>
+	</head>
+	<body>
+%%BODY%%
+	</body>
+</html>

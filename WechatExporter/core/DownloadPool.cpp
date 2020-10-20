@@ -1,0 +1,129 @@
+//
+//  DownloadPool.cpp
+//  WechatExporter
+//
+//  Created by Matthew on 2020/9/30.
+//  Copyright © 2020 Matthew. All rights reserved.
+//
+
+#include "DownloadPool.h"
+#include <curl/curl.h>
+#include <iostream>
+#include <fstream>
+
+size_t writeData(void *buffer, size_t size, size_t nmemb, void *user_p)
+{
+    Task *task = reinterpret_cast<Task *>(user_p);
+    if (NULL != task)
+    {
+        return task->writeData(buffer, size, nmemb);
+    }
+    
+    return 0;
+}
+
+void Task::run()
+{
+    std::ofstream output(m_output, std::fstream::in | std::fstream::out | std::fstream::trunc);
+    output.close();
+    
+    CURL *curl_handler = curl_easy_init();
+    curl_easy_setopt(curl_handler, CURLOPT_URL, m_url.c_str());
+    curl_easy_setopt(curl_handler, CURLOPT_WRITEFUNCTION, &::writeData);
+    curl_easy_setopt(curl_handler, CURLOPT_WRITEDATA, this);
+
+    curl_easy_perform(curl_handler);
+    
+    curl_easy_cleanup(curl_handler);
+}
+
+size_t Task::writeData(void *buffer, size_t size, size_t nmemb)
+{
+    std::ofstream file;
+    file.open (m_output, std::fstream::in | std::fstream::out | std::fstream::app | std::fstream::binary);
+    // file.write(buffer, size);
+    size_t bytesToWrite = size * nmemb;
+    file.write(reinterpret_cast<const char *>(buffer), bytesToWrite);
+    file.close();
+    
+    return bytesToWrite;
+}
+
+DownloadPool::DownloadPool()
+{
+    curl_global_init(CURL_GLOBAL_ALL);
+    
+    for (int idx = 0; idx < 4; idx++)
+    {
+        m_threads.push_back(std::thread(&DownloadPool::run, this));
+    }
+    // vecOfThreads.push_back(std::thread(func));
+    
+}
+
+DownloadPool::~DownloadPool()
+{
+    curl_global_cleanup();
+}
+
+void DownloadPool::addTask(const std::string &url, const std::string& output)
+{
+    Task task(url, output);
+    m_mtx.lock();
+    m_queue.push(task);
+    m_mtx.unlock();
+}
+
+void DownloadPool::setNoMoreTask()
+{
+    m_mtx.lock();
+    m_noMoreTask = true;
+    m_mtx.unlock();
+}
+
+void DownloadPool::run()
+{
+    while(1)
+    {
+        bool found = false;
+        bool noMoreTask = false;
+        
+        Task task;
+        m_mtx.lock();
+        
+        if (!m_queue.empty())
+        {
+            task = m_queue.front();
+            m_queue.pop();
+            found = true;
+        }
+        
+        noMoreTask = m_noMoreTask;
+        
+        m_mtx.unlock();
+        
+        if (found)
+        {
+            // run task
+            task.run();
+            continue;
+        }
+        if (m_noMoreTask)
+        {
+            break;
+        }
+        else
+        {
+            std::this_thread::sleep_for(std::chrono::milliseconds(100));
+        }
+    }
+}
+
+void DownloadPool::finishAndWaitForExit()
+{
+    setNoMoreTask();
+    for (std::vector<std::thread>::iterator it = m_threads.begin(); it != m_threads.end(); ++it)
+    {
+        it->join();
+    }
+}
