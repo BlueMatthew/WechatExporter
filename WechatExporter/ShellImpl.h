@@ -15,11 +15,107 @@
 class ShellImpl : public Shell
 {
 public:
-    bool makeDirectory(const std::string& path) const;
-    bool copyFile(const std::string& src, const std::string& dest, bool overwrite) const;
-    bool convertPlist(const std::string& plist, const std::string& xml) const;
-    bool convertSilk(const std::string& silk, const std::string& mp3) const;
-    int exec(const std::string& cmd) const;
+    
+    ShellImpl()
+    {
+        
+    }
+    
+    bool existsDirectory(const std::string& path) const
+    {
+        BOOL isDir = NO;
+        NSString *ocPath = [NSString stringWithUTF8String: path.c_str()];
+        
+        BOOL existed = [[NSFileManager defaultManager] fileExistsAtPath:ocPath isDirectory:&isDir];
+        return existed == YES && isDir == YES;
+    }
+    
+    bool makeDirectory(const std::string& path) const
+    {
+        NSString *ocPath = [NSString stringWithUTF8String: path.c_str()];
+        return [[NSFileManager defaultManager] createDirectoryAtPath:ocPath withIntermediateDirectories:YES attributes:nil error:nil] == YES;
+    }
+    
+    bool copyFile(const std::string& src, const std::string& dest, bool overwrite) const
+    {
+        NSString *srcPath = [NSString stringWithUTF8String: src.c_str()];
+        NSString *destPath = [NSString stringWithUTF8String: dest.c_str()];
+        
+        NSFileManager* fileManager = [NSFileManager defaultManager];
+        
+        if ([fileManager fileExistsAtPath:destPath])
+        {
+#ifndef NDEBUG
+            return true;
+#else
+            [fileManager removeItemAtPath:destPath error:nil];
+#endif
+        }
+        return [[NSFileManager defaultManager] copyItemAtPath:srcPath toPath:destPath error:nil] == YES;
+    }
+    
+    bool openOutputFile(std::ofstream& ofs, const std::string& fileName, std::ios_base::openmode mode/* = std::ios::out*/) const
+    {
+        if (ofs.is_open())
+        {
+            return false;
+        }
+
+        ofs.open(fileName, mode);
+
+        return ofs.is_open();
+    }
+    
+    bool convertPlist(const std::vector<unsigned char>& bplist, std::string& xml) const
+    {
+        std::string bplistPath = std::tmpnam(NULL);
+        if (!writeFile(bplistPath, bplist))
+        {
+            return false;
+        }
+        std::string xmlPath = std::tmpnam(NULL);
+        
+        std::string cmd = "plutil -convert xml1 -o " + xmlPath + " " + bplistPath;
+        bool result = exec(cmd);
+        if (result)
+        {
+            xml = readFile(xmlPath);
+            std::remove(xmlPath.c_str());
+        }
+        
+        std::remove(bplistPath.c_str());
+        return result;
+    }
+    
+    int exec(const std::string& cmd) const
+    {
+        NSArray *arguments = [NSArray arrayWithObjects:
+                                  @"-c" ,
+                              [NSString stringWithUTF8String:cmd.c_str()],
+                                  nil];
+        
+        int pid = [[NSProcessInfo processInfo] processIdentifier];
+        NSPipe *pipe = [NSPipe pipe];
+        NSFileHandle *file = pipe.fileHandleForReading;
+
+        NSTask *task = [[NSTask alloc] init];
+        task.launchPath = @"/bin/sh";
+        [task setArguments:arguments];
+        task.standardOutput = pipe;
+
+        [task launch];
+        
+        [task waitUntilExit];
+
+        NSData *data = [file readDataToEndOfFile];
+        [file closeFile];
+
+        NSString *grepOutput = [[NSString alloc] initWithData: data encoding: NSUTF8StringEncoding];
+        NSLog (@"grep returned:\n%@", grepOutput);
+        
+        return task.terminationStatus == 0;
+    }
+
 };
 
 #endif /* ShellImpl_h */

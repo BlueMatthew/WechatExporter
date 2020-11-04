@@ -12,7 +12,7 @@ bool convertUnknownField(const UnknownField &uf, std::string& value)
 {
     if (uf.type() == UnknownField::TYPE_LENGTH_DELIMITED)
     {
-        value = uf.length_delimited();
+        value.assign(uf.length_delimited().c_str(), uf.GetLengthDelimitedSize());
         return true;
     }
     else if (uf.type() == UnknownField::TYPE_VARINT)

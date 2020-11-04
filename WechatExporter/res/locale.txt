@@ -1,0 +1,154 @@
+[
+	{
+		"key": "[Video]",
+		"value": "[视频]"
+	},
+	{
+		"key": "(Video Missed)",
+		"value": "（视频丢失）"
+	},
+	{
+		"key": "[Emoji]",
+		"value": "[表情]"
+	},
+	{
+		"key": "[Audio]",
+		"value": "[语音]"
+	},
+	{
+		"key": "[Audio %s]",
+		"value": "[语音 %s]"
+	},
+	{
+		"key": "[Video/Audio Call]",
+		"value": "[视频/语音通话]"
+	},
+	{
+		"key": "[Picture]",
+		"value": "[图片]"
+	},
+	{
+		"key": "[Location]",
+		"value": "[位置]"
+	},
+	{
+		"key": "[Location (%s,%s) %s]",
+		"value": "[位置 (%s,%s]) %s]"
+	},
+	{
+		"key": "[Red Packet]",
+		"value": "[红包]"
+	},
+	{
+		"key": "[Transfer]",
+		"value": "[转账]"
+	},
+	{
+		"key": "[Real-time Location]",
+		"value": "[实时位置共享]"
+	},
+	{
+		"key": "[File]",
+		"value": "[文件]"
+	},
+	{
+		"key": "[Link]",
+		"value": "[链接]"
+	},
+	{
+		"key": "[Contact Card]",
+		"value": "[名片]"
+	},
+	{
+		"key": "[Contact Card] %s",
+		"value": "[名片] %s"
+	},
+	
+	
+	{
+		"key": "Failed to parse the backup data of iTunes in the directory: %s",
+		"value": "解析iTunes备份目录失败： %s"
+	},
+	{
+		"key": "Previous task has not completed.",
+		"value": "前一个导出任务还未结束。"
+	},
+	
+	{
+		"key": "Can't access output directory: %s",
+		"value": "不能访问输出目录： %s"
+	},
+	{
+		"key": "Finding Wechat accounts...",
+		"value": "查找微信登录账户..."
+	},
+	{
+		"key": "Failed to find Wechat account.",
+		"value": "查找微信登录账户失败。"
+	},
+	{
+		"key": "%d Wechat account(s) found.",
+		"value": "找到 %d个账号的消息记录。"
+	},
+	{
+		"key": "Handling account: %s",
+		"value": "开始处理微信账户: %s"
+	},
+	{
+		"key": "Reading account info.",
+		"value": "读取账号信息"
+	},
+	{
+		"key": "Reading chat info",
+		"value": "读取对话信息"
+	},
+	{
+		"key": "%d chats found.",
+		"value": "找到%d条对话。"
+	},
+	{
+		"key": "Wechat Id: %s, Nick Name: %s",
+		"value": "微信号：%s, 昵称：%s"
+	},
+	{
+		"key": "Handling the chat with %s",
+		"value": "处理与 %s 的对话"
+	},
+	{
+		"key": "Succeeded handling %d messages.",
+		"value": "成功处理%d条消息"
+	},
+	{
+		"key": "Finished.",
+		"value": "导出完成。"
+	},
+	{
+		"key": "",
+		"value": ""
+	},
+	{
+		"key": "",
+		"value": ""
+	},
+	{
+		"key": "",
+		"value": ""
+	},
+	{
+		"key": "",
+		"value": ""
+	},
+	{
+		"key": "",
+		"value": ""
+	},
+	{
+		"key": "",
+		"value": ""
+	},
+	{
+		"key": "",
+		"value": ""
+	}
+	
+]

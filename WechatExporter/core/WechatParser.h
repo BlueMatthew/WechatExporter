@@ -12,6 +12,7 @@
 #include <stdio.h>
 #include <regex>
 #include <string>
+#include <vector>
 #include <map>
 // #include <sys/md5.h>
 #include "WechatObjects.h"
@@ -33,23 +34,23 @@ protected:
     std::string m_pattern;
 
 public:
-    bool operator() (const StringPair& s1, const T& s2) const    // less
+    bool operator() (const ITunesFile* s1, const T& s2) const    // less
     {
-        return !startsWith(s1.first, m_path) && s1.first < m_path;
+        return !startsWith(s1->relativePath, m_path) && s1->relativePath < m_path;
     }
-    bool operator() (const T& s2, const StringPair& s1) const    // greater
+    bool operator() (const T& s2, const ITunesFile* s1) const    // greater
     {
-        return !startsWith(s1.first, m_path) && s1.first > m_path;
+        return !startsWith(s1->relativePath, m_path) && s1->relativePath > m_path;
     }
-    bool operator==(const StringPair& s) const
+    bool operator==(const ITunesFile* s) const
     {
-        return startsWith(s.first, m_path) && (s.first.find(m_pattern, m_path.size()) != std::string::npos);
+        return startsWith(s->relativePath, m_path) && (s->relativePath.find(m_pattern, m_path.size()) != std::string::npos);
     }
-    std::string parse(const StringPair& s) const
+    std::string parse(const ITunesFile* s) const
     {
         if (*this == s)
         {
-            return s.first.substr(m_path.size());
+            return s->relativePath.substr(m_path.size());
         }
         return std::string("");
     }
@@ -63,30 +64,30 @@ protected:
     std::regex m_pattern;
 
 public:
-    bool operator() (const StringPair& s1, const T& s2) const    // less
+    bool operator() (const ITunesFile* s1, const T& s2) const    // less
     {
-        return !startsWith(s1.first, m_path) && s1.first < m_path;
+        return !startsWith(s1->relativePath, m_path) && s1->relativePath < m_path;
     }
-    bool operator() (const T& s2, const StringPair& s1) const    // greater
+    bool operator() (const T& s2, const ITunesFile* s1) const    // greater
     {
-        return !startsWith(s1.first, m_path) && s1.first > m_path;
+        return !startsWith(s1->relativePath, m_path) && s1->relativePath > m_path;
     }
-    bool operator==(const StringPair& s) const
+    bool operator==(const ITunesFile* s) const
     {
         std::smatch sm;
-        return startsWith(s.first, m_path) && std::regex_search(s.first, sm, m_pattern);
+        return startsWith(s->relativePath, m_path) && std::regex_search(s->relativePath.begin() + m_path.size(), s->relativePath.end(), sm, m_pattern);
     }
-    std::string parse(const StringPair& s) const
+    std::string parse(const ITunesFile* s) const
     {
         std::smatch sm;
-        if (std::regex_search(s.first, sm, m_pattern))
+        if (std::regex_search(s->relativePath.begin() + m_path.size(), s->relativePath.end(), sm, m_pattern))
         {
             return sm[1];
         }
         return std::string("");
     }
 };
-
+/*
 class UserDirectoryFilter : public RegexFilterBase<UserDirectoryFilter>
 {
 public:
@@ -96,6 +97,7 @@ public:
         m_pattern = "Documents\\/([0-9a-f]{32})\\/";
     }
 };
+*/
 
 class MessageDbFilter : public RegexFilterBase<MessageDbFilter>
 {
@@ -111,12 +113,13 @@ public:
         vpath += "DB/";
         
         m_path = vpath;
-        m_pattern = "^\\/?(message_[0-9]{1,4}\\.sqlite)$";
+        m_pattern = "^(message_[0-9]{1,4}\\.sqlite)$";
     }
 };
 
 class SessionCellDataFilter : public FilterBase<SessionCellDataFilter>
 {
+public:
     SessionCellDataFilter(const std::string& cellDataBasePath) : FilterBase()
     {
         std::string vpath = cellDataBasePath;
@@ -208,16 +211,18 @@ class SessionsParser
 {
 private:
     ITunesDb *m_iTunesDb;
+    Shell*      m_shell;
 
 public:
-    SessionsParser(ITunesDb *iTunesDb);
+    SessionsParser(ITunesDb *iTunesDb, Shell* shell);
     
     bool parse(const std::string& userRoot, std::vector<Session>& sessions);
 
 private:
-    bool parseCellData(const std::string& userRoot, Session session);
-    bool parseMessageDbs(const std::string& userRoot, std::vector<std::pair<std::string, std::string>>& sessions);
-    bool parseMessageDb(const std::string& mmPath, std::vector<std::pair<std::string, std::string>>& sessions);
+    bool parseCellData(const std::string& userRoot, Session& session);
+    bool parseMessageDbs(const std::string& userRoot, std::vector<Session>& sessions);
+    bool parseMessageDb(const std::string& mmPath, std::vector<std::string>& sessionIds);
+    unsigned int parseModifiedTime(std::vector<unsigned char>& data);
 };
 
 struct Record
@@ -229,11 +234,12 @@ struct Record
     int msgid;
 };
 
-
 class SessionParser
 {
 private:
-    const std::map<std::string, std::string> m_templates;
+    const std::map<std::string, std::string>& m_templates;
+	const std::map<std::string, std::string>& m_localeStrings;
+
     Friends m_friends;
     // std::set<DownloadTask>& emojidown;
     const ITunesDb& m_iTunesDb;
@@ -241,19 +247,21 @@ private:
     Logger& m_logger;
     DownloadPool& m_downloadPool;
     Friend m_myself;
+    mutable std::vector<unsigned char> m_pcmData;  // buffer
     
 public:
     
-    SessionParser(Friend& myself, Friends& friends, const ITunesDb& iTunesDb, const Shell& shell, Logger& logger, std::map<std::string, std::string>& templates, DownloadPool& dlPool);
+    SessionParser(Friend& myself, Friends& friends, const ITunesDb& iTunesDb, const Shell& shell, Logger& logger, const std::map<std::string, std::string>& templates, const std::map<std::string, std::string>& localeStrings, DownloadPool& dlPool);
     
     // bool parse(const std::string& chatId, std::string& message);
-    int parse(const std::string& userBase, const std::string& path, const Session& session, Friend& f);
+    int parse(const std::string& userBase, const std::string& outputBase, const Session& session, Friend& f) const;
     
 private:
-    std::string getTemplate(std::string key) const;
+    std::string getTemplate(const std::string& key) const;
+	std::string getLocaleString(const std::string& key) const;
     std::string getDisplayTime(int ms) const;
-    bool requireResource(std::string vpath, std::string dest);
-    bool parseRow(Record& record, const std::string& userBase, const std::string& path, const Session& session, std::string& templateKey, std::map<std::string, std::string>& templateValues);
+    bool requireResource(const std::string& vpath, const std::string& dest) const;
+    bool parseRow(Record& record, const std::string& userBase, const std::string& path, const Session& session, std::string& templateKey, std::map<std::string, std::string>& templateValues) const;
     
 };
 

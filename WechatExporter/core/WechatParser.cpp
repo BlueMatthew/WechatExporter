@@ -16,10 +16,15 @@
 #include <libxml/parser.h>
 #include <libxml/tree.h>
 #include <libxml/xpath.h>
-// #include <libxml/xpathInternals.h>
+#include <json/json.h>
+
 #include "WechatObjects.h"
 #include "RawMessage.h"
 #include "OSDef.h"
+
+#ifdef _WIN32
+#include <atlconv.h>
+#endif
 
 template<class T>
 bool parseMembers(const std::string& xml, T& f)
@@ -30,7 +35,7 @@ bool parseMembers(const std::string& xml, T& f)
     xmlXPathObjectPtr xpathObj = NULL;
     xmlNodeSetPtr xpathNodes = NULL;
 
-    doc = xmlParseMemory(xml.c_str(), xml.size());
+    doc = xmlParseMemory(xml.c_str(), static_cast<int>(xml.size()));
     if (doc == NULL) { goto end; }
 
     xpathCtx = xmlXPathNewContext(doc);
@@ -219,7 +224,7 @@ std::string MMKVParser::findValue(const std::string& key)
                     if (p2 + valueLength < limit)
                     {
                         value.reserve(valueLength);
-                        for (int i = 0; i < valueLength; i++)
+                        for (uint32_t i = 0; i < valueLength; i++)
                         {
                             value.push_back((reinterpret_cast<const char*>(p2))[i]);
                         }
@@ -236,7 +241,7 @@ std::string MMKVParser::findValue(const std::string& key)
 bool FriendsParser::parseWcdb(const std::string& mmPath, Friends& friends)
 {
     sqlite3 *db = NULL;
-    int rc = sqlite3_open(mmPath.c_str(), &db);
+    int rc = openSqlite3ReadOnly(mmPath, &db);
     if (rc != SQLITE_OK)
     {
         sqlite3_close(db);
@@ -356,16 +361,20 @@ bool FriendsParser::parseChatroom(const void *data, int length, Friend& f)
     return true;
 }
 
-SessionsParser::SessionsParser(ITunesDb *iTunesDb) : m_iTunesDb(iTunesDb)
+SessionsParser::SessionsParser(ITunesDb *iTunesDb, Shell* shell) : m_iTunesDb(iTunesDb), m_shell(shell)
 {
 }
 
 bool SessionsParser::parse(const std::string& userRoot, std::vector<Session>& sessions)
 {
     std::string sessionDbPath = m_iTunesDb->findRealPath(combinePath(userRoot, "session", "session.db"));
-    
+	if (sessionDbPath.empty())
+	{
+		return false;
+	}
+
     sqlite3 *db = NULL;
-    int rc = sqlite3_open(sessionDbPath.c_str(), &db);
+    int rc = openSqlite3ReadOnly(sessionDbPath, &db);
     if (rc != SQLITE_OK)
     {
         sqlite3_close(db);
@@ -403,99 +412,96 @@ bool SessionsParser::parse(const std::string& userRoot, std::vector<Session>& se
     
     sqlite3_finalize(stmt);
     sqlite3_close(db);
-    
-    std::vector<std::pair<std::string, std::string>> sessionDbs;
-    
-    parseMessageDbs(userRoot, sessionDbs);
-    
-    SessionHashCompare comp;
-    std::sort(sessions.begin(), sessions.end(), comp);
-    
-    std::sort(sessions.begin(), sessions.end(), comp);
-    
-    for (typename std::vector<std::pair<std::string, std::string>>::const_iterator it = sessionDbs.cbegin(); it != sessionDbs.cend(); ++it)
-    {
-        std::vector<Session>::iterator itSession = std::lower_bound(sessions.begin(), sessions.end(), it->second, comp);
-        if (itSession != sessions.end())
-        {
-            itSession->dbFile = it->first;
-        }
-        else
-        {
 #ifndef NDEBUG
-            std::string value = it->second;
-            std::cout << value << std::endl;
+#ifdef _WIN32
+	std::ofstream htmlFile("D:\\debug.log", std::ios::out | std::ios::binary);
+#else
+    std::ofstream htmlFile(combinePath(userRoot, "debug.log"), std::ios::out | std::ios::binary);
 #endif
-        }
-    }
+	for (std::vector<Session>::iterator it = sessions.begin(); it != sessions.end(); ++it)
+	{
+		if (it->dbFile.empty())
+		{
+			htmlFile << "NODB:";
+			size_t sz = it->DisplayName.size();
+			htmlFile.write(it->DisplayName.c_str(), sz);
+			htmlFile << "\t";
+			htmlFile.write(it->UsrName.c_str(), it->UsrName.size());
+			// htmlFile << "\t";
+			// htmlFile.write(it->dbFile.c_str(), it->dbFile.size());
+			htmlFile << std::endl;
+		}
+	}
+	htmlFile.close();
 
+#endif
+ 
+    parseMessageDbs(userRoot, sessions);
+    
     return true;
 }
 
-bool SessionsParser::parseCellData(const std::string& userRoot, Session session)
+bool SessionsParser::parseMessageDbs(const std::string& userRoot, std::vector<Session>& sessions)
 {
-    std::string fileName = session.ExtFileName;
-    if (startsWith(fileName, DIR_SEP) || startsWith(fileName, DIR_SEP_R))
-    {
-        fileName = fileName.substr(1);
-    }
-    fileName = m_iTunesDb->findRealPath(combinePath(userRoot, fileName));
-    // SessionCellDataFilter filter(fileName);
-    // StringPairVector files = m_iTunesDb->filter(filter);
-    
-    if (fileName.empty())
-    {
-        return false;
-    }
+	SessionHashCompare comp;
+	std::sort(sessions.begin(), sessions.end(), comp);
 
-    RawMessage msg;
-    if (!msg.mergeFile(fileName))
-    {
-        return false;
-    }
-    
-    std::string value;
-    int value2;
-    if (msg.parse("1.1.4", value))
-    {
-        session.DisplayName = value;
-    }
-    if (msg.parse("1.1.14", value))
-    {
-        session.Portrait = value;
-    }
-    if (msg.parse("1.5", value))
-    {
-        parseMembers(value, session);
-    }
-    if (msg.parse("2.7", value2))
-    {
-        session.LastMessageTime = static_cast<unsigned int>(value2);
-    }
-
-    return true;
-}
-
-bool SessionsParser::parseMessageDbs(const std::string& userRoot, std::vector<std::pair<std::string, std::string>>& sessions)
-{
     MessageDbFilter filter(userRoot);
-    StringPairVector dbs = m_iTunesDb->filter(filter);
+    ITunesFileVector dbs = m_iTunesDb->filter(filter);
     
     std::string dbPath = m_iTunesDb->findRealPath(combinePath(userRoot, "DB", "MM.sqlite"));
-    parseMessageDb(dbPath, sessions);
-    for (SPVectorConstIterator it = dbs.cbegin(); it != dbs.cend(); ++it)
+
+	std::vector<std::string> sessionIds;
+    parseMessageDb(dbPath, sessionIds);
+
+	for (typename std::vector<std::string>::const_iterator it = sessionIds.cbegin(); it != sessionIds.cend(); ++it)
+	{
+		std::vector<Session>::iterator itSession = std::lower_bound(sessions.begin(), sessions.end(), *it, comp);
+		if (itSession != sessions.end() && itSession->Hash == *it)
+		{
+			itSession->dbFile = dbPath;
+		}
+		else
+		{
+#ifndef NDEBUG
+			std::string value = *it;
+			std::cout << value << std::endl;
+#endif
+		}
+	}
+
+    for (ITunesFilesConstIterator it = dbs.cbegin(); it != dbs.cend(); ++it)
     {
-        dbPath = m_iTunesDb->fieldIdToRealPath(it->first);
-        parseMessageDb(dbPath, sessions);
+        dbPath = m_iTunesDb->fileIdToRealPath((*it)->fileId);
+		sessionIds.clear();
+        parseMessageDb(dbPath, sessionIds);
+
+		for (typename std::vector<std::string>::const_iterator itId = sessionIds.cbegin(); itId != sessionIds.cend(); ++itId)
+		{
+			std::vector<Session>::iterator itSession = std::lower_bound(sessions.begin(), sessions.end(), *itId, comp);
+			if (itSession != sessions.end() && itSession->Hash == *itId)
+			{
+				itSession->dbFile = dbPath;
+			}
+			else
+			{
+#ifndef NDEBUG
+				std::string value = *itId;
+				std::cout << value << std::endl;
+#endif
+			}
+		}
     }
-    
+
+
+	
     return true;
 }
 
-bool SessionsParser::parseMessageDb(const std::string& mmPath, std::vector<std::pair<std::string, std::string>>& sessions)
+bool SessionsParser::parseMessageDb(const std::string& mmPath, std::vector<std::string>& sessionIds)
 {
     sqlite3 *db = NULL;
-    int rc = sqlite3_open(mmPath.c_str(), &db);
+    int rc = openSqlite3ReadOnly(mmPath, &db);
     if (rc != SQLITE_OK)
     {
         sqlite3_close(db);
@@ -521,7 +527,7 @@ bool SessionsParser::parseMessageDb(const std::string& mmPath, std::vector<std::
         static std::regex pattern("^Chat_([0-9a-f]{32})$");
         if (std::regex_search(name, sm, pattern))
         {
-            sessions.push_back(std::make_pair(mmPath, sm[1]));
+            sessionIds.push_back(sm[1]);
         }
     }
     
@@ -531,15 +537,143 @@ bool SessionsParser::parseMessageDb(const std::string& mmPath, std::vector<std::
     return true;
 }
 
-SessionParser::SessionParser(Friend& myself, Friends& friends, const ITunesDb& iTunesDb, const Shell& shell, Logger& logger, std::map<std::string, std::string>& templates, DownloadPool& dlPool) : m_myself(myself), m_friends(friends), m_iTunesDb(iTunesDb), m_shell(shell), m_logger(logger),  m_templates(templates), m_downloadPool(dlPool)
+bool SessionsParser::parseCellData(const std::string& userRoot, Session& session)
+{
+#ifndef NDEBUG
+        if (session.UsrName == "5424313692@chatroom" || session.UsrName == "22816103544@chatroom")
+        {
+            int aa = 0;
+        }
+#endif
+	std::string fileName = session.ExtFileName;
+	if (startsWith(fileName, DIR_SEP) || startsWith(fileName, DIR_SEP_R))
+	{
+		fileName = fileName.substr(1);
+	}
+    std::string cellDataPath = combinePath(userRoot, fileName);
+	fileName = m_iTunesDb->findRealPath(cellDataPath);
+	// SessionCellDataFilter filter(fileName);
+	// StringPairVector files = m_iTunesDb->filter(filter);
+
+	if (fileName.empty())
+	{
+		return false;
+	}
+
+	RawMessage msg;
+	if (!msg.mergeFile(fileName))
+	{
+		return false;
+	}
+
+	std::string value;
+	int value2;
+	if (msg.parse("1.1.4", value))
+	{
+		session.DisplayName.clear();
+#ifndef NDEBUG
+		size_t sz = value.size();
+		session.DisplayName.assign(value.c_str(), sz);
+		size_t sz1 = session.DisplayName.size();
+		if (sz1 == 0 && sz > 0)
+		{
+			sz = sz1;
+		}
+#endif
+		session.DisplayName.assign(value.c_str(), value.size());
+	}
+	if (msg.parse("1.1.14", value))
+	{
+		session.Portrait = value;
+	}
+	if (msg.parse("1.5", value))
+	{
+		parseMembers(value, session);
+	}
+	if (msg.parse("2.7", value2))
+	{
+		session.LastMessageTime = static_cast<unsigned int>(value2);
+	}
+    
+    if (session.DisplayName.empty())
+    {
+        SessionCellDataFilter filter(cellDataPath);
+        ITunesFileVector items = m_iTunesDb->filter(filter);
+
+        unsigned int lastModifiedTime = 0;
+        for (ITunesFilesConstIterator it = items.cbegin(); it != items.cend(); ++it)
+        {
+            fileName = m_iTunesDb->fileIdToRealPath((*it)->fileId);
+            if (fileName.empty())
+            {
+                continue;
+            }
+            
+            RawMessage msg2;
+            if (!msg2.mergeFile(fileName))
+            {
+                continue;
+            }
+            std::string displayName;
+            std::string msgTime;
+            if (msg2.parse("10", value))
+            {
+                msgTime = value;
+            }
+            
+            if (msg2.parse("7", value))
+            {
+                displayName = value;
+            }
+            
+            unsigned int modifiedTime = 0;
+            if (items.size() > 1)
+            {
+                modifiedTime = parseModifiedTime((*it)->blob);
+            }
+            if (session.DisplayName.empty() || (!displayName.empty() && modifiedTime > lastModifiedTime))
+            {
+                session.DisplayName = displayName;
+                lastModifiedTime = modifiedTime;
+            }
+        }
+    }
+
+	return true;
+}
+
+unsigned int SessionsParser::parseModifiedTime(std::vector<unsigned char>& data)
+{
+    std::string xml;
+    if (m_shell->convertPlist(data, xml))
+    {
+        static std::string KeyLastModified = "<key>LastModified</key>";
+        static std::regex ValueLastModified("<integer>(\\d+)</integer>");
+        
+        size_t pos = xml.find(KeyLastModified);
+        if (pos != std::string::npos)
+        {
+            std::smatch sm;
+            if (std::regex_search(xml.cbegin() + pos + KeyLastModified.size(), xml.cend(), sm, ValueLastModified))
+            {
+                return static_cast<unsigned int>(std::stoul(sm[1].str()));
+            }
+        }
+    }
+
+    return 0;
+}
+
+SessionParser::SessionParser(Friend& myself, Friends& friends, const ITunesDb& iTunesDb, const Shell& shell, Logger& logger, const std::map<std::string, std::string>& templates, const std::map<std::string, std::string>& localeStrings, DownloadPool& dlPool) : m_templates(templates), m_localeStrings(localeStrings), m_myself(myself), m_friends(friends), m_iTunesDb(iTunesDb), m_shell(shell), m_logger(logger), m_downloadPool(dlPool)
 {
 }
 
-int SessionParser::parse(const std::string& userBase, const std::string& path, const Session& session, Friend& f)
+int SessionParser::parse(const std::string& userBase, const std::string& outputBase, const Session& session, Friend& f) const
 {
     int count = 0;
+	std::string contents;
     sqlite3 *db = NULL;
-    int rc = sqlite3_open(session.dbFile.c_str(), &db);
+    int rc = openSqlite3ReadOnly(session.dbFile, &db);
     if (rc != SQLITE_OK)
     {
         sqlite3_close(db);
@@ -571,48 +705,58 @@ int SessionParser::parse(const std::string& userBase, const std::string& path, c
         record.type = sqlite3_column_int(stmt, 3);
         record.msgid = sqlite3_column_int(stmt, 4);
 
-        /*
-        if (parseRow(record, userBase, path, displayName, id, myself, table, f, templateKey, values))
+        if (parseRow(record, userBase, outputBase, session, templateKey, values))
         {
             count++;
             std::string ts = getTemplate(templateKey);
             for (std::map<std::string, std::string>::const_iterator it = values.cbegin(); it != values.cend(); ++it)
             {
-                // ts = ts.combinePath(entry.Key, entry.Value);
+                ts = replace_all(ts, it->first, it->second);
             }
             
-            ofstream myfile ("example.txt");
-            if (myfile.is_open())
-            {
-              myfile << "This is a line.\n";
-              myfile << "This is another line.\n";
-              myfile.close();
-            }
-             
+			contents += ts;
         }
-         */
     }
     
     sqlite3_finalize(stmt);
     sqlite3_close(db);
+
+	std::string fileName = combinePath(outputBase, session.UsrName + ".html");
+
+	std::string html = getTemplate("frame");
+	html = replace_all(html, "%%DISPLAYNAME%%", session.DisplayName);
+	html = replace_all(html, "%%BODY%%", contents);
+	
+	std::ofstream htmlFile;
+	if (m_shell.openOutputFile(htmlFile, fileName, std::ios::out | std::ios::binary | std::ios::trunc))
+	{
+		htmlFile.write(html.c_str(), html.size());
+		htmlFile.close();
+	}
     
-    return true;
+    return count;
 }
 
 
-std::string SessionParser::getTemplate(std::string key) const
+std::string SessionParser::getTemplate(const std::string& key) const
 {
     std::map<std::string, std::string>::const_iterator it = m_templates.find(key);
     return (it == m_templates.cend()) ? "" : it->second;
 }
 
-bool SessionParser::parseRow(Record& record, const std::string& userBase, const std::string& path, const Session& session, std::string& templateKey, std::map<std::string, std::string>& templateValues)
+bool SessionParser::parseRow(Record& record, const std::string& userBase, const std::string& path, const Session& session, std::string& templateKey, std::map<std::string, std::string>& templateValues) const
 {
     templateValues.clear();
     templateKey = "msg";
     
-    std::string assetsdir = combinePath(path, session.UsrName + "_files");
+	std::string msgIdStr = std::to_string(record.msgid);
+    std::string assetsDir = combinePath(path, session.UsrName + "_files");
+	m_shell.makeDirectory(assetsDir);
     
+	templateValues["%%NAME%%"] = "";
+	templateValues["%%TIME%%"] = fromUnixTime(record.createTime);
+	templateValues["%%MESSAGE%%"] = "";
+
     if (session.isChatroom())
     {
         if (record.des == 0)
@@ -622,7 +766,7 @@ bool SessionParser::parseRow(Record& record, const std::string& userBase, const 
             templateValues["%%ALIGNMENT%%"] = "right";
             // templateValues.Add("%%NAME%%", txtsender);
             templateValues["%%NAME%%"] = "";
-            templateValues["%%AVATAR%%"] = "Portrait/" + m_myself.FindPortrait();
+            templateValues["%%AVATAR%%"] = "Portrait/" + m_myself.getLocalPortrait();
         }
         else
         {
@@ -637,14 +781,14 @@ bool SessionParser::parseRow(Record& record, const std::string& userBase, const 
                 record.message = record.message.substr(enter + 2);
                 txtsender = session.getMemberName(md5(senderid));
                 
-                Friend *f = m_friends.getFriendByUid(senderid);
+                const Friend *f = m_friends.getFriendByUid(senderid);
                 if (txtsender.empty() && NULL != f)
                 {
                     txtsender = f->DisplayName();
                 }
             
                 templateValues["%%NAME%%"] = txtsender;
-                templateValues["%%AVATAR%%"] = (NULL != f) ? ("Portrait/" + f->FindPortrait()) : "Portrait/DefaultProfileHead@2x.png";
+                templateValues["%%AVATAR%%"] = (NULL != f) ? ("Portrait/" + f->getLocalPortrait()) : "Portrait/DefaultProfileHead@2x.png";
             }
             else
             {
@@ -655,18 +799,27 @@ bool SessionParser::parseRow(Record& record, const std::string& userBase, const 
     }
     else
     {
-        if (record.des == 0)
+        if (record.des == 0 || session.UsrName == m_myself.getUsrName())
         {
             templateValues["%%ALIGNMENT%%"] = "right";
             templateValues["%%NAME%%"] = "";
-            templateValues["%%AVATAR%%"] = "Portrait/" + m_myself.FindPortrait();
+            templateValues["%%AVATAR%%"] = "Portrait/" + m_myself.getLocalPortrait();
         }
         else
         {
-            Friend *f = m_friends.getFriend(session.Hash);
-            templateValues["%%ALIGNMENT%%"] = "left";
-            templateValues["%%NAME%%"] = session.DisplayName;
-            templateValues["%%AVATAR%%"] = "Portrait/" + f->FindPortrait();
+			templateValues["%%ALIGNMENT%%"] = "left";
+
+            const Friend *f = m_friends.getFriend(session.Hash);
+			if (NULL == f)
+			{
+				templateValues["%%NAME%%"] = session.DisplayName;
+				templateValues["%%AVATAR%%"] = "Portrait/" + session.Portrait;
+			}
+			else
+			{
+				templateValues["%%NAME%%"] = f->DisplayName();
+				templateValues["%%AVATAR%%"] = "Portrait/" + f->getLocalPortrait();
+			}
         }
         /*
         else
@@ -694,17 +847,21 @@ bool SessionParser::parseRow(Record& record, const std::string& userBase, const 
         {
             voicelen = std::stoi(sm[1]);
         }
-        std::string audiosrc = m_iTunesDb.findFileId(combinePath(userBase, "Audio", session.Hash, std::to_string(record.msgid) + ".aud"));
-        if (audiosrc.empty())
+        std::string audioSrc = m_iTunesDb.findRealPath(combinePath(userBase, "Audio", session.Hash, msgIdStr + ".aud"));
+        if (audioSrc.empty())
         {
             templateKey = "msg";
-            templateValues["%%MESSAGE%%"] = voicelen == -1 ? "[语音]" : "[语音 " + getDisplayTime(voicelen) + "]";
+            templateValues["%%MESSAGE%%"] = voicelen == -1 ? getLocaleString("[Audio]") : stringWithFormat(getLocaleString("[Audio %s]"), getDisplayTime(voicelen).c_str());
         }
         else
         {
-            m_shell.convertSilk(audiosrc, combinePath(assetsdir, std::to_string(record.msgid) + ".mp3"));
+            silkToPcm(audioSrc, m_pcmData);
+            pcmToMp3(m_pcmData, combinePath(assetsDir, msgIdStr + ".mp3"));
+            
+            // m_shell.convertSilk(audiosrc, combinePath(assetsDir, msgIdStr + ".mp3"));
+            
             templateKey = "audio";
-            templateValues["%%AUDIOPATH%%"] = session.UsrName + "_files/" + std::to_string(record.msgid) + ".mp3";
+            templateValues["%%AUDIOPATH%%"] = session.UsrName + "_files/" + msgIdStr + ".mp3";
         }
     }
     else if (record.type == 47)
@@ -713,10 +870,10 @@ bool SessionParser::parseRow(Record& record, const std::string& userBase, const 
         std::smatch sm;
         if (std::regex_search(record.message, sm, cdnUrlPattern))
         {
-            std::string localfile = removeCdata(sm[1].str());
+            std::string localfile = removeCdata(sm[1].str());;
             std::smatch sm2;
-            static std::regex localFilePattern("\/(\w+?)\/\w*$");
-            if (std::regex_search(record.message, sm, cdnUrlPattern))
+            static std::regex localFilePattern("\\/(\\w+?)\\/\\w*$");
+            if (std::regex_search(localfile, sm2, localFilePattern))
             {
                 localfile = sm2[1];
             }
@@ -726,161 +883,198 @@ bool SessionParser::parseRow(Record& record, const std::string& userBase, const 
                 localfile = std::to_string(uniqueFileName++);
             }
             
-            m_downloadPool.addTask(sm[1], localfile + ".gif");
+            localfile = "Emoji/" + localfile + ".gif";
+            m_downloadPool.addTask(sm[1].str(), combinePath(path, localfile));
             // message = "<img src=\"Emoji/" + localfile + ".gif\" style=\"max-width:100px;max-height:60px\" />";
             templateKey = "emoji";
             // message = "[表情]";
-            templateValues["%%EMOJIPATH%%"] = "Emoji/" + localfile + ".gif";
+            templateValues["%%EMOJIPATH%%"] = localfile;
         }
         else
         {
             templateKey = "msg";
             // message = "[表情]";
-            templateValues["%%MESSAGE%%"] = "[表情]";
+            templateValues["%%MESSAGE%%"] = getLocaleString("[Emoji]");
         }
     }
     else if (record.type == 62 || record.type == 43)
     {
-        /*
-        var hasthum = requireResource(combinePath(userBase, "Video", table, record.msgid + ".video_thum"), combinePath(assetsdir, record.msgid + "_thum.jpg"));
-        var hasvid = requireResource(combinePath(userBase, "Video", table, record.msgid + ".mp4"), combinePath(assetsdir, record.msgid + ".mp4"));
+        bool hasthum = requireResource(combinePath(userBase, "Video", session.Hash, msgIdStr + ".video_thum"), combinePath(assetsDir, msgIdStr + "_thum.jpg"));
+        bool hasvid = requireResource(combinePath(userBase, "Video", session.Hash, msgIdStr + ".mp4"), combinePath(assetsDir, msgIdStr + ".mp4"));
 
+		std::string msgFile;
+		if (hasthum || hasvid)
+		{
+			msgFile = session.UsrName + "_files/";
+			msgFile += msgIdStr;
+		}
         if (hasvid)
         {
             templateKey = "video";
-            templateValues["%%THUMBPATH%%"] = hasthum ? (id + "_files/" + msgid + "_thum.jpg") : "";
-            templateValues["%%VIDEOPATH%%"] = hasthum ? (id + "_files/" + msgid + ".mp4") : "";
+            templateValues["%%THUMBPATH%%"] = hasthum ? (msgFile + "_thum.jpg") : "";
+            templateValues["%%VIDEOPATH%%"] = hasthum ? (msgFile + ".mp4") : "";
         }
         else if (hasthum)
         {
             templateKey = "thumb";
-            templateValues["%%IMGTHUMBPATH%%"] = hasthum ? (id + "_files/" + msgid + "_thum.jpg") : "";
-            templateValues["%%MESSAGE%%"] = "（视频丢失）";
+            templateValues["%%IMGTHUMBPATH%%"] = hasthum ? (msgFile + "_thum.jpg") : "";
+            templateValues["%%MESSAGE%%"] = getLocaleString("(Video Missed)");
         }
         else
         {
             templateKey = "msg";
-            templateValues["%%MESSAGE%%"] = "[视频]";
+            templateValues["%%MESSAGE%%"] = getLocaleString("[Video]");
         }
-        */
     }
     else if (record.type == 50)
     {
         templateKey = "msg";
-        templateValues["%%MESSAGE%%"] = "[视频/语音通话]";
+        templateValues["%%MESSAGE%%"] = getLocaleString("[Video/Audio Call]");
         // message = "[视频/语音通话]";
     }
     else if (record.type == 64)
     {
-        /*
-        var serializer = new DataContractJsonSerializer(typeof(Message64));
-        var stream = new MemoryStream(Encoding.UTF8.GetBytes(message));
-        Message64 msg64 = (Message64)serializer.ReadObject(stream);
+		templateKey = "notice";
 
-        templateKey = "notice";
-        templateValues["%%MESSAGE%%"] = msg64.msgContent;
-         */
-        
+		Json::Reader reader;
+		Json::Value root;
+		if (reader.parse(record.message, root))
+		{
+			templateValues["%%MESSAGE%%"] = root["msgContent"].asString();
+		}
     }
     else if (record.type == 3)
     {
-        /*
-        var hasthum = requireResource(combinePath(userBase, "Img", table, msgid + ".pic_thum"), combinePath(assetsdir, msgid + "_thum.jpg"));
-        var haspic = requireResource(combinePath(userBase, "Img", table, msgid + ".pic"), combinePath(assetsdir, msgid + ".jpg"));
+		std::string vfile = combinePath(userBase, "Img", session.Hash, msgIdStr);
+
+        bool hasthum = requireResource(vfile + ".pic_thum", combinePath(assetsDir, msgIdStr + "_thum.jpg"));
+        bool haspic = requireResource(vfile + ".pic", combinePath(assetsDir, msgIdStr + ".jpg"));
         
+		std::string msgFile;
+		if (hasthum || haspic)
+		{
+			msgFile = session.UsrName + "_files/";
+			msgFile += msgIdStr;
+		}
+
         if (haspic)
         {
             templateKey = "image";
-            templateValues["%%IMGPATH%%"] = id + "_files/" + msgid + ".jpg";
-            templateValues["%%IMGTHUMBPATH%%"] = hasthum ? (id + "_files/" + msgid + "_thum.jpg") : (id + "_files/" + msgid + ".jpg");
+            templateValues["%%IMGPATH%%"] = msgFile + ".jpg";
+            templateValues["%%IMGTHUMBPATH%%"] = hasthum ? (msgFile + "_thum.jpg") : (msgFile + ".jpg");
         }
         else if (hasthum)
         {
             templateKey = "thumb";
-            templateValues["%%IMGTHUMBPATH%%"] = hasthum ? (id + "_files/" + msgid + "_thum.jpg") : "";
+            templateValues["%%IMGTHUMBPATH%%"] = hasthum ? (msgFile + "_thum.jpg") : "";
             templateValues["%%MESSAGE%%"] = "";
         }
         else
         {
             templateKey = "msg";
-            templateValues["%%MESSAGE%%"] = "[图片]";
+            templateValues["%%MESSAGE%%"] = getLocaleString("[Picture]");
         }
-         */
     }
     else if (record.type == 48)
     {
-        /*
-        var match1 = Regex.Match(message, @"x ?= ?""(.+?)""");
-        var match2 = Regex.Match(message, @"y ?= ?""(.+?)""");
-        var match3 = Regex.Match(message, @"label ?= ?""(.+?)""");
-        if (match1.Success && match2.Success && match3.Success) message = "[位置 (" + RemoveCdata(match2.Groups[1].Value) + "," + RemoveCdata(match1.Groups[1].Value) + ") " + RemoveCdata(match3.Groups[1].Value) + "]";
-        else message = "[位置]";
+		static std::regex pattern48_1("x ?= ?\"(.+?)\"");
+		static std::regex pattern48_2("y ?= ?\"(.+?)\"");
+		static std::regex pattern48_3("label ?= ?\"(.+?)\"");
 
-         */
-        templateKey = "msg";
-        templateValues["%%MESSAGE%%"] = record.message;
+		std::smatch sm1;
+		std::smatch sm2;
+		std::smatch sm3;
+
+		bool match1 = std::regex_search(record.message, sm1, pattern48_1);
+		bool match2 = std::regex_search(record.message, sm2, pattern48_2);
+		bool match3 = std::regex_search(record.message, sm3, pattern48_3);
+
+		if (match1 && match2 && match3)
+		{
+			templateValues["%%MESSAGE%%"] = stringWithFormat(getLocaleString("[Location (%s,%s) %s]"), removeCdata(sm1[1].str()).c_str(), removeCdata(sm2[1].str()).c_str(), removeCdata(sm3[1].str()).c_str());
+			// message = "[位置 (" + RemoveCdata(match2.Groups[1].Value) + "," + RemoveCdata(match1.Groups[1].Value) + ") " + RemoveCdata(match3.Groups[1].Value) + "]";
+		}
+		else
+		{
+			templateValues["%%MESSAGE%%"] = getLocaleString("[Location]");
+		}
+		templateKey = "msg";
     }
     else if (record.type == 49)
     {
-        /*
-        if (message.Contains("<type>2001<")) templateValues.Add("%%MESSAGE%%", "[红包]");
-        else if (message.Contains("<type>2000<")) templateValues.Add("%%MESSAGE%%", "[转账]");
-        else if (message.Contains("<type>17<")) templateValues.Add("%%MESSAGE%%", "[实时位置共享]");
-        else if (message.Contains("<type>6<")) templateValues.Add("%%MESSAGE%%", "[文件]");
+        if (record.message.find("<type>2001<") != std::string::npos) templateValues["%%MESSAGE%%"] = getLocaleString("[Red Packet]");
+        else if (record.message.find("<type>2000<") != std::string::npos) templateValues["%%MESSAGE%%"] = getLocaleString("[Transfer]");
+        else if (record.message.find("<type>17<") != std::string::npos) templateValues["%%MESSAGE%%"] = getLocaleString("[Real-time Location]");
+        else if (record.message.find("<type>6<") != std::string::npos) templateValues["%%MESSAGE%%"] = getLocaleString("[File]");
         else
         {
-            var match1 = Regex.Match(message, @"<title>(.+?)<\/title>");
-            var match2 = Regex.Match(message, @"<des>(.*?)<\/des>");
-            var match3 = Regex.Match(message, @"<url>(.+?)<\/url>");
-            var match4 = Regex.Match(message, @"<thumburl>(.+?)<\/thumburl>");
-            if (match1.Success && match3.Success)
+			static std::regex pattern49_1("<title>(.+?)<\/title>");
+			static std::regex pattern49_2("<des>(.*?)<\/des>");
+			static std::regex pattern49_3("<url>(.+?)<\/url>");
+			static std::regex pattern49_4("<thumburl>(.+?)<\/thumburl>");
+			
+			std::smatch sm1;
+			std::smatch sm2;
+			std::smatch sm3;
+			std::smatch sm4;
+			bool match1 = std::regex_search(record.message, sm1, pattern49_1);
+			bool match2 = std::regex_search(record.message, sm2, pattern49_2);
+			bool match3 = std::regex_search(record.message, sm3, pattern49_3);
+			bool match4 = std::regex_search(record.message, sm4, pattern49_4);
+
+            if (match1 && match3)
             {
                 templateKey = "share";
 
                 templateValues["%%SHARINGIMGPATH%%"] = "";
-                templateValues["%%SHARINGURL%%"] = RemoveCdata(match3.Groups[1].Value);
-                templateValues["%%SHARINGTITLE%%"] = RemoveCdata(match1.Groups[1].Value);
+                templateValues["%%SHARINGURL%%"] = removeCdata(sm3[1].str());
+                templateValues["%%SHARINGTITLE%%"] = removeCdata(sm1[1].str());
                 templateValues["%%MESSAGE%%"] = "";
 
-                if (match4.Success)
+                if (match4)
                 {
-                    templateValues["%%SHARINGIMGPATH%%"] = RemoveCdata(match4.Groups[1].Value);
+                    templateValues["%%SHARINGIMGPATH%%"] = removeCdata(sm4[1].str());
                     // message += "<img src=\"" + RemoveCdata(match4.Groups[1].Value) + "\" style=\"float:left;max-width:100px;max-height:60px\" />";
                 }
                 // message += "<a href=\"" + RemoveCdata(match3.Groups[1].Value) + "\"><b>" + RemoveCdata(match1.Groups[1].Value) + "</b></a>";
-                if (match2.Success)
+                if (match2)
                 {
                     // message += "<br />" + RemoveCdata(match2.Groups[1].Value);
-                    templateValues["%%MESSAGE%%"] = RemoveCdata(match2.Groups[1].Value);
+                    templateValues["%%MESSAGE%%"] = removeCdata(sm2[1].str());
                 }
             }
             else
             {
-                templateValues["%%MESSAGE%%"] = "[链接]";
+                templateValues["%%MESSAGE%%"] = getLocaleString("[Link]");
             }
         }
-         */
+        
     }
     else if (record.type == 42)
     {
-        /*
-        var match1 = Regex.Match(message, "nickname ?= ?\"(.+?)\"");
-        var match2 = Regex.Match(message, "smallheadimgurl ?= ?\"(.+?)\"");
-        if (match1.Success)
+		static std::regex pattern42_1("nickname ?= ?\"(.+?)\"");
+		static std::regex pattern42_2("smallheadimgurl ?= ?\"(.+?)\"");
+		
+		std::smatch sm1;
+		std::smatch sm2;
+		
+		bool match1 = std::regex_search(record.message, sm1, pattern42_1);
+		bool match2 = std::regex_search(record.message, sm2, pattern42_2);
+		
+        if (match1)
         {
-            message = "";
-            if (match2.Success) message += "<img src=\"" + RemoveCdata(match2.Groups[1].Value) + "\" style=\"float:left;max-width:100px;max-height:60px\" />";
-            message += "[名片] " + removeCdata(match1.Groups[1].Value);
+            std::string msg42 = "";
+            if (match2) msg42 += "<img src=\"" + removeCdata(sm2[1].str()) + "\" style=\"float:left;max-width:100px;max-height:60px\" />";
+            msg42 += stringWithFormat(getLocaleString("[Contact Card] %s"), removeCdata(sm1.str()).c_str());
 
             templateKey = "card";
-            templateValues["%%CARDIMGPATH%%"] = (match2.Success) ? removeCdata(match2.Groups[1].Value) : "";
-            templateValues["%%CARDNAME%%"] = removeCdata(match1.Groups[1].Value);
+            templateValues["%%CARDIMGPATH%%"] = (match2) ? removeCdata(sm2[1].str()) : "";
+            templateValues["%%CARDNAME%%"] = removeCdata(sm1[1].str());
         }
         else
         {
-            templateValues["%%MESSAGE%%"] = "[名片]";
+            templateValues["%%MESSAGE%%"] = getLocaleString("[Contact Card]");
         }
-         */
     }
     else
     {
@@ -899,9 +1093,16 @@ bool SessionParser::parseRow(Record& record, const std::string& userBase, const 
     
 }
 
-bool SessionParser::requireResource(std::string vpath, std::string dest)
+std::string SessionParser::getLocaleString(const std::string& key) const
 {
-    std::string srcPath = m_iTunesDb.findFileId(vpath);
+	// std::string value = key;
+	std::map<std::string, std::string>::const_iterator it = m_localeStrings.find(key);
+	return it == m_localeStrings.cend() ? key : it->second;
+}
+
+bool SessionParser::requireResource(const std::string& vpath, const std::string& dest) const
+{
+    std::string srcPath = m_iTunesDb.findRealPath(vpath);
     if (!srcPath.empty())
     {
         return m_shell.copyFile(srcPath, dest, true);

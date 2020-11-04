@@ -30,7 +30,7 @@ public:
     Task(const std::string &url, const std::string& output)
     {
         m_url = url;
-        m_output = m_output;
+        m_output = output;
     }
     
     Task& operator=(const Task& task)

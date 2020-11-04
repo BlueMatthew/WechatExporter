@@ -10,6 +10,9 @@
 #include <curl/curl.h>
 #include <iostream>
 #include <fstream>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include "OSDef.h"
 
 size_t writeData(void *buffer, size_t size, size_t nmemb, void *user_p)
 {
@@ -29,6 +32,7 @@ void Task::run()
     
     CURL *curl_handler = curl_easy_init();
     curl_easy_setopt(curl_handler, CURLOPT_URL, m_url.c_str());
+    curl_easy_setopt(curl_handler, CURLOPT_TIMEOUT, 60);
     curl_easy_setopt(curl_handler, CURLOPT_WRITEFUNCTION, &::writeData);
     curl_easy_setopt(curl_handler, CURLOPT_WRITEDATA, this);
 
@@ -51,6 +55,7 @@ size_t Task::writeData(void *buffer, size_t size, size_t nmemb)
 
 DownloadPool::DownloadPool()
 {
+    m_noMoreTask = false;
     curl_global_init(CURL_GLOBAL_ALL);
     
     for (int idx = 0; idx < 4; idx++)
@@ -68,7 +73,17 @@ DownloadPool::~DownloadPool()
 
 void DownloadPool::addTask(const std::string &url, const std::string& output)
 {
-    Task task(url, output);
+    std::string formatedPath = output;
+    std::replace(formatedPath.begin(), formatedPath.end(), DIR_SEP_R, DIR_SEP);
+#ifndef NDEBUG
+    struct stat buffer;
+    if (stat (formatedPath.c_str(), &buffer) == 0)
+    {
+        return;
+    }
+#endif
+
+    Task task(url, formatedPath);
     m_mtx.lock();
     m_queue.push(task);
     m_mtx.unlock();
@@ -91,7 +106,8 @@ void DownloadPool::run()
         Task task;
         m_mtx.lock();
         
-        if (!m_queue.empty())
+        size_t queueSize = m_queue.size();
+        if (queueSize > 0)
         {
             task = m_queue.front();
             m_queue.pop();
