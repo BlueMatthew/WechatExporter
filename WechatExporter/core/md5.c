@@ -22,7 +22,7 @@
    that code, there is no copyright issue.  I hereby disclaim
    copyright in any changes I have made; this code remains in the
    public domain.  */
-
+// #include <string.h>    /* for memcpy() */
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif

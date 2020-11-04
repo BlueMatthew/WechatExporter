@@ -57,6 +57,9 @@ public:
     void debug(const std::string& log)
     {
         write(log);
+        NSString *logString = [NSString stringWithUTF8String:log.c_str()];
+        
+        NSLog(@"%@", logString);
     }
     
 };

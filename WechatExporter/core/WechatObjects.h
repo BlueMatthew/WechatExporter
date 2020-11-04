@@ -31,6 +31,8 @@ public:
     std::string DefaultProfileHead;
     mutable bool IsChatroom;
     
+    std::string outputFileName;
+    
     std::map<std::string, std::pair<std::string, std::string>> Members; // uidHash => <uid,NickName>
     
 private:
@@ -46,7 +48,7 @@ public:
     
     const std::string& getUsrName() const { return usrName; }
     const std::string& getUidHash() const { return uidHash; }
-    void setUsrName(const std::string& usrName) { this->usrName = usrName; uidHash = md5(usrName); IsChatroom = endsWith(usrName, "@chatroom"); }
+    void setUsrName(const std::string& usrName) { this->usrName = usrName; uidHash = md5(usrName);  outputFileName = uidHash; IsChatroom = endsWith(usrName, "@chatroom"); }
     
     Friend() : PortraitRequired(false), DefaultProfileHead("DefaultProfileHead@2x.png"), IsChatroom(false)
     {
@@ -108,19 +110,17 @@ public:
         if (usrName != "") return usrName;
         return std::string("");
     }
-    std::string FindPortrait() const
+    
+    std::string getPortraitUrl() const
     {
-        PortraitRequired = true;
-        if (Portrait != "") return ID() + ".jpg";
-        return DefaultProfileHead;
+        return PortraitHD.empty() ? Portrait : PortraitHD;
     }
     
-    std::string FindPortraitHD() const
+    std::string getLocalPortrait() const
     {
-        PortraitRequired = true;
-        if (PortraitHD != "") return ID() + "_hd.jpg";
-        return FindPortrait();
+        return usrName + ".jpg";
     }
+    
 };
 
 class Friends
@@ -128,6 +128,15 @@ class Friends
 public:
     std::map<std::string, Friend> friends;  // uidHash => Friend
     std::map<std::string, std::string> hashes;  // uid => Hash
+    
+    template <class THandler>
+    void handleFriend(THandler handler)
+    {
+        for (std::map<std::string, Friend>::iterator it = friends.begin(); it != friends.end(); ++it)
+        {
+            handler(it->second);
+        }
+    }
     
     bool hasFriend(const std::string& hash) const { return friends.find(hash) != friends.end(); }
     const Friend* getFriend(const std::string& uidHash) const
@@ -200,11 +209,13 @@ struct Session
     
     std::string dbFile;
     
+    std::string outputFileName;
+    
     bool isChatroom() const { return endsWith(UsrName, "@chatroom"); }
     
     std::map<std::string, std::pair<std::string, std::string>> Members; // uidHash => <uid,NickName>
     
-    void setUsrName(const std::string& usrName) { this->UsrName = usrName; Hash = md5(UsrName); }
+    void setUsrName(const std::string& usrName) { this->UsrName = usrName; Hash = md5(UsrName); outputFileName = UsrName; }
     
     std::string getMemberName(std::string uidHash) const
     {

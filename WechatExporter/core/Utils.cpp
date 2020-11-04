@@ -12,8 +12,14 @@
 #include <sstream>
 #include <iomanip>
 #include <fstream>
+#include <algorithm>
+#include <codecvt>
+#include <locale>
+#include <cstdio>
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <sqlite3.h>
+#include <curl/curl.h>
 #include "OSDef.h"
 
 
@@ -47,6 +53,30 @@ bool startsWith(const std::string& str, const std::string& prefix)
 bool startsWith(const std::string& str, std::string::value_type ch)
 {
     return !str.empty() && str[0] == ch;
+}
+/*
+std::string stringWithFormat(const char* format, ...)
+{
+    va_list ap;
+    va_start(ap, format);
+    
+    auto size = std::vsnprintf(nullptr, 0, format.c_str(), ap);
+    std::string output(size + 1, '\0');
+    std::vsnprintf(&output[0], format.c_str(), ap);
+    va_end(ap);
+    return result;
+}
+ */
+
+std::string utf8ToString(const std::string& utf8str, const std::locale& loc)
+{
+	// UTF-8 to wstring
+	std::wstring_convert<std::codecvt_utf8<wchar_t>> wconv;
+	std::wstring wstr = wconv.from_bytes(utf8str);
+	// wstring to string
+	std::vector<char> buf(wstr.size());
+	std::use_facet<std::ctype<wchar_t>>(loc).narrow(wstr.data(), wstr.data() + wstr.size(), '?', buf.data());
+	return std::string(buf.data(), buf.size());
 }
 
 std::string combinePath(const std::string& p1, const std::string& p2)
@@ -122,6 +152,7 @@ bool existsFile(const std::string &path)
     return (stat (path.c_str(), &buffer) == 0);
 }
 
+/*
 int makePathImpl(const std::string::value_type *path, mode_t mode)
 {
     struct stat st;
@@ -129,13 +160,13 @@ int makePathImpl(const std::string::value_type *path, mode_t mode)
 
     if (stat(path, &st) != 0)
     {
-        /* Directory does not exist. EEXIST for race condition */
+        // Directory does not exist. EEXIST for race condition 
         if (mkdir(path, mode) != 0 && errno != EEXIST)
             status = -1;
     }
     else if (!S_ISDIR(st.st_mode))
     {
-        errno = ENOTDIR;
+        // errno = ENOTDIR;
         status = -1;
     }
 
@@ -172,6 +203,7 @@ int makePath(const std::string& path, mode_t mode)
     
     return status;
 }
+*/
 
 std::string readFile(const std::string& path)
 {
@@ -187,7 +219,7 @@ std::string readFile(const std::string& path)
 
 bool readFile(const std::string& path, std::vector<unsigned char>& data)
 {
-    std::ifstream file(path.c_str(), std::ios::in|std::ios::binary|std::ios::ate);
+    std::ifstream file(path, std::ios::in|std::ios::binary|std::ios::ate);
     if (file.is_open())
     {
         std::streampos size = file.tellg();
@@ -204,6 +236,55 @@ bool readFile(const std::string& path, std::vector<unsigned char>& data)
     return false;
 }
 
+bool writeFile(const std::string& path, const std::vector<unsigned char>& data)
+{
+    std::ofstream ofs;
+    ofs.open(path, std::ios::out | std::ios::binary | std::ios::trunc);
+    if (ofs.is_open())
+    {
+        ofs.write(reinterpret_cast<const char *>(&(data[0])), data.size());
+        ofs.close();
+        return true;
+    }
+    
+    return false;
+}
+
+bool isValidFileName(const std::string& fileName)
+{
+    char const *tmpdir = getenv("TMPDIR");
+    if (tmpdir == 0)
+    {
+#if defined(_WIN32)
+        // tmpdir = "/tmp";
+#else
+        tmpdir = "/tmp";
+
+#endif
+    }
+    
+    // std::string tmpname = std::tmpnam(nullptr);
+    
+    std::string path = combinePath(tmpdir, fileName);
+    
+    int status = mkdir(path.c_str(), 0);
+    int lastErrorNo = errno;
+    if (status == 0)
+    {
+        remove(path.c_str());
+    }
+    
+    return status == 0 || lastErrorNo == EEXIST;
+}
+
+int openSqlite3ReadOnly(const std::string& path, sqlite3 **ppDb)
+{
+    std::string pathWithQuery = "file:" + path;
+    pathWithQuery += "?immutable=1&mode=ro";
+    
+    return sqlite3_open_v2(pathWithQuery.c_str(), ppDb, SQLITE_OPEN_READONLY, NULL);
+}
+
 int GetBigEndianInteger(const unsigned char* data, int startIndex/* = 0*/)
 {
     return (data[startIndex] << 24)
@@ -218,4 +299,23 @@ int GetLittleEndianInteger(const unsigned char* data, int startIndex/* = 0*/)
          | (data[startIndex + 2] << 16)
          | (data[startIndex + 1] << 8)
          | data[startIndex];
+}
+
+std::string encodeUrl(const std::string& url)
+{
+    std::string encodedUrl = url;
+    CURL *curl = curl_easy_init();
+    if(curl)
+    {
+        char *output = curl_easy_escape(curl, url.c_str(), static_cast<int>(url.size()));
+        if(output)
+        {
+            encodedUrl = output;
+            curl_free(output);
+        }
+        
+        curl_easy_cleanup(curl);
+    }
+    
+    return encodedUrl;
 }

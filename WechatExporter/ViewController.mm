@@ -13,24 +13,70 @@
 
 #include "LoggerImpl.h"
 #include "ShellImpl.h"
+#include "ExportNotifierImpl.h"
 #include "RawMessage.h"
 #include "Utils.h"
 #include "Exporter.h"
 
+#include <sqlite3.h>
 #include <fstream>
+
+void errorLogCallback(void *pArg, int iErrCode, const char *zMsg)
+{
+    NSString *log = [NSString stringWithUTF8String:zMsg];
+    
+    NSLog(@"SQLITE3: %@", log);
+}
+
 
 @interface ViewController()
 {
+    ShellImpl* m_shell;
+    LoggerImpl* m_logger;
+    ExportNotifierImpl *m_notifier;
+    Exporter* m_exp;
+    
+    std::vector<BackupManifest> m_manifests;
+    NSInteger m_selectedIndex;
     
 }
 @end
 
 @implementation ViewController
 
+-(void)dealloc
+{
+    if (NULL != m_exp)
+    {
+        delete m_exp;
+    }
+    if (NULL != m_notifier)
+    {
+        delete m_notifier;
+    }
+    if (NULL != m_logger)
+    {
+        delete m_logger;
+    }
+    if (NULL != m_shell)
+    {
+        delete m_shell;
+    }
+}
+
 - (void)viewDidLoad {
     [super viewDidLoad];
+    
+    sqlite3_config(SQLITE_CONFIG_LOG, errorLogCallback, NULL);
 
     [self.view.window center];
+    
+    m_selectedIndex = 0;
+    m_shell = new ShellImpl();
+    m_logger = new LoggerImpl(self.txtViewLogs);
+    std::vector<NSControl *> ctrls;
+    m_notifier = new ExportNotifierImpl(self.progressBar, ctrls);
+    m_exp = NULL;
     
     [self.btnBackup setAction:@selector(btnBackupClicked:)];
     [self.btnOutput setAction:@selector(btnOutputClicked:)];
@@ -38,8 +84,74 @@
     
     // btnBackupPicker.all
     // Do any additional setup after loading the view.
+    
+    NSFileManager *fileManager = [NSFileManager defaultManager];
+    
+    NSString *outputDir = [[NSUserDefaults standardUserDefaults] objectForKey:@"OutputDir"];
+    if (nil == outputDir || [outputDir isEqualToString:@""])
+    {
+        NSURL* homeDir = [fileManager homeDirectoryForCurrentUser];
+        NSArray *components = @[[homeDir path], @"Documents", @"WechatHistory"];
+        outputDir = [NSString pathWithComponents:components];
+    }
+    
+    self.txtboxOutput.stringValue = outputDir;
+    
+    NSURL *appSupport = [fileManager URLForDirectory:NSApplicationSupportDirectory inDomain:NSUserDomainMask appropriateForURL:nil create:NO error:nil];
+    
+    NSArray *components = @[[appSupport path], @"MobileSync", @"Backup"];
+    NSString *backupDir = [NSString pathWithComponents:components];
+    BOOL isDir = NO;
+    if ([fileManager fileExistsAtPath:backupDir isDirectory:&isDir] && isDir)
+    {
+        NSString *backupDir = [NSString pathWithComponents:components];
+
+        ManifestParser parser([backupDir UTF8String], "Info.plist");
+        std::vector<BackupManifest> manifests = parser.parse();
+        [self updateBackups:manifests];
+    }
 }
 
+- (void)updateBackups:(const std::vector<BackupManifest>&) manifests
+{
+    int selectedIndex = -1;
+    if (!manifests.empty())
+    {
+        // Add default backup folder
+        for (std::vector<BackupManifest>::const_iterator it = manifests.cbegin(); it != manifests.cend(); ++it)
+        {
+            std::vector<BackupManifest>::const_iterator it2 = std::find(m_manifests.cbegin(), m_manifests.cend(), *it);
+            if (it2 != m_manifests.cend())
+            {
+                if (selectedIndex == -1)
+                {
+                    selectedIndex = static_cast<int>(std::distance(it2, m_manifests.cbegin()));
+                }
+            }
+            else
+            {
+                m_manifests.push_back(*it);
+                if (selectedIndex == -1)
+                {
+                    selectedIndex = static_cast<int>(m_manifests.size() - 1);
+                }
+            }
+        }
+        
+        // update
+        [self.cmbboxBackup removeAllItems];
+        for (std::vector<BackupManifest>::const_iterator it = m_manifests.cbegin(); it != m_manifests.cend(); ++it)
+        {
+            std::string itemTitle = it->toString();
+            NSString* item = [NSString stringWithUTF8String:itemTitle.c_str()];
+            [self.cmbboxBackup addItemWithObjectValue:item];
+        }
+        if (selectedIndex != -1 && selectedIndex < self.cmbboxBackup.numberOfItems)
+        {
+            [self.cmbboxBackup selectItemAtIndex:selectedIndex];
+        }
+    }
+}
 
 - (void)setRepresentedObject:(id)representedObject {
     [super setRepresentedObject:representedObject];
@@ -49,65 +161,6 @@
 
 - (void)btnBackupClicked:(id)sender
 {
-    
-    // LoginInfo2Parser li(NULL);
-    
-    
-    
-    std::string json;
-    RawMessage msg;
-     
-    std::string pbFile;
-    
-    pbFile = "/Users/matthew/Documents/Programs/Github/WechatExporter/WechatExporter/bb.bin";
-    pbFile = "/Users/matthew/Documents/reebes/iPhoneSE/com.tencent.xin/Documents/LoginInfo2.dat";
-    
-    
-    pbFile = "/Users/matthew/Documents/reebes/iPhoneSE/com.tencent.xin/Documents/MMappedKV/mmsetting.archive.wxid_2gix66ls0aq611";
-    
-    std::vector<unsigned char> data;
-    readFile(pbFile, data);
-    
-    const char *p = reinterpret_cast<const char*>(&data[0]);
-    const char *limit = p + data.size();
-    uint32_t value = 0;
-    int idx  = 0;
-    // while (p != NULL)
-    {
-        value = GetLittleEndianInteger(&data[0]);
-        
-        
-        std::string newpath = pbFile + "." + std::to_string(idx++);
-        std::ofstream myFile (newpath, std::ios::out | std::ios::binary);
-        myFile.write (p + 8, value - 4);
-        myFile.close();
-        p += value;
-    }
-
-    
-    
-    
-    if (msg.mergeFile(pbFile))
-    {
-        msg.parse("1", json);
-        // msg.parse("4", json);
-        int len = json.size();
-        
-        // std::vector<unsigned char> buffer;
-        // buffer.resize(len);
-        
-        uint32_t aa = 0;
-        const char* buf = json.c_str();
-        const char* res = calcVarint32Ptr(buf, buf + len, &aa);
-        
-        std::ofstream myFile ("/Users/matthew/Documents/reebes/iPhoneSE/com.tencent.xin/Documents/LoginInfo2.dat.f1", std::ios::out | std::ios::binary);
-        myFile.write (json.c_str() + 2, 446);
-        myFile.close();
-    }
-     
-    
-    // parseFieldValueFromProtobuf("/Users/matthew/Documents/Programs/Github/WechatExporter/WechatExporter/bb.bin", "3", json);
-
     NSOpenPanel *panel = [NSOpenPanel openPanel];
     panel.canChooseFiles = NO;
     panel.canChooseDirectories = YES;
@@ -115,83 +168,131 @@
     panel.canCreateDirectories = NO;
     panel.showsHiddenFiles = YES;
     
-    // [panel setDirectoryURL:[NSURL URLWithString:NSHomeDirectory()]]; // Set panel's default directory.
-    [panel setDirectoryURL:[NSURL URLWithString:@"/Users/matthew/Documents/reebes/Backup"]]; // Set panel's default directory.
+    [panel setDirectoryURL:[NSURL URLWithString:NSHomeDirectory()]]; // Set panel's default directory.
+    // [panel setDirectoryURL:[NSURL URLWithString:@"/Users/matthew/Documents/reebes/Backup"]]; // Set panel's default directory.
     
     [panel beginSheetModalForWindow:[self.view window] completionHandler: (^(NSInteger result){
-        if(result == NSOKButton) {
+        if (result == NSOKButton)
+        {
             NSURL *backupUrl = panel.directoryURL;
             
             if ([backupUrl.absoluteString hasSuffix:@"/Backup"] || [backupUrl.absoluteString hasSuffix:@"/Backup/"])
             {
-                NSFileManager *fileManager = [NSFileManager defaultManager];
-                
-                NSError *error = nil;
-                NSString *backupPath = [backupUrl.absoluteString substringFromIndex:7];
-                NSArray<NSString *> * subFiles = [fileManager contentsOfDirectoryAtPath:backupPath error:&error];
-                
-                NSMutableArray<NSString *> *uids = [NSMutableArray array];
-                
-                for (NSString *file in subFiles)
-                {
-                    if (file.length == 32)
-                    {
-                        [uids addObject:file];
-                    }
-                }
-                
-                NSString *infoPlist = [NSString stringWithFormat:@"%@/info.plist", backupUrl];
-                
-
-                NSString *pathForFile;
-
-                if ([fileManager fileExistsAtPath:infoPlist])
-                {
-                    BackupItem *backupItem = [[BackupItem alloc] init];
-                    backupItem.backupPath = @"";
-                    backupItem.displayName = @"iPhone SE";
-                    backupItem.lastBackupDate = [NSDate date];
-                    // backupItem.title = @"Test";
-                    
-                    [self.cmbboxBackup addItemWithObjectValue:backupItem];
-                }
+                ManifestParser parser([backupUrl.path UTF8String], "Info.plist");
+                std::vector<BackupManifest> manifests = parser.parse();
+                [self updateBackups:manifests];
             }
-            // backupUrl.
-            
-            // panel.dire
-            // NSLog(backupUrl);
         }
     })];
 }
 
 - (void)btnOutputClicked:(id)sender
 {
+    NSOpenPanel *panel = [NSOpenPanel openPanel];
+    panel.canChooseFiles = NO;
+    panel.canChooseDirectories = YES;
+    panel.allowsMultipleSelection = NO;
+    panel.canCreateDirectories = NO;
+    panel.showsHiddenFiles = YES;
     
+    NSString *outputPath = self.txtboxOutput.stringValue;
+    if (nil == outputPath || [outputPath isEqualToString:@""])
+    {
+        [panel setDirectoryURL:[NSURL URLWithString:NSHomeDirectory()]]; // Set panel's default directory.
+    }
+    else
+    {
+        [panel setDirectoryURL:[NSURL fileURLWithPath:outputPath]];
+    }
+    
+    [panel beginSheetModalForWindow:[self.view window] completionHandler: (^(NSInteger result){
+        if (result == NSOKButton)
+        {
+            NSURL *url = panel.directoryURL;
+            
+            self.txtboxOutput.stringValue = url.path;
+        }
+    })];
 }
 
 - (void)btnExportClicked:(id)sender
 {
+    if (NULL != m_exp)
+    {
+        [self msgBox:@"导出已经在执行。"];
+        return;
+    }
+    
     self.txtViewLogs.string = @"";
     
-    [self.progressBar startAnimation:nil];
+    if (self.cmbboxBackup.indexOfSelectedItem == -1 || self.cmbboxBackup.indexOfSelectedItem >= m_manifests.size())
+    {
+        [self msgBox:@"请选择iTunes备份目录。"];
+        return;
+    }
+    std::string backup = m_manifests[self.cmbboxBackup.indexOfSelectedItem].getPath();
+    NSString *backupPath = [NSString stringWithUTF8String:backup.c_str()];
+    BOOL isDir = NO;
+    if (![[NSFileManager defaultManager] fileExistsAtPath:backupPath isDirectory:&isDir] || !isDir)
+    {
+        [self msgBox:@"iTunes备份目录不存在。"];
+        return;
+    }
     
-    [NSThread detachNewThreadSelector:@selector(run) toTarget:self withObject:nil];
+    NSString *outputPath = self.txtboxOutput.stringValue;
+    if (nil == outputPath || [outputPath isEqualToString:@""])
+    {
+        [self msgBox:@"请选择输出目录。"];
+        return;
+    }
+    
+    if (![[NSFileManager defaultManager] fileExistsAtPath:outputPath isDirectory:&isDir] || !isDir)
+    {
+        [self msgBox:@"输出目录不存在。"];
+        // self.txtboxOutput focus
+        return;
+    }
+    
+    NSDictionary *dict = @{@"backup": backupPath, @"output": outputPath };
+    [NSThread detachNewThreadSelector:@selector(run:) toTarget:self withObject:dict];
 }
 
-- (void)run
+- (void)run:(NSDictionary *)dict
 {
-    ShellImpl shell;
-    LoggerImpl logger(self.txtViewLogs);
+    NSString *backup = [dict objectForKey:@"backup"];
+    NSString *output = [dict objectForKey:@"output"];
     
-    std::string backup = "/Users/matthew/Documents/reebes/iTunes/MobileSync/Backup/11833774f1a5eed6ca84c0270417670f1483deae/";
-    std::string output = "/Users/matthew/Documents/reebes/wx_android_h5/";
+    if (backup == nil || output == nil)
+    {
+        [self msgBox:@"参数错误。"];
+        return;
+    }
+    
+    // std::string backup =  "/Users/matthew/Documents/reebes/MobileSync/Backup/11833774f1a5eed6ca84c0270417670f1483deae/";
+    // backup = "/Users/matthew/Library/Application Support/MobileSync/Backup/11833774f1a5eed6ca84c0270417670f1483deae";
+    
+    // std::string output = "/Users/matthew/Documents/reebes/wx_android_h5/";
     
     NSString *workDir = [[NSFileManager defaultManager] currentDirectoryPath];
     
     workDir = [[NSBundle mainBundle] resourcePath];
     
-    Exporter exp([workDir UTF8String], backup, output, &shell, &logger);
-    exp.run();
+    m_exp = new Exporter([workDir UTF8String], [backup UTF8String], [output UTF8String], m_shell, m_logger);
+    m_exp->setNotifier(m_notifier);
+    
+    m_exp->run();
+}
+
+- (void)msgBox:(NSString *)msg
+{
+    __block NSString *localMsg = [NSString stringWithString:msg];
+    __block NSString *title = [NSString stringWithString:self.title];
+    dispatch_async(dispatch_get_main_queue(), ^{
+        NSAlert *alert = [[NSAlert alloc] init];
+        alert.informativeText = localMsg;
+        alert.messageText = title;
+        [alert runModal];
+    });
 }
 
 @end
