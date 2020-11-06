@@ -8,7 +8,6 @@
 
 #include "ITunesParser.h"
 #include <stdio.h>
-#include <dirent.h>
 #include <map>
 #include <sys/types.h>
 #include <sqlite3.h>
@@ -238,7 +237,7 @@ std::string ITunesDb::findRealPath(const std::string& relativePath) const
     return fileIdToRealPath(fieldId);
 }
 
-ManifestParser::ManifestParser(const std::string& manifestPath, const std::string& xml) : m_manifestPath(manifestPath), m_xml(xml)
+ManifestParser::ManifestParser(const std::string& manifestPath, const std::string& xml, const Shell* shell) : m_manifestPath(manifestPath), m_xml(xml), m_shell(shell)
 {
     
 }
@@ -247,28 +246,24 @@ std::vector<BackupManifest> ManifestParser::parse()
 {
     std::vector<BackupManifest> manifests;
     
-    struct dirent *entry;
-    DIR *dir = opendir(m_manifestPath.c_str());
-    if (dir == NULL)
-    {
-        return manifests;
-    }
-
-    while ((entry = readdir(dir)) != NULL)
-    {
-        if (strcmp(entry->d_name, ".") == 0 || strcmp(entry->d_name, "..") == 0 || strlen(entry->d_name) != 40)
-        {
-            continue;
-        }
-        std::string subDir = entry->d_name;
-        
-        BackupManifest manifest = parse(entry->d_name);
-        if (manifest.isValid())
-        {
-            manifests.push_back(manifest);
-        }
-    }
-    closedir(dir);
+	std::vector<std::string> subDirectories;
+	if (!m_shell->listSubDirectories(m_manifestPath, subDirectories))
+	{
+		return manifests;
+	}
+	
+	for (std::vector<std::string>::const_iterator it = subDirectories.cbegin(); it != subDirectories.cend(); ++it)
+	{
+		if (it->size() != 40)
+		{
+			continue;
+		}
+		BackupManifest manifest = parse(*it);
+		if (manifest.isValid())
+		{
+			manifests.push_back(manifest);
+		}
+	}
 
     return manifests;
 }

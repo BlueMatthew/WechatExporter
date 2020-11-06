@@ -5,6 +5,8 @@
 #define IDD_ABOUTBOX                    100
 #define IDR_MAINFRAME                   128
 #define IDD_WECHATEXPORTER_FORM         129
+#define IDS_SEL_BACKUP_DIR              129
+#define IDS_SEL_OUTPUT_DIR              130
 #define IDC_BACKUP                      1000
 #define IDC_CHOOSE_BKP                  1001
 #define IDC_OUTPUT                      1002

@@ -80,10 +80,15 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
+    <LibraryPath>D:\Workspace\github\vcpkg\installed\x64-windows-static\lib;$(LibraryPath)</LibraryPath>
+    <IncludePath>$(ProjectDir)..\WechatExporter\core;D:\Workspace\github\vcpkg\installed\x64-windows-static\include;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Label="Vcpkg" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <VcpkgEnabled>false</VcpkgEnabled>
     <VcpkgUseStatic>true</VcpkgUseStatic>
+  </PropertyGroup>
+  <PropertyGroup Label="Vcpkg" Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <VcpkgEnabled>false</VcpkgEnabled>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -124,13 +129,13 @@
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <Optimization>Disabled</Optimization>
-      <PreprocessorDefinitions>_WINDOWS;STRICT;_DEBUG;CURL_STATICLIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_WINDOWS;STRICT;_DEBUG;CURL_STATICLIB;COMPILE_SDK;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalOptions>/source-charset:utf-8 %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>Shell32.lib;Ws2_32.lib;Wldap32.lib;Crypt32.lib;libprotobufd.lib;libcharset.lib;libiconv.lib;lzmad.lib;zlibd.lib;libcrypto.lib;libssl.lib;libcurl-d.lib;libxml2.lib;sqlite3.lib;jsoncpp.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>Shell32.lib;Ws2_32.lib;Wldap32.lib;Crypt32.lib;libprotobufd.lib;libcrypto.lib;libcharset.lib;libiconv.lib;lzmad.lib;zlibd.lib;libssl.lib;libcurl-d.lib;libxml2.lib;sqlite3.lib;jsoncpp.lib;SKP_Silk_FIX.lib;libmp3lame-static.lib;libmpghip-static.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <ResourceCompile>
       <Culture>0x0409</Culture>
@@ -179,15 +184,16 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
-      <PrecompiledHeader>Use</PrecompiledHeader>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <ExceptionHandling />
       <DebugInformationFormat />
-      <PreprocessorDefinitions>_WINDOWS;STRICT;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_WINDOWS;STRICT;NDEBUG;CURL_STATICLIB;COMPILE_SDK;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
+      <AdditionalDependencies>Shell32.lib;Ws2_32.lib;Wldap32.lib;Crypt32.lib;libprotobuf.lib;libcrypto.lib;libcharset.lib;libiconv.lib;zlib.lib;lzma.lib;libssl.lib;libcurl.lib;libxml2.lib;sqlite3.lib;jsoncpp.lib;SKP_Silk_FIX.lib;libmp3lame-static.lib;libmpghip-static.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <ResourceCompile>
       <Culture>0x0409</Culture>
@@ -209,11 +215,12 @@
     <ClCompile Include="..\WechatExporter\core\DownloadPool.cpp" />
     <ClCompile Include="..\WechatExporter\core\Exporter.cpp" />
     <ClCompile Include="..\WechatExporter\core\ITunesParser.cpp" />
-    <ClCompile Include="..\WechatExporter\core\md5.c" />
     <ClCompile Include="..\WechatExporter\core\RawMessage.cpp" />
     <ClCompile Include="..\WechatExporter\core\Utils.cpp" />
+    <ClCompile Include="..\WechatExporter\core\Utils_audio.cpp" />
     <ClCompile Include="..\WechatExporter\core\Utils_md5.cpp" />
     <ClCompile Include="..\WechatExporter\core\Utils_protobuf.cpp" />
+    <ClCompile Include="..\WechatExporter\core\Utils_silk.cpp" />
     <ClCompile Include="..\WechatExporter\core\WechatParser.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
@@ -230,7 +237,6 @@
     <ClInclude Include="..\WechatExporter\core\ExportNotifier.h" />
     <ClInclude Include="..\WechatExporter\core\ITunesParser.h" />
     <ClInclude Include="..\WechatExporter\core\Logger.h" />
-    <ClInclude Include="..\WechatExporter\core\md5.h" />
     <ClInclude Include="..\WechatExporter\core\OSDef.h" />
     <ClInclude Include="..\WechatExporter\core\RawMessage.h" />
     <ClInclude Include="..\WechatExporter\core\semaphore.h" />

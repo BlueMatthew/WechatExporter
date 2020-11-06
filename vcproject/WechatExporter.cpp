@@ -28,8 +28,6 @@ int Run(LPTSTR /*lpstrCmdLine*/ = NULL, int nCmdShow = SW_SHOWDEFAULT)
 		return 0;
 	}
 
-	nCmdShow = SW_HIDE;
-
 	wndMain.ShowWindow(nCmdShow);
 
 	int nRet = theLoop.Run();

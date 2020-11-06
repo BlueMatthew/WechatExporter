@@ -30,6 +30,12 @@ public:
 	{
 		return m_isCancelled;
 	}
+
+	void onStart() const
+	{
+
+	}
+
 	void onProgress(double progress) const
 	{
 		if (::IsWindow(m_hWndProgress))
@@ -55,6 +61,7 @@ public:
 			::EnableWindow(*it, TRUE);
 		}
 	}
+
 
 	
 };

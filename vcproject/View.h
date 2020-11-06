@@ -18,10 +18,7 @@ private:
 	ExportNotifierImpl* m_notifier;
 	Exporter* m_exporter;
 
-	
-	
-
-
+	std::vector<BackupManifest> m_manifests;
 
 public:
 	enum { IDD = IDD_WECHATEXPORTER_FORM };
@@ -42,7 +39,26 @@ public:
 		m_notifier = new ExportNotifierImpl(GetDlgItem(IDC_PROGRESS), GetInteractiveCtrls());
 		m_logger = new LoggerImpl(GetDlgItem(IDC_LOG));
 
-		::PostMessage(GetDlgItem(IDC_EXPORT), BM_CLICK, 0, 0L);
+		// ::PostMessage(GetDlgItem(IDC_EXPORT), BM_CLICK, 0, 0L);
+
+		TCHAR szPath[MAX_PATH] = { 0 };
+		HRESULT result = SHGetFolderPath(NULL, CSIDL_MYDOCUMENTS, NULL, SHGFP_TYPE_CURRENT, szPath);
+		// _tcscat(docDir, TEXT("\\Wechat"));
+		SetDlgItemText(IDC_OUTPUT, szPath);
+
+		// Check iTunes Folder
+		result = SHGetFolderPath(NULL, CSIDL_APPDATA, NULL, SHGFP_TYPE_CURRENT, szPath);
+		_tcscat(szPath, TEXT("\\Apple Computer\\MobileSync\\Backup"));
+		
+		DWORD dwAttrib = ::GetFileAttributes(szPath);
+		if (dwAttrib != INVALID_FILE_ATTRIBUTES && (dwAttrib & FILE_ATTRIBUTE_DIRECTORY))
+		{
+			CT2A backupDir(szPath, CP_UTF8);
+
+			ManifestParser parser((LPCSTR)backupDir, "Info.plist", &m_shell);
+			std::vector<BackupManifest> manifests = parser.parse();
+			UpdateBackups(manifests);
+		}
 		
 		return TRUE;
 	}
@@ -102,17 +118,41 @@ public:
 //	LRESULT NotifyHandler(int /*idCtrl*/, LPNMHDR /*pnmh*/, BOOL& /*bHandled*/)
 	LRESULT OnBnClickedChooseBkp(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/)
 	{
-		CFolderDialog folder(NULL, L"Select a dir", BIF_RETURNONLYFSDIRS | BIF_USENEWUI | BIF_NONEWFOLDERBUTTON);
+		CString text;
+		text.LoadString(IDS_SEL_BACKUP_DIR);
+
+		CFolderDialog folder(NULL, text, BIF_RETURNONLYFSDIRS | BIF_USENEWUI | BIF_NONEWFOLDERBUTTON);
 		if (IDOK == folder.DoModal()) {
 			// std::wstring dir = folder.m_szFolderPath;
-			// OutputDebugString((dir + L"\n").c_str());
+			// if ([backupUrl.absoluteString hasSuffix : @"/Backup"] || [backupUrl.absoluteString hasSuffix:@" / Backup / "])
+			{
+				CT2A backupDir(folder.m_szFolderPath, CP_UTF8);
+
+				ManifestParser parser((LPCSTR)backupDir, "Info.plist", &m_shell);
+				std::vector<BackupManifest> manifests = parser.parse();
+				UpdateBackups(manifests);
+			}
 		}
 
 		return 0;
 	}
 	LRESULT OnBnClickedChooseOutput(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/)
 	{
-		CFolderDialog folder(NULL, L"Select a dir", BIF_RETURNONLYFSDIRS | BIF_USENEWUI | BIF_NONEWFOLDERBUTTON);
+		CString text;
+		text.LoadString(IDS_SEL_OUTPUT_DIR);
+		CFolderDialog folder(NULL, text, BIF_RETURNONLYFSDIRS | BIF_USENEWUI);
+		
+		TCHAR outputDir[MAX_PATH] = { 0 };
+		GetDlgItemText(IDC_OUTPUT, outputDir, MAX_PATH);
+		if (_tcscmp(outputDir, TEXT("")) == 0)
+		{
+			HRESULT result = SHGetFolderPath(NULL, CSIDL_MYDOCUMENTS, NULL, SHGFP_TYPE_CURRENT, outputDir);
+		}
+		if (_tcscmp(outputDir, TEXT("")) != 0)
+		{
+			folder.SetInitialFolder(outputDir);
+		}
+		
 		if (IDOK == folder.DoModal()) {
 			SetDlgItemText(IDC_OUTPUT, folder.m_szFolderPath);
 			// std::wstring dir = folder.m_szFolderPath;
@@ -188,6 +228,52 @@ public:
 		::EnableWindow(GetDlgItem(IDC_CHOOSE_BKP), FALSE);
 		::EnableWindow(GetDlgItem(IDC_CHOOSE_OUTPUT), FALSE);
 		::EnableWindow(GetDlgItem(IDC_EXPORT), FALSE);
+	}
+
+
+	void UpdateBackups(const std::vector<BackupManifest>& manifests)
+	{
+		int selectedIndex = -1;
+		if (!manifests.empty())
+		{
+			// Add default backup folder
+			for (std::vector<BackupManifest>::const_iterator it = manifests.cbegin(); it != manifests.cend(); ++it)
+			{
+				std::vector<BackupManifest>::const_iterator it2 = std::find(m_manifests.cbegin(), m_manifests.cend(), *it);
+				if (it2 != m_manifests.cend())
+				{
+					if (selectedIndex == -1)
+					{
+						selectedIndex = static_cast<int>(std::distance(it2, m_manifests.cbegin()));
+					}
+				}
+				else
+				{
+					m_manifests.push_back(*it);
+					if (selectedIndex == -1)
+					{
+						selectedIndex = static_cast<int>(m_manifests.size() - 1);
+					}
+				}
+			}
+
+			// update
+			CComboBox cmb = GetDlgItem(IDC_BACKUP);
+			cmb.LockWindowUpdate();
+			cmb.Clear();
+			for (std::vector<BackupManifest>::const_iterator it = m_manifests.cbegin(); it != m_manifests.cend(); ++it)
+			{
+				std::string itemTitle = it->toString();
+				// String* item = [NSString stringWithUTF8String : itemTitle.c_str()];
+				CA2T item(it->toString().c_str(), CP_UTF8);
+				cmb.AddString((LPCTSTR)item);
+			}
+			if (selectedIndex != -1 && selectedIndex < cmb.GetCount())
+			{
+				cmb.SetCurSel(selectedIndex);
+			}
+			cmb.LockWindowUpdate(FALSE);
+		}
 	}
 	
 
