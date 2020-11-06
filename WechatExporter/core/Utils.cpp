@@ -16,6 +16,9 @@
 #include <codecvt>
 #include <locale>
 #include <cstdio>
+#ifdef _WIN32
+#include <direct.h>
+#endif
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <sqlite3.h>
@@ -267,7 +270,11 @@ bool isValidFileName(const std::string& fileName)
     
     std::string path = combinePath(tmpdir, fileName);
     
+#ifdef _WIN32
+	int status = mkdir(path.c_str());
+#else
     int status = mkdir(path.c_str(), 0);
+#endif
     int lastErrorNo = errno;
     if (status == 0)
     {
@@ -318,4 +325,43 @@ std::string encodeUrl(const std::string& url)
     }
     
     return encodedUrl;
+}
+
+long long diff_tm(struct tm *a, struct tm *b) {
+    return a->tm_sec - b->tm_sec
+        + 60LL * (a->tm_min - b->tm_min)
+        + 3600LL * (a->tm_hour - b->tm_hour)
+        + 86400LL * (a->tm_yday - b->tm_yday)
+        + (a->tm_year - 70) * 31536000LL
+        - (a->tm_year - 69) / 4 * 86400LL
+        + (a->tm_year - 1) / 100 * 86400LL
+        - (a->tm_year + 299) / 400 * 86400LL
+        - (b->tm_year - 70) * 31536000LL
+        + (b->tm_year - 69) / 4 * 86400LL
+        - (b->tm_year - 1) / 100 * 86400LL
+        + (b->tm_year + 299) / 400 * 86400LL;
+}
+
+std::string utcToLocal(const std::string& utcTime)
+{
+    struct std::tm tp;
+    std::istringstream ss(utcTime);
+    ss >> std::get_time(&tp, "%Y-%m-%dT%H:%M:%SZ");
+    tp.tm_isdst = -1;
+    time_t utc = mktime(&tp);
+    struct std::tm e0 = { 0 };
+    e0.tm_year = tp.tm_year;
+    e0.tm_mday = tp.tm_mday;
+    e0.tm_mon = tp.tm_mon;
+    e0.tm_hour = tp.tm_hour;
+    e0.tm_isdst = -1;
+    std::time_t pseudo = mktime(&e0);
+    struct std::tm e1 = *gmtime(&pseudo);
+    e0.tm_sec += utc - diff_tm(&e1, &e0);
+    time_t local = e0.tm_sec;
+    struct tm localt = *localtime(&local);
+    char buf[30] = { 0 };
+    strftime(buf, 30, "%Y-%m-%d %H:%M:%S", &localt);
+
+    return std::string(buf);
 }

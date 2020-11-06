@@ -26,14 +26,6 @@
 		34E3E90C2531BE200093042D /* Utils_protobuf.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 34E3E90B2531BE1F0093042D /* Utils_protobuf.cpp */; };
 		34E3E9242535555F0093042D /* RawMessage.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 34E3E9232535555F0093042D /* RawMessage.cpp */; };
 		34ED31E825528A1800C42698 /* Utils_audio.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 34ED31E725528A1800C42698 /* Utils_audio.cpp */; };
-		34ED31ED25528CF500C42698 /* CoreAudio.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 34ED31EC25528CF500C42698 /* CoreAudio.framework */; };
-		34ED31F0255294A000C42698 /* VideoToolbox.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 34ED31EF255294A000C42698 /* VideoToolbox.framework */; };
-		34ED31F2255294A500C42698 /* AudioToolbox.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 34ED31F1255294A500C42698 /* AudioToolbox.framework */; };
-		34ED31F4255294BB00C42698 /* Security.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 34ED31F3255294BB00C42698 /* Security.framework */; };
-		34ED31F6255294D100C42698 /* libbz2.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 34ED31F5255294D100C42698 /* libbz2.tbd */; };
-		34ED31F9255294E100C42698 /* libiconv.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 34ED31F8255294E100C42698 /* libiconv.tbd */; };
-		34ED31FC255294E600C42698 /* libz.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 34ED31FB255294E500C42698 /* libz.tbd */; };
-		34ED31FF2552950100C42698 /* CoreMedia.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 34ED31FE2552950100C42698 /* CoreMedia.framework */; };
 		34ED32082552A98600C42698 /* Utils_silk.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 34ED32072552A98600C42698 /* Utils_silk.cpp */; };
 /* End PBXBuildFile section */
 
@@ -95,14 +87,6 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				34ED31FF2552950100C42698 /* CoreMedia.framework in Frameworks */,
-				34ED31FC255294E600C42698 /* libz.tbd in Frameworks */,
-				34ED31F9255294E100C42698 /* libiconv.tbd in Frameworks */,
-				34ED31F6255294D100C42698 /* libbz2.tbd in Frameworks */,
-				34ED31F4255294BB00C42698 /* Security.framework in Frameworks */,
-				34ED31F2255294A500C42698 /* AudioToolbox.framework in Frameworks */,
-				34ED31F0255294A000C42698 /* VideoToolbox.framework in Frameworks */,
-				34ED31ED25528CF500C42698 /* CoreAudio.framework in Frameworks */,
 				342EDB00252450EB006A295A /* libcurl.tbd in Frameworks */,
 				343F613025234BFC00FFE085 /* libsqlite3.tbd in Frameworks */,
 				342EDB0B252495BD006A295A /* libxml2.tbd in Frameworks */,
@@ -436,10 +420,6 @@
 					"-L/usr/local/lib",
 					"-lprotobuf",
 					"-ljsoncpp",
-					"-lavformat",
-					"-lavcodec",
-					"-lavutil",
-					"-lswresample",
 					"-lmp3lame",
 					"-lSKP_SILK_SDK",
 				);
@@ -470,10 +450,6 @@
 					"-L/usr/local/lib",
 					"-lprotobuf",
 					"-ljsoncpp",
-					"-lavformat",
-					"-lavcodec",
-					"-lavutil",
-					"-lswresample",
 					"-lmp3lame",
 					"-lSKP_SILK_SDK",
 				);

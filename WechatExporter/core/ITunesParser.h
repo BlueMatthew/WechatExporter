@@ -10,9 +10,11 @@
 #include <vector>
 #include <map>
 
-// #include <sstream>
-// #include <iomanip>
+#include <sstream>
+#include <iomanip>
+#include <ctime>
 #include <libxml/parser.h>
+#include "Shell.h"
 #include "Utils.h"
 
 #ifndef ITunesParser_h
@@ -59,9 +61,13 @@ public:
         
         return m_path == rhs.m_path;
     }
-    
-    BackupManifest(std::string path, std::string deviceName, std::string displayName, std::string backupTime) : m_path(path), m_deviceName(deviceName), m_displayName(displayName), m_backupTime(backupTime)
+
+    BackupManifest(std::string path, std::string deviceName, std::string displayName, std::string backupTime) : m_path(path), m_deviceName(deviceName), m_displayName(displayName)
     {
+		if (!backupTime.empty())
+		{
+			m_backupTime = utcToLocal(backupTime);
+		}
     }
 
     bool isValid() const
@@ -71,7 +77,7 @@ public:
     
     std::string toString() const
     {
-        return m_displayName + " " + m_backupTime + "(" + m_path + ")";
+        return m_displayName + " " + m_backupTime + " (" + m_path + ")";
     }
     
     std::string getPath() const
@@ -126,9 +132,11 @@ class ManifestParser
 protected:
     std::string m_manifestPath;
     std::string m_xml;
+	const Shell* m_shell;
+	
     
 public:
-    ManifestParser(const std::string& m_manifestPath, const std::string& m_xml);
+    ManifestParser(const std::string& m_manifestPath, const std::string& m_xml, const Shell* shell);
     std::vector<BackupManifest> parse();
     BackupManifest parse(const std::string& backupId);
     

@@ -69,6 +69,7 @@ int openSqlite3ReadOnly(const std::string& path, sqlite3 **ppDb);
 
 std::string encodeUrl(const std::string& url);
 
+std::string utcToLocal(const std::string& utcTime);
 
 bool silkToPcm(const std::string& silkPath, std::vector<unsigned char>& pcmData);
 bool silkToPcm(const std::string& silkPath, const std::string& pcmPath);

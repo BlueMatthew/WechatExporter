@@ -27,13 +27,45 @@ public:
 		return ::SHCreateDirectoryEx(NULL, (LPCTSTR)p, NULL) == ERROR_SUCCESS;
 	}
 
+	bool listSubDirectories(const std::string& path, std::vector<std::string>& subDirectories) const
+	{
+		WIN32_FIND_DATA FindFileData;
+		HANDLE hFind = INVALID_HANDLE_VALUE;
+
+		std::string formatedPath = combinePath(path, "*.*");
+		std::replace(formatedPath.begin(), formatedPath.end(), DIR_SEP_R, DIR_SEP);
+
+		CA2T localPath(formatedPath.c_str(), CP_UTF8);
+
+		hFind = FindFirstFile((LPTSTR)localPath, &FindFileData);
+		if (hFind == INVALID_HANDLE_VALUE)
+		{
+			return false;
+		}
+		do
+		{
+			if (_tcscmp(FindFileData.cFileName, TEXT(".")) == 0 || _tcscmp(FindFileData.cFileName, TEXT("..")) == 0)
+			{
+				continue;
+			}
+			if (FindFileData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
+			{
+				CT2A utf8Path(FindFileData.cFileName, CP_UTF8);
+				subDirectories.push_back((LPCSTR)utf8Path);
+			}
+		} while (::FindNextFile(hFind, &FindFileData));
+		FindClose(hFind);
+
+		return true;
+	}
+	
 	bool copyFile(const std::string& src, const std::string& dest, bool overwrite) const
 	{
 		CA2T s(src.c_str(), CP_UTF8);
 		CA2T d(dest.c_str(), CP_UTF8);
 
-		return ::CopyFile((LPCTSTR)s, (LPCTSTR)d, overwrite ? FALSE : TRUE) == TRUE;
-		return true;
+		BOOL bRet = ::CopyFile((LPCTSTR)s, (LPCTSTR)d, (overwrite ? FALSE : TRUE));
+		return (bRet == TRUE);
 	}
 
 	bool openOutputFile(std::ofstream& ofs, const std::string& fileName, std::ios_base::openmode mode/* = std::ios::out*/) const
@@ -50,17 +82,12 @@ public:
 
 		return ofs.is_open();
 	}
-	
-	bool convertPlist(const std::string& plist, const std::string& xml) const
+
+	bool convertPlist(const std::vector<unsigned char>& bplist, std::string& xml) const
 	{
 		return true;
 	}
 
-	bool convertSilk(const std::string& silk, const std::string& mp3) const
-	{
-		return true;
-	}
-	
 	int exec(const std::string& cmd) const
 	{
 		CA2A c(cmd.c_str(), CP_UTF8);

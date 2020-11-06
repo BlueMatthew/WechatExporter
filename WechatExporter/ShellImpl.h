@@ -7,6 +7,7 @@
 //
 
 #include "core/Shell.h"
+#include <dirent.h>
 
 #ifndef ShellImpl_h
 #define ShellImpl_h
@@ -29,6 +30,30 @@ public:
         BOOL existed = [[NSFileManager defaultManager] fileExistsAtPath:ocPath isDirectory:&isDir];
         return existed == YES && isDir == YES;
     }
+    
+    bool listSubDirectories(const std::string& path, std::vector<std::string>& subDirectories) const
+	{
+		struct dirent *entry;
+	    DIR *dir = opendir(path.c_str());
+	    if (dir == NULL)
+	    {
+	        return false;
+	    }
+	
+	    while ((entry = readdir(dir)) != NULL)
+	    {
+	        if (strcmp(entry->d_name, ".") == 0 || strcmp(entry->d_name, "..") == 0)
+	        {
+	            continue;
+	        }
+	        std::string subDir = entry->d_name;
+            // TODO: Check directory or not
+            subDirectories.push_back(subDir);
+	    }
+	    closedir(dir);
+    
+		return true;
+	}
     
     bool makeDirectory(const std::string& path) const
     {

@@ -106,7 +106,7 @@ void errorLogCallback(void *pArg, int iErrCode, const char *zMsg)
     {
         NSString *backupDir = [NSString pathWithComponents:components];
 
-        ManifestParser parser([backupDir UTF8String], "Info.plist");
+        ManifestParser parser([backupDir UTF8String], "Info.plist", m_shell);
         std::vector<BackupManifest> manifests = parser.parse();
         [self updateBackups:manifests];
     }
@@ -178,7 +178,7 @@ void errorLogCallback(void *pArg, int iErrCode, const char *zMsg)
             
             if ([backupUrl.absoluteString hasSuffix:@"/Backup"] || [backupUrl.absoluteString hasSuffix:@"/Backup/"])
             {
-                ManifestParser parser([backupUrl.path UTF8String], "Info.plist");
+                ManifestParser parser([backupUrl.path UTF8String], "Info.plist", self->m_shell);
                 std::vector<BackupManifest> manifests = parser.parse();
                 [self updateBackups:manifests];
             }

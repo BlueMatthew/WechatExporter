@@ -33,9 +33,6 @@
     <ClCompile Include="..\WechatExporter\core\ITunesParser.cpp">
       <Filter>core</Filter>
     </ClCompile>
-    <ClCompile Include="..\WechatExporter\core\md5.c">
-      <Filter>core</Filter>
-    </ClCompile>
     <ClCompile Include="..\WechatExporter\core\RawMessage.cpp">
       <Filter>core</Filter>
     </ClCompile>
@@ -49,6 +46,12 @@
       <Filter>core</Filter>
     </ClCompile>
     <ClCompile Include="..\WechatExporter\core\WechatParser.cpp">
+      <Filter>core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\WechatExporter\core\Utils_audio.cpp">
+      <Filter>core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\WechatExporter\core\Utils_silk.cpp">
       <Filter>core</Filter>
     </ClCompile>
   </ItemGroup>
@@ -81,9 +84,6 @@
       <Filter>core</Filter>
     </ClInclude>
     <ClInclude Include="..\WechatExporter\core\Logger.h">
-      <Filter>core</Filter>
-    </ClInclude>
-    <ClInclude Include="..\WechatExporter\core\md5.h">
       <Filter>core</Filter>
     </ClInclude>
     <ClInclude Include="..\WechatExporter\core\OSDef.h">
