@@ -134,7 +134,7 @@ bool Exporter::runImpl()
 #ifndef NDEBUG
         if (it->getUsrName() != "wxid_2gix66ls0aq611")
         {
-            continue;
+            // continue;
         }
 #endif
 		fillUser(*it);
@@ -241,6 +241,11 @@ bool Exporter::exportUser(Friend& user, DownloadPool& downloadPool)
         {
             // continue;
         }
+        if (it->UsrName != "23069688360@chatroom")
+        {
+            // continue;
+        }
+        
         if (!it->DisplayName.empty())
         {
             // continue;
