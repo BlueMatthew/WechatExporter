@@ -91,6 +91,7 @@ public:
         return ofs.is_open();
     }
     
+    /*
     bool convertPlist(const std::vector<unsigned char>& bplist, std::string& xml) const
     {
         std::string bplistPath = std::tmpnam(NULL);
@@ -111,6 +112,7 @@ public:
         std::remove(bplistPath.c_str());
         return result;
     }
+    */
     
     int exec(const std::string& cmd) const
     {

@@ -282,6 +282,8 @@ BackupManifest ManifestParser::parse(const std::string& backupId)
     std::string path = combinePath(m_manifestPath, backupId);
     std::string fileName = combinePath(path, m_xml);
     
+    // plist_t node = plist_from_xml(fileName.c_str());
+    
     const std::string NodePlist = "plist";
     const std::string NodeDict = "dict";
     

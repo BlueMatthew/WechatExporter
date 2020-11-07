@@ -422,6 +422,7 @@
 					"-ljsoncpp",
 					"-lmp3lame",
 					"-lSKP_SILK_SDK",
+					"-lplist-2.0",
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = org.wakin.WechatExporter;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -452,6 +453,7 @@
 					"-ljsoncpp",
 					"-lmp3lame",
 					"-lSKP_SILK_SDK",
+					"-lplist-2.0",
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = org.wakin.WechatExporter;
 				PRODUCT_NAME = "$(TARGET_NAME)";

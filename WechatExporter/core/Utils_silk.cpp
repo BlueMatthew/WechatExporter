@@ -2,6 +2,7 @@
 #define _CRT_SECURE_NO_DEPRECATE    1
 #endif
 
+#include "Utils.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -116,7 +117,8 @@ bool silkToPcm(const std::string& silkPath, std::vector<unsigned char>& pcmData)
            if( strcmp( header_buf, "!SILK_V3" ) != 0 ) {
                /* Non-equal strings */
                printf( "Error: Wrong Header %s\n", header_buf );
-               exit( 0 );
+               // exit( 0 );
+               return false;
            }
         } else {
            counter = fread( header_buf, sizeof( char ), strlen( "#!SILK_V3" ), bitInFile );
@@ -124,7 +126,8 @@ bool silkToPcm(const std::string& silkPath, std::vector<unsigned char>& pcmData)
            if( strcmp( header_buf, "#!SILK_V3" ) != 0 ) {
                /* Non-equal strings */
                printf( "Error: Wrong Header %s\n", header_buf );
-               exit( 0 );
+               // exit( 0 );
+               return false;
            }
         }
     }
@@ -262,7 +265,7 @@ bool silkToPcm(const std::string& silkPath, std::vector<unsigned char>& pcmData)
                 /* Generate 20 ms */
                 ret = SKP_Silk_SDK_Decode( psDec, &DecControl, 1, payloadToDec, nBytes, outPtr, &len );
                 if( ret ) {
-                    printf( "\nSKP_Silk_Decode returned %d", ret );
+                    // printf( "\nSKP_Silk_Decode returned %d", ret );
                 }
                 outPtr  += len;
                 tot_len += len;
@@ -408,7 +411,7 @@ bool silkToPcm(const std::string& silkPath, std::vector<unsigned char>& pcmData)
     
     return true;
 }
-/*
+
 bool silkToPcm(const std::string& silkPath, const std::string& pcmPath)
 {
     std::vector<unsigned char> pcmData;
@@ -419,4 +422,4 @@ bool silkToPcm(const std::string& silkPath, const std::string& pcmPath)
     }
     return result;
 }
-*/
+

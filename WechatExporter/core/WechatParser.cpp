@@ -17,6 +17,7 @@
 #include <libxml/tree.h>
 #include <libxml/xpath.h>
 #include <json/json.h>
+#include <plist/plist.h>
 
 #include "WechatObjects.h"
 #include "RawMessage.h"
@@ -644,24 +645,21 @@ bool SessionsParser::parseCellData(const std::string& userRoot, Session& session
 
 unsigned int SessionsParser::parseModifiedTime(std::vector<unsigned char>& data)
 {
-    std::string xml;
-    if (m_shell->convertPlist(data, xml))
+    uint64_t val = 0;
+    plist_t node = NULL;
+    plist_from_memory(reinterpret_cast<const char *>(&data[0]), static_cast<uint32_t>(data.size()), &node);
+    if (NULL != node)
     {
-        static std::string KeyLastModified = "<key>LastModified</key>";
-        static std::regex ValueLastModified("<integer>(\\d+)</integer>");
-        
-        size_t pos = xml.find(KeyLastModified);
-        if (pos != std::string::npos)
+        plist_t lastModified = plist_access_path(node, 3, "$objects", 1, "LastModified");
+        if (NULL != lastModified)
         {
-            std::smatch sm;
-            if (std::regex_search(xml.cbegin() + pos + KeyLastModified.size(), xml.cend(), sm, ValueLastModified))
-            {
-                return static_cast<unsigned int>(std::stoul(sm[1].str()));
-            }
+            plist_get_uint_val(lastModified, &val);
         }
+        
+        plist_free(node);
     }
 
-    return 0;
+    return static_cast<unsigned int>(val);
 }
 
 SessionParser::SessionParser(Friend& myself, Friends& friends, const ITunesDb& iTunesDb, const Shell& shell, Logger& logger, const std::map<std::string, std::string>& templates, const std::map<std::string, std::string>& localeStrings, DownloadPool& dlPool) : m_templates(templates), m_localeStrings(localeStrings), m_myself(myself), m_friends(friends), m_iTunesDb(iTunesDb), m_shell(shell), m_logger(logger), m_downloadPool(dlPool)
@@ -855,8 +853,12 @@ bool SessionParser::parseRow(Record& record, const std::string& userBase, const 
         }
         else
         {
+            m_pcmData.clear();
+            std::string mp3Path = combinePath(assetsDir, msgIdStr + ".mp3");
             silkToPcm(audioSrc, m_pcmData);
+            // silkToPcm(audioSrc, mp3Path + ".pcm");
             pcmToMp3(m_pcmData, combinePath(assetsDir, msgIdStr + ".mp3"));
+            // pcmToMp3(mp3Path + ".pcm", mp3Path);
             
             // m_shell.convertSilk(audiosrc, combinePath(assetsDir, msgIdStr + ".mp3"));
             
