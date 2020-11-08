@@ -33,7 +33,7 @@ public:
 
 	void onStart() const
 	{
-
+		::ShowWindow(m_hWndProgress, SW_SHOW);
 	}
 
 	void onProgress(double progress) const
@@ -60,6 +60,7 @@ public:
 		{
 			::EnableWindow(*it, TRUE);
 		}
+		::ShowWindow(m_hWndProgress, SW_HIDE);
 	}
 
 

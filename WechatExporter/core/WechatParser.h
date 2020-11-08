@@ -216,7 +216,7 @@ private:
 public:
     SessionsParser(ITunesDb *iTunesDb, Shell* shell);
     
-    bool parse(const std::string& userRoot, std::vector<Session>& sessions);
+    bool parse(const std::string& userRoot, std::vector<Session>& sessions, const Friends& friends);
 
 private:
     bool parseCellData(const std::string& userRoot, Session& session);

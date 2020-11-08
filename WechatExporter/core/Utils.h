@@ -59,6 +59,7 @@ const unsigned char* calcVarint32Ptr(const unsigned char* p, const unsigned char
 std::string readFile(const std::string& path);
 bool readFile(const std::string& path, std::vector<unsigned char>& data);
 bool writeFile(const std::string& path, const std::vector<unsigned char>& data);
+bool writeFile(const std::string& path, const std::string& data);
 bool isValidFileName(const std::string& fileName);
 
 int GetBigEndianInteger(const unsigned char* data, int startIndex = 0);

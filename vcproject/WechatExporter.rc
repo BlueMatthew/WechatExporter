@@ -28,8 +28,6 @@ IDR_MAINFRAME MENU
 BEGIN
     POPUP "&File"
     BEGIN
-        MENUITEM SEPARATOR
-        MENUITEM SEPARATOR
         MENUITEM "E&xit",                       ID_APP_EXIT
     END
     POPUP "&Edit"
@@ -73,20 +71,20 @@ BEGIN
     GROUPBOX        "",IDC_STATIC,7,7,115,88
 END
 
-IDD_WECHATEXPORTER_FORM DIALOGEX 0, 0, 410, 196
+IDD_WECHATEXPORTER_FORM DIALOGEX 0, 0, 393, 196
 STYLE DS_SETFONT | WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS
 EXSTYLE WS_EX_CLIENTEDGE
 FONT 9, "Segoe UI", 0, 0, 0x1
 BEGIN
-    COMBOBOX        IDC_BACKUP,7,21,374,30,CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP
-    PUSHBUTTON      "...",IDC_CHOOSE_BKP,388,20,15,14
-    EDITTEXT        IDC_OUTPUT,7,54,372,14,ES_AUTOHSCROLL | ES_READONLY
+    COMBOBOX        IDC_BACKUP,7,21,360,30,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    PUSHBUTTON      "...",IDC_CHOOSE_BKP,371,20,15,14
+    EDITTEXT        IDC_OUTPUT,7,54,359,14,ES_AUTOHSCROLL | ES_READONLY
     LTEXT           "iTunes备份：",IDC_STATIC,7,7,321,8
-    LTEXT           "聊天记录输出目录：",IDC_STATIC,7,39,284,8
-    PUSHBUTTON      "...",IDC_CHOOSE_OUTPUT,388,53,15,14
-    LISTBOX         IDC_LOG,7,74,396,96,LBS_SORT | LBS_NOINTEGRALHEIGHT | WS_VSCROLL | WS_TABSTOP
-    PUSHBUTTON      "导出",IDC_EXPORT,353,175,50,14
-    CONTROL         "",IDC_PROGRESS,"msctls_progress32",WS_BORDER,7,175,151,14
+    LTEXT           "聊天记录输出目录：",IDC_STATIC,7,39,361,8
+    PUSHBUTTON      "...",IDC_CHOOSE_OUTPUT,371,53,15,14
+    LISTBOX         IDC_LOG,7,74,378,96,LBS_NOINTEGRALHEIGHT | WS_VSCROLL | WS_TABSTOP
+    PUSHBUTTON      "导出",IDC_EXPORT,336,175,50,14
+    LTEXT           "ProgressIcon",IDC_PROGRESS,7,174,15,15,NOT WS_VISIBLE
 END
 
 
@@ -109,7 +107,7 @@ BEGIN
     IDD_WECHATEXPORTER_FORM, DIALOG
     BEGIN
         LEFTMARGIN, 7
-        RIGHTMARGIN, 403
+        RIGHTMARGIN, 386
         TOPMARGIN, 7
         BOTTOMMARGIN, 189
     END
@@ -124,12 +122,9 @@ END
 
 IDR_MAINFRAME ACCELERATORS
 BEGIN
-    "N",            ID_FILE_NEW,            VIRTKEY, CONTROL
-    "O",            ID_FILE_OPEN,           VIRTKEY, CONTROL
-    "S",            ID_FILE_SAVE,           VIRTKEY, CONTROL
-    "P",            ID_FILE_PRINT,          VIRTKEY, CONTROL
-    VK_F6,          ID_NEXT_PANE,           VIRTKEY 
-    VK_F6,          ID_PREV_PANE,           VIRTKEY, SHIFT
+    "N",            ID_FILE_NEW,            VIRTKEY, CONTROL, NOINVERT
+    "O",            ID_FILE_OPEN,           VIRTKEY, CONTROL, NOINVERT
+    "S",            ID_FILE_SAVE,           VIRTKEY, CONTROL, NOINVERT
 END
 
 
@@ -153,7 +148,7 @@ VS_VERSION_INFO VERSIONINFO
 BEGIN
     BLOCK "StringFileInfo"
     BEGIN
-        BLOCK "040904B0"
+        BLOCK "080404b0"
         BEGIN
             VALUE "FileDescription", "WechatExporter Module"
             VALUE "FileVersion", "1, 0, 0, 1"
@@ -166,7 +161,7 @@ BEGIN
     END
     BLOCK "VarFileInfo"
     BEGIN
-        VALUE "Translation", 0x409, 1200
+        VALUE "Translation", 0x804, 1200
     END
 END
 
@@ -180,6 +175,14 @@ IDD_WECHATEXPORTER_FORM AFX_DIALOG_LAYOUT
 BEGIN
     0
 END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Bitmap
+//
+
+IDB_WAITING             BITMAP                  "res\\waiting.bmp"
 
 
 /////////////////////////////////////////////////////////////////////////////

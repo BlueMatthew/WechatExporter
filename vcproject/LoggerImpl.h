@@ -45,6 +45,8 @@ public:
 #endif
 
 		::SendMessage(m_hWndLog, LB_ADDSTRING, 0, (LPARAM)(LPCTSTR)ca2t);
+		int count = ::SendMessage(m_hWndLog, LB_GETCOUNT, 0, 0L);
+		::SendMessage(m_hWndLog, LB_SETTOPINDEX, count - 1, 0L);
 	}
 
 	void debug(const std::string& log)
