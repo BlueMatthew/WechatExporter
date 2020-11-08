@@ -1,0 +1,62 @@
+.TH "plistutil" 1
+.SH NAME
+plistutil \- Convert a plist FILE from binary to XML format or vice-versa
+.SH SYNOPSIS
+.B plistutil
+[OPTIONS]
+[-i FILE]
+[-o FILE]
+.SH DESCRIPTION
+plistutil allows to convert a file in Property List format from binary to XML format or vice-versa.
+.SH OPTIONS
+.TP
+.B \-i, \-\-infile FILE
+Input FILE to convert from. If this argument is omitted or - is passed as
+filename, plistutil will read from stdin.
+.TP
+.B \-o, \-\-outfile FILE
+Output FILE to convert to. If this argument is omitted or - is passed as
+filename, plistutil will write to stdout.
+.TP
+.B \-f, \-\-format [bin|xml]
+Force output format, regardless of input type. This is useful if the input
+format is not known, but the output format should always be in a specific
+format (like xml).
+.TP
+.B \-h, \-\-help
+Prints usage information.
+.TP
+.B \-d, \-\-debug
+Enabled extended debug output.
+.TP
+.B \-v, \-\-version
+Print version information
+.SH EXAMPLES
+.TP
+.B plistutil -i test.plist -o out.plist
+Convert test.plist and write to out.plist. If test.plist is in XML format,
+out.plist will be in binary format. If test.plist is in binary format,
+out.plist will be in XML format.
+.TP
+.B plistutil -i test.plist -o out.plist -f bin
+Same as before, but the output will always be in binary format.
+.TP
+.B plistutil -i test.plist -f xml
+Print test.plist as XML plist, regardless of the input format.
+.TP
+.B plistutil -i test.plist -f xml -o -
+Same as before.
+.TP
+.B cat test.plist |plistutil -f xml
+Take plist data from stdin - piped via cat - and write the output as XML
+to stdout.
+.SH AUTHORS
+Zach C.
+
+Martin Szulecki
+
+Nikias Bassen
+.SH ON THE WEB
+https://libimobiledevice.org
+
+https://github.com/libimobiledevice/libplist

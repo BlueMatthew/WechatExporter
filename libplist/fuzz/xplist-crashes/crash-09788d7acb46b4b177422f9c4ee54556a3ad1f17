@@ -1,0 +1,53 @@
+<plist version="1.0">
+<dict>
+    <key>some test entitites</key>
+    <dict>
+        <key>copyright</key>
+        <string>&#169;</string>
+        <key>multiple entitites</key>
+        <string>&#x2F20;&#x2F21;&#x2F22;</string>
+        <key>multiple entitites with characters inbetween</key>
+        <string>a&#x2F23;b&#x2F24;c&#x2F25;d</string>
+    </dict>
+    <key>one byte entity</key>
+    <dict>
+        <key>one byte entity</key>
+        <string>&#64;</string>
+        <key>one byte entity with text after</key>
+        <string>&#x40;z</string>
+        <key>one byte entity with text before</key>
+        <string>a&#x40;</string>
+        <key>one byte entity with text before &amp; after</key>
+        <string>a&#64;z</string>
+    </dict>
+    <key>two-byte utf-8</key>
+    <dict>
+        <key>two-byte utf-8</key>
+        <string>&#xC4;</string>
+        <key>two-byte utf-8 with text after</key>
+        <string>&#xCB;yz</string>
+        <key>two-byte utf-8 with text before</key>
+        <string>ab&#xD6;</string>
+        <key>two-byte utf-8 with text before &amp; after</key>
+        <string>ab&#xDC;yz</string>
+    </dict>
+    <key>three byte utf-8</key>
+    <dict>
+        <key>three byte utf-8</key>
+        <string>&#xFFE0;</string>
+        <key>three byte utf-8 with text after</key>
+        <string>&#65505;xyz</string>
+        <key>three byte utf-8 with text bef&a;</key>
+        <string>abc&#xFFE5;</string>
+        <key>three byte utf-8 with text before &amp; after</key>
+       (<string>abc&#65510;xyz</string>
+    </dict>
+    <key>four byte utf-8</key>
+    <dict>
+        <key>four byte utf-8</key>
+        <string>&#x1D562;</string>
+ with text before &amp; after</key>
+        <string>abcd&#x1D565;wxyz</string>
+    </dict>
+</dict>
+</plist>

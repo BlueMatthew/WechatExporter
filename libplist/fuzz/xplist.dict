@@ -1,0 +1,51 @@
+################################################################################
+#
+# AFL dictionary for XML Property Lists
+# ----------------------
+#
+# Several basic syntax elements and attributes for libplist.
+#
+# Created by Nikias Bassen <nikias@gmx.li>
+# Adapted from libxml2's dict file (created by Michal Zalewski <lcamtuf@google.com>)
+#
+
+attr_encoding=" encoding=\"1\""
+attr_generic=" a=\"1\""
+attr_version=" version=\"1\""
+
+entity_builtin="&lt;"
+entity_decimal="&#1;"
+entity_external="&a;"
+entity_hex="&#x1;"
+
+string_cdata="CDATA"
+string_dashes="--"
+string_empty="EMPTY"
+string_empty_dblquotes="\"\""
+string_empty_quotes="''"
+string_parentheses="()"
+string_pcdata="#PCDATA"
+string_percent="%a"
+string_public="PUBLIC"
+string_utf8="UTF-8"
+
+tag_cdata="<![CDATA["
+tag_close="</plist>"
+tag_doctype="<!DOCTYPE"
+tag_open="<plist>"
+tag_open_close="<plist />"
+tag_open_exclamation="<!"
+tag_open_q="<?"
+tag_sq2_close="]]>"
+tag_xml_q="<?xml?>"
+tag_array="<array>"
+tag_data="<data>"
+tag_date="<date>"
+tag_dict="<dict>"
+tag_false="<false/>"
+tag_integer="<integer>"
+tag_key="<key>"
+tag_plist="<plist>"
+tag_real="<real>"
+tag_string="<string>"
+tag_true="<true/>"

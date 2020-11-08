@@ -1,0 +1,23 @@
+## -*- sh -*-
+
+set -e
+
+DATASRC=$top_srcdir/test/data
+TESTFILE0=signed.plist
+TESTFILE1=unsigned.plist
+DATAIN0=$DATASRC/$TESTFILE0
+DATAIN1=$DATASRC/$TESTFILE1
+
+CMPFILE0=signed.bplist
+CMPFILE1=unsigned.bplist
+DATACMP0=$DATASRC/$CMPFILE0
+DATACMP1=$DATASRC/$CMPFILE1
+
+DATAOUT0=$top_builddir/test/data/$TESTFILE0.bin
+DATAOUT1=$top_builddir/test/data/$TESTFILE1.bin
+
+$top_builddir/tools/plistutil -i $DATAIN0 -o $DATAOUT0
+$top_builddir/tools/plistutil -i $DATAIN1 -o $DATAOUT1
+
+diff --strip-trailing-cr $DATACMP0 $DATAOUT0
+diff --strip-trailing-cr $DATACMP1 $DATAOUT1

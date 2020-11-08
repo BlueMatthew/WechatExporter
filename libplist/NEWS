@@ -1,0 +1,252 @@
+Version 2.2.0
+~~~~~~~~~~~~~
+
+- Changes:
+  * bplist: Improve recursion check performance by at least 30% for large files
+  * test: Fix test suite on Windows
+  * cython: Fix handling of Date nodes (MACH_EPOCH)
+  * Add new plist_*_val_compare(), plist_*_val_contains() helper functions
+  * Fix/suppress several compiler warnings
+  * plistutil: Added ability for files to be read from stdin
+  * plistutil: Added ability to specify output format
+  * Fix: Return NULL from plist_copy() if passed a NULL pointer instead of asserting
+  * Add GitHub Actions integration for automatic build tests
+  * plistutil: Add manual page and usage output
+  * Fix removal of docs directory on `make clean`
+  * Improve README.md with project description, installation, contributing and
+    usage sections
+  * Rename library and all related files by adding an API version resulting
+    in "libplist-2.0" and "libplist++-2.0"
+
+Version 2.1.0
+~~~~~~~~~~~~~
+
+- Changes:
+  * Add new plist_get_data_ptr() and plist_get_string_ptr() for direct access to underlying buffer
+  * Increase precision when converting PLIST_REAL nodes to XML
+  * Fix several issues in libcnary (UaF, segfault, memory leak)
+  * Fix copying of hash table entries when cloning array/dict nodes
+  * cython: Implement load()/loads() and dump()/dumps() to match up with plistlib (Python 3.4)
+  * Add new plist_dict_item_get_key() for retrieving key node of a dict item
+  * Add new plist_array_item_remove() to allow removing an array's child node without relying on the index
+  * Make plist_array_get_item_index() return UINT_MAX instead of 0 when node can't be found
+  * Add index lookup table for large PLIST_ARRAY nodes
+  * Add iterator for array nodes: plist_array_new_iter(), plist_array_next_item()
+  * Improve performance of plist_dict_next_item() drastically
+  * Improve performance and memory usage when writing XML plists
+  * Improve performance and memory usage when writing binary plists
+  * Allow building with sanitizers (without fuzzers)
+  * Prevent store to misaligned address when writing real/date nodes
+  * Work around misaligned reads in binary plist parser
+  * Integrate fuzzing targets (libFuzzer) into project
+  * Add sanitizers (ASAN, UBSAN) when building fuzzers (--with-fuzzers)
+
+Version 2.0.0
+~~~~~~~~~~~~~
+
+- Changes:
+  * New light-weight custom XML parser
+  * Remove libxml2 dependency
+  * Refactor binary plist parsing
+  * Improved malformed XML and binary plist detection and error handling
+  * Add parser debug/error output (when compiled with --enable-debug), controlled via environment variables
+  * Fix unicode character handling
+  * Add PLIST_IS_* helper macros for the different node types
+  * Extend date/time range and date conversion issues
+  * Add plist_is_binary() and plist_from_memory() functions to the interface
+  * Plug several memory leaks
+  * Speed improvements for handling large plist files
+
+- Includes security fixes for:
+  * CVE-2017-6440
+  * CVE-2017-6439
+  * CVE-2017-6438
+  * CVE-2017-6437
+  * CVE-2017-6436
+  * CVE-2017-6435
+  * CVE-2017-5836
+  * CVE-2017-5835
+  * CVE-2017-5834
+  * CVE-2017-5545
+  * CVE-2017-5209
+  ... and several others that didn't receive any CVE (yet).
+
+Version 1.12
+~~~~~~~~~~~~
+
+- Changes:
+  * Fix plist_from_bin() changing value nodes to key nodes in dictionaries
+  * Avoid exporting non-public symbols
+  * Prevent crash in plist_from_bin() when parsing unusual binary plists
+  * Fix crash in String|Key::GetValue() and actually make C++ interface work
+  * Fix memory leaks in new_xml_plist() and parse_real_node()
+  * Fix header guards to conform to C++ standard
+  * Update Cython based Python bindings and remove plist_new_key()
+  * Fix key nodes not being output correctly if they contained XML entities
+  * Fix handling and storage of signed vs. unsigned integer values
+  * Fix date handling to respect the "Mac Epoch" instead of "Unix Epoch"
+  * Remove plist_set_type() as it should not be used
+  * Fix deprecated macros to work with older LLVM/Clang
+  * Fix various shadowed declarations
+  * Add documentation to explicitly describe memory buffer ownership
+  * Fix memory leak in plist_from_bin()
+  * Add various test cases based on fixes
+  * Fix wrong timezone related date/time conversion of date nodes
+  * Fix endian detection on MIPS architecture
+  * Fix parallel build for autotools
+
+Version 1.11
+~~~~~~~~~~~~
+
+- Changes:
+  * Deprecated plist_dict_insert_item() in favor of plist_dict_set_item()
+  * Updated cython bindings for Python 3.x
+  * Removed swig python bindings
+  * Changed build system to autotools
+  * Added new plist_dict_merge() function
+  * WIN32 (MinGW) + OSX compilation fixes
+  * Made base64 decoding thread safe
+
+Version 1.10
+~~~~~~~~~~~~
+
+- Changes:
+  * Renamed plutil to plistutil to not mask Apple's plutil
+  * Fixed cython bindings (broken in 1.9) 
+  * Added support for PLIST_UID node types to C++, cython, and swig bindings
+
+- Important Note:
+  * Support for swig python bindings will be dropped with future releases.
+    The bindings will be kept in the source tree for now, but we suggest
+    to update your python code to use the cython bindings instead.
+
+Version 1.9
+~~~~~~~~~~~
+
+- Changes:
+  * Add support for handling UID node types
+  * Fix crash when converting plists containing comments
+  * Fix Bug in plist_data_compare()
+  * Fix DST handling for PLIST_DATE
+  * Fix plist_dict_set_item() and plist_array_set_item()
+  * Fix cython String plist handling
+  * Fix invalid memory access in copy_plist_data()
+  * Fix several compiler warnings
+
+Version 1.8
+~~~~~~~~~~~
+
+- Changes:
+  * Add cython bindings
+  * Fix error in swig bindings
+  * Fix memory corruption in libcnary
+
+Version 1.7
+~~~~~~~~~~~
+
+- Changes:
+  * Fix building on Big Endian systems
+
+Version 1.6
+~~~~~~~~~~~
+
+- Changes:
+  * Updated libcnary sources, adding license and copyright info
+
+Version 1.5
+~~~~~~~~~~~
+
+- Changes:
+  * Removed glib dependency, libplist now uses libcnary
+    (http://github.com/Chronic-Dev/libcnary)
+  * Fix building of python bindings with GCC 4.6
+
+Version 1.4
+~~~~~~~~~~~
+
+- New maintainer and source location
+- Changes:
+  * Update AUTHORS from git history
+  * Fix Unicode writing in binary plists
+  * Update plist doctype
+  * Fix Dictionary copy constructor
+  * Fix Mac OS X library install path detection
+  * Plug memory leak when writing Unicode data
+
+Version 1.3
+~~~~~~~~~~~
+
+- Changes:
+  * Endianness, alignment and type-punning fixes
+  * Fix armel floating point endianess 
+  * Allow compiling with mingw on Windows
+  * Minor bugfixes
+
+Version 1.2
+~~~~~~~~~~~
+
+- Changes:
+  * Fix xml entity conversion
+  * Silence build warnings
+
+Version 1.1
+~~~~~~~~~~~
+
+- Changes:
+  * Fix use of integer nodes within Python Bindings
+
+Version 1.0
+~~~~~~~~~~~
+
+- Changes:
+  * Bugfixes
+  * Remove deprecated API
+
+Version 0.16
+~~~~~~~~~~~~
+
+- Changes:
+  * Build fixes
+  * Fix issues with SWIG
+
+Version 0.15
+~~~~~~~~~~~~
+
+- Changes:
+  * Build fixes
+
+Version 0.14
+~~~~~~~~~~~~
+
+- Changes:
+  * Add C++ binding
+  * Refactor API
+  * Bugfixes
+
+Version 0.13
+~~~~~~~~~~~~
+
+- Changes:
+  * Add plist_copy for deep node copies
+  * Add node setter functions
+  * Unlink nodes from parent if free'd
+  * Update Python bindings
+
+Version 0.12
+~~~~~~~~~~~~
+
+- Changes:
+  * Merge ascii and unicode handling in PLIST_STRING using UTF-8
+  * Remove unicode related declaration in API (breaks API&ABI)
+  * Fix bad variable type for date elements
+  * Silence compiler warnings
+  * Plugged few memory leaks
+
+Version 0.11
+~~~~~~~~~~~~
+
+- Changes:
+  * Fix Python binding segfaults
+  * Python API additions
+  * Better binary buffer handling in Python bindings
+

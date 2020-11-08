@@ -1,0 +1,12 @@
+## -*- sh -*-
+
+set -e
+
+DATASRC=$top_srcdir/test/data
+TESTFILE=hex.plist
+DATAIN0=$DATASRC/$TESTFILE
+DATAOUT0=$top_builddir/test/data/$TESTFILE.bin
+
+$top_builddir/tools/plistutil -i $DATAIN0 -o $DATAOUT0
+
+$top_builddir/test/plist_cmp $DATAIN0 $DATAOUT0

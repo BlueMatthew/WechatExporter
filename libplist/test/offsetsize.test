@@ -1,0 +1,12 @@
+## -*- sh -*-
+
+set -e
+
+DATASRC=$top_srcdir/test/data
+TESTFILES="off1byte.bplist off2bytes.bplist off3bytes.bplist off4bytes.bplist off5bytes.bplist off6bytes.bplist off7bytes.bplist off8bytes.bplist"
+CMPFILE=offxml.plist
+
+for I in $TESTFILES; do
+    echo "* checking $I"
+    $top_builddir/test/plist_cmp $DATASRC/$I $DATASRC/$CMPFILE
+done

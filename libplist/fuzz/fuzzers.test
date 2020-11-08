@@ -1,0 +1,8 @@
+## -*- sh -*-
+
+set -e
+
+./init-fuzzers.sh
+
+./test-fuzzers.sh
+

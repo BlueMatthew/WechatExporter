@@ -1,0 +1,15 @@
+## -*- sh -*-
+
+DATASRC=$top_srcdir/test/data
+DATAOUT=$top_builddir/test/data
+TESTFILE=1.plist
+
+if ! test -d "$DATAOUT"; then
+	mkdir -p $DATAOUT
+fi
+
+echo "Converting"
+$top_builddir/test/plist_test $DATASRC/$TESTFILE $DATAOUT/$TESTFILE.out
+
+echo "Comparing"
+$top_builddir/test/plist_cmp $DATASRC/$TESTFILE $DATAOUT/$TESTFILE.out

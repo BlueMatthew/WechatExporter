@@ -1,0 +1,15 @@
+## -*- sh -*-
+
+set -e
+
+DATASRC=$top_srcdir/test/data
+TESTFILE=7.plist
+DATAIN0=$DATASRC/$TESTFILE
+DATAOUT0=$top_builddir/test/data/$TESTFILE.bin
+DATAOUT1=$top_builddir/test/data/$TESTFILE.xml
+
+$top_builddir/tools/plistutil -i $DATAIN0 -o $DATAOUT0
+$top_builddir/tools/plistutil -i $DATAOUT0 -o $DATAOUT1
+
+$top_builddir/test/plist_cmp $DATAOUT0 $DATAIN0
+$top_builddir/test/plist_cmp $DATAOUT1 $DATAIN0
