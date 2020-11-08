@@ -1,0 +1,17 @@
+## -*- sh -*-
+
+set -e
+
+DATASRC=$top_srcdir/test/data
+TESTFILE=7.plist
+DATAIN0=$DATASRC/$TESTFILE
+DATAOUT0=$top_builddir/test/data/$TESTFILE.tz0.bin
+DATAOUT1=$top_builddir/test/data/$TESTFILE.tz1.bin
+DATAOUT2=$top_builddir/test/data/$TESTFILE.tz2.bin
+
+TZ=UTC $top_builddir/tools/plistutil -i $DATAIN0 -o $DATAOUT0
+TZ=Asia/Singapore $top_builddir/tools/plistutil -i $DATAIN0 -o $DATAOUT1
+TZ=US/Pacific $top_builddir/tools/plistutil -i $DATAIN0 -o $DATAOUT2
+
+$top_builddir/test/plist_cmp $DATAOUT0 $DATAOUT1
+$top_builddir/test/plist_cmp $DATAOUT0 $DATAOUT2

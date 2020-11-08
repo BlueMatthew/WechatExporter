@@ -1,0 +1,90 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="libplist">
+      <UniqueIdentifier>{9c6093ac-6ef3-46db-8207-d7b630af2f3a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="libcnary">
+      <UniqueIdentifier>{071c9d8f-c1dc-4777-984d-1ddc1afe0ce4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="include">
+      <UniqueIdentifier>{4c01c78a-eaa7-49aa-822f-871dba9fcbb7}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="src\base64.c">
+      <Filter>libplist</Filter>
+    </ClCompile>
+    <ClCompile Include="src\bplist.c">
+      <Filter>libplist</Filter>
+    </ClCompile>
+    <ClCompile Include="src\bytearray.c">
+      <Filter>libplist</Filter>
+    </ClCompile>
+    <ClCompile Include="src\hashtable.c">
+      <Filter>libplist</Filter>
+    </ClCompile>
+    <ClCompile Include="src\plist.c">
+      <Filter>libplist</Filter>
+    </ClCompile>
+    <ClCompile Include="src\ptrarray.c">
+      <Filter>libplist</Filter>
+    </ClCompile>
+    <ClCompile Include="src\time64.c">
+      <Filter>libplist</Filter>
+    </ClCompile>
+    <ClCompile Include="src\xplist.c">
+      <Filter>libplist</Filter>
+    </ClCompile>
+    <ClCompile Include="libcnary\cnary.c">
+      <Filter>libcnary</Filter>
+    </ClCompile>
+    <ClCompile Include="libcnary\node.c">
+      <Filter>libcnary</Filter>
+    </ClCompile>
+    <ClCompile Include="libcnary\node_list.c">
+      <Filter>libcnary</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="include\plist\Array.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\plist\Boolean.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\plist\Data.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\plist\Date.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\plist\Dictionary.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\plist\Integer.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\plist\Key.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\plist\Node.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\plist\plist.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\plist\Real.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\plist\String.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\plist\Structure.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\plist\Uid.h">
+      <Filter>include</Filter>
+    </ClInclude>
+  </ItemGroup>
+</Project>

@@ -1,0 +1,13 @@
+## -*- sh -*-
+
+set -e
+
+DATASRC=$top_srcdir/test/data
+TESTFILE=order.bplist
+DATAIN0=$DATASRC/$TESTFILE
+DATAIN1=$DATASRC/order.plist
+DATAOUT0=$top_builddir/test/data/$TESTFILE.out
+
+$top_builddir/tools/plistutil -i $DATAIN0 -o $DATAOUT0
+
+$top_builddir/test/plist_cmp $DATAIN1 $DATAOUT0

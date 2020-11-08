@@ -1,0 +1,14 @@
+## -*- sh -*-
+
+set -e
+
+DATASRC=$top_srcdir/test/data
+TESTFILE=amp.plist
+DATAIN0=$DATASRC/$TESTFILE
+DATAOUT0=$top_builddir/test/data/$TESTFILE.out
+
+rm -rf $DATAOUT0
+$top_builddir/tools/plistutil -i $DATAIN0 -o $DATAOUT0
+if test -f $DATAOUT0; then
+  exit 1
+fi

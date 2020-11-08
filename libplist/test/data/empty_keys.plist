@@ -1,0 +1,8 @@
+<plist version="1.0">
+<dict>
+    <key></key>
+    <string>empty key</string>
+    <key><!-- comment --></key>
+    <string>empty key with comment</string>
+</dict>
+</plist>

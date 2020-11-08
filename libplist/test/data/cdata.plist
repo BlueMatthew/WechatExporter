@@ -1,0 +1,6 @@
+<plist version="1.0">
+<dict>
+    <key><![CDATA[cdata&key]]></key>
+    <string>string with cdata content: <![CDATA[ !"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\]^_`abcdefghijklmnopqrstuvwxyz{|}~]]> !!!</string>
+</dict>
+</plist>
