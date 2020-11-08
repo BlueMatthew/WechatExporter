@@ -42,7 +42,7 @@ bool pcmToMp3(const std::vector<unsigned char>& pcmData, const std::string& mp3P
     lame_set_mode(gfp, MONO);
     // RG is enabled by default
     lame_set_findReplayGain(gfp, 1);
-    lame_set_quality(gfp, 7);
+    // lame_set_quality(gfp, 7);
     //Setting Channels
     lame_set_num_channels(gfp, num_of_channels);
 
