@@ -135,5 +135,8 @@
     <Image Include="res\WechatExporter.ico">
       <Filter>Resource Files</Filter>
     </Image>
+    <Image Include="res\waiting.bmp">
+      <Filter>Resource Files</Filter>
+    </Image>
   </ItemGroup>
 </Project>

@@ -211,7 +211,7 @@ bool Exporter::exportUser(Friend& user, DownloadPool& downloadPool)
     SessionsParser sessionsParser(m_iTunesDb, m_shell);
     std::vector<Session> sessions;
     
-    sessionsParser.parse(userBase, sessions);
+    sessionsParser.parse(userBase, sessions, friends);
  
 	m_logger->write(stringWithFormat(getLocaleString("%d chats found."), (int)(sessions.size())));
     std::sort(sessions.begin(), sessions.end(), SessionLastMsgTimeCompare());

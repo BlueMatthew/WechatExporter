@@ -5,6 +5,7 @@
 #pragma once
 
 #include <thread>
+#include "WaitingAnim.h"
 #include "Core.h"
 #include "LoggerImpl.h"
 #include "ShellImpl.h"
@@ -20,11 +21,15 @@ private:
 
 	std::vector<BackupManifest> m_manifests;
 
+	CWaitingAnimCtrl m_ctlWaiting;
+
 public:
 	enum { IDD = IDD_WECHATEXPORTER_FORM };
 
 	LRESULT OnInitDialog(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 	{
+		m_ctlWaiting.SubclassWindow(GetDlgItem(IDC_PROGRESS));
+
 		// m_shell = NULL;
 		m_logger = NULL;
 		m_notifier = NULL;
@@ -189,6 +194,8 @@ public:
 			// printf("GetCurrentDirectory failed (%d)\n", GetLastError());
 			return;
 		}
+
+		m_ctlWaiting.Start();
 
 		// NSString *workDir = [[NSFileManager defaultManager] currentDirectoryPath];
 

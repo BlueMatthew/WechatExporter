@@ -83,10 +83,23 @@ void DownloadPool::addTask(const std::string &url, const std::string& output)
     }
 #endif
 
+    std::string uid = url + output;
+    bool existed = false;
     Task task(url, formatedPath);
     m_mtx.lock();
-    m_queue.push(task);
+    if (!(existed = (m_urls.find(uid) != m_urls.cend())))
+    {
+        m_urls.insert(uid);
+        m_queue.push(task);
+    }
     m_mtx.unlock();
+    
+    if (existed)
+    {
+#ifndef NDEBUG
+        printf("URL Existed: %s", url.c_str());
+#endif
+    }
 }
 
 void DownloadPool::setNoMoreTask()

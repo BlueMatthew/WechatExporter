@@ -18,6 +18,7 @@
 #include <cstdio>
 #ifdef _WIN32
 #include <direct.h>
+#include <atlstr.h>
 #endif
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -253,22 +254,50 @@ bool writeFile(const std::string& path, const std::vector<unsigned char>& data)
     return false;
 }
 
-bool isValidFileName(const std::string& fileName)
+bool writeFile(const std::string& path, const std::string& data)
 {
-    char const *tmpdir = getenv("TMPDIR");
-    if (tmpdir == 0)
+    std::ofstream ofs;
+    ofs.open(path, std::ios::out | std::ios::binary | std::ios::trunc);
+    if (ofs.is_open())
     {
-#if defined(_WIN32)
-        // tmpdir = "/tmp";
-#else
-        tmpdir = "/tmp";
-
-#endif
+        ofs.write(reinterpret_cast<const char *>(data.c_str()), data.size());
+        ofs.close();
+        return true;
     }
     
-    // std::string tmpname = std::tmpnam(nullptr);
+    return false;
+}
+
+bool isValidFileName(const std::string& fileName)
+{
+#if defined(_WIN32)
+	// tmpdir = "/tmp";
+	char const *tmpdir = getenv("TEMP");
+#else
+	char const *tmpdir = getenv("TMPDIR");
+#endif
     
-    std::string path = combinePath(tmpdir, fileName);
+	std::string tempDir;
+
+    if (tmpdir == NULL)
+    {
+#if defined(_WIN32)
+		TCHAR charPath[MAX_PATH] = { 0 };
+		if (GetTempPath(MAX_PATH, charPath))
+		{
+			CT2A t2a(charPath);
+			tempDir = (LPCSTR)t2a;
+		}
+#else
+		tempDir = "/tmp";
+#endif
+    }
+	else
+	{
+		tempDir = tmpdir;
+	}
+    
+    std::string path = combinePath(tempDir, fileName);
     
 #ifdef _WIN32
 	int status = mkdir(path.c_str());
@@ -289,7 +318,7 @@ int openSqlite3ReadOnly(const std::string& path, sqlite3 **ppDb)
     std::string pathWithQuery = "file:" + path;
     pathWithQuery += "?immutable=1&mode=ro";
     
-    return sqlite3_open_v2(pathWithQuery.c_str(), ppDb, SQLITE_OPEN_READONLY, NULL);
+    return sqlite3_open_v2(pathWithQuery.c_str(), ppDb, SQLITE_OPEN_READONLY | SQLITE_OPEN_URI, NULL);
 }
 
 int GetBigEndianInteger(const unsigned char* data, int startIndex/* = 0*/)

@@ -366,7 +366,7 @@ SessionsParser::SessionsParser(ITunesDb *iTunesDb, Shell* shell) : m_iTunesDb(iT
 {
 }
 
-bool SessionsParser::parse(const std::string& userRoot, std::vector<Session>& sessions)
+bool SessionsParser::parse(const std::string& userRoot, std::vector<Session>& sessions, const Friends& friends)
 {
     std::string sessionDbPath = m_iTunesDb->findRealPath(combinePath(userRoot, "session", "session.db"));
 	if (sessionDbPath.empty())
@@ -408,7 +408,24 @@ bool SessionsParser::parse(const std::string& userRoot, std::vector<Session>& se
         {
             parseCellData(userRoot, session);
         }
+        if (!session.isChatroom() && session.DisplayName.empty())
+        {
+            const Friend* f = friends.getFriend(session.Hash);
+            if (NULL != f)
+            {
+                session.DisplayName = f->DisplayName();
+            }
+        }
         
+#ifndef NDEBUG
+        if (endsWith(session.UsrName, "@chatroom") && session.DisplayName.empty())
+        {
+            if (!session.ExtFileName.empty())
+            {
+                parseCellData(userRoot, session);
+            }
+        }
+#endif
     }
     
     sqlite3_finalize(stmt);
@@ -417,11 +434,11 @@ bool SessionsParser::parse(const std::string& userRoot, std::vector<Session>& se
 #ifdef _WIN32
 	std::ofstream htmlFile("D:\\debug.log", std::ios::out | std::ios::binary);
 #else
-    std::ofstream htmlFile(combinePath(userRoot, "debug.log"), std::ios::out | std::ios::binary);
+    std::ofstream htmlFile(combinePath("~", "debug.log"), std::ios::out | std::ios::binary);
 #endif
 	for (std::vector<Session>::iterator it = sessions.begin(); it != sessions.end(); ++it)
 	{
-		if (it->dbFile.empty())
+		if (it->DisplayName.empty())
 		{
 			htmlFile << "NODB:";
 			size_t sz = it->DisplayName.size();
@@ -885,7 +902,7 @@ bool SessionParser::parseRow(Record& record, const std::string& userBase, const 
                 localfile = std::to_string(uniqueFileName++);
             }
             
-            localfile = "Emoji/" + localfile + ".gif";
+            localfile = combinePath("Emoji", localfile + ".gif");
             m_downloadPool.addTask(sm[1].str(), combinePath(path, localfile));
             // message = "<img src=\"Emoji/" + localfile + ".gif\" style=\"max-width:100px;max-height:60px\" />";
             templateKey = "emoji";
@@ -942,7 +959,16 @@ bool SessionParser::parseRow(Record& record, const std::string& userBase, const 
 		Json::Value root;
 		if (reader.parse(record.message, root))
 		{
+            
 			templateValues["%%MESSAGE%%"] = root["msgContent"].asString();
+#ifndef NDEBUG
+            std::string v = root["msgContent"].asString();
+            if (v.empty() || !root.isMember("msgContent"))
+            {
+                writeFile("/Users/matthew/Documents/dbg.log", record.message);
+                int aa = 0;
+            }
+#endif
 		}
     }
     else if (record.type == 3)
@@ -1065,10 +1091,6 @@ bool SessionParser::parseRow(Record& record, const std::string& userBase, const 
 		
         if (match1)
         {
-            std::string msg42 = "";
-            if (match2) msg42 += "<img src=\"" + removeCdata(sm2[1].str()) + "\" style=\"float:left;max-width:100px;max-height:60px\" />";
-            msg42 += stringWithFormat(getLocaleString("[Contact Card] %s"), removeCdata(sm1.str()).c_str());
-
             templateKey = "card";
             templateValues["%%CARDIMGPATH%%"] = (match2) ? removeCdata(sm2[1].str()) : "";
             templateValues["%%CARDNAME%%"] = removeCdata(sm1[1].str());
@@ -1083,16 +1105,7 @@ bool SessionParser::parseRow(Record& record, const std::string& userBase, const 
         templateValues["%%MESSAGE%%"] = safeHTML(record.message);
     }
 
-    // templateValues.Add("%%TIME%%", fromUnixTime(record.createTime).ToLocalTime().ToString().combinePath(" ", "&nbsp;"));
-    
-
     return true;
-    // ts = ts.combinePath(@"%%TIME%%", FromUnixTime(unixtime).ToLocalTime().ToString().combinePath(" ", "&nbsp;"));
-    // ts = ts.combinePath(@"%%MESSAGE%%", message);
-    // ts += @"<td width=""100"" align=""center"">" + FromUnixTime(unixtime).ToLocalTime().ToString().combinePath(" ","<br />") + "</td>";
-    // ts += @"<td>" + message + @"</td></tr>";
-    // sw.WriteLine(ts);
-    
 }
 
 std::string SessionParser::getLocaleString(const std::string& key) const
