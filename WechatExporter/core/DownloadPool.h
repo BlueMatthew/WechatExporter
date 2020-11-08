@@ -12,6 +12,7 @@
 #include <stdio.h>
 #include <string>
 #include <queue>
+#include <set>
 #include <utility>
 #include <thread>
 #include <mutex>
@@ -52,6 +53,7 @@ class DownloadPool
 {
 protected:
     std::queue<Task> m_queue;
+    std::set<std::string> m_urls;
     std::mutex m_mtx;
     bool m_noMoreTask;
     std::vector<std::thread> m_threads;

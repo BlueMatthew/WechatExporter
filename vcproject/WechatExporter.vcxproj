@@ -259,6 +259,7 @@
   </ItemGroup>
   <ItemGroup>
     <Image Include="res\toolbar.bmp" />
+    <Image Include="res\waiting.bmp" />
     <Image Include="res\WechatExporter.ico" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

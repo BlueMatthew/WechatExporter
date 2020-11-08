@@ -73,7 +73,7 @@ void errorLogCallback(void *pArg, int iErrCode, const char *zMsg)
     
     m_selectedIndex = 0;
     m_shell = new ShellImpl();
-    m_logger = new LoggerImpl(self.txtViewLogs);
+    m_logger = new LoggerImpl(self.sclViewLogs, self.txtViewLogs);
     std::vector<NSControl *> ctrls;
     m_notifier = new ExportNotifierImpl(self.progressBar, ctrls);
     m_exp = NULL;
