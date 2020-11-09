@@ -152,6 +152,10 @@
       <TypeLibraryName>$(IntDir)/WechatExporter.tlb</TypeLibraryName>
       <DllDataFileName />
     </Midl>
+    <PostBuildEvent>
+      <Command>if not exist "$(OutDir)res" mkdir "$(OutDir)res"
+xcopy "$(ProjectDir)..\WechatExporter\res"  "$(OutDir)res"  /Y /S /E</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
@@ -210,9 +214,12 @@
       <TypeLibraryName>$(IntDir)/WechatExporter.tlb</TypeLibraryName>
       <DllDataFileName />
     </Midl>
+    <PostBuildEvent>
+      <Command>xcopy /Y /E $(ProjectDir)..\WechatExporter\res  $(OutDir)</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="..\WechatExporter\core\DownloadPool.cpp" />
+    <ClCompile Include="..\WechatExporter\core\Downloader.cpp" />
     <ClCompile Include="..\WechatExporter\core\Exporter.cpp" />
     <ClCompile Include="..\WechatExporter\core\ITunesParser.cpp" />
     <ClCompile Include="..\WechatExporter\core\RawMessage.cpp" />
@@ -232,7 +239,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\WechatExporter\core\ByteArrayLocater.h" />
-    <ClInclude Include="..\WechatExporter\core\DownloadPool.h" />
+    <ClInclude Include="..\WechatExporter\core\Downloader.h" />
     <ClInclude Include="..\WechatExporter\core\Exporter.h" />
     <ClInclude Include="..\WechatExporter\core\ExportNotifier.h" />
     <ClInclude Include="..\WechatExporter\core\ITunesParser.h" />
@@ -259,7 +266,6 @@
   </ItemGroup>
   <ItemGroup>
     <Image Include="res\toolbar.bmp" />
-    <Image Include="res\waiting.bmp" />
     <Image Include="res\WechatExporter.ico" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

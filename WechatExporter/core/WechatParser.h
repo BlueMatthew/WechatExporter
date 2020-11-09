@@ -14,17 +14,12 @@
 #include <string>
 #include <vector>
 #include <map>
-// #include <sys/md5.h>
+#include "Utils.h"
+#include "Shell.h"
+#include "Downloader.h"
+#include "ByteArrayLocater.h"
 #include "WechatObjects.h"
 #include "ITunesParser.h"
-#include "Utils.h"
-#include "ByteArrayLocater.h"
-#include "Shell.h"
-#include "Logger.h"
-
-#include "DownloadPool.h"
-
-using StringPair = std::pair<std::string, std::string>;
 
 template<class T>
 class FilterBase
@@ -87,17 +82,6 @@ public:
         return std::string("");
     }
 };
-/*
-class UserDirectoryFilter : public RegexFilterBase<UserDirectoryFilter>
-{
-public:
-    UserDirectoryFilter() : RegexFilterBase()
-    {
-        m_path = "Documents\\/";
-        m_pattern = "Documents\\/([0-9a-f]{32})\\/";
-    }
-};
-*/
 
 class MessageDbFilter : public RegexFilterBase<MessageDbFilter>
 {
@@ -182,19 +166,6 @@ public:
     std::string findValue(const std::string& key);
 };
 
-class UserParser
-{
-private:
-    std::string m_backupPath;
-    ITunesDb *m_iTunesDb;
-    Shell*      m_shell;
-    
-public:
-    bool parse(Friend& myself);
-};
-
-
-
 class FriendsParser
 {
 public:
@@ -204,7 +175,6 @@ private:
     bool parseRemark(const void *data, int length, Friend& f);
     bool parseHeadImage(const void *data, int length, Friend& f);
     bool parseChatroom(const void *data, int length, Friend& f);
-    // bool parseMembers(const std::string& xml, Friend& f);
 };
 
 class SessionsParser
@@ -240,21 +210,19 @@ private:
     const std::map<std::string, std::string>& m_templates;
 	const std::map<std::string, std::string>& m_localeStrings;
 
-    Friends m_friends;
-    // std::set<DownloadTask>& emojidown;
+    Friends& m_friends;
     const ITunesDb& m_iTunesDb;
     const Shell&  m_shell;
-    Logger& m_logger;
-    DownloadPool& m_downloadPool;
+    Downloader& m_downloader;
     Friend m_myself;
+    
+    
     mutable std::vector<unsigned char> m_pcmData;  // buffer
     
 public:
     
-    SessionParser(Friend& myself, Friends& friends, const ITunesDb& iTunesDb, const Shell& shell, Logger& logger, const std::map<std::string, std::string>& templates, const std::map<std::string, std::string>& localeStrings, DownloadPool& dlPool);
-    
-    // bool parse(const std::string& chatId, std::string& message);
-    int parse(const std::string& userBase, const std::string& outputBase, const Session& session, Friend& f) const;
+    SessionParser(Friend& myself, Friends& friends, const ITunesDb& iTunesDb, const Shell& shell, const std::map<std::string, std::string>& templates, const std::map<std::string, std::string>& localeStrings, Downloader& dlPool);
+    int parse(const std::string& userBase, const std::string& outputBase, const Session& session, std::string& contents) const;
     
 private:
     std::string getTemplate(const std::string& key) const;
@@ -262,26 +230,7 @@ private:
     std::string getDisplayTime(int ms) const;
     bool requireResource(const std::string& vpath, const std::string& dest) const;
     bool parseRow(Record& record, const std::string& userBase, const std::string& path, const Session& session, std::string& templateKey, std::map<std::string, std::string>& templateValues) const;
-    
 };
-
-class WechatParser
-{
-private:
-    std::string backupPath;
-    std::string saveBase;
-    // Logger& logger;
-    
-    Friends m_friends;
-    
-public:
-    
-    WechatParser(const std::string& documentsPath, const std::string& uidMd5);
-    
-    bool parse();
-    
-};
-
 
 
 #endif /* WechatParser_h */

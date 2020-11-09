@@ -84,7 +84,7 @@ BEGIN
     PUSHBUTTON      "...",IDC_CHOOSE_OUTPUT,371,53,15,14
     LISTBOX         IDC_LOG,7,74,378,96,LBS_NOINTEGRALHEIGHT | WS_VSCROLL | WS_TABSTOP
     PUSHBUTTON      "µ¼³ö",IDC_EXPORT,336,175,50,14
-    LTEXT           "ProgressIcon",IDC_PROGRESS,7,174,15,15,NOT WS_VISIBLE
+    CONTROL         "",IDC_PROGRESS,"msctls_progress32",WS_BORDER,7,175,246,14
 END
 
 
@@ -175,14 +175,6 @@ IDD_WECHATEXPORTER_FORM AFX_DIALOG_LAYOUT
 BEGIN
     0
 END
-
-
-/////////////////////////////////////////////////////////////////////////////
-//
-// Bitmap
-//
-
-IDB_WAITING             BITMAP                  "res\\waiting.bmp"
 
 
 /////////////////////////////////////////////////////////////////////////////

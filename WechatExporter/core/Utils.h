@@ -26,9 +26,9 @@ bool endsWith(const std::string& str, const std::string& suffix);
 bool endsWith(const std::string& str, std::string::value_type ch);
 bool startsWith(const std::string& str, const std::string& prefix);
 bool startsWith(const std::string& str, const std::string::value_type ch);
-std::string stringWithFormat(const char* format, ...);
+
 template <typename ...Args>
-std::string stringWithFormat(const std::string& format, Args && ...args)
+std::string formatString(const std::string& format, Args && ...args)
 {
     auto size = std::snprintf(nullptr, 0, format.c_str(), std::forward<Args>(args)...);
     std::string output(size + 1, '\0');
@@ -36,14 +36,12 @@ std::string stringWithFormat(const std::string& format, Args && ...args)
     return output;
 }
 
-std::string utf8ToString(const std::string& utf8str, const std::locale& loc);
-
 std::string combinePath(const std::string& p1, const std::string& p2);
 std::string combinePath(const std::string& p1, const std::string& p2, const std::string& p3);
 std::string combinePath(const std::string& p1, const std::string& p2, const std::string& p3, const std::string& p4);
 
-bool existsFile(const std::string &path);
-int makePath(const std::string& path, mode_t mode);
+// bool existsFile(const std::string &path);
+// int makePath(const std::string& path, mode_t mode);
 
 std::string md5(const std::string& s);
 

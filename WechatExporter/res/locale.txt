@@ -91,8 +91,8 @@
 		"value": "找到 %d个账号的消息记录。"
 	},
 	{
-		"key": "Handling account: %s",
-		"value": "开始处理微信账户: %s"
+		"key": "Handling account: %s, Wechat Id: %s",
+		"value": "开始处理微信账户: %s，微信号：%s"
 	},
 	{
 		"key": "Reading account info.",
@@ -107,20 +107,16 @@
 		"value": "找到%d条对话。"
 	},
 	{
-		"key": "Wechat Id: %s, Nick Name: %s",
-		"value": "微信号：%s, 昵称：%s"
-	},
-	{
-		"key": "Handling the chat with %s",
-		"value": "处理与 %s 的对话"
+		"key": "%d/%d: Handling the chat with %s",
+		"value": "%d/%d: 处理与 %s 的对话"
 	},
 	{
 		"key": "Succeeded handling %d messages.",
 		"value": "成功处理%d条消息"
 	},
 	{
-		"key": "Finished.",
-		"value": "导出完成。"
+		"key": "Completed in %s.",
+		"value": "导出完成，耗时：%s"
 	},
 	{
 		"key": "",

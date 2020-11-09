@@ -5,7 +5,6 @@
 #pragma once
 
 #include <thread>
-#include "WaitingAnim.h"
 #include "Core.h"
 #include "LoggerImpl.h"
 #include "ShellImpl.h"
@@ -21,16 +20,14 @@ private:
 
 	std::vector<BackupManifest> m_manifests;
 
-	CWaitingAnimCtrl m_ctlWaiting;
-
 public:
 	enum { IDD = IDD_WECHATEXPORTER_FORM };
 
 	LRESULT OnInitDialog(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 	{
-		m_ctlWaiting.SubclassWindow(GetDlgItem(IDC_PROGRESS));
+		CProgressBarCtrl progressCtrl = GetDlgItem(IDC_PROGRESS);
+		progressCtrl.ModifyStyle(0, PBS_MARQUEE);
 
-		// m_shell = NULL;
 		m_logger = NULL;
 		m_notifier = NULL;
 		m_exporter = NULL;
@@ -38,17 +35,27 @@ public:
 		// Init the CDialogResize code
 		DlgResize_Init();
 
-		CProgressBarCtrl pbc = GetDlgItem(IDC_PROGRESS);
-		pbc.SetRange(0, 100);
-
-		m_notifier = new ExportNotifierImpl(GetDlgItem(IDC_PROGRESS), GetInteractiveCtrls());
+		m_notifier = new ExportNotifierImpl(progressCtrl.m_hWnd, GetInteractiveCtrls());
 		m_logger = new LoggerImpl(GetDlgItem(IDC_LOG));
 
 		// ::PostMessage(GetDlgItem(IDC_EXPORT), BM_CLICK, 0, 0L);
 
 		TCHAR szPath[MAX_PATH] = { 0 };
-		HRESULT result = SHGetFolderPath(NULL, CSIDL_MYDOCUMENTS, NULL, SHGFP_TYPE_CURRENT, szPath);
-		// _tcscat(docDir, TEXT("\\Wechat"));
+		CRegKey rk;
+		HRESULT result = S_OK;
+		BOOL found = FALSE;
+		if (rk.Open(HKEY_CURRENT_USER, TEXT("Software\\WechatExporter"), KEY_READ) == ERROR_SUCCESS)
+		{
+			ULONG chars = MAX_PATH;
+			if (rk.QueryStringValue(TEXT("OutputDir"), szPath, &chars) == ERROR_SUCCESS)
+			{
+				found = TRUE;
+			}
+		}
+		if (!found)
+		{
+			result = SHGetFolderPath(NULL, CSIDL_MYDOCUMENTS, NULL, SHGFP_TYPE_CURRENT, szPath);
+		}
 		SetDlgItemText(IDC_OUTPUT, szPath);
 
 		// Check iTunes Folder
@@ -159,56 +166,54 @@ public:
 		}
 		
 		if (IDOK == folder.DoModal()) {
+			CRegKey rk;
+			if (rk.Create(HKEY_CURRENT_USER, TEXT("Software\\WechatExporter"), REG_NONE, REG_OPTION_NON_VOLATILE, KEY_READ | KEY_WRITE) == ERROR_SUCCESS)
+			{
+				rk.SetStringValue(TEXT("OutputDir"), folder.m_szFolderPath);
+			}
+
 			SetDlgItemText(IDC_OUTPUT, folder.m_szFolderPath);
-			// std::wstring dir = folder.m_szFolderPath;
-			// OutputDebugString((dir + L"\n").c_str());
 		}
 
 		return 0;
 	}
 	LRESULT OnBnClickedExport(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/)
 	{
-		Run();
+		if (NULL != m_exporter)
+		{
+			return 0;
+		}
+
+		CComboBox cbmBox = GetDlgItem(IDC_BACKUP);
+		if (cbmBox.GetCurSel() == -1)
+		{
+			CString text;
+			text.LoadString(IDS_SEL_BACKUP_DIR);
+			MessageBox(text);
+			return 0;
+		}
+
+		std::string backup = m_manifests[cbmBox.GetCurSel()].getPath();
+
+		TCHAR buffer[MAX_PATH] = { 0 };
+		GetDlgItemText(IDC_OUTPUT, buffer, MAX_PATH);
+		CW2A output(CT2W(buffer), CP_UTF8);
+
+		DWORD dwRet = GetCurrentDirectory(MAX_PATH, buffer);
+		if (dwRet == 0)
+		{
+			// printf("GetCurrentDirectory failed (%d)\n", GetLastError());
+			return 0;
+		}
+
+		CW2A resDir(CT2W(buffer), CP_UTF8);
+		Run((LPCSTR)resDir, backup, (LPCSTR)output);
 
 		return 0;
 	}
 
-
-	void Run()
+	void Run(const std::string& resDir, const std::string& backup, const std::string& output)
 	{
-		if (NULL != m_exporter)
-		{
-			return;
-		}
-
-		std::string backup = "D:\\Workspace\\iTunes\\MobileSync\\Backup\\11833774f1a5eed6ca84c0270417670f1483deae\\";
-		std::string output = "D:\\pngs\\bak\\";
-
-		TCHAR buffer[MAX_PATH] = { 0 };
-		DWORD dwRet = 0;
-		
-		dwRet = GetCurrentDirectory(MAX_PATH, buffer);
-
-		if (dwRet == 0)
-		{
-			// printf("GetCurrentDirectory failed (%d)\n", GetLastError());
-			return;
-		}
-
-		m_ctlWaiting.Start();
-
-		// NSString *workDir = [[NSFileManager defaultManager] currentDirectoryPath];
-
-		// workDir = [[NSBundle mainBundle] resourcePath];
-
-		CT2A workDir(buffer, CP_UTF8);
-
-		std::string resDir((LPCSTR)workDir);
-
-#ifndef NDEBUG
-		resDir = "D:\\Workspace\\github\\WechatExporter\\WechatExporter\\";
-#endif
-
 		m_exporter = new Exporter(resDir, backup, output, &m_shell, m_logger);
 		m_exporter->setNotifier(m_notifier);
 		if (m_exporter->run())

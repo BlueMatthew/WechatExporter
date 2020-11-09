@@ -18,12 +18,10 @@
 class Friend
 {
 public:
-    
     std::string NickName;
-    std::string alias;
+    std::string Alias;
     std::string ConRemark;
     std::string ConChatRoomMem;
-    std::string dbContactChatRoom;
     std::string ConStrRes2;
     std::string Portrait;
     std::string PortraitHD;
@@ -52,16 +50,15 @@ public:
     
     Friend() : PortraitRequired(false), DefaultProfileHead("DefaultProfileHead@2x.png"), IsChatroom(false)
     {
-        
     }
     
-    bool containMember(std::string uidHash) const
+    bool containMember(const std::string& uidHash) const
     {
         std::map<std::string, std::pair<std::string, std::string>>::const_iterator it = Members.find(uidHash);
         return it != Members.cend();
     }
     
-    std::string getMemberName(std::string uidHash) const
+    std::string getMemberName(const std::string& uidHash) const
     {
         std::map<std::string, std::pair<std::string, std::string>>::const_iterator it = Members.find(uidHash);
         return it != Members.cend() ? it->second.second : "";
@@ -75,7 +72,7 @@ public:
         bool matched = std::regex_search(ConStrRes2, sm, aliasPattern);
         if (matched)
         {
-            alias = sm[1];
+            Alias = sm[1];
         }
         // alias = match.Success ? match.Groups[1].Value : null;
         static std::regex headImgUrlPattern("<HeadImgUrl>(.+?)<\\/HeadImgUrl>");
@@ -95,8 +92,7 @@ public:
             PortraitHD = sm[1];
         }
     }
-    
-    
+
     std::string DisplayName() const
     {
         if (ConRemark != "") return ConRemark;
@@ -106,7 +102,7 @@ public:
     
     std::string ID() const
     {
-        if (alias != "") return alias;
+        if (Alias != "") return Alias;
         if (usrName != "") return usrName;
         return std::string("");
     }
@@ -217,7 +213,7 @@ struct Session
     
     void setUsrName(const std::string& usrName) { this->UsrName = usrName; Hash = md5(UsrName); outputFileName = UsrName; }
     
-    std::string getMemberName(std::string uidHash) const
+    std::string getMemberName(const std::string& uidHash) const
     {
         std::map<std::string, std::pair<std::string, std::string>>::const_iterator it = Members.find(uidHash);
         return it != Members.cend() ? it->second.second : "";
