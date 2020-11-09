@@ -58,19 +58,6 @@ bool startsWith(const std::string& str, std::string::value_type ch)
 {
     return !str.empty() && str[0] == ch;
 }
-/*
-std::string stringWithFormat(const char* format, ...)
-{
-    va_list ap;
-    va_start(ap, format);
-    
-    auto size = std::vsnprintf(nullptr, 0, format.c_str(), ap);
-    std::string output(size + 1, '\0');
-    std::vsnprintf(&output[0], format.c_str(), ap);
-    va_end(ap);
-    return result;
-}
- */
 
 std::string utf8ToString(const std::string& utf8str, const std::locale& loc)
 {
@@ -152,8 +139,14 @@ std::string fromUnixTime(unsigned int unixtime)
 
 bool existsFile(const std::string &path)
 {
+#ifdef _WIN32
     struct stat buffer;
-    return (stat (path.c_str(), &buffer) == 0);
+	CW2A pszA(CA2W(path.c_str(), CP_UTF8));
+    return (stat ((LPCSTR)pszA, &buffer) == 0);
+#else
+	struct stat buffer;
+	return (stat(path.c_str(), &buffer) == 0);
+#endif
 }
 
 /*
@@ -223,7 +216,13 @@ std::string readFile(const std::string& path)
 
 bool readFile(const std::string& path, std::vector<unsigned char>& data)
 {
-    std::ifstream file(path, std::ios::in|std::ios::binary|std::ios::ate);
+#ifdef _WIN32
+	CW2A pszA(CA2W(path.c_str(), CP_UTF8));
+	std::ifstream file((LPCSTR)pszA, std::ios::in | std::ios::binary | std::ios::ate);
+#else
+	std::ifstream file(path, std::ios::in | std::ios::binary | std::ios::ate);
+#endif
+    
     if (file.is_open())
     {
         std::streampos size = file.tellg();
@@ -243,7 +242,13 @@ bool readFile(const std::string& path, std::vector<unsigned char>& data)
 bool writeFile(const std::string& path, const std::vector<unsigned char>& data)
 {
     std::ofstream ofs;
-    ofs.open(path, std::ios::out | std::ios::binary | std::ios::trunc);
+#ifdef _WIN32
+	CW2A pszA(CA2W(path.c_str(), CP_UTF8));
+	ofs.open(pszA, std::ios::out | std::ios::binary | std::ios::trunc);
+#else
+	ofs.open(path, std::ios::out | std::ios::binary | std::ios::trunc);
+#endif
+    
     if (ofs.is_open())
     {
         ofs.write(reinterpret_cast<const char *>(&(data[0])), data.size());
@@ -257,7 +262,12 @@ bool writeFile(const std::string& path, const std::vector<unsigned char>& data)
 bool writeFile(const std::string& path, const std::string& data)
 {
     std::ofstream ofs;
-    ofs.open(path, std::ios::out | std::ios::binary | std::ios::trunc);
+#ifdef _WIN32
+	CW2A pszA(CA2W(path.c_str(), CP_UTF8));
+	ofs.open(pszA, std::ios::out | std::ios::binary | std::ios::trunc);
+#else
+	ofs.open(path, std::ios::out | std::ios::binary | std::ios::trunc);
+#endif
     if (ofs.is_open())
     {
         ofs.write(reinterpret_cast<const char *>(data.c_str()), data.size());
@@ -297,7 +307,12 @@ bool isValidFileName(const std::string& fileName)
 		tempDir = tmpdir;
 	}
     
-    std::string path = combinePath(tempDir, fileName);
+#if defined(_WIN32)
+	CW2A pszA(CA2W(fileName.c_str(), CP_UTF8));
+    std::string path = combinePath(tempDir, (LPCSTR)pszA);
+#else
+	std::string path = combinePath(tempDir, fileName);
+#endif
     
 #ifdef _WIN32
 	int status = mkdir(path.c_str());

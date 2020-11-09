@@ -21,30 +21,9 @@ public:
 
 	void write(const std::string& log)
 	{
-		// std::string localString = utf8ToString(log, std::locale());
-		// CA2T ca2t(localString.c_str());
+		CW2T pszT(CA2W(log.c_str(), CP_UTF8));
 
-		static char newline[] = { 13, 10 };
-		CA2T ca2t(log.c_str(), CP_UTF8);
-#ifndef NDEBUG
-		std::string fileName = "D:\\debug1.log";
-		std::ofstream logfile;
-
-		// std::locale utf8_locale(std::locale(), new std::utf8cvt<false>);
-		// logfile.imbue(utf8_locale);
-
-		logfile.open(fileName, std::ios::out | std::ios::binary | std::ios::app);
-
-		{
-			logfile.write(log.c_str(), log.size());
-			logfile.write(newline, 2);
-			logfile.close();
-		}
-
-		ATLTRACE(TEXT("%s\r\n"), (LPCTSTR)ca2t);
-#endif
-
-		::SendMessage(m_hWndLog, LB_ADDSTRING, 0, (LPARAM)(LPCTSTR)ca2t);
+		::SendMessage(m_hWndLog, LB_ADDSTRING, 0, (LPARAM)(LPCTSTR)pszT);
 		int count = ::SendMessage(m_hWndLog, LB_GETCOUNT, 0, 0L);
 		::SendMessage(m_hWndLog, LB_SETTOPINDEX, count - 1, 0L);
 	}

@@ -6,7 +6,8 @@
 //  Copyright © 2020 Matthew. All rights reserved.
 //
 
-#include <stdio.h>
+#include <cstdio>
+#include <ctime>
 #include <string>
 #include <atomic>
 #include <thread>
@@ -15,7 +16,7 @@
 #include "Shell.h"
 #include "WechatObjects.h"
 #include "ITunesParser.h"
-#include "DownloadPool.h"
+#include "Downloader.h"
 #include "semaphore.h"
 #include "ExportNotifier.h"
 
@@ -54,15 +55,11 @@ public:
     bool run();
 	bool isRunning() const;
 	void waitForComplition();
-    
-    
-    
+
 protected:
 	bool runImpl();
-	bool exportUser(Friend& user, DownloadPool& downloadPool);
-	// bool exportSession(Friend& user, Friends& friends, const Session& session, const std::string& userBase, const std::string& outputBase, DownloadPool& downloadPool);
-	bool exportSession(Friend& user, const SessionParser& sessionParser, const Session& session, const std::string& userBase, const std::string& outputBase);
-
+	bool exportUser(Friend& user, Downloader& downloadPool);
+	int exportSession(Friend& user, const SessionParser& sessionParser, const Session& session, const std::string& userBase, const std::string& outputBase);
 
     bool fillUser(Friend& user);
 	bool fillSession(Session& session, const Friends& friends) const;
@@ -70,7 +67,6 @@ protected:
 	bool loadStrings();
     std::string getTemplate(const std::string& key) const;
 	std::string getLocaleString(std::string key) const;
-    
     
     void notifyStart();
     void notifyComplete(bool cancelled = false);

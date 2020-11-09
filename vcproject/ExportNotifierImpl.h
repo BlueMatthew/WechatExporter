@@ -11,7 +11,7 @@ protected:
 	bool m_isCancelled;
 
 public:
-	ExportNotifierImpl(HWND hWndProgress, std::vector<HWND>& ctrls) : m_hWndProgress(m_hWndProgress), m_isCancelled(false)
+	ExportNotifierImpl(HWND hWndProgress, std::vector<HWND>& ctrls) : m_hWndProgress(hWndProgress), m_isCancelled(false)
 	{
 		m_ctrls = ctrls;
 	}
@@ -33,25 +33,11 @@ public:
 
 	void onStart() const
 	{
-		::ShowWindow(m_hWndProgress, SW_SHOW);
+		::PostMessage(m_hWndProgress, PBM_SETMARQUEE, (WPARAM)TRUE, (LPARAM)0);
 	}
 
 	void onProgress(double progress) const
 	{
-		if (::IsWindow(m_hWndProgress))
-		{
-			PBRANGE pbr;
-			::SendMessage(m_hWndProgress, PBM_GETRANGE, TRUE, (LPARAM)&pbr);
-
-			int pos = pbr.iLow + static_cast<int>((pbr.iHigh - pbr.iLow) * progress);
-
-			::SendMessage(m_hWndProgress, PBM_SETPOS, pos, 0L);
-		}
-
-
-		// CA2T ca2t(log.c_str(), CP_UTF8);
-
-		// ::SendMessage(m_hWndLog, LB_ADDSTRING, 0, (LPARAM)(LPCTSTR)ca2t);
 	}
 	
 	void onComplete(bool cancelled) const
@@ -60,10 +46,7 @@ public:
 		{
 			::EnableWindow(*it, TRUE);
 		}
-		::ShowWindow(m_hWndProgress, SW_HIDE);
+		::PostMessage(m_hWndProgress, PBM_SETMARQUEE, (WPARAM)FALSE, (LPARAM)0);
 	}
-
-
-	
 };
 
