@@ -192,8 +192,8 @@ void errorLogCallback(void *pArg, int iErrCode, const char *zMsg)
     panel.canChooseFiles = NO;
     panel.canChooseDirectories = YES;
     panel.allowsMultipleSelection = NO;
-    panel.canCreateDirectories = NO;
-    panel.showsHiddenFiles = YES;
+    panel.canCreateDirectories = YES;
+    panel.showsHiddenFiles = NO;
     
     NSString *outputPath = self.txtboxOutput.stringValue;
     if (nil == outputPath || [outputPath isEqualToString:@""])
@@ -209,6 +209,7 @@ void errorLogCallback(void *pArg, int iErrCode, const char *zMsg)
         if (result == NSOKButton)
         {
             NSURL *url = panel.directoryURL;
+            [[NSUserDefaults standardUserDefaults] setURL:url forKey:@"OutputDir"];
             
             self.txtboxOutput.stringValue = url.path;
         }

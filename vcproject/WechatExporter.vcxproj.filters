@@ -24,9 +24,6 @@
     <ClCompile Include="WechatExporter.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\WechatExporter\core\DownloadPool.cpp">
-      <Filter>core</Filter>
-    </ClCompile>
     <ClCompile Include="..\WechatExporter\core\Exporter.cpp">
       <Filter>core</Filter>
     </ClCompile>
@@ -54,6 +51,9 @@
     <ClCompile Include="..\WechatExporter\core\Utils_silk.cpp">
       <Filter>core</Filter>
     </ClCompile>
+    <ClCompile Include="..\WechatExporter\core\Downloader.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="stdafx.h">
@@ -72,9 +72,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\WechatExporter\core\ByteArrayLocater.h">
-      <Filter>core</Filter>
-    </ClInclude>
-    <ClInclude Include="..\WechatExporter\core\DownloadPool.h">
       <Filter>core</Filter>
     </ClInclude>
     <ClInclude Include="..\WechatExporter\core\Exporter.h">
@@ -122,6 +119,9 @@
     <ClInclude Include="ExportNotifierImpl.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\WechatExporter\core\Downloader.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="WechatExporter.rc">
@@ -133,9 +133,6 @@
       <Filter>Resource Files</Filter>
     </Image>
     <Image Include="res\WechatExporter.ico">
-      <Filter>Resource Files</Filter>
-    </Image>
-    <Image Include="res\waiting.bmp">
       <Filter>Resource Files</Filter>
     </Image>
   </ItemGroup>

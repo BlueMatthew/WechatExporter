@@ -12,10 +12,10 @@
 
 struct FriendDownloadHandler
 {
-    DownloadPool& downloadPool;
+    Downloader& downloadPool;
     std::string& userRoot;
     
-    FriendDownloadHandler(DownloadPool& dlPool, std::string& usrRoot) : downloadPool(dlPool), userRoot(usrRoot)
+    FriendDownloadHandler(Downloader& dlPool, std::string& usrRoot) : downloadPool(dlPool), userRoot(usrRoot)
     {
     }
     
@@ -80,7 +80,7 @@ bool Exporter::run()
 
     if (!m_shell->existsDirectory(m_output))
     {
-		m_logger->write(stringWithFormat(getLocaleString("Can't access output directory: %s"), m_output.c_str()));
+		m_logger->write(formatString(getLocaleString("Can't access output directory: %s"), m_output.c_str()));
         return false;
     }
     
@@ -94,7 +94,8 @@ bool Exporter::run()
 
 bool Exporter::runImpl()
 {
-    
+    time_t startTime;
+    std::time(&startTime);
     notifyStart();
     
 	if (NULL != m_iTunesDb)
@@ -105,7 +106,7 @@ bool Exporter::runImpl()
 
 	if (!m_iTunesDb->load("AppDomain-com.tencent.xin"))
 	{
-		m_logger->write(stringWithFormat(getLocaleString("Failed to parse the backup data of iTunes in the directory: %s"), m_backup.c_str()));
+		m_logger->write(formatString(getLocaleString("Failed to parse the backup data of iTunes in the directory: %s"), m_backup.c_str()));
         notifyComplete();
 		return false;
 	}
@@ -124,21 +125,15 @@ bool Exporter::runImpl()
 		return false;
 	}
 
-	m_logger->write(stringWithFormat(getLocaleString("%d Wechat account(s) found."), (int)(users.size())));
+	m_logger->write(formatString(getLocaleString("%d Wechat account(s) found."), (int)(users.size())));
 
     std::string userBody;
     
-    DownloadPool downloadPool;
+    Downloader downloader;
 	for (std::vector<Friend>::iterator it = users.begin(); it != users.end(); ++it)
 	{
-#ifndef NDEBUG
-        if (it->getUsrName() != "wxid_2gix66ls0aq611")
-        {
-            // continue;
-        }
-#endif
 		fillUser(*it);
-		exportUser(*it, downloadPool);
+		exportUser(*it, downloader);
         
         std::string userItem = getTemplate("listitem");
         userItem = replace_all(userItem, "%%ITEMPICPATH%%", it->outputFileName + "/Portrait/" + it->getLocalPortrait());
@@ -161,16 +156,27 @@ bool Exporter::runImpl()
         htmlFile.close();
     }
 
-	downloadPool.finishAndWaitForExit();
+	downloader.finishAndWaitForExit();
 
-    m_logger->write(getLocaleString("Finished."));
+    time_t endTime = 0;
+    std::time(&endTime);
+    int seconds = static_cast<int>(difftime(endTime, startTime));
+    std::ostringstream stream;
+	
+	int minutes = seconds / 60;
+	int hours = minutes / 60;
+	stream << std::setfill('0') << std::setw(2) << hours << ':'
+		<< std::setfill('0') << std::setw(2) << (minutes % 60) << ':'
+		<< std::setfill('0') << std::setw(2) << (seconds % 60);
+	
+    m_logger->write(formatString(getLocaleString("Completed in %s."), stream.str().c_str()));
     
     notifyComplete();
-
+    
 	return true;
 }
 
-bool Exporter::exportUser(Friend& user, DownloadPool& downloadPool)
+bool Exporter::exportUser(Friend& user, Downloader& downloader)
 {
     std::string uidMd5 = user.getUidHash();
     
@@ -196,9 +202,9 @@ bool Exporter::exportUser(Friend& user, DownloadPool& downloadPool)
     m_shell->makeDirectory(combinePath(outputBase, "Emoji"));
     m_shell->makeDirectory(portraitPath);
     
-	m_logger->write(stringWithFormat(getLocaleString("Handling account: %s"), user.DisplayName().c_str()));
+	m_logger->write(formatString(getLocaleString("Handling account: %s, Wechat Id: %s"), user.DisplayName().c_str(), user.getUsrName().c_str()));
+    
 	m_logger->write(getLocaleString("Reading account info."));
-    // Friend myself;
     
     std::string wcdbPath = m_iTunesDb->findRealPath(combinePath(userBase, "DB", "WCDB_Contact.sqlite"));
     
@@ -213,7 +219,7 @@ bool Exporter::exportUser(Friend& user, DownloadPool& downloadPool)
     
     sessionsParser.parse(userBase, sessions, friends);
  
-	m_logger->write(stringWithFormat(getLocaleString("%d chats found."), (int)(sessions.size())));
+	m_logger->write(formatString(getLocaleString("%d chats found."), (int)(sessions.size())));
     std::sort(sessions.begin(), sessions.end(), SessionLastMsgTimeCompare());
     
     Friend* myself = friends.getFriend(user.getUidHash());
@@ -224,38 +230,16 @@ bool Exporter::exportUser(Friend& user, DownloadPool& downloadPool)
         myself = &user;
     }
     
-    friends.handleFriend(FriendDownloadHandler(downloadPool, portraitPath));
+    friends.handleFriend(FriendDownloadHandler(downloader, portraitPath));
     
-    // downloadPool.addTask(user.getPortraitUrl(), combinePath(portraitPath, user.getLocalPortrait()));
+    // downloader.addTask(user.getPortraitUrl(), combinePath(portraitPath, user.getLocalPortrait()));
     
     std::string userBody;
 
-	m_logger->write(stringWithFormat(getLocaleString("Wechat Id: %s, Nick Name: %s"), myself->getUsrName().c_str(), myself->DisplayName().c_str()));
-
-	SessionParser sessionParser(*myself, friends, *m_iTunesDb, *m_shell, *m_logger, m_templates, m_localeStrings, downloadPool);
+	SessionParser sessionParser(*myself, friends, *m_iTunesDb, *m_shell, m_templates, m_localeStrings, downloader);
     
     for (std::vector<Session>::iterator it = sessions.begin(); it != sessions.end(); ++it)
     {
-#ifndef NDEBUG
-        if (it->UsrName != "5424313692@chatroom")
-        {
-            // continue;
-        }
-        if (it->UsrName != "23069688360@chatroom")
-        {
-            // continue;
-        }
-        
-        if (!it->DisplayName.empty())
-        {
-            // continue;
-        }
-        
-        if (!it->dbFile.empty())
-        {
-            ;
-        }
-#endif
         /*
         if (isValidFileName(it->DisplayName))
         {
@@ -267,7 +251,11 @@ bool Exporter::exportUser(Friend& user, DownloadPool& downloadPool)
         }
          */
 
-		exportSession(*myself, sessionParser, *it, userBase, outputBase);
+        m_logger->write(formatString(getLocaleString("%d/%d: Handling the chat with %s"), (std::distance(sessions.begin(), it) + 1), sessions.size(), it->DisplayName.c_str()));
+        
+		int count = exportSession(*myself, sessionParser, *it, userBase, outputBase);
+        
+        m_logger->write(formatString(getLocaleString("Succeeded handling %d messages."), count));
         
         std::string userItem = getTemplate("listitem");
         userItem = replace_all(userItem, "%%ITEMPICPATH%%", it->Portrait);
@@ -295,29 +283,31 @@ bool Exporter::exportUser(Friend& user, DownloadPool& downloadPool)
     return true;
 }
 
-bool Exporter::exportSession(Friend& user, const SessionParser& sessionParser, const Session& session, const std::string& userBase, const std::string& outputBase)
+int Exporter::exportSession(Friend& user, const SessionParser& sessionParser, const Session& session, const std::string& userBase, const std::string& outputBase)
 {
 	if (session.dbFile.empty())
 	{
 		return false;
 	}
-	// var hash = chat;
-	std::string displayName = session.DisplayName;
-	
-	
-	m_logger->write(stringWithFormat(getLocaleString("Handling the chat with %s"), displayName.c_str()));
-
-	int count = sessionParser.parse(userBase, outputBase, session, user);
+    std::string contents;
+	int count = sessionParser.parse(userBase, outputBase, session, contents);
 	if (count > 0)
 	{
-		m_logger->write(stringWithFormat(getLocaleString("Succeeded handling %d messages."), count));
+        std::string fileName = combinePath(outputBase, session.UsrName + ".html");
 
-		// chatList.Add(new WeChatInterface.DisplayItem() { pic = "Portrait/" + (friend != null ? friend.FindPortrait() : "DefaultProfileHead@2x.png"), text = displayname, link = id + ".html", lastMessageTime = lastMsgTime });
+        std::string html = getTemplate("frame");
+        html = replace_all(html, "%%DISPLAYNAME%%", session.DisplayName);
+        html = replace_all(html, "%%BODY%%", contents);
+        
+        std::ofstream htmlFile;
+        if (m_shell->openOutputFile(htmlFile, fileName, std::ios::out | std::ios::binary | std::ios::trunc))
+        {
+            htmlFile.write(html.c_str(), html.size());
+            htmlFile.close();
+        }
 	}
-	// else logger.AddLog("失败");
-	// emojidown.UnionWith(_emojidown);
-
-	return true;
+    
+	return count;
 }
 
 bool Exporter::fillUser(Friend& user)

@@ -168,21 +168,14 @@ int LoginInfo2Parser::parseUser(const char* data, int length, std::vector<Friend
     {
         user.NickName = value;
     }
-    
+#ifndef NDEBUG
     if (msg.parse("10.1.2", value))
     {
-        // user.DisplayName = value;
     }
     if (msg.parse("10.2.2.2", value))
     {
-        // user.DisplayName = value;
-        
-        std::ofstream myFile ("/Users/matthew/Documents/reebes/iPhone SE/com.tencent.xin/Documents/LoginInfo2.dat.f1.10.2.2.2", std::ios::out | std::ios::binary);
-        myFile.write (value.c_str(), value.size());
-        myFile.close();
-        
     }
-    
+#endif
     users.push_back(user);
     
     return static_cast<int>(userBufferLen + (p - data));
@@ -277,16 +270,10 @@ bool FriendsParser::parseWcdb(const std::string& mmPath, Friends& friends)
         std::string uid = val;
         
         Friend& f = friends.addFriend(uid);
-        
-        if (f.IsChatroom)
-        {
-            // f.IsChatroom = true;
-        }
+
         parseRemark(sqlite3_column_blob(stmt, 1), sqlite3_column_bytes(stmt, 1), f);
         parseHeadImage(sqlite3_column_blob(stmt, 3), sqlite3_column_bytes(stmt, 3), f);
         parseChatroom(sqlite3_column_blob(stmt, 2), sqlite3_column_bytes(stmt, 2), f);
-        
-        // friends[f.getUidHash()] = f;
     }
     
     sqlite3_finalize(stmt);
@@ -309,7 +296,6 @@ bool FriendsParser::parseRemark(const void *data, int length, Friend& f)
         if (msg.parse("1", value))
         {
             f.NickName = value;
-            // f.alias = RawMessage::toUtf8String(value);
         }
         /*
         if (msg.parse("6", value))
@@ -354,10 +340,7 @@ bool FriendsParser::parseChatroom(const void *data, int length, Friend& f)
     if (msg.parse("6", value))
     {
         parseMembers(value, f);
-        // f.dbContactChatRoom = value;
     }
-    // 2: 群主
-    // 1: 成员uid列表 ;分割
 
     return true;
 }
@@ -416,44 +399,11 @@ bool SessionsParser::parse(const std::string& userRoot, std::vector<Session>& se
                 session.DisplayName = f->DisplayName();
             }
         }
-        
-#ifndef NDEBUG
-        if (endsWith(session.UsrName, "@chatroom") && session.DisplayName.empty())
-        {
-            if (!session.ExtFileName.empty())
-            {
-                parseCellData(userRoot, session);
-            }
-        }
-#endif
     }
     
     sqlite3_finalize(stmt);
     sqlite3_close(db);
-#ifndef NDEBUG
-#ifdef _WIN32
-	std::ofstream htmlFile("D:\\debug.log", std::ios::out | std::ios::binary);
-#else
-    std::ofstream htmlFile(combinePath("~", "debug.log"), std::ios::out | std::ios::binary);
-#endif
-	for (std::vector<Session>::iterator it = sessions.begin(); it != sessions.end(); ++it)
-	{
-		if (it->DisplayName.empty())
-		{
-			htmlFile << "NODB:";
-			size_t sz = it->DisplayName.size();
-			htmlFile.write(it->DisplayName.c_str(), sz);
-			htmlFile << "\t";
-			htmlFile.write(it->UsrName.c_str(), it->UsrName.size());
-			// htmlFile << "\t";
-			// htmlFile.write(it->dbFile.c_str(), it->dbFile.size());
-			htmlFile << std::endl;
-		}
-	}
-	htmlFile.close();
 
-#endif
- 
     parseMessageDbs(userRoot, sessions);
     
     return true;
@@ -511,8 +461,6 @@ bool SessionsParser::parseMessageDbs(const std::string& userRoot, std::vector<Se
 		}
     }
 
-
-	
     return true;
 }
 
@@ -557,12 +505,6 @@ bool SessionsParser::parseMessageDb(const std::string& mmPath, std::vector<std::
 
 bool SessionsParser::parseCellData(const std::string& userRoot, Session& session)
 {
-#ifndef NDEBUG
-        if (session.UsrName == "5424313692@chatroom" || session.UsrName == "22816103544@chatroom")
-        {
-            int aa = 0;
-        }
-#endif
 	std::string fileName = session.ExtFileName;
 	if (startsWith(fileName, DIR_SEP) || startsWith(fileName, DIR_SEP_R))
 	{
@@ -570,9 +512,7 @@ bool SessionsParser::parseCellData(const std::string& userRoot, Session& session
 	}
     std::string cellDataPath = combinePath(userRoot, fileName);
 	fileName = m_iTunesDb->findRealPath(cellDataPath);
-	// SessionCellDataFilter filter(fileName);
-	// StringPairVector files = m_iTunesDb->filter(filter);
-
+	
 	if (fileName.empty())
 	{
 		return false;
@@ -589,15 +529,6 @@ bool SessionsParser::parseCellData(const std::string& userRoot, Session& session
 	if (msg.parse("1.1.4", value))
 	{
 		session.DisplayName.clear();
-#ifndef NDEBUG
-		size_t sz = value.size();
-		session.DisplayName.assign(value.c_str(), sz);
-		size_t sz1 = session.DisplayName.size();
-		if (sz1 == 0 && sz > 0)
-		{
-			sz = sz1;
-		}
-#endif
 		session.DisplayName.assign(value.c_str(), value.size());
 	}
 	if (msg.parse("1.1.14", value))
@@ -679,14 +610,14 @@ unsigned int SessionsParser::parseModifiedTime(std::vector<unsigned char>& data)
     return static_cast<unsigned int>(val);
 }
 
-SessionParser::SessionParser(Friend& myself, Friends& friends, const ITunesDb& iTunesDb, const Shell& shell, Logger& logger, const std::map<std::string, std::string>& templates, const std::map<std::string, std::string>& localeStrings, DownloadPool& dlPool) : m_templates(templates), m_localeStrings(localeStrings), m_myself(myself), m_friends(friends), m_iTunesDb(iTunesDb), m_shell(shell), m_logger(logger), m_downloadPool(dlPool)
+SessionParser::SessionParser(Friend& myself, Friends& friends, const ITunesDb& iTunesDb, const Shell& shell, const std::map<std::string, std::string>& templates, const std::map<std::string, std::string>& localeStrings, Downloader& downloader) : m_templates(templates), m_localeStrings(localeStrings), m_myself(myself), m_friends(friends), m_iTunesDb(iTunesDb), m_shell(shell), m_downloader(downloader)
 {
 }
 
-int SessionParser::parse(const std::string& userBase, const std::string& outputBase, const Session& session, Friend& f) const
+int SessionParser::parse(const std::string& userBase, const std::string& outputBase, const Session& session, std::string& contents) const
 {
     int count = 0;
-	std::string contents;
+    contents.clear();
     sqlite3 *db = NULL;
     int rc = openSqlite3ReadOnly(session.dbFile, &db);
     if (rc != SQLITE_OK)
@@ -735,23 +666,9 @@ int SessionParser::parse(const std::string& userBase, const std::string& outputB
     
     sqlite3_finalize(stmt);
     sqlite3_close(db);
-
-	std::string fileName = combinePath(outputBase, session.UsrName + ".html");
-
-	std::string html = getTemplate("frame");
-	html = replace_all(html, "%%DISPLAYNAME%%", session.DisplayName);
-	html = replace_all(html, "%%BODY%%", contents);
-	
-	std::ofstream htmlFile;
-	if (m_shell.openOutputFile(htmlFile, fileName, std::ios::out | std::ios::binary | std::ios::trunc))
-	{
-		htmlFile.write(html.c_str(), html.size());
-		htmlFile.close();
-	}
     
     return count;
 }
-
 
 std::string SessionParser::getTemplate(const std::string& key) const
 {
@@ -759,13 +676,13 @@ std::string SessionParser::getTemplate(const std::string& key) const
     return (it == m_templates.cend()) ? "" : it->second;
 }
 
-bool SessionParser::parseRow(Record& record, const std::string& userBase, const std::string& path, const Session& session, std::string& templateKey, std::map<std::string, std::string>& templateValues) const
+bool SessionParser::parseRow(Record& record, const std::string& userBase, const std::string& outputPath, const Session& session, std::string& templateKey, std::map<std::string, std::string>& templateValues) const
 {
     templateValues.clear();
     templateKey = "msg";
     
 	std::string msgIdStr = std::to_string(record.msgid);
-    std::string assetsDir = combinePath(path, session.UsrName + "_files");
+    std::string assetsDir = combinePath(outputPath, session.UsrName + "_files");
 	m_shell.makeDirectory(assetsDir);
     
 	templateValues["%%NAME%%"] = "";
@@ -866,19 +783,15 @@ bool SessionParser::parseRow(Record& record, const std::string& userBase, const 
         if (audioSrc.empty())
         {
             templateKey = "msg";
-            templateValues["%%MESSAGE%%"] = voicelen == -1 ? getLocaleString("[Audio]") : stringWithFormat(getLocaleString("[Audio %s]"), getDisplayTime(voicelen).c_str());
+            templateValues["%%MESSAGE%%"] = voicelen == -1 ? getLocaleString("[Audio]") : formatString(getLocaleString("[Audio %s]"), getDisplayTime(voicelen).c_str());
         }
         else
         {
             m_pcmData.clear();
             std::string mp3Path = combinePath(assetsDir, msgIdStr + ".mp3");
             silkToPcm(audioSrc, m_pcmData);
-            // silkToPcm(audioSrc, mp3Path + ".pcm");
             pcmToMp3(m_pcmData, combinePath(assetsDir, msgIdStr + ".mp3"));
-            // pcmToMp3(mp3Path + ".pcm", mp3Path);
-            
-            // m_shell.convertSilk(audiosrc, combinePath(assetsDir, msgIdStr + ".mp3"));
-            
+
             templateKey = "audio";
             templateValues["%%AUDIOPATH%%"] = session.UsrName + "_files/" + msgIdStr + ".mp3";
         }
@@ -903,16 +816,13 @@ bool SessionParser::parseRow(Record& record, const std::string& userBase, const 
             }
             
             localfile = combinePath("Emoji", localfile + ".gif");
-            m_downloadPool.addTask(sm[1].str(), combinePath(path, localfile));
-            // message = "<img src=\"Emoji/" + localfile + ".gif\" style=\"max-width:100px;max-height:60px\" />";
+            m_downloader.addTask(sm[1].str(), combinePath(outputPath, localfile));
             templateKey = "emoji";
-            // message = "[表情]";
             templateValues["%%EMOJIPATH%%"] = localfile;
         }
         else
         {
             templateKey = "msg";
-            // message = "[表情]";
             templateValues["%%MESSAGE%%"] = getLocaleString("[Emoji]");
         }
     }
@@ -949,7 +859,6 @@ bool SessionParser::parseRow(Record& record, const std::string& userBase, const 
     {
         templateKey = "msg";
         templateValues["%%MESSAGE%%"] = getLocaleString("[Video/Audio Call]");
-        // message = "[视频/语音通话]";
     }
     else if (record.type == 64)
     {
@@ -959,16 +868,7 @@ bool SessionParser::parseRow(Record& record, const std::string& userBase, const 
 		Json::Value root;
 		if (reader.parse(record.message, root))
 		{
-            
 			templateValues["%%MESSAGE%%"] = root["msgContent"].asString();
-#ifndef NDEBUG
-            std::string v = root["msgContent"].asString();
-            if (v.empty() || !root.isMember("msgContent"))
-            {
-                writeFile("/Users/matthew/Documents/dbg.log", record.message);
-                int aa = 0;
-            }
-#endif
 		}
     }
     else if (record.type == 3)
@@ -1019,8 +919,7 @@ bool SessionParser::parseRow(Record& record, const std::string& userBase, const 
 
 		if (match1 && match2 && match3)
 		{
-			templateValues["%%MESSAGE%%"] = stringWithFormat(getLocaleString("[Location (%s,%s) %s]"), removeCdata(sm1[1].str()).c_str(), removeCdata(sm2[1].str()).c_str(), removeCdata(sm3[1].str()).c_str());
-			// message = "[位置 (" + RemoveCdata(match2.Groups[1].Value) + "," + RemoveCdata(match1.Groups[1].Value) + ") " + RemoveCdata(match3.Groups[1].Value) + "]";
+			templateValues["%%MESSAGE%%"] = formatString(getLocaleString("[Location (%s,%s) %s]"), removeCdata(sm1[1].str()).c_str(), removeCdata(sm2[1].str()).c_str(), removeCdata(sm3[1].str()).c_str());
 		}
 		else
 		{
@@ -1036,10 +935,10 @@ bool SessionParser::parseRow(Record& record, const std::string& userBase, const 
         else if (record.message.find("<type>6<") != std::string::npos) templateValues["%%MESSAGE%%"] = getLocaleString("[File]");
         else
         {
-			static std::regex pattern49_1("<title>(.+?)<\/title>");
-			static std::regex pattern49_2("<des>(.*?)<\/des>");
-			static std::regex pattern49_3("<url>(.+?)<\/url>");
-			static std::regex pattern49_4("<thumburl>(.+?)<\/thumburl>");
+			static std::regex pattern49_1("<title>(.+?)<\\/title>");
+			static std::regex pattern49_2("<des>(.*?)<\\/des>");
+			static std::regex pattern49_3("<url>(.+?)<\\/url>");
+			static std::regex pattern49_4("<thumburl>(.+?)<\\/thumburl>");
 			
 			std::smatch sm1;
 			std::smatch sm2;
@@ -1062,12 +961,9 @@ bool SessionParser::parseRow(Record& record, const std::string& userBase, const 
                 if (match4)
                 {
                     templateValues["%%SHARINGIMGPATH%%"] = removeCdata(sm4[1].str());
-                    // message += "<img src=\"" + RemoveCdata(match4.Groups[1].Value) + "\" style=\"float:left;max-width:100px;max-height:60px\" />";
                 }
-                // message += "<a href=\"" + RemoveCdata(match3.Groups[1].Value) + "\"><b>" + RemoveCdata(match1.Groups[1].Value) + "</b></a>";
                 if (match2)
                 {
-                    // message += "<br />" + RemoveCdata(match2.Groups[1].Value);
                     templateValues["%%MESSAGE%%"] = removeCdata(sm2[1].str());
                 }
             }
@@ -1076,7 +972,6 @@ bool SessionParser::parseRow(Record& record, const std::string& userBase, const 
                 templateValues["%%MESSAGE%%"] = getLocaleString("[Link]");
             }
         }
-        
     }
     else if (record.type == 42)
     {
@@ -1130,291 +1025,4 @@ std::string SessionParser::getDisplayTime(int ms) const
 {
     if (ms < 1000) return "1\"";
     return std::to_string(std::round((double)ms)) + "\"";
-}
-
-
-bool UserParser::parse(Friend& myself)
-{
-    bool succ = false;
-    /*
-    myself.UsrName = uid;
-    myself.NickName = "我";
-    
-    // friend = new Friend() { UsrName = uid, NickName = "我", alias = null, PortraitRequired=true };
-    
-    try
-    {
-        // m_shell
-        
-        // var pr = new BinaryPlistReader();
-        std::string mmsetting = combinePath(m_backupPath, m_iTunesDb->findFileId(combinePath(userBase, "mmsetting.archive")));
-        if (existsFile(mmsetting))
-        {
-            std::string xmlPath = std::tmpnam();
-            if (m_shell->convertPlist(mmsetting, xmlPath))
-            //using (var sw = new FileStream(mmsetting, FileMode.Open))
-            {
-                xmlDoc *doc = NULL;
-                
-                if (doc = xmlReadFile(xmlPath.c_str(), NULL, 0)) != NULL)
-                {
-                    xmlNode *root_element = NULL;
-                    
-                    root_element = xmlDocGetRootElement(doc);
-                    // print_element_names(root_element);
-                    
-                    xmlFreeDoc(doc);       // free document
-                    
-                }
-                
-                xmlCleanupParser();    // Free globals
-                
-                var dd = pr.ReadObject(sw);
-                var objs = dd["$objects"] as object[];
-                var dict = GetCFUID(objs[1] as Dictionary<object, object>);
-                if (dict.ContainsKey("UsrName") && dict.ContainsKey("NickName"))
-                {
-                    friend.UsrName = objs[dict["UsrName"]] as string;
-                    friend.NickName = objs[dict["NickName"]] as string;
-                    succ = true;
-                }
-                if (dict.ContainsKey("AliasName"))
-                {
-                    friend.alias = objs[dict["AliasName"]] as string;
-                }
-                for (int i = 0; i < objs.Length; i++)
-                {
-                    if (objs[i].GetType() != typeof(string)) continue;
-                    string obj = (objs[i] as string);
-                    
-                    if (obj.StartsWith("http://wx.qlogo.cn/mmhead/") || obj.StartsWith("https://wx.qlogo.cn/mmhead/"))
-                    {
-                        if (obj.EndsWith("/0")) friend.PortraitHD = obj;
-                        else if (obj.EndsWith("/132")) friend.Portrait = obj;
-                    }
-                }
-            }
-        }
-        else
-        {
-            // Find it from MMappedKV
-            mmsetting = FindMMSettingFromMMappedKV(uid);
-            if (mmsetting != null && (mmsetting = GetBackupFilePath(mmsetting)) != null)
-            {
-                byte[] data = null;
-                try
-                {
-                    data = File.ReadAllBytes(mmsetting);
-                }
-                catch (Exception) { }
-
-                if (data != null)
-                {
-                    byte[] nameKey = { 56, 56 };
-                    friend.NickName = GetStringFromMMSetting2(data, nameKey);
-                    friend.alias = friend.NickName;
-
-                    byte[] headImgUrl = Encoding.UTF8.GetBytes("headimgurl");
-                    friend.Portrait = GetStringFromMMSetting(data, headImgUrl);
-
-                    byte[] headHDImgUrl = Encoding.UTF8.GetBytes("headhdimgurl");
-                    friend.PortraitHD = GetStringFromMMSetting(data, headHDImgUrl);
-
-                    succ = true;
-                }
-            }
-        }
-
-    }
-    catch (Exception ex)
-    {
-        logger.Debug(ex.ToString());
-    }
-*/
-    return succ;
-}
-
-bool WechatParser::parse()
-{
-    /*
-    Directory.CreateDirectory(saveBase);
-    logger.AddLog("分析文件夹结构");
-    WeChatInterface wechat = new WeChatInterface(backupPath, files92, logger);
-    wechat.BuildFilesDictionary();
-    logger.AddLog("查找UID");
-    var UIDs = wechat.FindUIDs();
-    logger.AddLog("找到" + UIDs.Count + "个账号的消息记录");
-    var uidList = new List<WeChatInterface.DisplayItem>();
-    foreach (var uid in UIDs)
-    {
-#ifndef NDEBUG
-        if (!uid.Equals("ed93c38987566a06ce6430aa8bb5a1ef"))
-        {
-            // continue;
-        }
-#endif
-        var userBase = Path.Combine("Documents", uid);
-        logger.AddLog("开始处理UID: " + uid);
-        logger.AddLog("读取账号信息");
-        if (wechat.GetUserBasics(uid, userBase, out Friend myself))
-        {
-            logger.AddLog("微信号：" + myself.ID() + " 昵称：" + myself.DisplayName());
-        }
-        else
-        {
-            // logger.AddLog("没有找到本人信息，用默认值替代，可以手动替换正确的头像文件：" + Path.Combine("res", "DefaultProfileHead@2x-Me.png").ToString());
-        }
-        var userSaveBase = Path.Combine(saveBase, myself.ID());
-        Directory.CreateDirectory(userSaveBase);
-        logger.AddLog("正在打开数据库");
-        var emojidown = new HashSet<DownloadTask>();
-        var chatList = new List<WeChatInterface.DisplayItem>();
-        Dictionary<string, Friend> friends = null;
-        int friendcount = 0;
-
-        Dictionary<string, Session> sessions = null;
-        if (wechat.OpenSessions(userBase, out SQLiteConnection sessionConnection))
-        {
-            wechat.GetSessionDict(userBase, sessionConnection, out sessions);
-            sessionConnection.Close();
-            if (sessions == null)
-            {
-                sessions = new Dictionary<string, Session>();
-            }
-        }
-
-        List<string> dbs = wechat.GetMMSqlites(userBase);
-        foreach (string db in dbs)
-        {
-            if (!wechat.OpenMMSqlite(userBase, db, out SQLiteConnection conn))
-            {
-                logger.AddLog("打开MM.sqlite失败，跳过");
-                continue;
-            }
-
-            if (db.Equals("MM.sqlite"))
-            {
-                if (wechat.OpenWCDBContact(userBase, out SQLiteConnection wcdb))
-                    logger.AddLog("存在WCDB，与旧版好友列表合并使用");
-                logger.AddLog("读取好友列表");
-                if (!wechat.GetFriendsDict(conn, wcdb, myself, out friends, out friendcount))
-                {
-                    logger.AddLog("读取好友列表失败，跳过");
-                    continue;
-                }
-                logger.AddLog("找到" + friendcount + "个好友/聊天室");
-            }
-            
-            logger.AddLog("查找对话");
-            wechat.GetChatSessions(conn, out List<string> chats);
-            logger.AddLog("找到" + chats.Count + "个对话");
-            
-            foreach (var chat in chats)
-            {
-                var hash = chat;
-                string displayname = chat, id = displayname;
-                Friend friend = null;
-                if (friends.ContainsKey(hash))
-                {
-                    friend = friends[hash];
-                    displayname = friend.DisplayName();
-                    logger.AddLog("处理与" + displayname + "的对话");
-                    id = friend.ID();
-                }
-                else logger.AddLog("未找到好友信息，用默认名字代替");
-
-                if (displayname.EndsWith("@chatroom"))
-                {
-                    if (sessions.ContainsKey(displayname))
-                    {
-                        Session session = sessions[displayname];
-                        if (session.DisplayName != null && session.DisplayName.Length != 0)
-                        {
-                            displayname = session.DisplayName;
-                        }
-                    }
-                }
-    #if DEBUG
-                if (!"23069688360@chatroom".Equals(id))
-                {
-                    continue;
-                }
-    #endif
-                long lastMsgTime = 0;
-                if (wechat.SaveHtmlRecord(conn, userBase, userSaveBase, displayname, id, myself, chat, friend, friends, out int count, out HashSet<DownloadTask> _emojidown, out lastMsgTime))
-                {
-                    logger.AddLog("成功处理" + count + "条");
-                    chatList.Add(new WeChatInterface.DisplayItem() { pic = "Portrait/" + (friend != null ? friend.FindPortrait() : "DefaultProfileHead@2x.png"), text = displayname, link = id + ".html", lastMessageTime = lastMsgTime });
-                }
-                else logger.AddLog("失败");
-                emojidown.UnionWith(_emojidown);
-                
-            }
-            conn.Close();
-        }
-
-        if (outputHtml)
-        {
-            // 最后一条消息的时间倒叙
-            chatList.Sort((x, y) => { return y.lastMessageTime.CompareTo(x.lastMessageTime); });
-            wechat.MakeListHTML(chatList, Path.Combine(userSaveBase, "聊天记录.html"));
-        }
-        var portraitdir = Path.Combine(userSaveBase, "Portrait");
-        Directory.CreateDirectory(portraitdir);
-        var downlist = new HashSet<DownloadTask>();
-        foreach (var item in friends)
-        {
-            var tfriend = item.Value;
-            // Console.WriteLine(tfriend.ID());
-#ifndef NDEBUG
-            if (!"25926707592@chatroom".Equals(tfriend.ID()))
-            {
-                // continue;
-            }
-#endif
-            if (!tfriend.PortraitRequired) continue;
-            if (tfriend.Portrait != null && tfriend.Portrait != "") downlist.Add(new DownloadTask() { url = tfriend.Portrait, filename = tfriend.ID() + ".jpg" });
-            //if (tfriend.PortraitHD != null && tfriend.PortraitHD != "") downlist.Add(new DownloadTask() { url = tfriend.PortraitHD, filename = tfriend.ID() + "_hd.jpg" });
-        }
-        var downloader = new Downloader(6);
-        if (downlist.Count > 0)
-        {
-            logger.AddLog("下载" + downlist.Count + "个头像");
-            foreach (var item in downlist)
-            {
-                downloader.AddTask(item.url, Path.Combine(portraitdir, item.filename));
-            }
-            try
-            {
-                File.Copy(Path.Combine("res", "DefaultProfileHead@2x.png"), Path.Combine(portraitdir, "DefaultProfileHead@2x.png"), true);
-            }
-            catch (Exception) { }
-        }
-        var emojidir = Path.Combine(userSaveBase, "Emoji");
-        Directory.CreateDirectory(emojidir);
-        if (emojidown != null && emojidown.Count > 0)
-        {
-            logger.AddLog("下载" + emojidown.Count + "个表情");
-            foreach (var item in emojidown)
-            {
-                downloader.AddTask(item.url, Path.Combine(emojidir, item.filename));
-            }
-        }
-        string displayName = myself.DisplayName();
-        if (displayName == "我" && myself.alias != null && myself.alias.Length != 0)
-        {
-            displayName = myself.alias;
-        }
-        uidList.Add(new WeChatInterface.DisplayItem() { pic = myself.ID() + "/Portrait/" + myself.FindPortrait(), text = displayName, link = myself.ID() + "/聊天记录.html" });
-        downloader.StartDownload();
-        System.Threading.Thread.Sleep(16);
-        downloader.WaitToEnd();
-        logger.AddLog("完成当前账号");
-    }
-    if (outputHtml) wechat.MakeListHTML(uidList, indexPath);
-    logger.AddLog("任务结束");
-
-    wechat = null;
-     */
-    return true;
 }

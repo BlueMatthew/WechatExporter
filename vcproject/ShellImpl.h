@@ -12,9 +12,9 @@ public:
 
 	bool existsDirectory(const std::string& path) const
 	{
-		CA2T p(path.c_str(), CP_UTF8);
+		CW2T pszT(CA2W(path.c_str(), CP_UTF8));
 
-		DWORD dwAttrib = ::GetFileAttributes((LPCTSTR)p);
+		DWORD dwAttrib = ::GetFileAttributes((LPCTSTR)pszT);
 
 		return (dwAttrib != INVALID_FILE_ATTRIBUTES &&
 			(dwAttrib & FILE_ATTRIBUTE_DIRECTORY) == FILE_ATTRIBUTE_DIRECTORY);
@@ -22,9 +22,9 @@ public:
 
 	bool makeDirectory(const std::string& path) const
 	{
-		CA2T p(path.c_str(), CP_UTF8);
+		CW2T pszT(CA2W(path.c_str(), CP_UTF8));
 
-		return ::SHCreateDirectoryEx(NULL, (LPCTSTR)p, NULL) == ERROR_SUCCESS;
+		return ::SHCreateDirectoryEx(NULL, (LPCTSTR)pszT, NULL) == ERROR_SUCCESS;
 	}
 
 	bool listSubDirectories(const std::string& path, std::vector<std::string>& subDirectories) const
@@ -35,7 +35,7 @@ public:
 		std::string formatedPath = combinePath(path, "*.*");
 		std::replace(formatedPath.begin(), formatedPath.end(), DIR_SEP_R, DIR_SEP);
 
-		CA2T localPath(formatedPath.c_str(), CP_UTF8);
+		CW2T localPath(CA2W(formatedPath.c_str(), CP_UTF8));
 
 		hFind = FindFirstFile((LPTSTR)localPath, &FindFileData);
 		if (hFind == INVALID_HANDLE_VALUE)
@@ -50,8 +50,8 @@ public:
 			}
 			if (FindFileData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
 			{
-				CT2A utf8Path(FindFileData.cFileName, CP_UTF8);
-				subDirectories.push_back((LPCSTR)utf8Path);
+				CW2A pszU8(CT2W(FindFileData.cFileName), CP_UTF8);
+				subDirectories.push_back((LPCSTR)pszU8);
 			}
 		} while (::FindNextFile(hFind, &FindFileData));
 		FindClose(hFind);
@@ -61,10 +61,10 @@ public:
 	
 	bool copyFile(const std::string& src, const std::string& dest, bool overwrite) const
 	{
-		CA2T s(src.c_str(), CP_UTF8);
-		CA2T d(dest.c_str(), CP_UTF8);
+		CW2T pszSrc(CA2W(src.c_str(), CP_UTF8));
+		CW2T pszDest(CA2W(dest.c_str(), CP_UTF8));
 
-		BOOL bRet = ::CopyFile((LPCTSTR)s, (LPCTSTR)d, (overwrite ? FALSE : TRUE));
+		BOOL bRet = ::CopyFile((LPCTSTR)pszSrc, (LPCTSTR)pszDest, (overwrite ? FALSE : TRUE));
 		return (bRet == TRUE);
 	}
 
@@ -75,24 +75,10 @@ public:
 			return false;
 		}
 
-		std::string ansi = utf8ToString(fileName, ofs.getloc());
-
-		CA2T localFileName(fileName.c_str(), CP_UTF8);
-		ofs.open(ansi, mode);
+		CW2A psz(CA2W(fileName.c_str(), CP_UTF8));
+		ofs.open((LPCSTR)psz, mode);
 
 		return ofs.is_open();
-	}
-
-	bool convertPlist(const std::vector<unsigned char>& bplist, std::string& xml) const
-	{
-		return true;
-	}
-
-	int exec(const std::string& cmd) const
-	{
-		CA2A c(cmd.c_str(), CP_UTF8);
-
-		return ::WinExec((LPCSTR)c, SW_HIDE) > 31;
 	}
 
 protected:
