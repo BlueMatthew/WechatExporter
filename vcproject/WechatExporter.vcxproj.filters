@@ -52,7 +52,10 @@
       <Filter>core</Filter>
     </ClCompile>
     <ClCompile Include="..\WechatExporter\core\Downloader.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\WechatExporter\core\Utils_xml.cpp">
+      <Filter>core</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -120,7 +123,7 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\WechatExporter\core\Downloader.h">
-      <Filter>Header Files</Filter>
+      <Filter>core</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

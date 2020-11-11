@@ -22,6 +22,7 @@
 		343F6122252322D600FFE085 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 343F6121252322D600FFE085 /* main.m */; };
 		343F612D25234BD300FFE085 /* ITunesParser.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 343F612C25234BD300FFE085 /* ITunesParser.cpp */; };
 		343F613025234BFC00FFE085 /* libsqlite3.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 343F612F25234BFC00FFE085 /* libsqlite3.tbd */; };
+		349DAD25255BEC1000BFE204 /* Utils_xml.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 349DAD24255BEC1000BFE204 /* Utils_xml.cpp */; };
 		34E3E90A2531BD8E0093042D /* Utils_md5.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 34E3E9092531BD8E0093042D /* Utils_md5.cpp */; };
 		34E3E90C2531BE200093042D /* Utils_protobuf.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 34E3E90B2531BE1F0093042D /* Utils_protobuf.cpp */; };
 		34E3E9242535555F0093042D /* RawMessage.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 34E3E9232535555F0093042D /* RawMessage.cpp */; };
@@ -62,6 +63,7 @@
 		343F612F25234BFC00FFE085 /* libsqlite3.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libsqlite3.tbd; path = usr/lib/libsqlite3.tbd; sourceTree = SDKROOT; };
 		345C8D4D2543F5E30036368C /* ExportNotifier.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ExportNotifier.h; sourceTree = "<group>"; };
 		345C8D4E2543F5E30036368C /* semaphore.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = semaphore.h; sourceTree = "<group>"; };
+		349DAD24255BEC1000BFE204 /* Utils_xml.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Utils_xml.cpp; sourceTree = "<group>"; };
 		34CC0787253D98CA00AC8860 /* ByteArrayLocater.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ByteArrayLocater.h; sourceTree = "<group>"; };
 		34E3E9022525C20E0093042D /* ShellImpl.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ShellImpl.h; sourceTree = "<group>"; };
 		34E3E9032525C2640093042D /* LoggerImpl.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = LoggerImpl.h; sourceTree = "<group>"; };
@@ -139,6 +141,7 @@
 		343F612A25234BBE00FFE085 /* core */ = {
 			isa = PBXGroup;
 			children = (
+				349DAD24255BEC1000BFE204 /* Utils_xml.cpp */,
 				34CC0787253D98CA00AC8860 /* ByteArrayLocater.h */,
 				342EDB0125245206006A295A /* Downloader.cpp */,
 				342EDB0225245206006A295A /* Downloader.h */,
@@ -255,6 +258,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				34E3E9242535555F0093042D /* RawMessage.cpp in Sources */,
+				349DAD25255BEC1000BFE204 /* Utils_xml.cpp in Sources */,
 				34E3E90C2531BE200093042D /* Utils_protobuf.cpp in Sources */,
 				343F611A252322D500FFE085 /* ViewController.mm in Sources */,
 				34ED31E825528A1800C42698 /* Utils_audio.cpp in Sources */,
@@ -416,6 +420,7 @@
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
+				MACOSX_DEPLOYMENT_TARGET = 10.10;
 				OTHER_LDFLAGS = (
 					"-L/usr/local/lib",
 					"-lprotobuf",
@@ -447,6 +452,7 @@
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
+				MACOSX_DEPLOYMENT_TARGET = 10.10;
 				OTHER_LDFLAGS = (
 					"-L/usr/local/lib",
 					"-lprotobuf",

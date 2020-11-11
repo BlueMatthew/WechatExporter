@@ -59,12 +59,20 @@ bool readFile(const std::string& path, std::vector<unsigned char>& data);
 bool writeFile(const std::string& path, const std::vector<unsigned char>& data);
 bool writeFile(const std::string& path, const std::string& data);
 bool isValidFileName(const std::string& fileName);
+#ifdef _WIN32
+std::string utf8ToLocalAnsi(std::string utf8Str);
+#else
+#define utf8ToLocalAnsi(utf8Str) utf8Str
+#endif
 
 int GetBigEndianInteger(const unsigned char* data, int startIndex = 0);
 int GetLittleEndianInteger(const unsigned char* data, int startIndex = 0);
 
 class sqlite3;
 int openSqlite3ReadOnly(const std::string& path, sqlite3 **ppDb);
+
+bool getXmlNodeValue(const std::string& xml, const std::string& xpath, std::string& value);
+bool getXmlNodeAttributeValue(const std::string& xml, const std::string& xpath, const std::string& attributeName, std::string& value);
 
 std::string encodeUrl(const std::string& url);
 

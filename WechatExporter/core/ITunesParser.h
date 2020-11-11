@@ -13,7 +13,6 @@
 #include <sstream>
 #include <iomanip>
 #include <ctime>
-#include <libxml/parser.h>
 #include "Shell.h"
 #include "Utils.h"
 
@@ -139,25 +138,6 @@ public:
     ManifestParser(const std::string& m_manifestPath, const std::string& m_xml, const Shell* shell);
     std::vector<BackupManifest> parse();
     BackupManifest parse(const std::string& backupId);
-    
-    static void startElement(void * ctx, const xmlChar * fullName, const xmlChar ** attrs);
-    static void startElementNs(void * ctx, const xmlChar * localName, const xmlChar * prefix, const xmlChar * URI, int nb_namespaces, const xmlChar ** namespaces, int nb_attributes, int nb_defaulted, const xmlChar ** attrs);
-    static void endElementNs(void* ctx, const xmlChar* localname, const xmlChar* prefix, const xmlChar* URI);
-    static void characters(void* ctx, const xmlChar * ch, int len);
-
-    static std::string toString(const xmlChar* ch);
-    static std::string toString(const xmlChar* ch, int len);
 };
-
-inline std::string ManifestParser::toString(const xmlChar* ch)
-{
-    const char *p = reinterpret_cast<const char *>(ch);
-    return std::string(p, p + xmlStrlen(ch));
-}
-inline std::string ManifestParser::toString(const xmlChar* ch, int len)
-{
-    const char *p = reinterpret_cast<const char *>(ch);
-    return std::string(p, p + len);
-}
 
 #endif /* ITunesParser_h */

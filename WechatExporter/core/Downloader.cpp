@@ -13,6 +13,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include "OSDef.h"
+#include "Utils.h"
 
 size_t writeData(void *buffer, size_t size, size_t nmemb, void *user_p)
 {
@@ -27,16 +28,30 @@ size_t writeData(void *buffer, size_t size, size_t nmemb, void *user_p)
 
 void Task::run()
 {
-    std::ofstream output(m_output, std::fstream::in | std::fstream::out | std::fstream::trunc);
-    output.close();
+	remove(utf8ToLocalAnsi(m_output).c_str());
     
+	CURLcode res;
+	char errbuf[CURL_ERROR_SIZE] = { 0 };
+
     CURL *curl_handler = curl_easy_init();
     curl_easy_setopt(curl_handler, CURLOPT_URL, m_url.c_str());
     curl_easy_setopt(curl_handler, CURLOPT_TIMEOUT, 60);
     curl_easy_setopt(curl_handler, CURLOPT_WRITEFUNCTION, &::writeData);
     curl_easy_setopt(curl_handler, CURLOPT_WRITEDATA, this);
+	curl_easy_setopt(curl_handler, CURLOPT_SSL_VERIFYPEER, 0);
+	curl_easy_setopt(curl_handler, CURLOPT_SSL_VERIFYHOST, 0);
 
-    curl_easy_perform(curl_handler);
+    res = curl_easy_perform(curl_handler);
+	if (res != CURLE_OK)
+	{
+		size_t len = strlen(errbuf);
+		fprintf(stderr, "\nlibcurl: (%d) ", res);
+		if (len)
+			fprintf(stderr, "%s%s", errbuf,
+			((errbuf[len - 1] != '\n') ? "\n" : ""));
+		else
+			fprintf(stderr, "%s\n", curl_easy_strerror(res));
+	}
     
     curl_easy_cleanup(curl_handler);
 }
@@ -44,12 +59,14 @@ void Task::run()
 size_t Task::writeData(void *buffer, size_t size, size_t nmemb)
 {
     std::ofstream file;
-    file.open (m_output, std::fstream::in | std::fstream::out | std::fstream::app | std::fstream::binary);
-    // file.write(buffer, size);
-    size_t bytesToWrite = size * nmemb;
-    file.write(reinterpret_cast<const char *>(buffer), bytesToWrite);
-    file.close();
-    
+    file.open (utf8ToLocalAnsi(m_output), std::fstream::in | std::fstream::out | std::fstream::app | std::fstream::binary);
+	size_t bytesToWrite = size * nmemb;
+	if (file.is_open())
+	{
+		file.write(reinterpret_cast<const char *>(buffer), bytesToWrite);
+		file.close();
+	}
+
     return bytesToWrite;
 }
 
@@ -62,8 +79,6 @@ Downloader::Downloader()
     {
         m_threads.push_back(std::thread(&Downloader::run, this));
     }
-    // vecOfThreads.push_back(std::thread(func));
-    
 }
 
 Downloader::~Downloader()
@@ -73,15 +88,15 @@ Downloader::~Downloader()
 
 void Downloader::addTask(const std::string &url, const std::string& output)
 {
+#ifndef NDEBUG
+	size_t pos = url.find("design");
+	if (pos != std::string::npos || url.empty())
+	{
+		int aa = 1;
+	}
+#endif
     std::string formatedPath = output;
     std::replace(formatedPath.begin(), formatedPath.end(), DIR_SEP_R, DIR_SEP);
-#ifndef NDEBUG
-    struct stat buffer;
-    if (stat (formatedPath.c_str(), &buffer) == 0)
-    {
-        return;
-    }
-#endif
 
     std::string uid = url + output;
     bool existed = false;
