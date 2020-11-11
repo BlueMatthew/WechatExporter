@@ -17,7 +17,7 @@
 @property (weak) IBOutlet NSButton *btnBackup;
 @property (weak) IBOutlet NSButton *btnOutput;
 
-@property (weak) IBOutlet NSTextView *txtViewLogs;
+@property (assign) IBOutlet NSTextView *txtViewLogs;
 @property (weak) IBOutlet NSScrollView *sclViewLogs;
 @property (weak) IBOutlet NSProgressIndicator *progressBar;
 

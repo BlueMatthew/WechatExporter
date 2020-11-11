@@ -798,14 +798,30 @@ bool SessionParser::parseRow(Record& record, const std::string& userBase, const 
     }
     else if (record.type == 47)
     {
-        static std::regex cdnUrlPattern("cdnurl ?= ?\"(.+?)\"");
+#ifndef NDEBUG
+		writeFile("D:\\msg47.txt", record.message);
+#endif
+		std::string url;
+        
+#if 1
+        static std::regex pattern47_1("cdnurl ?= ?\"(.*?)\"");
         std::smatch sm;
-        if (std::regex_search(record.message, sm, cdnUrlPattern))
+        if (std::regex_search(record.message, sm, pattern47_1))
         {
-            std::string localfile = removeCdata(sm[1].str());;
+            url = sm[1].str();
+        }
+#else
+        if (!getXmlNodeAttributeValue(record.message, "/msg/emoji", "cdnurl", url) && !url.empty())
+        {
+            url.clear();
+        }
+#endif
+		if (!url.empty())
+        {
+            std::string localfile = url;
             std::smatch sm2;
-            static std::regex localFilePattern("\\/(\\w+?)\\/\\w*$");
-            if (std::regex_search(localfile, sm2, localFilePattern))
+            static std::regex pattern47_2("\\/(\\w+?)\\/\\w*$");
+            if (std::regex_search(localfile, sm2, pattern47_1))
             {
                 localfile = sm2[1];
             }
@@ -816,7 +832,7 @@ bool SessionParser::parseRow(Record& record, const std::string& userBase, const 
             }
             
             localfile = combinePath("Emoji", localfile + ".gif");
-            m_downloader.addTask(sm[1].str(), combinePath(outputPath, localfile));
+            m_downloader.addTask(url, combinePath(outputPath, localfile));
             templateKey = "emoji";
             templateValues["%%EMOJIPATH%%"] = localfile;
         }
