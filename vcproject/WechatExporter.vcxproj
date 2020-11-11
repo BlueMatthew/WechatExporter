@@ -215,7 +215,8 @@ xcopy "$(ProjectDir)..\WechatExporter\res"  "$(OutDir)res"  /Y /S /E</Command>
       <DllDataFileName />
     </Midl>
     <PostBuildEvent>
-      <Command>xcopy /Y /E $(ProjectDir)..\WechatExporter\res  $(OutDir)</Command>
+      <Command>if not exist "$(OutDir)res" mkdir "$(OutDir)res"
+xcopy "$(ProjectDir)..\WechatExporter\res"  "$(OutDir)res"  /Y /S /E</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
@@ -228,6 +229,7 @@ xcopy "$(ProjectDir)..\WechatExporter\res"  "$(OutDir)res"  /Y /S /E</Command>
     <ClCompile Include="..\WechatExporter\core\Utils_md5.cpp" />
     <ClCompile Include="..\WechatExporter\core\Utils_protobuf.cpp" />
     <ClCompile Include="..\WechatExporter\core\Utils_silk.cpp" />
+    <ClCompile Include="..\WechatExporter\core\Utils_xml.cpp" />
     <ClCompile Include="..\WechatExporter\core\WechatParser.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>

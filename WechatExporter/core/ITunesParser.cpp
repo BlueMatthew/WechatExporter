@@ -14,7 +14,6 @@
 #include <algorithm>
 #include <libxml/tree.h>
 #include <libxml/parser.h>
-#include <libxml/parserInternals.h>
 
 #include "OSDef.h"
 #include "Utils.h"
@@ -44,6 +43,14 @@ struct PlistDictionary
     void startElementNs(const std::string& localName, const std::string& prefix, const std::string& URI, const std::vector<std::string>& namespaces, const std::map<std::string, std::string>& attrs);
     void endElementNs(const std::string& localName, const std::string& prefix, const std::string& URI);
     void characters(const std::string& ch);
+    
+    static void startElement(void * ctx, const xmlChar * fullName, const xmlChar ** attrs);
+    static void startElementNs(void * ctx, const xmlChar * localName, const xmlChar * prefix, const xmlChar * URI, int nb_namespaces, const xmlChar ** namespaces, int nb_attributes, int nb_defaulted, const xmlChar ** attrs);
+    static void endElementNs(void* ctx, const xmlChar* localname, const xmlChar* prefix, const xmlChar* URI);
+    static void characters(void* ctx, const xmlChar * ch, int len);
+    
+    static std::string toString(const xmlChar* ch);
+    static std::string toString(const xmlChar* ch, int len);
     
     std::string operator[](const std::string& key) const
     {
@@ -91,6 +98,18 @@ protected:
         unsigned m_flags;
     };
 };
+
+inline std::string PlistDictionary::toString(const xmlChar* ch)
+{
+    const char *p = reinterpret_cast<const char *>(ch);
+    return std::string(p, p + xmlStrlen(ch));
+}
+
+inline std::string PlistDictionary::toString(const xmlChar* ch, int len)
+{
+    const char *p = reinterpret_cast<const char *>(ch);
+    return std::string(p, p + len);
+}
 
 ITunesDb::ITunesDb(const std::string& rootPath, const std::string& manifestFileName) : m_rootPath(rootPath), m_manifestFileName(manifestFileName)
 {
@@ -209,8 +228,8 @@ bool ITunesDb::load(const std::string& domain, bool onlyFile)
 
 std::string ITunesDb::findFileId(const std::string& relativePath) const
 {
-	std::string formatedPath = relativePath;
-	std::replace(formatedPath.begin(), formatedPath.end(), '\\', '/');
+    std::string formatedPath = relativePath;
+    std::replace(formatedPath.begin(), formatedPath.end(), '\\', '/');
 
     typename std::vector<ITunesFile *>::const_iterator it = std::lower_bound(m_files.begin(), m_files.end(), formatedPath, __string_less());
     
@@ -246,24 +265,24 @@ std::vector<BackupManifest> ManifestParser::parse()
 {
     std::vector<BackupManifest> manifests;
     
-	std::vector<std::string> subDirectories;
-	if (!m_shell->listSubDirectories(m_manifestPath, subDirectories))
-	{
-		return manifests;
-	}
-	
-	for (std::vector<std::string>::const_iterator it = subDirectories.cbegin(); it != subDirectories.cend(); ++it)
-	{
-		if (it->size() != 40)
-		{
-			continue;
-		}
-		BackupManifest manifest = parse(*it);
-		if (manifest.isValid())
-		{
-			manifests.push_back(manifest);
-		}
-	}
+    std::vector<std::string> subDirectories;
+    if (!m_shell->listSubDirectories(m_manifestPath, subDirectories))
+    {
+        return manifests;
+    }
+    
+    for (std::vector<std::string>::const_iterator it = subDirectories.cbegin(); it != subDirectories.cend(); ++it)
+    {
+        if (it->size() != 40)
+        {
+            continue;
+        }
+        BackupManifest manifest = parse(*it);
+        if (manifest.isValid())
+        {
+            manifests.push_back(manifest);
+        }
+    }
 
     return manifests;
 }
@@ -274,15 +293,13 @@ BackupManifest ManifestParser::parse(const std::string& backupId)
     memset(&saxHander, 0, sizeof(xmlSAXHandler));
 
     saxHander.initialized = XML_SAX2_MAGIC;
-    saxHander.startElementNs = startElementNs;
-    saxHander.startElement = startElement;
-    saxHander.endElementNs = endElementNs;
-    saxHander.characters = characters;
+    saxHander.startElementNs = PlistDictionary::startElementNs;
+    saxHander.startElement = PlistDictionary::startElement;
+    saxHander.endElementNs = PlistDictionary::endElementNs;
+    saxHander.characters = PlistDictionary::characters;
 
     std::string path = combinePath(m_manifestPath, backupId);
     std::string fileName = combinePath(path, m_xml);
-    
-    // plist_t node = plist_from_xml(fileName.c_str());
     
     const std::string NodePlist = "plist";
     const std::string NodeDict = "dict";
@@ -316,13 +333,13 @@ BackupManifest ManifestParser::parse(const std::string& backupId)
     return manifest;
 }
 
-void ManifestParser::startElement(void * ctx, const xmlChar * fullName, const xmlChar ** attrs)
+void PlistDictionary::startElement(void * ctx, const xmlChar * fullName, const xmlChar ** attrs)
 {
     // NSLog(@"%@", [NSString stringWithUTF8String:localName]);
     std::string fullNameStr = toString(fullName);
 }
 
-void ManifestParser::startElementNs(void * ctx, const xmlChar * localName, const xmlChar * prefix, const xmlChar * URI, int nb_namespaces, const xmlChar ** namespaces, int nb_attributes, int nb_defaulted, const xmlChar ** attrs)
+void PlistDictionary::startElementNs(void * ctx, const xmlChar * localName, const xmlChar * prefix, const xmlChar * URI, int nb_namespaces, const xmlChar ** namespaces, int nb_attributes, int nb_defaulted, const xmlChar ** attrs)
 {
     // NSLog(@"%@", [NSString stringWithUTF8String:localName]);
     
@@ -350,7 +367,7 @@ void ManifestParser::startElementNs(void * ctx, const xmlChar * localName, const
     }
 }
 
-void ManifestParser::endElementNs(void* ctx, const xmlChar* localname, const xmlChar* prefix, const xmlChar* URI)
+void PlistDictionary::endElementNs(void* ctx, const xmlChar* localname, const xmlChar* prefix, const xmlChar* URI)
 {
     // xmlParserCtxtPtr ctxt = reinterpret_cast<xmlParserCtxtPtr>(ctx);
     PlistDictionary* userData = reinterpret_cast<PlistDictionary*>(ctx);
@@ -360,7 +377,7 @@ void ManifestParser::endElementNs(void* ctx, const xmlChar* localname, const xml
     }
 }
 
-void ManifestParser::characters(void* ctx, const xmlChar* ch, int len)
+void PlistDictionary::characters(void* ctx, const xmlChar* ch, int len)
 {
     // xmlParserCtxtPtr ctxt = reinterpret_cast<xmlParserCtxtPtr>(ctx);
     PlistDictionary* userData = reinterpret_cast<PlistDictionary*>(ctx);

@@ -207,7 +207,7 @@ struct Session
     
     std::string outputFileName;
     
-    bool isChatroom() const { return endsWith(UsrName, "@chatroom"); }
+    bool isChatroom() const { return endsWith(UsrName, "@chatroom") || endsWith(UsrName, "@im.chatroom"); }
     
     std::map<std::string, std::pair<std::string, std::string>> Members; // uidHash => <uid,NickName>
     

@@ -150,7 +150,7 @@ bool Exporter::runImpl()
     html = replace_all(html, "%%TBODY%%", userBody);
     
     std::ofstream htmlFile;
-    if (m_shell->openOutputFile(htmlFile, fileName, std::ios::out | std::ios::binary | std::ios::trunc))
+    if (m_shell->openOutputFile(htmlFile, fileName, std::ios::out | std::ios::in | std::ios::binary | std::ios::trunc))
     {
         htmlFile.write(html.c_str(), html.size());
         htmlFile.close();
@@ -232,8 +232,6 @@ bool Exporter::exportUser(Friend& user, Downloader& downloader)
     
     friends.handleFriend(FriendDownloadHandler(downloader, portraitPath));
     
-    // downloader.addTask(user.getPortraitUrl(), combinePath(portraitPath, user.getLocalPortrait()));
-    
     std::string userBody;
 
 	SessionParser sessionParser(*myself, friends, *m_iTunesDb, *m_shell, m_templates, m_localeStrings, downloader);
@@ -274,7 +272,7 @@ bool Exporter::exportUser(Friend& user, Downloader& downloader)
     html = replace_all(html, "%%TBODY%%", userBody);
     
     std::ofstream htmlFile;
-    if (m_shell->openOutputFile(htmlFile, fileName, std::ios::out | std::ios::binary | std::ios::trunc))
+    if (m_shell->openOutputFile(htmlFile, fileName, std::ios::out | std::ios::in | std::ios::binary | std::ios::trunc))
     {
         htmlFile.write(html.c_str(), html.size());
         htmlFile.close();

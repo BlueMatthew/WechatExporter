@@ -328,6 +328,15 @@ bool isValidFileName(const std::string& fileName)
     return status == 0 || lastErrorNo == EEXIST;
 }
 
+#ifdef _WIN32
+std::string utf8ToLocalAnsi(std::string utf8Str)
+{
+	CW2A pszA(CA2W(utf8Str.c_str(), CP_UTF8));
+	return std::string((LPCSTR)pszA);
+}
+#else
+#endif
+
 int openSqlite3ReadOnly(const std::string& path, sqlite3 **ppDb)
 {
     std::string pathWithQuery = "file:" + path;
