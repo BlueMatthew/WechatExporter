@@ -47,10 +47,10 @@ void Task::run()
 		size_t len = strlen(errbuf);
 		fprintf(stderr, "\nlibcurl: (%d) ", res);
 		if (len)
-			fprintf(stderr, "%s%s", errbuf,
+			fprintf(stderr, "%s: %s%s", errbuf, m_url.c_str(),
 			((errbuf[len - 1] != '\n') ? "\n" : ""));
 		else
-			fprintf(stderr, "%s\n", curl_easy_strerror(res));
+			fprintf(stderr, "%s: %s\n", curl_easy_strerror(res), m_url.c_str());
 	}
     
     curl_easy_cleanup(curl_handler);
@@ -112,7 +112,7 @@ void Downloader::addTask(const std::string &url, const std::string& output)
     if (existed)
     {
 #ifndef NDEBUG
-        printf("URL Existed: %s", url.c_str());
+        printf("URL Existed: %s\r\n", url.c_str());
 #endif
     }
 }

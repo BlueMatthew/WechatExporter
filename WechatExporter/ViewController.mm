@@ -90,8 +90,19 @@ void errorLogCallback(void *pArg, int iErrCode, const char *zMsg)
     NSString *outputDir = [[NSUserDefaults standardUserDefaults] objectForKey:@"OutputDir"];
     if (nil == outputDir || [outputDir isEqualToString:@""])
     {
-        NSURL* homeDir = [fileManager homeDirectoryForCurrentUser];
-        NSArray *components = @[[homeDir path], @"Documents", @"WechatHistory"];
+        NSMutableArray *components = [NSMutableArray array];
+        NSArray *paths = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES);
+        if (nil == paths && paths.count > 0)
+        {
+            [components addObject:[paths objectAtIndex:0]];
+        }
+        else
+        {
+            [components addObject:NSHomeDirectory()];
+            [components addObject:@"Documents"];
+        }
+        [components addObject:@"WechatHistory"];
+        
         outputDir = [NSString pathWithComponents:components];
     }
     
@@ -209,7 +220,7 @@ void errorLogCallback(void *pArg, int iErrCode, const char *zMsg)
         if (result == NSOKButton)
         {
             NSURL *url = panel.directoryURL;
-            [[NSUserDefaults standardUserDefaults] setURL:url forKey:@"OutputDir"];
+            [[NSUserDefaults standardUserDefaults] setObject:url.path forKey:@"OutputDir"];
             
             self.txtboxOutput.stringValue = url.path;
         }
@@ -287,11 +298,11 @@ void errorLogCallback(void *pArg, int iErrCode, const char *zMsg)
 - (void)msgBox:(NSString *)msg
 {
     __block NSString *localMsg = [NSString stringWithString:msg];
-    __block NSString *title = [NSString stringWithString:self.title];
+    __block NSString *title = [NSRunningApplication currentApplication].localizedName;
     dispatch_async(dispatch_get_main_queue(), ^{
         NSAlert *alert = [[NSAlert alloc] init];
-        alert.informativeText = localMsg;
-        alert.messageText = title;
+        alert.messageText = localMsg;
+        alert.window.title = title;
         [alert runModal];
     });
 }
