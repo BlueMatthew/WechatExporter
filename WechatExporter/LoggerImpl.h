@@ -7,6 +7,7 @@
 //
 
 #include "core/Logger.h"
+#include <ctime>
 
 #ifndef LoggerImpl_h
 #define LoggerImpl_h
@@ -31,7 +32,16 @@ public:
     
     void write(const std::string& log)
     {
-        __block NSString *logString = [NSString stringWithUTF8String:log.c_str()];
+        time_t rawtime;
+        struct tm * timeinfo;
+        char buffer[16] = {0};
+        
+        std::time(&rawtime);
+        timeinfo = std::localtime(&rawtime);
+
+        strftime (buffer, 16, "%H:%M:%S ", timeinfo);
+        
+        __block NSString *logString = [NSString stringWithUTF8String:(buffer + log).c_str()];
         __block NSScrollView* scrollView = m_scrollView;
         __block NSTextView* txtView = m_textView;
         

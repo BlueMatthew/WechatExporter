@@ -8,6 +8,7 @@
 
 #include <string>
 #include <vector>
+#include <map>
 #include <locale>
 
 #ifdef _WIN32
@@ -31,7 +32,7 @@ template <typename ...Args>
 std::string formatString(const std::string& format, Args && ...args)
 {
     auto size = std::snprintf(nullptr, 0, format.c_str(), std::forward<Args>(args)...);
-    std::string output(size + 1, '\0');
+    std::string output(size, '\0');
     std::sprintf(&output[0], format.c_str(), std::forward<Args>(args)...);
     return output;
 }
@@ -70,9 +71,6 @@ int GetLittleEndianInteger(const unsigned char* data, int startIndex = 0);
 
 class sqlite3;
 int openSqlite3ReadOnly(const std::string& path, sqlite3 **ppDb);
-
-bool getXmlNodeValue(const std::string& xml, const std::string& xpath, std::string& value);
-bool getXmlNodeAttributeValue(const std::string& xml, const std::string& xpath, const std::string& attributeName, std::string& value);
 
 std::string encodeUrl(const std::string& url);
 

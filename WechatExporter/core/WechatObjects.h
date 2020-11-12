@@ -21,6 +21,7 @@ public:
     std::string NickName;
     std::string Alias;
     std::string ConRemark;
+    int UserType;
     std::string ConChatRoomMem;
     std::string ConStrRes2;
     std::string Portrait;
@@ -208,6 +209,9 @@ struct Session
     std::string outputFileName;
     
     bool isChatroom() const { return endsWith(UsrName, "@chatroom") || endsWith(UsrName, "@im.chatroom"); }
+    bool isSubscription() const { return isSubscription(UsrName); }
+    
+    static bool isSubscription(const std::string& usrName);
     
     std::map<std::string, std::pair<std::string, std::string>> Members; // uidHash => <uid,NickName>
     
@@ -221,7 +225,7 @@ struct Session
     
     bool exportToFriend(Friend& f)
     {
-        if (UsrName != f.getUsrName() && !endsWith(UsrName, "@chatroom"))
+        if (UsrName != f.getUsrName() && !isChatroom())
         {
             return false;
         }
@@ -251,6 +255,11 @@ struct Session
     }
 
 };
+
+inline bool Session::isSubscription(const std::string& usrName)
+{
+    return startsWith(usrName, "gh_") || (usrName.compare("brandsessionholder") == 0);
+}
 
 struct SessionHashCompare
 {
