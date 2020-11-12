@@ -248,21 +248,32 @@ bool Exporter::exportUser(Friend& user, Downloader& downloader)
             it->outputFileName = it->UsrName;
         }
          */
-
+#ifndef NDEBUG
+        m_logger->write(formatString(getLocaleString("%d/%d: Handling the chat with %s"), (std::distance(sessions.begin(), it) + 1), sessions.size(), it->DisplayName.c_str()) + " uid:" + it->UsrName);
+#else
         m_logger->write(formatString(getLocaleString("%d/%d: Handling the chat with %s"), (std::distance(sessions.begin(), it) + 1), sessions.size(), it->DisplayName.c_str()));
+#endif
+        if (it->isSubscription())
+        {
+            m_logger->write(formatString(getLocaleString("Skip subscription: %s"), it->DisplayName.c_str()));
+            continue;
+        }
         
 		int count = exportSession(*myself, sessionParser, *it, userBase, outputBase);
         
         m_logger->write(formatString(getLocaleString("Succeeded handling %d messages."), count));
         
-        std::string userItem = getTemplate("listitem");
-        userItem = replace_all(userItem, "%%ITEMPICPATH%%", it->Portrait);
-        userItem = replace_all(userItem, "%%ITEMLINK%%", encodeUrl(it->UsrName) + ".html");
-        std::string displayName = it->DisplayName;
-        if (displayName.empty()) displayName = it->UsrName;
-        userItem = replace_all(userItem, "%%ITEMTEXT%%", safeHTML(displayName));
-        
-        userBody += userItem;
+        if (count > 0)
+        {
+            std::string userItem = getTemplate("listitem");
+            userItem = replace_all(userItem, "%%ITEMPICPATH%%", it->Portrait);
+            userItem = replace_all(userItem, "%%ITEMLINK%%", encodeUrl(it->UsrName) + ".html");
+            std::string displayName = it->DisplayName;
+            if (displayName.empty()) displayName = it->UsrName;
+            userItem = replace_all(userItem, "%%ITEMTEXT%%", safeHTML(displayName));
+            
+            userBody += userItem;
+        }
     }
     
     std::string fileName = combinePath(outputBase, "index.html");

@@ -21,6 +21,7 @@
 
 #include "WechatObjects.h"
 #include "RawMessage.h"
+#include "XmlParser.h"
 #include "OSDef.h"
 
 #ifdef _WIN32
@@ -378,10 +379,15 @@ bool SessionsParser::parse(const std::string& userRoot, std::vector<Session>& se
     
     while (sqlite3_step(stmt) == SQLITE_ROW)
     {
+        const char *usrName = reinterpret_cast<const char*>(sqlite3_column_text(stmt, 3));
+        if (NULL == usrName || Session::isSubscription(usrName))
+        {
+            continue;
+        }
         sessions.push_back(Session());
         Session& session = sessions.back();
         
-        session.setUsrName(reinterpret_cast<const char*>(sqlite3_column_text(stmt, 3)));
+        session.setUsrName(usrName);
         session.CreateTime = static_cast<unsigned int>(sqlite3_column_int(stmt, 1));
         const char* extFileName = reinterpret_cast<const char*>(sqlite3_column_text(stmt, 0));
         if (NULL != extFileName) session.ExtFileName = extFileName;
@@ -399,6 +405,7 @@ bool SessionsParser::parse(const std::string& userRoot, std::vector<Session>& se
                 session.DisplayName = f->DisplayName();
             }
         }
+        
     }
     
     sqlite3_finalize(stmt);
@@ -660,7 +667,7 @@ int SessionParser::parse(const std::string& userBase, const std::string& outputB
                 ts = replace_all(ts, it->first, it->second);
             }
             
-			contents += ts;
+			contents.append(ts);
         }
     }
     
@@ -763,6 +770,9 @@ bool SessionParser::parseRow(Record& record, const std::string& userBase, const 
          */
     }
     
+#ifndef NDEBUG
+    writeFile(combinePath(outputPath, "msg" + std::to_string(record.type) + ".txt"), record.message);
+#endif
     if (record.type == 10000 || record.type == 10002)
     {
         templateKey = "system";
@@ -770,15 +780,23 @@ bool SessionParser::parseRow(Record& record, const std::string& userBase, const 
     }
     else if (record.type == 34)
     {
+#ifndef NDEBUG
+        writeFile(combinePath(outputPath, "msg34.txt"), record.message);
+#endif
         int voicelen = -1;
-        
-        static std::regex voiceLengthPattern("voicelength=\"(\\d+?)\"");
-        std::smatch sm;
-        
-        if (std::regex_search(record.message, sm, voiceLengthPattern))
+        std::string vlenstr;
+        XmlParser xmlParser(record.message);
+        if (xmlParser.parseAttributeValue("/msg/voicemsg", "voicelength", vlenstr) && !vlenstr.empty())
         {
-            voicelen = std::stoi(sm[1]);
+            voicelen = std::stoi(vlenstr);
         }
+
+        // static std::regex voiceLengthPattern("voicelength=\"(\\d+?)\"");
+        // std::smatch sm;
+        // if (std::regex_search(record.message, sm, voiceLengthPattern))
+        // {
+        //     voicelen = std::stoi(sm[1]);
+        // }
         std::string audioSrc = m_iTunesDb.findRealPath(combinePath(userBase, "Audio", session.Hash, msgIdStr + ".aud"));
         if (audioSrc.empty())
         {
@@ -798,30 +816,27 @@ bool SessionParser::parseRow(Record& record, const std::string& userBase, const 
     }
     else if (record.type == 47)
     {
-#ifndef NDEBUG
-		writeFile("D:\\msg47.txt", record.message);
-#endif
 		std::string url;
-        
-#if 1
-        static std::regex pattern47_1("cdnurl ?= ?\"(.*?)\"");
-        std::smatch sm;
-        if (std::regex_search(record.message, sm, pattern47_1))
-        {
-            url = sm[1].str();
-        }
-#else
-        if (!getXmlNodeAttributeValue(record.message, "/msg/emoji", "cdnurl", url) && !url.empty())
+
+        // static std::regex pattern47_1("cdnurl ?= ?\"(.*?)\"");
+        // std::smatch sm;
+        // if (std::regex_search(record.message, sm, pattern47_1))
+        // {
+        //     url = sm[1].str();
+        // }
+        // xml is quicker than regex
+        XmlParser xmlParser(record.message);
+        if (!xmlParser.parseAttributeValue("/msg/emoji", "cdnurl", url))
         {
             url.clear();
         }
-#endif
+        
 		if (!url.empty())
         {
             std::string localfile = url;
             std::smatch sm2;
             static std::regex pattern47_2("\\/(\\w+?)\\/\\w*$");
-            if (std::regex_search(localfile, sm2, pattern47_1))
+            if (std::regex_search(localfile, sm2, pattern47_2))
             {
                 localfile = sm2[1];
             }
@@ -921,26 +936,17 @@ bool SessionParser::parseRow(Record& record, const std::string& userBase, const 
     }
     else if (record.type == 48)
     {
-		static std::regex pattern48_1("x ?= ?\"(.+?)\"");
-		static std::regex pattern48_2("y ?= ?\"(.+?)\"");
-		static std::regex pattern48_3("label ?= ?\"(.+?)\"");
-
-		std::smatch sm1;
-		std::smatch sm2;
-		std::smatch sm3;
-
-		bool match1 = std::regex_search(record.message, sm1, pattern48_1);
-		bool match2 = std::regex_search(record.message, sm2, pattern48_2);
-		bool match3 = std::regex_search(record.message, sm3, pattern48_3);
-
-		if (match1 && match2 && match3)
-		{
-			templateValues["%%MESSAGE%%"] = formatString(getLocaleString("[Location (%s,%s) %s]"), removeCdata(sm1[1].str()).c_str(), removeCdata(sm2[1].str()).c_str(), removeCdata(sm3[1].str()).c_str());
-		}
-		else
-		{
-			templateValues["%%MESSAGE%%"] = getLocaleString("[Location]");
-		}
+        std::map<std::string, std::string> attrs = { {"x", ""}, {"y", ""}, {"label", ""} };
+        
+        XmlParser xmlParser(record.message);
+        if (xmlParser.parseAttributesValue("/msg/location", attrs) && !attrs["x"].empty() && !attrs["y"].empty() && !attrs["label"].empty())
+        {
+            templateValues["%%MESSAGE%%"] = formatString(getLocaleString("[Location (%s,%s) %s]"), attrs["x"].c_str(), attrs["y"].c_str(), attrs["label"].c_str());
+        }
+        else
+        {
+            templateValues["%%MESSAGE%%"] = getLocaleString("[Location]");
+        }
 		templateKey = "msg";
     }
     else if (record.type == 49)
@@ -951,36 +957,48 @@ bool SessionParser::parseRow(Record& record, const std::string& userBase, const 
         else if (record.message.find("<type>6<") != std::string::npos) templateValues["%%MESSAGE%%"] = getLocaleString("[File]");
         else
         {
-			static std::regex pattern49_1("<title>(.+?)<\\/title>");
-			static std::regex pattern49_2("<des>(.*?)<\\/des>");
-			static std::regex pattern49_3("<url>(.+?)<\\/url>");
-			static std::regex pattern49_4("<thumburl>(.+?)<\\/thumburl>");
-			
-			std::smatch sm1;
-			std::smatch sm2;
-			std::smatch sm3;
-			std::smatch sm4;
-			bool match1 = std::regex_search(record.message, sm1, pattern49_1);
-			bool match2 = std::regex_search(record.message, sm2, pattern49_2);
-			bool match3 = std::regex_search(record.message, sm3, pattern49_3);
-			bool match4 = std::regex_search(record.message, sm4, pattern49_4);
-
-            if (match1 && match3)
+            std::map<std::string, std::string> nodes = { {"title", ""}, {"des", ""}, {"url", ""}, {"thumburl", ""} };
+            
+#ifndef NDEBUG
+            static std::regex pattern49_1("<title>(.+?)<\\/title>");
+            static std::regex pattern49_2("<des>(.*?)<\\/des>");
+            static std::regex pattern49_3("<url>(.+?)<\\/url>");
+            static std::regex pattern49_4("<thumburl>(.+?)<\\/thumburl>");
+            
+            std::smatch sm1;
+            std::smatch sm2;
+            std::smatch sm3;
+            std::smatch sm4;
+            bool match1 = std::regex_search(record.message, sm1, pattern49_1);
+            bool match2 = std::regex_search(record.message, sm2, pattern49_2);
+            bool match3 = std::regex_search(record.message, sm3, pattern49_3);
+            bool match4 = std::regex_search(record.message, sm4, pattern49_4);
+#endif
+            XmlParser xmlParser(record.message, true);
+            if (xmlParser .parseNodesValue("/msg/appmsg/*", nodes))
             {
-                templateKey = "share";
-
-                templateValues["%%SHARINGIMGPATH%%"] = "";
-                templateValues["%%SHARINGURL%%"] = removeCdata(sm3[1].str());
-                templateValues["%%SHARINGTITLE%%"] = removeCdata(sm1[1].str());
-                templateValues["%%MESSAGE%%"] = "";
-
-                if (match4)
+#ifndef NDEBUG
+                if (nodes["title"] != sm1[1].str() || nodes["des"] != sm2[1].str() || nodes["url"] != sm3[1].str() || nodes["thumburl"] != sm4[1].str())
                 {
-                    templateValues["%%SHARINGIMGPATH%%"] = removeCdata(sm4[1].str());
+                    int aa = 1;
                 }
-                if (match2)
+#endif
+                if (!nodes["title"].empty() && !nodes["url"].empty())
                 {
-                    templateValues["%%MESSAGE%%"] = removeCdata(sm2[1].str());
+                    templateKey = "share";
+
+                    templateValues["%%SHARINGIMGPATH%%"] = nodes["thumburl"];
+                    templateValues["%%SHARINGURL%%"] = nodes["url"];
+                    templateValues["%%SHARINGTITLE%%"] = nodes["title"];
+                    templateValues["%%MESSAGE%%"] = nodes["des"];
+                }
+                else if (!nodes["title"].empty())
+                {
+                    templateValues["%%MESSAGE%%"] = nodes["title"];
+                }
+                else
+                {
+                    templateValues["%%MESSAGE%%"] = getLocaleString("[Link]");
                 }
             }
             else
@@ -991,20 +1009,27 @@ bool SessionParser::parseRow(Record& record, const std::string& userBase, const 
     }
     else if (record.type == 42)
     {
-		static std::regex pattern42_1("nickname ?= ?\"(.+?)\"");
-		static std::regex pattern42_2("smallheadimgurl ?= ?\"(.+?)\"");
-		
-		std::smatch sm1;
-		std::smatch sm2;
-		
-		bool match1 = std::regex_search(record.message, sm1, pattern42_1);
-		bool match2 = std::regex_search(record.message, sm2, pattern42_2);
-		
-        if (match1)
+		// static std::regex pattern42_1("nickname ?= ?\"(.+?)\"");
+		// static std::regex pattern42_2("smallheadimgurl ?= ?\"(.+?)\"");
+        
+        std::map<std::string, std::string> attrs = { {"nickname", ""}, {"smallheadimgurl", ""}, {"username", ""} };
+        
+        XmlParser xmlParser(record.message, true);
+        if (xmlParser.parseAttributesValue("/msg", attrs) && !attrs["nickname"].empty())
         {
             templateKey = "card";
-            templateValues["%%CARDIMGPATH%%"] = (match2) ? removeCdata(sm2[1].str()) : "";
-            templateValues["%%CARDNAME%%"] = removeCdata(sm1[1].str());
+            templateValues["%%CARDNAME%%"] = attrs["nickname"];
+            
+            if (!attrs["username"].empty() && !attrs["smallheadimgurl"].empty())
+            {
+                templateValues["%%CARDIMGPATH%%"] = "Portrait/" + attrs["username"] + ".jpg";
+                std::string localfile = combinePath("Portrait", attrs["username"] + ".jpg");
+                m_downloader.addTask(attrs["smallheadimgurl"], combinePath(outputPath, localfile));
+            }
+            else
+            {
+                templateValues["%%CARDIMGPATH%%"] = attrs["smallheadimgurl"];
+            }
         }
         else
         {
