@@ -13,6 +13,7 @@
 #include <regex>
 #include <string>
 #include <vector>
+#include <atomic>
 #include <map>
 #include "Utils.h"
 #include "Shell.h"
@@ -215,13 +216,13 @@ private:
     const Shell&  m_shell;
     Downloader& m_downloader;
     Friend m_myself;
-    
+    std::atomic<bool>& m_cancelled;
     
     mutable std::vector<unsigned char> m_pcmData;  // buffer
     
 public:
     
-    SessionParser(Friend& myself, Friends& friends, const ITunesDb& iTunesDb, const Shell& shell, const std::map<std::string, std::string>& templates, const std::map<std::string, std::string>& localeStrings, Downloader& dlPool);
+    SessionParser(Friend& myself, Friends& friends, const ITunesDb& iTunesDb, const Shell& shell, const std::map<std::string, std::string>& templates, const std::map<std::string, std::string>& localeStrings, Downloader& downloader, std::atomic<bool>& cancelled);
     int parse(const std::string& userBase, const std::string& outputBase, const Session& session, std::string& contents) const;
     
 private:

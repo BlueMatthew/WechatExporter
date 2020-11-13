@@ -77,7 +77,7 @@ Downloader::Downloader()
     
     for (int idx = 0; idx < 4; idx++)
     {
-        m_threads.push_back(std::thread(&Downloader::run, this));
+        m_threads.push_back(std::thread(&Downloader::run, this, idx));
     }
 }
 
@@ -124,8 +124,14 @@ void Downloader::setNoMoreTask()
     m_mtx.unlock();
 }
 
-void Downloader::run()
+void Downloader::run(int idx)
 {
+    {
+        char name[16] = {0};
+        sprintf(name, "dl_%d", idx);
+        setThreadName(name);
+    }
+    
     while(1)
     {
         bool found = false;
@@ -161,6 +167,14 @@ void Downloader::run()
             std::this_thread::sleep_for(std::chrono::milliseconds(100));
         }
     }
+}
+
+void Downloader::cancel()
+{
+    std::queue<Task> empty;
+    m_mtx.lock();
+    m_queue.swap(empty);
+    m_mtx.unlock();
 }
 
 void Downloader::finishAndWaitForExit()

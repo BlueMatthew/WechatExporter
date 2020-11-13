@@ -39,6 +39,7 @@ Exporter::Exporter(const std::string& workDir, const std::string& backup, const 
     m_shell = shell;
     m_logger = logger;
     m_notifier = NULL;
+    m_cancelled = false;
 }
 
 Exporter::~Exporter()
@@ -48,6 +49,9 @@ Exporter::~Exporter()
         delete m_iTunesDb;
         m_iTunesDb = NULL;
     }
+    m_shell = NULL;
+    m_logger = NULL;
+    m_notifier = NULL;
 }
 
 void Exporter::setNotifier(ExportNotifier *notifier)
@@ -57,6 +61,11 @@ void Exporter::setNotifier(ExportNotifier *notifier)
 bool Exporter::isRunning() const
 {
 	return m_running;
+}
+
+void Exporter::cancel()
+{
+    m_cancelled = true;
 }
 
 void Exporter::waitForComplition()
@@ -94,6 +103,7 @@ bool Exporter::run()
 
 bool Exporter::runImpl()
 {
+    setThreadName("wxexp");
     time_t startTime;
     std::time(&startTime);
     notifyStart();
@@ -132,6 +142,10 @@ bool Exporter::runImpl()
     Downloader downloader;
 	for (std::vector<Friend>::iterator it = users.begin(); it != users.end(); ++it)
 	{
+        if (m_cancelled)
+        {
+            break;
+        }
 		fillUser(*it);
 		exportUser(*it, downloader);
         
@@ -155,6 +169,11 @@ bool Exporter::runImpl()
         htmlFile.write(html.c_str(), html.size());
         htmlFile.close();
     }
+    
+    if (m_cancelled)
+    {
+        downloader.cancel();
+    }
 
 	downloader.finishAndWaitForExit();
 
@@ -169,9 +188,9 @@ bool Exporter::runImpl()
 		<< std::setfill('0') << std::setw(2) << (minutes % 60) << ':'
 		<< std::setfill('0') << std::setw(2) << (seconds % 60);
 	
-    m_logger->write(formatString(getLocaleString("Completed in %s."), stream.str().c_str()));
+    m_logger->write(formatString(getLocaleString((m_cancelled ? "Cancelled in %s." : "Completed in %s.")), stream.str().c_str()));
     
-    notifyComplete();
+    notifyComplete(m_cancelled);
     
 	return true;
 }
@@ -234,10 +253,14 @@ bool Exporter::exportUser(Friend& user, Downloader& downloader)
     
     std::string userBody;
 
-	SessionParser sessionParser(*myself, friends, *m_iTunesDb, *m_shell, m_templates, m_localeStrings, downloader);
+	SessionParser sessionParser(*myself, friends, *m_iTunesDb, *m_shell, m_templates, m_localeStrings, downloader, m_cancelled);
     
     for (std::vector<Session>::iterator it = sessions.begin(); it != sessions.end(); ++it)
     {
+        if (m_cancelled)
+        {
+            break;
+        }
         /*
         if (isValidFileName(it->DisplayName))
         {
