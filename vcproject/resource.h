@@ -7,6 +7,7 @@
 #define IDD_WECHATEXPORTER_FORM         129
 #define IDS_SEL_BACKUP_DIR              129
 #define IDS_SEL_OUTPUT_DIR              130
+#define IDS_CANCEL_PROMPT               131
 #define IDB_BITMAP1                     202
 #define IDB_WAITING                     202
 #define IDC_BACKUP                      1000
@@ -16,6 +17,7 @@
 #define IDC_LOG                         1004
 #define IDC_EXPORT                      1005
 #define IDC_PROGRESS                    1006
+#define IDC_CANCEL                      1007
 
 // Next default values for new objects
 // 

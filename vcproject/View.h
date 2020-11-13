@@ -23,6 +23,10 @@ private:
 public:
 	enum { IDD = IDD_WECHATEXPORTER_FORM };
 
+	static const DWORD WM_START = ExportNotifierImpl::WM_START;
+	static const DWORD WM_COMPLETE = ExportNotifierImpl::WM_COMPLETE;
+	static const DWORD WM_PROGRESS = ExportNotifierImpl::WM_PROGRESS;
+
 	LRESULT OnInitDialog(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 	{
 		CProgressBarCtrl progressCtrl = GetDlgItem(IDC_PROGRESS);
@@ -35,7 +39,7 @@ public:
 		// Init the CDialogResize code
 		DlgResize_Init();
 
-		m_notifier = new ExportNotifierImpl(progressCtrl.m_hWnd, GetInteractiveCtrls());
+		m_notifier = new ExportNotifierImpl(m_hWnd);
 		m_logger = new LoggerImpl(GetDlgItem(IDC_LOG));
 
 		// ::PostMessage(GetDlgItem(IDC_EXPORT), BM_CLICK, 0, 0L);
@@ -77,12 +81,9 @@ public:
 
 	void OnFinalMessage(HWND hWnd)
 	{
-		if (NULL != m_notifier)
-		{
-			m_notifier->cancel();
-		}
 		if (NULL != m_exporter)
 		{
+			m_exporter->cancel();
 			m_exporter->waitForComplition();
 			delete m_exporter;
 			m_exporter = NULL;
@@ -111,6 +112,9 @@ public:
 		COMMAND_HANDLER(IDC_CHOOSE_BKP, BN_CLICKED, OnBnClickedChooseBkp)
 		COMMAND_HANDLER(IDC_CHOOSE_OUTPUT, BN_CLICKED, OnBnClickedChooseOutput)
 		COMMAND_HANDLER(IDC_EXPORT, BN_CLICKED, OnBnClickedExport)
+		COMMAND_HANDLER(IDC_CANCEL, BN_CLICKED, OnBnClickedCancel)
+		MESSAGE_HANDLER(WM_START, OnStart)
+		MESSAGE_HANDLER(WM_COMPLETE, OnComplete)
 	END_MSG_MAP()
 
 	BEGIN_DLGRESIZE_MAP(CView)
@@ -120,6 +124,7 @@ public:
 		DLGRESIZE_CONTROL(IDC_OUTPUT, DLSZ_SIZE_X)
 		DLGRESIZE_CONTROL(IDC_LOG, DLSZ_SIZE_X | DLSZ_SIZE_Y)
 		DLGRESIZE_CONTROL(IDC_PROGRESS, DLSZ_MOVE_Y)
+		DLGRESIZE_CONTROL(IDC_CANCEL, DLSZ_MOVE_X | DLSZ_MOVE_Y)
 		DLGRESIZE_CONTROL(IDC_EXPORT, DLSZ_MOVE_X | DLSZ_MOVE_Y)
 	END_DLGRESIZE_MAP()
 
@@ -148,6 +153,7 @@ public:
 
 		return 0;
 	}
+
 	LRESULT OnBnClickedChooseOutput(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/)
 	{
 		CString text;
@@ -177,6 +183,28 @@ public:
 
 		return 0;
 	}
+
+	LRESULT OnBnClickedCancel(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/)
+	{
+		CString text;
+		CString caption;
+		caption.LoadString(IDR_MAINFRAME);
+		text.LoadString(IDS_CANCEL_PROMPT);
+		if (MessageBox(text, caption, MB_OKCANCEL) == IDCANCEL)
+		{
+			return 0;
+		}
+
+		if (NULL == m_exporter)
+		{
+			return 0;
+		}
+
+		m_exporter->cancel();
+
+		return 0;
+	}
+
 	LRESULT OnBnClickedExport(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/)
 	{
 		if (NULL != m_exporter)
@@ -206,9 +234,30 @@ public:
 			return 0;
 		}
 
+		CListBox lstboxLogs = GetDlgItem(IDC_LOG);
+		lstboxLogs.ResetContent();
+
 		CW2A resDir(CT2W(buffer), CP_UTF8);
 		Run((LPCSTR)resDir, backup, (LPCSTR)output);
 
+		return 0;
+	}
+
+	LRESULT OnStart(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+	{
+		EnableInteractiveCtrls(FALSE);
+		return 0;
+	}
+
+	LRESULT OnComplete(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+	{
+		if (m_exporter)
+		{
+			m_exporter->waitForComplition();
+			delete m_exporter;
+			m_exporter = NULL;
+		}
+		EnableInteractiveCtrls(TRUE);
 		return 0;
 	}
 
@@ -218,30 +267,18 @@ public:
 		m_exporter->setNotifier(m_notifier);
 		if (m_exporter->run())
 		{
-			DisableInteractiveCtrls();
+			EnableInteractiveCtrls(FALSE);
 		}
 	}
-	// void 
 
-	std::vector<HWND> GetInteractiveCtrls()
+	void EnableInteractiveCtrls(BOOL enabled)
 	{
-		std::vector<HWND> ctrls;
-		ctrls.push_back(GetDlgItem(IDC_BACKUP));
-		ctrls.push_back(GetDlgItem(IDC_CHOOSE_BKP));
-		ctrls.push_back(GetDlgItem(IDC_CHOOSE_OUTPUT));
-		ctrls.push_back(GetDlgItem(IDC_EXPORT));
-
-		return ctrls;
+		::EnableWindow(GetDlgItem(IDC_BACKUP), enabled);
+		::EnableWindow(GetDlgItem(IDC_CHOOSE_BKP), enabled);
+		::EnableWindow(GetDlgItem(IDC_CHOOSE_OUTPUT), enabled);
+		::EnableWindow(GetDlgItem(IDC_EXPORT), enabled);
+		::EnableWindow(GetDlgItem(IDC_CANCEL), !enabled);
 	}
-
-	void DisableInteractiveCtrls()
-	{
-		::EnableWindow(GetDlgItem(IDC_BACKUP), FALSE);
-		::EnableWindow(GetDlgItem(IDC_CHOOSE_BKP), FALSE);
-		::EnableWindow(GetDlgItem(IDC_CHOOSE_OUTPUT), FALSE);
-		::EnableWindow(GetDlgItem(IDC_EXPORT), FALSE);
-	}
-
 
 	void UpdateBackups(const std::vector<BackupManifest>& manifests)
 	{

@@ -19,7 +19,7 @@ struct NodeValueHandler
         xmlChar* sz = xmlNodeGetContent(cur);
         if (sz != NULL)
         {
-            value = reinterpret_cast<char *>(sz);;
+            value = reinterpret_cast<char *>(sz);
             xmlFree(sz);
             return true;
         }
@@ -44,7 +44,7 @@ struct NodesValueHandler
                 xmlChar* sz = xmlNodeGetContent(cur);
                 if (sz != NULL)
                 {
-                    it->second = reinterpret_cast<char *>(sz);;
+                    it->second = reinterpret_cast<char *>(sz);
                     xmlFree(sz);
                 }
                 else
@@ -65,6 +65,17 @@ struct AttributeHandler
     
     bool operator() (xmlNodeSetPtr xpathNodes)
     {
+        // assert ((xpathNodes) && (xpathNodes->nodeNr > 0))
+        xmlNode *cur = xpathNodes->nodeTab[0];
+
+        xmlChar* attr = xmlGetProp(cur, reinterpret_cast<const xmlChar *>(name.c_str()));
+        if (NULL != attr)
+        {
+            value = reinterpret_cast<char *>(attr);
+            xmlFree(attr);
+            return true;
+        }
+        
         return true;
     }
 };

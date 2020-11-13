@@ -8,6 +8,7 @@
 
 #include "core/Logger.h"
 #include <ctime>
+#include "ViewController.h"
 
 #ifndef LoggerImpl_h
 #define LoggerImpl_h
@@ -15,19 +16,17 @@
 class LoggerImpl : public Logger
 {
 protected:
-    NSScrollView* m_scrollView;
-    NSTextView* m_textView;
+    __weak ViewController *m_viewController;
+
 public:
-    LoggerImpl(NSScrollView* scrollView, NSTextView* textField)
+    LoggerImpl(ViewController* viewController)
     {
-        m_scrollView = scrollView;
-        m_textView = textField;
+        m_viewController = viewController;
     }
     
     ~LoggerImpl()
     {
-        m_textView = NULL;
-        m_scrollView = NULL;
+        m_viewController = nil;
     }
     
     void write(const std::string& log)
@@ -42,55 +41,24 @@ public:
         strftime (buffer, 16, "%H:%M:%S ", timeinfo);
         
         __block NSString *logString = [NSString stringWithUTF8String:(buffer + log).c_str()];
-        __block NSScrollView* scrollView = m_scrollView;
-        __block NSTextView* txtView = m_textView;
-        
+        __block __weak ViewController* viewController = m_viewController;
         dispatch_async(dispatch_get_main_queue(), ^{
-            NSString *oldLog = txtView.string;
-           
-            if (nil == oldLog || oldLog.length == 0)
+            __strong __typeof(viewController)strongVC = viewController;
+            if (strongVC)
             {
-                oldLog = logString;
+                [strongVC writeLog:logString];
+                strongVC = nil;
             }
-            else
-            {
-                oldLog = [NSString stringWithFormat:@"%@\n%@", oldLog, logString];
-            }
-            txtView.string = oldLog;
-           
-        
-            NSPoint newScrollOrigin;
-             
-            // assume that the scrollview is an existing variable
-            if ([[scrollView documentView] isFlipped])
-            {
-                newScrollOrigin=NSMakePoint(0.0,NSMaxY([[scrollView documentView] frame])
-                                               -NSHeight([[scrollView contentView] bounds]));
-            }
-            else
-            {
-                newScrollOrigin = NSMakePoint(0.0,0.0);
-            }
-
-            [[scrollView documentView] scrollPoint:newScrollOrigin];
-
-        
-           // Smart Scrolling
-           // BOOL scroll = (NSMaxY(txtView.visibleRect) == NSMaxY(txtView.bounds));
-           // if (scroll) // Scroll to end of the textview contents
-           {
-               // [txtView scrollRangeToVisible: NSMakeRange(txtView.string.length, 0)];
-           }
         });
-
     }
     
     void debug(const std::string& log)
     {
         write(log);
+#ifndef NDEBUG
         NSString *logString = [NSString stringWithUTF8String:log.c_str()];
-        
         NSLog(@"%@", logString);
+#endif
     }
     
 };

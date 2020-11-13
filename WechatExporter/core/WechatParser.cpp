@@ -617,7 +617,7 @@ unsigned int SessionsParser::parseModifiedTime(std::vector<unsigned char>& data)
     return static_cast<unsigned int>(val);
 }
 
-SessionParser::SessionParser(Friend& myself, Friends& friends, const ITunesDb& iTunesDb, const Shell& shell, const std::map<std::string, std::string>& templates, const std::map<std::string, std::string>& localeStrings, Downloader& downloader) : m_templates(templates), m_localeStrings(localeStrings), m_myself(myself), m_friends(friends), m_iTunesDb(iTunesDb), m_shell(shell), m_downloader(downloader)
+SessionParser::SessionParser(Friend& myself, Friends& friends, const ITunesDb& iTunesDb, const Shell& shell, const std::map<std::string, std::string>& templates, const std::map<std::string, std::string>& localeStrings, Downloader& downloader, std::atomic<bool>& cancelled) : m_templates(templates), m_localeStrings(localeStrings), m_myself(myself), m_friends(friends), m_iTunesDb(iTunesDb), m_shell(shell), m_downloader(downloader), m_cancelled(cancelled)
 {
 }
 
@@ -647,8 +647,14 @@ int SessionParser::parse(const std::string& userBase, const std::string& outputB
     std::string templateKey;
     Record record;
     
+    bool cancelled = false;
     while (sqlite3_step(stmt) == SQLITE_ROW)
     {
+        if (m_cancelled)
+        {
+            break;
+        }
+        
         values.clear();
         templateKey = "";
         
@@ -668,6 +674,15 @@ int SessionParser::parse(const std::string& userBase, const std::string& outputB
             }
             
 			contents.append(ts);
+#ifndef NDEBUG
+            static std::map<std::string, int> types;
+            std::string key = templateKey + "_" + values["%%ALIGNMENT%%"];
+            if (types.find(key) == types.end())
+            {
+                types[key] = record.type;
+                writeFile(combinePath(outputBase, "type_" + key + ".html"), ts);
+            }
+#endif
         }
     }
     
