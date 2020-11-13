@@ -5,6 +5,7 @@
 //  Created by Matthew on 2020/9/30.
 //  Copyright © 2020 Matthew. All rights reserved.
 //
+#if 0
 #include "Utils.h"
 
 #ifdef _WIN32
@@ -67,3 +68,5 @@ void setThreadName(const char* threadName)
     pthread_setname_np(threadName);
 }
 #endif
+
+#endif // 0

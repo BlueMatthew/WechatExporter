@@ -103,7 +103,6 @@ bool Exporter::run()
 
 bool Exporter::runImpl()
 {
-    setThreadName("wxexp");
     time_t startTime;
     std::time(&startTime);
     notifyStart();
