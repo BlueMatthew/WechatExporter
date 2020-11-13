@@ -88,13 +88,6 @@ Downloader::~Downloader()
 
 void Downloader::addTask(const std::string &url, const std::string& output)
 {
-#ifndef NDEBUG
-	size_t pos = url.find("design");
-	if (pos != std::string::npos || url.empty())
-	{
-		int aa = 1;
-	}
-#endif
     std::string formatedPath = output;
     std::replace(formatedPath.begin(), formatedPath.end(), DIR_SEP_R, DIR_SEP);
 
@@ -112,7 +105,7 @@ void Downloader::addTask(const std::string &url, const std::string& output)
     if (existed)
     {
 #ifndef NDEBUG
-        printf("URL Existed: %s\r\n", url.c_str());
+        // printf("URL Existed: %s\r\n", url.c_str());
 #endif
     }
 }
@@ -126,12 +119,6 @@ void Downloader::setNoMoreTask()
 
 void Downloader::run(int idx)
 {
-    {
-        char name[16] = {0};
-        sprintf(name, "dl_%d", idx);
-        setThreadName(name);
-    }
-    
     while(1)
     {
         bool found = false;
