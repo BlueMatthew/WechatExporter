@@ -436,13 +436,6 @@ bool SessionsParser::parseMessageDbs(const std::string& userRoot, std::vector<Se
 		{
 			itSession->dbFile = dbPath;
 		}
-		else
-		{
-#ifndef NDEBUG
-			std::string value = *it;
-			std::cout << value << std::endl;
-#endif
-		}
 	}
 
     for (ITunesFilesConstIterator it = dbs.cbegin(); it != dbs.cend(); ++it)
@@ -457,13 +450,6 @@ bool SessionsParser::parseMessageDbs(const std::string& userRoot, std::vector<Se
 			if (itSession != sessions.end() && itSession->Hash == *itId)
 			{
 				itSession->dbFile = dbPath;
-			}
-			else
-			{
-#ifndef NDEBUG
-				std::string value = *itId;
-				std::cout << value << std::endl;
-#endif
 			}
 		}
     }
@@ -795,9 +781,6 @@ bool SessionParser::parseRow(Record& record, const std::string& userBase, const 
     }
     else if (record.type == 34)
     {
-#ifndef NDEBUG
-        writeFile(combinePath(outputPath, "msg34.txt"), record.message);
-#endif
         int voicelen = -1;
         std::string vlenstr;
         XmlParser xmlParser(record.message);
