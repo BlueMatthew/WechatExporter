@@ -23,6 +23,7 @@
 		343F612D25234BD300FFE085 /* ITunesParser.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 343F612C25234BD300FFE085 /* ITunesParser.cpp */; };
 		343F613025234BFC00FFE085 /* libsqlite3.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 343F612F25234BFC00FFE085 /* libsqlite3.tbd */; };
 		349DAD2C255D3BB800BFE204 /* XmlParser.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 349DAD2A255D3BB800BFE204 /* XmlParser.cpp */; };
+		349DAD32255E6A0700BFE204 /* Utils_thread.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 349DAD31255E6A0600BFE204 /* Utils_thread.cpp */; };
 		34E3E90A2531BD8E0093042D /* Utils_md5.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 34E3E9092531BD8E0093042D /* Utils_md5.cpp */; };
 		34E3E90C2531BE200093042D /* Utils_protobuf.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 34E3E90B2531BE1F0093042D /* Utils_protobuf.cpp */; };
 		34E3E9242535555F0093042D /* RawMessage.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 34E3E9232535555F0093042D /* RawMessage.cpp */; };
@@ -65,6 +66,7 @@
 		345C8D4E2543F5E30036368C /* semaphore.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = semaphore.h; sourceTree = "<group>"; };
 		349DAD2A255D3BB800BFE204 /* XmlParser.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = XmlParser.cpp; sourceTree = "<group>"; };
 		349DAD2B255D3BB800BFE204 /* XmlParser.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = XmlParser.h; sourceTree = "<group>"; };
+		349DAD31255E6A0600BFE204 /* Utils_thread.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Utils_thread.cpp; sourceTree = "<group>"; };
 		34CC0787253D98CA00AC8860 /* ByteArrayLocater.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ByteArrayLocater.h; sourceTree = "<group>"; };
 		34E3E9022525C20E0093042D /* ShellImpl.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ShellImpl.h; sourceTree = "<group>"; };
 		34E3E9032525C2640093042D /* LoggerImpl.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = LoggerImpl.h; sourceTree = "<group>"; };
@@ -160,6 +162,7 @@
 				34E3E9092531BD8E0093042D /* Utils_md5.cpp */,
 				34E3E90B2531BE1F0093042D /* Utils_protobuf.cpp */,
 				34ED32072552A98600C42698 /* Utils_silk.cpp */,
+				349DAD31255E6A0600BFE204 /* Utils_thread.cpp */,
 				342EDB0825247852006A295A /* Utils.cpp */,
 				342EDAFE2524485C006A295A /* Utils.h */,
 				342EDAFD25241E64006A295A /* WechatObjects.h */,
@@ -268,6 +271,7 @@
 				343F6122252322D600FFE085 /* main.m in Sources */,
 				342EDAFC25241D91006A295A /* WechatParser.cpp in Sources */,
 				342EDB0925247852006A295A /* Utils.cpp in Sources */,
+				349DAD32255E6A0700BFE204 /* Utils_thread.cpp in Sources */,
 				343F6117252322D500FFE085 /* AppDelegate.m in Sources */,
 				342EDAF825236A63006A295A /* BackupItem.m in Sources */,
 				349DAD2C255D3BB800BFE204 /* XmlParser.cpp in Sources */,

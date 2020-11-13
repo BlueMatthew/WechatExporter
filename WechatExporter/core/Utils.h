@@ -9,6 +9,7 @@
 #include <string>
 #include <vector>
 #include <map>
+#include <thread>
 #include <locale>
 
 #ifdef _WIN32
@@ -81,5 +82,7 @@ bool silkToPcm(const std::string& silkPath, const std::string& pcmPath);
 
 bool pcmToMp3(const std::string& pcmPath, const std::string& mp3Path);
 bool pcmToMp3(const std::vector<unsigned char>& pcmData, const std::string& mp3Path);
+
+void setThreadName(const char* threadName);
 
 #endif /* Utils_h */

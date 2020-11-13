@@ -6,47 +6,36 @@
 class ExportNotifierImpl : public ExportNotifier
 {
 protected:
-	HWND m_hWndProgress;
-	std::vector<HWND> m_ctrls;
-	bool m_isCancelled;
+	HWND m_hWnd;
 
 public:
-	ExportNotifierImpl(HWND hWndProgress, std::vector<HWND>& ctrls) : m_hWndProgress(hWndProgress), m_isCancelled(false)
+	static const DWORD WM_START = WM_USER + 10;
+	static const DWORD WM_COMPLETE = WM_USER + 11;
+	static const DWORD WM_PROGRESS = WM_USER + 12;
+
+public:
+	ExportNotifierImpl(HWND hWnd) : m_hWnd(hWnd)
 	{
-		m_ctrls = ctrls;
 	}
 
 	~ExportNotifierImpl()
 	{
-		m_hWndProgress = NULL;
-	}
-
-	void cancel()
-	{
-		m_isCancelled = true;
-	}
-
-	bool isCancelled() const
-	{
-		return m_isCancelled;
+		m_hWnd = NULL;
 	}
 
 	void onStart() const
 	{
-		::PostMessage(m_hWndProgress, PBM_SETMARQUEE, (WPARAM)TRUE, (LPARAM)0);
+		::PostMessage(m_hWnd, WM_START, (WPARAM)0, (LPARAM)0);
 	}
 
 	void onProgress(double progress) const
 	{
+		// ::PostMessage(m_hWnd, WM_PROGRESS, (WPARAM)0, (LPARAM)&progress);
 	}
 	
 	void onComplete(bool cancelled) const
 	{
-		for (std::vector<HWND>::const_iterator it = m_ctrls.cbegin(); it != m_ctrls.cend(); ++it)
-		{
-			::EnableWindow(*it, TRUE);
-		}
-		::PostMessage(m_hWndProgress, PBM_SETMARQUEE, (WPARAM)FALSE, (LPARAM)0);
+		::PostMessage(m_hWnd, WM_COMPLETE, (WPARAM)0, (LPARAM)cancelled);
 	}
 };
 

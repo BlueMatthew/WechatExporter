@@ -11,15 +11,20 @@
 @interface ViewController : NSViewController
 
 @property (weak) IBOutlet NSButton *btnExport;
+@property (weak) IBOutlet NSButton *btnCancel;
 @property (weak) IBOutlet NSTextField *txtboxOutput;
 @property (weak) IBOutlet NSComboBox *cmbboxBackup;
 
 @property (weak) IBOutlet NSButton *btnBackup;
 @property (weak) IBOutlet NSButton *btnOutput;
 
-@property (assign) IBOutlet NSTextView *txtViewLogs;
-@property (weak) IBOutlet NSScrollView *sclViewLogs;
 @property (weak) IBOutlet NSProgressIndicator *progressBar;
+@property (weak) IBOutlet NSScrollView *sclViewLogs;
+@property (unsafe_unretained) IBOutlet NSTextView *txtViewLogs;
+
+- (void)writeLog:(NSString *)log;
+- (void)onStart;
+- (void)onComplete:(BOOL)cancelled;
 
 @end
 

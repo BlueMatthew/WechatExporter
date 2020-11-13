@@ -745,6 +745,17 @@
                                     <font key="font" metaFont="system"/>
                                 </buttonCell>
                             </button>
+                            <button verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="kaB-gl-s4B">
+                                <rect key="frame" x="444" y="7" width="96" height="32"/>
+                                <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                                <buttonCell key="cell" type="push" title="Cancel" bezelStyle="rounded" alignment="center" enabled="NO" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="CHb-bh-1kG">
+                                    <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
+                                    <font key="font" metaFont="system"/>
+                                    <string key="keyEquivalent" base64-UTF8="YES">
+Gw
+</string>
+                                </buttonCell>
+                            </button>
                             <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="9La-2q-J8z">
                                 <rect key="frame" x="8" y="326" width="108" height="16"/>
                                 <autoresizingMask key="autoresizingMask"/>
@@ -762,33 +773,6 @@
                                     <font key="font" metaFont="system"/>
                                 </buttonCell>
                             </button>
-                            <scrollView fixedFrame="YES" borderType="none" horizontalLineScroll="10" horizontalPageScroll="10" verticalLineScroll="10" verticalPageScroll="10" hasHorizontalScroller="NO" translatesAutoresizingMaskIntoConstraints="NO" id="MhA-6K-ayc">
-                                <rect key="frame" x="10" y="43" width="620" height="241"/>
-                                <autoresizingMask key="autoresizingMask"/>
-                                <clipView key="contentView" drawsBackground="NO" copiesOnScroll="NO" id="cWn-Cz-sQb">
-                                    <rect key="frame" x="0.0" y="0.0" width="605" height="241"/>
-                                    <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
-                                    <subviews>
-                                        <textView editable="NO" importsGraphics="NO" richText="NO" verticallyResizable="YES" spellingCorrection="YES" smartInsertDelete="YES" id="qvj-dT-WtI">
-                                            <rect key="frame" x="0.0" y="0.0" width="605" height="241"/>
-                                            <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
-                                            <color key="textColor" name="textColor" catalog="System" colorSpace="catalog"/>
-                                            <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
-                                            <size key="minSize" width="605" height="241"/>
-                                            <size key="maxSize" width="620" height="10000000"/>
-                                            <color key="insertionPointColor" name="textColor" catalog="System" colorSpace="catalog"/>
-                                        </textView>
-                                    </subviews>
-                                </clipView>
-                                <scroller key="horizontalScroller" hidden="YES" wantsLayer="YES" verticalHuggingPriority="750" horizontal="YES" id="yNa-GR-XcQ">
-                                    <rect key="frame" x="-100" y="-100" width="240" height="16"/>
-                                    <autoresizingMask key="autoresizingMask"/>
-                                </scroller>
-                                <scroller key="verticalScroller" wantsLayer="YES" verticalHuggingPriority="750" horizontal="NO" id="wuP-QN-S7o">
-                                    <rect key="frame" x="605" y="0.0" width="15" height="241"/>
-                                    <autoresizingMask key="autoresizingMask"/>
-                                </scroller>
-                            </scrollView>
                             <progressIndicator wantsLayer="YES" fixedFrame="YES" maxValue="100" indeterminate="YES" style="bar" translatesAutoresizingMaskIntoConstraints="NO" id="VMi-pK-9Z0">
                                 <rect key="frame" x="10" y="16" width="409" height="20"/>
                                 <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
@@ -801,16 +785,44 @@
                                     <font key="font" metaFont="system"/>
                                 </buttonCell>
                             </button>
+                            <scrollView fixedFrame="YES" borderType="none" autohidesScrollers="YES" horizontalLineScroll="10" horizontalPageScroll="10" verticalLineScroll="10" verticalPageScroll="10" hasHorizontalScroller="NO" translatesAutoresizingMaskIntoConstraints="NO" id="Mkn-sk-kD7">
+                                <rect key="frame" x="12" y="43" width="618" height="241"/>
+                                <autoresizingMask key="autoresizingMask"/>
+                                <clipView key="contentView" drawsBackground="NO" copiesOnScroll="NO" id="jiT-mv-qJD">
+                                    <rect key="frame" x="0.0" y="0.0" width="618" height="241"/>
+                                    <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                                    <subviews>
+                                        <textView editable="NO" importsGraphics="NO" richText="NO" verticallyResizable="YES" textCompletion="NO" id="09Z-23-gCi">
+                                            <rect key="frame" x="0.0" y="0.0" width="618" height="241"/>
+                                            <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                                            <color key="textColor" name="textColor" catalog="System" colorSpace="catalog"/>
+                                            <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
+                                            <size key="minSize" width="618" height="241"/>
+                                            <size key="maxSize" width="618" height="10000000"/>
+                                            <color key="insertionPointColor" name="textColor" catalog="System" colorSpace="catalog"/>
+                                        </textView>
+                                    </subviews>
+                                </clipView>
+                                <scroller key="horizontalScroller" hidden="YES" verticalHuggingPriority="750" horizontal="YES" id="F2k-Dr-bCj">
+                                    <rect key="frame" x="-100" y="-100" width="225" height="15"/>
+                                    <autoresizingMask key="autoresizingMask"/>
+                                </scroller>
+                                <scroller key="verticalScroller" hidden="YES" verticalHuggingPriority="750" horizontal="NO" id="5aF-5y-0Jo">
+                                    <rect key="frame" x="603" y="0.0" width="15" height="241"/>
+                                    <autoresizingMask key="autoresizingMask"/>
+                                </scroller>
+                            </scrollView>
                         </subviews>
                     </view>
                     <connections>
                         <outlet property="btnBackup" destination="8gl-oS-xn6" id="ykX-mi-M09"/>
+                        <outlet property="btnCancel" destination="kaB-gl-s4B" id="pBJ-1v-c4B"/>
                         <outlet property="btnExport" destination="c7I-ig-uay" id="L8d-sU-cTy"/>
                         <outlet property="btnOutput" destination="ybQ-bI-p2r" id="pAc-FC-1zh"/>
                         <outlet property="cmbboxBackup" destination="MCy-Pf-KGR" id="RR8-hc-S2u"/>
                         <outlet property="progressBar" destination="VMi-pK-9Z0" id="O1p-nX-RQW"/>
-                        <outlet property="sclViewLogs" destination="MhA-6K-ayc" id="TE8-EL-GLk"/>
-                        <outlet property="txtViewLogs" destination="qvj-dT-WtI" id="EMo-a9-0sV"/>
+                        <outlet property="sclViewLogs" destination="Mkn-sk-kD7" id="42K-bF-yhL"/>
+                        <outlet property="txtViewLogs" destination="09Z-23-gCi" id="8iS-At-7Jk"/>
                         <outlet property="txtboxOutput" destination="az7-4y-9PZ" id="H1v-yu-igB"/>
                     </connections>
                 </viewController>

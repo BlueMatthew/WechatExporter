@@ -64,8 +64,9 @@ public:
     
     void addTask(const std::string &url, const std::string& output);
     void setNoMoreTask();
-    void run();
+    void run(int idx);
     
+    void cancel();
     void finishAndWaitForExit();
     int getCount() const;
 };

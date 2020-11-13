@@ -46,22 +46,38 @@ void errorLogCallback(void *pArg, int iErrCode, const char *zMsg)
 
 -(void)dealloc
 {
+    [self stopExporting];
+}
+
+- (void)stopExporting
+{
     if (NULL != m_exp)
     {
+        m_exp->cancel();
+        m_exp->waitForComplition();
         delete m_exp;
+        m_exp = NULL;
     }
     if (NULL != m_notifier)
     {
         delete m_notifier;
+        m_notifier = NULL;
     }
     if (NULL != m_logger)
     {
         delete m_logger;
+        m_logger = NULL;
     }
     if (NULL != m_shell)
     {
         delete m_shell;
+        m_shell = NULL;
     }
+    
+    [self.btnBackup setAction:nil];
+    [self.btnOutput setAction:nil];
+    [self.btnExport setAction:nil];
+    [self.btnCancel setAction:nil];
 }
 
 - (void)viewDidLoad {
@@ -71,19 +87,18 @@ void errorLogCallback(void *pArg, int iErrCode, const char *zMsg)
 
     [self.view.window center];
     
+    // self.txtboxLogs.
+    
     m_selectedIndex = 0;
     m_shell = new ShellImpl();
-    m_logger = new LoggerImpl(self.sclViewLogs, self.txtViewLogs);
-    std::vector<NSControl *> ctrls;
-    m_notifier = new ExportNotifierImpl(self.progressBar, ctrls);
+    m_logger = new LoggerImpl(self);
+    m_notifier = new ExportNotifierImpl(self);
     m_exp = NULL;
     
     [self.btnBackup setAction:@selector(btnBackupClicked:)];
     [self.btnOutput setAction:@selector(btnOutputClicked:)];
     [self.btnExport setAction:@selector(btnExportClicked:)];
-    
-    // btnBackupPicker.all
-    // Do any additional setup after loading the view.
+    [self.btnCancel setAction:@selector(btnCancelClicked:)];
     
     NSFileManager *fileManager = [NSFileManager defaultManager];
     
@@ -121,6 +136,13 @@ void errorLogCallback(void *pArg, int iErrCode, const char *zMsg)
         std::vector<BackupManifest> manifests = parser.parse();
         [self updateBackups:manifests];
     }
+}
+
+- (void)viewWillDisappear
+{
+    [super viewWillDisappear];
+    
+    [self stopExporting];
 }
 
 - (void)updateBackups:(const std::vector<BackupManifest>&) manifests
@@ -235,8 +257,6 @@ void errorLogCallback(void *pArg, int iErrCode, const char *zMsg)
         return;
     }
     
-    self.txtViewLogs.string = @"";
-    
     if (self.cmbboxBackup.indexOfSelectedItem == -1 || self.cmbboxBackup.indexOfSelectedItem >= m_manifests.size())
     {
         [self msgBox:@"请选择iTunes备份目录。"];
@@ -265,8 +285,22 @@ void errorLogCallback(void *pArg, int iErrCode, const char *zMsg)
         return;
     }
     
+    self.txtViewLogs.string = @"";
+    [self onStart];
     NSDictionary *dict = @{@"backup": backupPath, @"output": outputPath };
     [NSThread detachNewThreadSelector:@selector(run:) toTarget:self withObject:dict];
+}
+
+- (void)btnCancelClicked:(id)sender
+{
+    if (NULL == m_exp)
+    {
+        // [self msgBox:@"当前未执行导出。"];
+        return;
+    }
+    
+    m_exp->cancel();
+    [self.btnCancel setEnabled:NO];
 }
 
 - (void)run:(NSDictionary *)dict
@@ -279,11 +313,6 @@ void errorLogCallback(void *pArg, int iErrCode, const char *zMsg)
         [self msgBox:@"参数错误。"];
         return;
     }
-    
-    // std::string backup =  "/Users/matthew/Documents/reebes/MobileSync/Backup/11833774f1a5eed6ca84c0270417670f1483deae/";
-    // backup = "/Users/matthew/Library/Application Support/MobileSync/Backup/11833774f1a5eed6ca84c0270417670f1483deae";
-    
-    // std::string output = "/Users/matthew/Documents/reebes/wx_android_h5/";
     
     NSString *workDir = [[NSFileManager defaultManager] currentDirectoryPath];
     
@@ -305,6 +334,57 @@ void errorLogCallback(void *pArg, int iErrCode, const char *zMsg)
         alert.window.title = title;
         [alert runModal];
     });
+}
+
+- (void)onStart
+{
+    self.view.window.styleMask &= ~NSClosableWindowMask;
+    [self.cmbboxBackup setEnabled:NO];
+    [self.btnOutput setEnabled:NO];
+    [self.btnBackup setEnabled:NO];
+    [self.btnExport setEnabled:NO];
+    [self.btnCancel setEnabled:YES];
+    [self.progressBar startAnimation:nil];
+}
+
+- (void)onComplete:(BOOL)cancelled
+{
+    self.view.window.styleMask |= NSClosableWindowMask;
+    [self.btnExport setEnabled:YES];
+    [self.btnCancel setEnabled:NO];
+    [self.cmbboxBackup setEnabled:YES];
+    [self.btnOutput setEnabled:YES];
+    [self.btnBackup setEnabled:YES];
+    [self.progressBar stopAnimation:nil];
+}
+
+- (void)writeLog:(NSString *)log
+{
+    NSString *newLog = nil;
+   
+    if (nil == self.txtViewLogs.string || self.txtViewLogs.string.length == 0)
+    {
+        self.txtViewLogs.string = [log copy];
+    }
+    else
+    {
+        newLog = [NSString stringWithFormat:@"%@\n%@", self.txtViewLogs.string, log];
+        self.txtViewLogs.string = newLog;
+    }
+
+    NSPoint newScrollOrigin;
+    // assume that the scrollview is an existing variable
+    if ([[self.sclViewLogs documentView] isFlipped])
+    {
+        newScrollOrigin = NSMakePoint(0.0, NSMaxY([[self.sclViewLogs documentView] frame])
+                                       -NSHeight([[self.sclViewLogs contentView] bounds]));
+    }
+    else
+    {
+        newScrollOrigin = NSMakePoint(0.0,0.0);
+    }
+
+    [[self.sclViewLogs documentView] scrollPoint:newScrollOrigin];
 }
 
 @end

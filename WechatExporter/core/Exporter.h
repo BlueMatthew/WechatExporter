@@ -11,6 +11,7 @@
 #include <string>
 #include <atomic>
 #include <thread>
+#include <atomic>
 
 #include "Logger.h"
 #include "Shell.h"
@@ -46,6 +47,8 @@ protected:
 
 	ExportNotifier* m_notifier;
     
+    std::atomic<bool> m_cancelled;
+    
 public:
     Exporter(const std::string& workDir, const std::string& backup, const std::string& output, Shell* shell, Logger* logger);
     ~Exporter();
@@ -54,6 +57,7 @@ public:
     
     bool run();
 	bool isRunning() const;
+    void cancel();
 	void waitForComplition();
 
 protected:

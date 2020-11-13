@@ -83,8 +83,9 @@ BEGIN
     LTEXT           "聊天记录输出目录：",IDC_STATIC,7,39,361,8
     PUSHBUTTON      "...",IDC_CHOOSE_OUTPUT,371,53,15,14
     LISTBOX         IDC_LOG,7,74,378,96,LBS_NOINTEGRALHEIGHT | WS_VSCROLL | WS_TABSTOP
-    PUSHBUTTON      "导出",IDC_EXPORT,336,175,50,14
+    PUSHBUTTON      "导出(&E)",IDC_EXPORT,336,175,50,14
     CONTROL         "",IDC_PROGRESS,"msctls_progress32",WS_BORDER,7,175,246,14
+    PUSHBUTTON      "取消(&C)",IDC_CANCEL,275,175,50,14,WS_DISABLED
 END
 
 
@@ -187,6 +188,7 @@ BEGIN
     IDR_MAINFRAME           "WechatExporter"
     IDS_SEL_BACKUP_DIR      "请选择iTunes备份目录。"
     IDS_SEL_OUTPUT_DIR      "请选择聊天记录输出目录。"
+    IDS_CANCEL_PROMPT       "确定要取消导出吗？"
 END
 
 STRINGTABLE
