@@ -138,13 +138,6 @@ void errorLogCallback(void *pArg, int iErrCode, const char *zMsg)
     }
 }
 
-- (void)viewWillDisappear
-{
-    [super viewWillDisappear];
-    
-    [self stopExporting];
-}
-
 - (void)updateBackups:(const std::vector<BackupManifest>&) manifests
 {
     int selectedIndex = -1;
