@@ -27,6 +27,16 @@ public:
 		return ::SHCreateDirectoryEx(NULL, (LPCTSTR)pszT, NULL) == ERROR_SUCCESS;
 	}
 
+	bool existsFile(const std::string& path) const
+	{
+		CW2T pszT(CA2W(path.c_str(), CP_UTF8));
+
+		DWORD dwAttrib = ::GetFileAttributes((LPCTSTR)pszT);
+
+		return (dwAttrib != INVALID_FILE_ATTRIBUTES &&
+			(dwAttrib & FILE_ATTRIBUTE_DIRECTORY) == 0);
+	}
+
 	bool listSubDirectories(const std::string& path, std::vector<std::string>& subDirectories) const
 	{
 		WIN32_FIND_DATA FindFileData;
