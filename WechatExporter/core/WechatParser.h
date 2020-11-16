@@ -229,7 +229,7 @@ private:
     std::string getTemplate(const std::string& key) const;
 	std::string getLocaleString(const std::string& key) const;
     std::string getDisplayTime(int ms) const;
-    bool requireResource(const std::string& vpath, const std::string& dest) const;
+    bool requireFile(const std::string& vpath, const std::string& dest) const;
     bool parseRow(Record& record, const std::string& userBase, const std::string& path, const Session& session, std::string& templateKey, std::map<std::string, std::string>& templateValues) const;
 };
 

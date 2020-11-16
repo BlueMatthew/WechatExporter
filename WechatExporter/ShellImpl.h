@@ -31,6 +31,15 @@ public:
         return existed == YES && isDir == YES;
     }
     
+    bool existsFile(const std::string& path) const
+    {
+        BOOL isDir = NO;
+        NSString *ocPath = [NSString stringWithUTF8String: path.c_str()];
+        
+        BOOL existed = [[NSFileManager defaultManager] fileExistsAtPath:ocPath isDirectory:&isDir];
+        return existed == YES;
+    }
+    
     bool listSubDirectories(const std::string& path, std::vector<std::string>& subDirectories) const
 	{
 		struct dirent *entry;
