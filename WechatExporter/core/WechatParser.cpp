@@ -861,8 +861,8 @@ bool SessionParser::parseRow(Record& record, const std::string& userBase, const 
     }
     else if (record.type == 62 || record.type == 43)
     {
-        bool hasthum = requireResource(combinePath(userBase, "Video", session.Hash, msgIdStr + ".video_thum"), combinePath(assetsDir, msgIdStr + "_thum.jpg"));
-        bool hasvid = requireResource(combinePath(userBase, "Video", session.Hash, msgIdStr + ".mp4"), combinePath(assetsDir, msgIdStr + ".mp4"));
+        bool hasthum = requireFile(combinePath(userBase, "Video", session.Hash, msgIdStr + ".video_thum"), combinePath(assetsDir, msgIdStr + "_thum.jpg"));
+        bool hasvid = requireFile(combinePath(userBase, "Video", session.Hash, msgIdStr + ".mp4"), combinePath(assetsDir, msgIdStr + ".mp4"));
 
 		std::string msgFile;
 		if (hasthum || hasvid)
@@ -908,8 +908,8 @@ bool SessionParser::parseRow(Record& record, const std::string& userBase, const 
     {
 		std::string vfile = combinePath(userBase, "Img", session.Hash, msgIdStr);
 
-        bool hasthum = requireResource(vfile + ".pic_thum", combinePath(assetsDir, msgIdStr + "_thum.jpg"));
-        bool haspic = requireResource(vfile + ".pic", combinePath(assetsDir, msgIdStr + ".jpg"));
+        bool hasthum = requireFile(vfile + ".pic_thum", combinePath(assetsDir, msgIdStr + "_thum.jpg"));
+        bool haspic = requireFile(vfile + ".pic", combinePath(assetsDir, msgIdStr + ".jpg"));
         
 		std::string msgFile;
 		if (hasthum || haspic)
@@ -1053,11 +1053,18 @@ std::string SessionParser::getLocaleString(const std::string& key) const
 	return it == m_localeStrings.cend() ? key : it->second;
 }
 
-bool SessionParser::requireResource(const std::string& vpath, const std::string& dest) const
+bool SessionParser::requireFile(const std::string& vpath, const std::string& dest) const
 {
     std::string srcPath = m_iTunesDb.findRealPath(vpath);
     if (!srcPath.empty())
     {
+#ifndef NDEBUG
+        // Make debug more effective
+        if (m_shell.existsFile(srcPath))
+        {
+            return true;
+        }
+#endif
         return m_shell.copyFile(srcPath, dest, true);
     }
     
