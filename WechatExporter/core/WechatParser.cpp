@@ -393,19 +393,23 @@ bool SessionsParser::parse(const std::string& userRoot, std::vector<Session>& se
         if (NULL != extFileName) session.ExtFileName = extFileName;
         session.UnreadCount = sqlite3_column_int(stmt, 2);
         
+        if (session.UsrName == "sun_yunfeng")
+        {
+            int aa = 1;
+        }
+        
         if (!session.ExtFileName.empty())
         {
             parseCellData(userRoot, session);
         }
-        if (!session.isChatroom() && session.DisplayName.empty())
+        const Friend* f = friends.getFriend(session.Hash);
+        if (NULL != f)
         {
-            const Friend* f = friends.getFriend(session.Hash);
-            if (NULL != f)
+            if (!session.isChatroom())
             {
-                session.DisplayName = f->DisplayName();
+                session.copyInfoFromFriend(*f);
             }
         }
-        
     }
     
     sqlite3_finalize(stmt);

@@ -145,12 +145,6 @@ public:
         }
         return &(it->second);
     }
-    const Friend* getFriendByUid(const std::string& uid) const
-    {
-        std::map<std::string, std::string>::const_iterator it = hashes.find(uid);
-        std::string hash = it == hashes.cend() ? md5(uid) : it->second;
-        return getFriend(hash);
-    }
     Friend* getFriend(const std::string& uidHash)
     {
         std::map<std::string, Friend>::iterator it = friends.find(uidHash);
@@ -158,8 +152,13 @@ public:
         {
             return NULL;
         }
-        
         return &(it->second);
+    }
+    const Friend* getFriendByUid(const std::string& uid) const
+    {
+        std::map<std::string, std::string>::const_iterator it = hashes.find(uid);
+        std::string hash = it == hashes.cend() ? md5(uid) : it->second;
+        return getFriend(hash);
     }
     Friend* getFriendByUid(const std::string& uid)
     {
@@ -221,6 +220,25 @@ struct Session
     {
         std::map<std::string, std::pair<std::string, std::string>>::const_iterator it = Members.find(uidHash);
         return it != Members.cend() ? it->second.second : "";
+    }
+    
+    bool copyInfoFromFriend(const Friend& f)
+    {
+        if (UsrName != f.getUsrName())
+        {
+            return false;
+        }
+        
+        if (DisplayName.empty())
+        {
+            DisplayName = f.DisplayName();
+        }
+        if (Portrait.empty())
+        {
+            Portrait = f.getPortraitUrl();
+        }
+        
+        return true;
     }
     
     bool exportToFriend(Friend& f)

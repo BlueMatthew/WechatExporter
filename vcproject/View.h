@@ -246,6 +246,8 @@ public:
 	LRESULT OnStart(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 	{
 		EnableInteractiveCtrls(FALSE);
+		CProgressBarCtrl progressCtrl = GetDlgItem(IDC_PROGRESS);
+		progressCtrl.SetMarquee(TRUE, 0);
 		return 0;
 	}
 
@@ -257,6 +259,8 @@ public:
 			delete m_exporter;
 			m_exporter = NULL;
 		}
+		CProgressBarCtrl progressCtrl = GetDlgItem(IDC_PROGRESS);
+		progressCtrl.SetMarquee(FALSE, 0);
 		EnableInteractiveCtrls(TRUE);
 		return 0;
 	}
