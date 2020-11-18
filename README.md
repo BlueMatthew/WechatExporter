@@ -23,10 +23,10 @@ MacOS版本：MacOS 10.10(Yosemite)+
 程序依赖如下第三方库：
 - libxml2: http://www.xmlsoft.org/  
 - libcurl: https://curl.se/libcurl/  
-- libsqlite3: https://www.sqlite.org/index.html  
-- libmp3lame: http://lame.sourceforge.net/  
+- libsqlite3: https://www.sqlite.org/index.html   
 - libprotobuf: https://github.com/protocolbuffers/protobuf  
 - libjsoncpp: https://github.com/open-source-parsers/jsoncpp  
+- lame: http://lame.sourceforge.net/ 
 - silk: https://github.com/collects/silk (也参考了： https://github.com/kn007/silk-v3-decoder)  
 - libplist: https://github.com/libimobiledevice/libplist  https://github.com/libimobiledevice-win32/libplist  
 - libiconv(windows only): https://www.gnu.org/software/libiconv/  
