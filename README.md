@@ -5,7 +5,7 @@
 ## 操作步骤：
 1. 通过iTunes将手机备份到电脑上（建议备份前杀掉微信），Windows操作系统一般位于目录：C:\用户[用户名]\AppData\Roaming\Apple Computer\MobileSync\Backup\。Android手机可以找一个iPad/iPhone设备，把聊天记录迁移到iPad/iPhone设备上，然后通过iTunes备份到电脑上。
 
-2. 下载本代码的执行文件：https://github.com/BlueMatthew/WechatExport-iOS/releases/download/v1.5.0/Release_1.5.0_win.zip
+2. 下载本代码的执行文件：[Windows x64版本](https://github.com/BlueMatthew/WechatExporter/releases/download/v1.0/x64_win.zip) 或者 [MacOS x64版本](https://github.com/BlueMatthew/WechatExporter/releases/download/v1.0/x64_macos.zip)
 解压压缩文件
 
 3. 执行解压出来的WechatExport.exe (如果运行报缺少必须的dll文件，请安装Visual C++ 2017 redist后再尝试运行)
