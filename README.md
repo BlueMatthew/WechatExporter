@@ -21,16 +21,16 @@ MacOS本本：MacOS 10.10(Yosemite)+
 
 ## 程序编译
 程序依赖如下第三方库：
-libxml2: http://www.xmlsoft.org/  
-libcurl: https://curl.se/libcurl/  
-libsqlite3: https://www.sqlite.org/index.html  
-libmp3lame: http://lame.sourceforge.net/  
-libprotobuf: https://github.com/protocolbuffers/protobuf  
-libjsoncpp: https://github.com/open-source-parsers/jsoncpp  
-silk: https://github.com/collects/silk (也参考了： https://github.com/kn007/silk-v3-decoder)  
-libplist: https://github.com/libimobiledevice/libplist  https://github.com/libimobiledevice-win32/libplist  
-libiconv(windows only): https://www.gnu.org/software/libiconv/  
-openssl(windows only)  
+- libxml2: http://www.xmlsoft.org/  
+- libcurl: https://curl.se/libcurl/  
+- libsqlite3: https://www.sqlite.org/index.html  
+- libmp3lame: http://lame.sourceforge.net/  
+- libprotobuf: https://github.com/protocolbuffers/protobuf  
+- libjsoncpp: https://github.com/open-source-parsers/jsoncpp  
+- silk: https://github.com/collects/silk (也参考了： https://github.com/kn007/silk-v3-decoder)  
+- libplist: https://github.com/libimobiledevice/libplist  https://github.com/libimobiledevice-win32/libplist  
+- libiconv(windows only): https://www.gnu.org/software/libiconv/  
+- openssl(windows only)  
 
 MacOS下，libxml2,libcurl,libsqlite3直接使用了Xcode自带的库，其它第三方库需自行编译。  
 libmp3lame需手动删除文件include/libmp3lame.sym中的行：lame_init_old  
