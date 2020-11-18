@@ -5,10 +5,9 @@
 ## 操作步骤：
 1. 通过iTunes将手机备份到电脑上（建议备份前杀掉微信），Windows操作系统一般位于目录：C:\用户[用户名]\AppData\Roaming\Apple Computer\MobileSync\Backup\。Android手机可以找一个iPad/iPhone设备，把聊天记录迁移到iPad/iPhone设备上，然后通过iTunes备份到电脑上。
 
-2. 下载本代码的执行文件：[Windows x64版本](https://github.com/BlueMatthew/WechatExporter/releases/download/v1.0/x64_win.zip) 或者 [MacOS x64版本](https://github.com/BlueMatthew/WechatExporter/releases/download/v1.0/x64_macos.zip)
-解压压缩文件
+2. 下载本代码的执行文件：[Windows x64版本](https://github.com/BlueMatthew/WechatExporter/releases/download/v1.0/x64_win.zip) 或者 [MacOS x64版本](https://github.com/BlueMatthew/WechatExporter/releases/download/v1.0/x64_macos.zip)，然后解压压缩文件
 
-3. 执行解压出来的WechatExport.exe (如果运行报缺少必须的dll文件，请安装Visual C++ 2017 redist后再尝试运行)
+3. 执行解压出来的WechatExport.exe (如果运行报缺少必须的dll文件，请安装[Visual C++ 2017 redist](https://aka.ms/vs/16/release/vc_redist.x64.exe)后再尝试运行)
 
 4. 按界面提示进行操作。
 
@@ -16,7 +15,7 @@
 解压目录下的res\templates(MacOS版本位于Contents\Resources\res)子目录里存放了输出聊天记录的html页面模版，其中通过两个%包含起来的字符串，譬如，%%NAME%%，不要修改之外，其它页面内容和格式都可以自行调整。
 
 ## 系统依赖：
-windows版本：windows 7+, Visual C++ 2017 redist(https://aka.ms/vs/16/release/vc_redist.x64.exe at https://support.microsoft.com/en-us/help/2977003/the-latest-supported-visual-c-downloads)  
+windows版本：windows 7+, [Visual C++ 2017 redist](https://aka.ms/vs/16/release/vc_redist.x64.exe) at [The latest supported Visual C++ downloads](https://support.microsoft.com/en-us/help/2977003/the-latest-supported-visual-c-downloads)  
 MacOS本本：MacOS 10.10(Yosemite)+
 
 
