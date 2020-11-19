@@ -242,6 +242,7 @@ void errorLogCallback(void *pArg, int iErrCode, const char *zMsg)
     })];
 }
 
+
 - (void)btnExportClicked:(id)sender
 {
     if (NULL != m_exp)
@@ -312,6 +313,9 @@ void errorLogCallback(void *pArg, int iErrCode, const char *zMsg)
     workDir = [[NSBundle mainBundle] resourcePath];
     
     m_exp = new Exporter([workDir UTF8String], [backup UTF8String], [output UTF8String], m_shell, m_logger);
+#ifndef NDEBUG
+    m_exp->ignoreAudio();
+#endif
     m_exp->setNotifier(m_notifier);
     
     m_exp->run();

@@ -122,15 +122,13 @@
 		"key": "Completed in %s.",
 		"value": "导出完成，耗时：%s"
 	},
-
 	{
 		"key": "Cancelled in %s.",
 		"value": "导出被取消，用时：%s"
 	},
-	
 	{
-		"key": "",
-		"value": ""
+		"key": "Waiting for images(%d) downloading.",
+		"value": "等待%d张图片下载。"
 	},
 	{
 		"key": "",

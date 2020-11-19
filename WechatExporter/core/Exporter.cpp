@@ -40,6 +40,7 @@ Exporter::Exporter(const std::string& workDir, const std::string& backup, const 
     m_logger = logger;
     m_notifier = NULL;
     m_cancelled = false;
+    m_ignoreAudio = false;
 }
 
 Exporter::~Exporter()
@@ -77,6 +78,12 @@ void Exporter::waitForComplition()
 
 	m_thread.join();
 }
+
+void Exporter::ignoreAudio(bool ignoreAudio/* = true*/)
+{
+    m_ignoreAudio = ignoreAudio;
+}
+
 
 bool Exporter::run()
 {
@@ -172,6 +179,14 @@ bool Exporter::runImpl()
     if (m_cancelled)
     {
         downloader.cancel();
+    }
+    else
+    {
+        int dlCount = downloader.getRunningCount();
+        if (dlCount > 0)
+        {
+            m_logger->write(formatString(getLocaleString("Waiting for images(%d) downloading."), dlCount));
+        }
     }
 
 	downloader.finishAndWaitForExit();
