@@ -54,7 +54,7 @@ class Downloader
 protected:
     std::queue<Task> m_queue;
     std::set<std::string> m_urls;
-    std::mutex m_mtx;
+    mutable std::mutex m_mtx;
     bool m_noMoreTask;
     std::vector<std::thread> m_threads;
     
@@ -69,6 +69,7 @@ public:
     void cancel();
     void finishAndWaitForExit();
     int getCount() const;
+    int getRunningCount() const;
 };
 
 #endif /* Downloader_h */

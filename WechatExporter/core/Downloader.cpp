@@ -33,6 +33,7 @@ void Task::run()
 	CURLcode res;
 	char errbuf[CURL_ERROR_SIZE] = { 0 };
 
+    // User-Agent: WeChat/7.0.15.33 CFNetwork/978.0.7 Darwin/18.6.0
     CURL *curl_handler = curl_easy_init();
     curl_easy_setopt(curl_handler, CURLOPT_URL, m_url.c_str());
     curl_easy_setopt(curl_handler, CURLOPT_TIMEOUT, 60);
@@ -176,4 +177,14 @@ void Downloader::finishAndWaitForExit()
 int Downloader::getCount() const
 {
     return static_cast<int>(m_urls.size());
+}
+
+int Downloader::getRunningCount() const
+{
+    size_t count  = 0;
+    m_mtx.lock();
+    count = m_queue.size();
+    m_mtx.unlock();
+    
+    return static_cast<int>(count);
 }

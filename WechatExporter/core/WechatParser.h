@@ -211,6 +211,7 @@ private:
     const std::map<std::string, std::string>& m_templates;
 	const std::map<std::string, std::string>& m_localeStrings;
 
+    bool m_ignoreAudio;
     Friends& m_friends;
     const ITunesDb& m_iTunesDb;
     const Shell&  m_shell;
@@ -223,6 +224,10 @@ private:
 public:
     
     SessionParser(Friend& myself, Friends& friends, const ITunesDb& iTunesDb, const Shell& shell, const std::map<std::string, std::string>& templates, const std::map<std::string, std::string>& localeStrings, Downloader& downloader, std::atomic<bool>& cancelled);
+    void ignoreAudio(bool ignoreAudio = true)
+    {
+        m_ignoreAudio = ignoreAudio;
+    }
     int parse(const std::string& userBase, const std::string& outputBase, const Session& session, std::string& contents) const;
     
 private:
