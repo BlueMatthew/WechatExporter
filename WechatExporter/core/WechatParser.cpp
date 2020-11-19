@@ -523,11 +523,17 @@ bool SessionsParser::parseCellData(const std::string& userRoot, Session& session
 
 	std::string value;
 	int value2;
-	if (msg.parse("1.1.4", value))
-	{
-		session.DisplayName.clear();
-		session.DisplayName.assign(value.c_str(), value.size());
-	}
+    if (msg.parse("1.1.6", value))
+    {
+        session.DisplayName = value;
+    }
+    if (msg.parse("1.1.4", value))
+    {
+        if (session.DisplayName.empty())
+        {
+            session.DisplayName = value;
+        }
+    }
 	if (msg.parse("1.1.14", value))
 	{
 		session.Portrait = value;
@@ -607,7 +613,7 @@ unsigned int SessionsParser::parseModifiedTime(std::vector<unsigned char>& data)
     return static_cast<unsigned int>(val);
 }
 
-SessionParser::SessionParser(Friend& myself, Friends& friends, const ITunesDb& iTunesDb, const Shell& shell, const std::map<std::string, std::string>& templates, const std::map<std::string, std::string>& localeStrings, Downloader& downloader, std::atomic<bool>& cancelled) : m_templates(templates), m_localeStrings(localeStrings), m_myself(myself), m_friends(friends), m_iTunesDb(iTunesDb), m_shell(shell), m_downloader(downloader), m_cancelled(cancelled)
+SessionParser::SessionParser(Friend& myself, Friends& friends, const ITunesDb& iTunesDb, const Shell& shell, const std::map<std::string, std::string>& templates, const std::map<std::string, std::string>& localeStrings, Downloader& downloader, std::atomic<bool>& cancelled) : m_templates(templates), m_localeStrings(localeStrings), m_ignoreAudio(false), m_myself(myself), m_friends(friends), m_iTunesDb(iTunesDb), m_shell(shell), m_downloader(downloader), m_cancelled(cancelled)
 {
 }
 
@@ -636,8 +642,7 @@ int SessionParser::parse(const std::string& userBase, const std::string& outputB
     std::map<std::string, std::string> values;
     std::string templateKey;
     Record record;
-    
-    bool cancelled = false;
+
     while (sqlite3_step(stmt) == SQLITE_ROW)
     {
         if (m_cancelled)
@@ -809,8 +814,11 @@ bool SessionParser::parseRow(Record& record, const std::string& userBase, const 
         {
             m_pcmData.clear();
             std::string mp3Path = combinePath(assetsDir, msgIdStr + ".mp3");
-            silkToPcm(audioSrc, m_pcmData);
-            pcmToMp3(m_pcmData, combinePath(assetsDir, msgIdStr + ".mp3"));
+            if (!m_ignoreAudio)
+            {
+                silkToPcm(audioSrc, m_pcmData);
+                pcmToMp3(m_pcmData, combinePath(assetsDir, msgIdStr + ".mp3"));
+            }
 
             templateKey = "audio";
             templateValues["%%AUDIOPATH%%"] = session.UsrName + "_files/" + msgIdStr + ".mp3";
