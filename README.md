@@ -31,6 +31,7 @@ MacOS版本：MacOS 10.10(Yosemite)+
 - libplist: https://github.com/libimobiledevice/libplist  https://github.com/libimobiledevice-win32/libplist  
 - libiconv(windows only): https://www.gnu.org/software/libiconv/  
 - openssl(windows only)  
+- WTL (windows only)
 
 MacOS下，libxml2,libcurl,libsqlite3直接使用了Xcode自带的库，其它第三方库需自行编译。  
 libmp3lame需手动删除文件include/libmp3lame.sym中的行：lame_init_old  
