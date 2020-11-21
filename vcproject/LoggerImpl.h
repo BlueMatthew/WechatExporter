@@ -24,7 +24,7 @@ public:
 		CW2T pszT(CA2W(log.c_str(), CP_UTF8));
 
 		::SendMessage(m_hWndLog, LB_ADDSTRING, 0, (LPARAM)(LPCTSTR)pszT);
-		int count = ::SendMessage(m_hWndLog, LB_GETCOUNT, 0, 0L);
+		LRESULT count = ::SendMessage(m_hWndLog, LB_GETCOUNT, 0, 0L);
 		::SendMessage(m_hWndLog, LB_SETTOPINDEX, count - 1, 0L);
 	}
 

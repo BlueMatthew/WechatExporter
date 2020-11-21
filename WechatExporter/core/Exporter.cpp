@@ -40,7 +40,7 @@ Exporter::Exporter(const std::string& workDir, const std::string& backup, const 
     m_logger = logger;
     m_notifier = NULL;
     m_cancelled = false;
-    m_ignoreAudio = false;
+    m_options = 0;
 }
 
 Exporter::~Exporter()
@@ -81,7 +81,18 @@ void Exporter::waitForComplition()
 
 void Exporter::ignoreAudio(bool ignoreAudio/* = true*/)
 {
-    m_ignoreAudio = ignoreAudio;
+    if (ignoreAudio)
+        m_options |= SPO_IGNORE_AUDIO;
+    else
+        m_options &= ~SPO_IGNORE_AUDIO;
+}
+
+void Exporter::setOrder(bool asc/* = true*/)
+{
+    if (asc)
+        m_options &= ~SPO_DESC;
+    else
+        m_options |= SPO_DESC;
 }
 
 

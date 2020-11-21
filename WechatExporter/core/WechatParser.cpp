@@ -613,7 +613,7 @@ unsigned int SessionsParser::parseModifiedTime(std::vector<unsigned char>& data)
     return static_cast<unsigned int>(val);
 }
 
-SessionParser::SessionParser(Friend& myself, Friends& friends, const ITunesDb& iTunesDb, const Shell& shell, const std::map<std::string, std::string>& templates, const std::map<std::string, std::string>& localeStrings, Downloader& downloader, std::atomic<bool>& cancelled) : m_templates(templates), m_localeStrings(localeStrings), m_ignoreAudio(false), m_myself(myself), m_friends(friends), m_iTunesDb(iTunesDb), m_shell(shell), m_downloader(downloader), m_cancelled(cancelled)
+SessionParser::SessionParser(Friend& myself, Friends& friends, const ITunesDb& iTunesDb, const Shell& shell, const std::map<std::string, std::string>& templates, const std::map<std::string, std::string>& localeStrings, Downloader& downloader, std::atomic<bool>& cancelled) : m_templates(templates), m_localeStrings(localeStrings), m_options(0), m_myself(myself), m_friends(friends), m_iTunesDb(iTunesDb), m_shell(shell), m_downloader(downloader), m_cancelled(cancelled)
 {
 }
 
@@ -630,7 +630,11 @@ int SessionParser::parse(const std::string& userBase, const std::string& outputB
     }
     
     std::string sql = "SELECT CreateTime,Message,Des,Type,MesLocalID FROM Chat_" + session.Hash + " ORDER BY CreateTime";
-
+    if ((m_options & SPO_DESC) == SPO_DESC)
+    {
+        sql += " DESC";
+    }
+    
     sqlite3_stmt* stmt = NULL;
     rc = sqlite3_prepare_v2(db, sql.c_str(), (int)(sql.size()), &stmt, NULL);
     if (rc != SQLITE_OK)
@@ -814,7 +818,7 @@ bool SessionParser::parseRow(Record& record, const std::string& userBase, const 
         {
             m_pcmData.clear();
             std::string mp3Path = combinePath(assetsDir, msgIdStr + ".mp3");
-            if (!m_ignoreAudio)
+            if ((m_options & SPO_IGNORE_AUDIO) == 0)
             {
                 silkToPcm(audioSrc, m_pcmData);
                 pcmToMp3(m_pcmData, combinePath(assetsDir, msgIdStr + ".mp3"));
