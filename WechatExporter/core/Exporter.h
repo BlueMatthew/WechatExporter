@@ -48,7 +48,7 @@ protected:
 	ExportNotifier* m_notifier;
     
     std::atomic<bool> m_cancelled;
-    bool m_ignoreAudio;
+    int m_options;
     
 public:
     Exporter(const std::string& workDir, const std::string& backup, const std::string& output, Shell* shell, Logger* logger);
@@ -62,6 +62,7 @@ public:
 	void waitForComplition();
     
     void ignoreAudio(bool ignoreAudio = true);
+    void setOrder(bool asc = true);
 
 protected:
 	bool runImpl();

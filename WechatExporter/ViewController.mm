@@ -83,6 +83,9 @@ void errorLogCallback(void *pArg, int iErrCode, const char *zMsg)
 - (void)viewDidLoad {
     [super viewDidLoad];
     
+#ifndef NDEBUG
+    self.chkboxNoAudio.hidden = NO;
+#endif
     sqlite3_config(SQLITE_CONFIG_LOG, errorLogCallback, NULL);
 
     [self.view.window center];
@@ -99,7 +102,15 @@ void errorLogCallback(void *pArg, int iErrCode, const char *zMsg)
     [self.btnOutput setAction:@selector(btnOutputClicked:)];
     [self.btnExport setAction:@selector(btnExportClicked:)];
     [self.btnCancel setAction:@selector(btnCancelClicked:)];
+    [self.chkboxDesc setAction:@selector(btnDescClicked:)];
+    [self.chkboxNoAudio setAction:@selector(btnIgnoreAudioClicked:)];
     
+    BOOL descOrder = [[NSUserDefaults standardUserDefaults] boolForKey:@"Desc"];
+    self.chkboxDesc.state = descOrder ? NSOnState : NSOffState;
+    
+    BOOL ignoreAudio = [[NSUserDefaults standardUserDefaults] boolForKey:@"IgnoreAudio"];
+    self.chkboxNoAudio.state = ignoreAudio ? NSOnState : NSOffState;
+
     NSFileManager *fileManager = [NSFileManager defaultManager];
     
     NSString *outputDir = [[NSUserDefaults standardUserDefaults] objectForKey:@"OutputDir"];
@@ -242,7 +253,6 @@ void errorLogCallback(void *pArg, int iErrCode, const char *zMsg)
     })];
 }
 
-
 - (void)btnExportClicked:(id)sender
 {
     if (NULL != m_exp)
@@ -279,9 +289,12 @@ void errorLogCallback(void *pArg, int iErrCode, const char *zMsg)
         return;
     }
     
+    BOOL descOrder = (self.chkboxDesc.state == NSOnState);
+    BOOL ignoreAudio = (self.chkboxNoAudio.state == NSOnState);
+    
     self.txtViewLogs.string = @"";
     [self onStart];
-    NSDictionary *dict = @{@"backup": backupPath, @"output": outputPath };
+    NSDictionary *dict = @{@"backup": backupPath, @"output": outputPath, @"descOrder": @(descOrder), @"ignoreAudio": @(ignoreAudio) };
     [NSThread detachNewThreadSelector:@selector(run:) toTarget:self withObject:dict];
 }
 
@@ -297,6 +310,18 @@ void errorLogCallback(void *pArg, int iErrCode, const char *zMsg)
     [self.btnCancel setEnabled:NO];
 }
 
+- (void)btnDescClicked:(id)sender
+{
+    BOOL descOrder = (self.chkboxDesc.state == NSOnState);
+    [[NSUserDefaults standardUserDefaults] setBool:descOrder forKey:@"Desc"];
+}
+
+- (void)btnIgnoreAudioClicked:(id)sender
+{
+    BOOL ignoreAudio = (self.chkboxNoAudio.state == NSOnState);
+    [[NSUserDefaults standardUserDefaults] setBool:ignoreAudio forKey:@"IgnoreAudio"];
+}
+
 - (void)run:(NSDictionary *)dict
 {
     NSString *backup = [dict objectForKey:@"backup"];
@@ -308,14 +333,23 @@ void errorLogCallback(void *pArg, int iErrCode, const char *zMsg)
         return;
     }
     
+    NSNumber *ignoreAudio = [dict objectForKey:@"ignoreAudio"];
+    NSNumber *descOrder = [dict objectForKey:@"descOrder"];
+    
     NSString *workDir = [[NSFileManager defaultManager] currentDirectoryPath];
     
     workDir = [[NSBundle mainBundle] resourcePath];
     
     m_exp = new Exporter([workDir UTF8String], [backup UTF8String], [output UTF8String], m_shell, m_logger);
-#ifndef NDEBUG
-    m_exp->ignoreAudio();
-#endif
+    if (nil != ignoreAudio && [ignoreAudio boolValue])
+    {
+        m_exp->ignoreAudio();
+    }
+    if (nil != descOrder && [descOrder boolValue])
+    {
+        m_exp->setOrder(false);
+    }
+
     m_exp->setNotifier(m_notifier);
     
     m_exp->run();
