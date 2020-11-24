@@ -706,84 +706,25 @@ bool SessionParser::parseRow(Record& record, const std::string& userBase, const 
     std::string assetsDir = combinePath(outputPath, session.UsrName + "_files");
 	m_shell.makeDirectory(assetsDir);
     
+    templateValues["%%MSGID%%"] = std::to_string(record.msgid);
 	templateValues["%%NAME%%"] = "";
 	templateValues["%%TIME%%"] = fromUnixTime(record.createTime);
 	templateValues["%%MESSAGE%%"] = "";
 
+    std::string senderId = "";
     if (session.isChatroom())
     {
-        if (record.des == 0)
+        if (record.des != 0)
         {
-            std::string txtsender = m_myself.DisplayName();
-            
-            templateValues["%%ALIGNMENT%%"] = "right";
-            // templateValues.Add("%%NAME%%", txtsender);
-            templateValues["%%NAME%%"] = "";
-            templateValues["%%AVATAR%%"] = "Portrait/" + m_myself.getLocalPortrait();
-        }
-        else
-        {
-            templateValues["%%ALIGNMENT%%"] = "left";
-            
             std::string::size_type enter = record.message.find(":\n");
             if (enter != std::string::npos && enter + 2 < record.message.size())
             {
-                std::string senderid = record.message.substr(0, enter);
-                std::string txtsender = senderid;
-                
+                senderId = record.message.substr(0, enter);
                 record.message = record.message.substr(enter + 2);
-                txtsender = session.getMemberName(md5(senderid));
-                
-                const Friend *f = m_friends.getFriendByUid(senderid);
-                if (txtsender.empty() && NULL != f)
-                {
-                    txtsender = f->DisplayName();
-                }
-            
-                templateValues["%%NAME%%"] = txtsender;
-                templateValues["%%AVATAR%%"] = (NULL != f) ? ("Portrait/" + f->getLocalPortrait()) : "Portrait/DefaultProfileHead@2x.png";
-            }
-            else
-            {
-                templateValues["%%NAME%%"] = "";
-                templateValues["%%AVATAR%%"] = "";
             }
         }
     }
-    else
-    {
-        if (record.des == 0 || session.UsrName == m_myself.getUsrName())
-        {
-            templateValues["%%ALIGNMENT%%"] = "right";
-            templateValues["%%NAME%%"] = "";
-            templateValues["%%AVATAR%%"] = "Portrait/" + m_myself.getLocalPortrait();
-        }
-        else
-        {
-			templateValues["%%ALIGNMENT%%"] = "left";
 
-            const Friend *f = m_friends.getFriend(session.Hash);
-			if (NULL == f)
-			{
-				templateValues["%%NAME%%"] = session.DisplayName;
-				templateValues["%%AVATAR%%"] = "Portrait/" + session.Portrait;
-			}
-			else
-			{
-				templateValues["%%NAME%%"] = f->DisplayName();
-				templateValues["%%AVATAR%%"] = "Portrait/" + f->getLocalPortrait();
-			}
-        }
-        /*
-        else
-        {
-            templateValues["%%ALIGNMENT%%"] = "left";
-            templateValues["%%NAME%%"] = displayname;
-            templateValues["%%AVATAR%%"] = "Portrait/DefaultProfileHead@2x.png";
-        }
-         */
-    }
-    
 #ifndef NDEBUG
     writeFile(combinePath(outputPath, "msg" + std::to_string(record.type) + ".txt"), record.message);
 #endif
@@ -873,6 +814,13 @@ bool SessionParser::parseRow(Record& record, const std::string& userBase, const 
     }
     else if (record.type == 62 || record.type == 43)
     {
+        if (senderId.empty())
+        {
+            XmlParser xmlParser(record.message);
+            if (xmlParser.parseAttributeValue("/msg/videomsg", "fromusername", senderId))
+            {
+            }
+        }
         bool hasthum = requireFile(combinePath(userBase, "Video", session.Hash, msgIdStr + ".video_thum"), combinePath(assetsDir, msgIdStr + "_thum.jpg"));
         bool hasvid = requireFile(combinePath(userBase, "Video", session.Hash, msgIdStr + ".mp4"), combinePath(assetsDir, msgIdStr + ".mp4"));
 
@@ -1053,6 +1001,74 @@ bool SessionParser::parseRow(Record& record, const std::string& userBase, const 
     else
     {
         templateValues["%%MESSAGE%%"] = safeHTML(record.message);
+    }
+    
+    if (session.isChatroom())
+    {
+        if (record.des == 0)
+        {
+            std::string txtsender = m_myself.DisplayName();
+            
+            templateValues["%%ALIGNMENT%%"] = "right";
+            // templateValues.Add("%%NAME%%", txtsender);
+            templateValues["%%NAME%%"] = "";
+            templateValues["%%AVATAR%%"] = "Portrait/" + m_myself.getLocalPortrait();
+        }
+        else
+        {
+            templateValues["%%ALIGNMENT%%"] = "left";
+            if (!senderId.empty())
+            {
+                std::string txtsender = session.getMemberName(md5(senderId));
+                
+                const Friend *f = m_friends.getFriendByUid(senderId);
+                if (txtsender.empty() && NULL != f)
+                {
+                    txtsender = f->DisplayName();
+                }
+            
+                templateValues["%%NAME%%"] = txtsender.empty() ? senderId : txtsender;
+                templateValues["%%AVATAR%%"] = (NULL != f) ? ("Portrait/" + f->getLocalPortrait()) : "Portrait/DefaultProfileHead@2x.png";
+            }
+            else
+            {
+                templateValues["%%NAME%%"] = senderId;
+                templateValues["%%AVATAR%%"] = "";
+            }
+        }
+    }
+    else
+    {
+        if (record.des == 0 || session.UsrName == m_myself.getUsrName())
+        {
+            templateValues["%%ALIGNMENT%%"] = "right";
+            templateValues["%%NAME%%"] = "";
+            templateValues["%%AVATAR%%"] = "Portrait/" + m_myself.getLocalPortrait();
+        }
+        else
+        {
+            templateValues["%%ALIGNMENT%%"] = "left";
+
+            const Friend *f = m_friends.getFriend(session.Hash);
+            if (NULL == f)
+            {
+                templateValues["%%NAME%%"] = session.DisplayName;
+                templateValues["%%AVATAR%%"] = "Portrait/" + session.Portrait;
+            }
+            else
+            {
+                templateValues["%%NAME%%"] = f->DisplayName();
+                templateValues["%%AVATAR%%"] = "Portrait/" + f->getLocalPortrait();
+            }
+        }
+        /*
+        else
+        {
+            templateValues["%%ALIGNMENT%%"] = "left";
+            templateValues["%%NAME%%"] = displayname;
+            templateValues["%%AVATAR%%"] = "Portrait/DefaultProfileHead@2x.png";
+        }
+         */
     }
 
     return true;

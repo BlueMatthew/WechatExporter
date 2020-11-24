@@ -72,16 +72,16 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
     <ExecutablePath>$(ExecutablePath)</ExecutablePath>
-    <IncludePath>C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Tools\MSVC\14.16.27023\wtl\include;$(ProjectDir)..\WechatExporter\core;C:\x64-windows-static\include;$(IncludePath)</IncludePath>
-    <LibraryPath>C:\x64-windows-static\debug\lib;$(LibraryPath)</LibraryPath>
+    <IncludePath>C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Tools\MSVC\14.16.27023\wtl\include;$(ProjectDir)..\WechatExporter\core;Z:\Documents\Programs\Github\WechatExporter\release\x64-windows-static\include;$(IncludePath)</IncludePath>
+    <LibraryPath>Z:\Documents\Programs\Github\WechatExporter\release\x64-windows-static\debug\lib;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
-    <LibraryPath>C:\x64-windows-static\lib;$(LibraryPath)</LibraryPath>
-    <IncludePath>$(ProjectDir)..\WechatExporter\core;C:\x64-windows-static\include;C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Tools\MSVC\14.16.27023\wtl\include;$(IncludePath)</IncludePath>
+    <LibraryPath>Z:\Documents\Programs\Github\WechatExporter\release\x64-windows-static\lib;$(LibraryPath)</LibraryPath>
+    <IncludePath>$(ProjectDir)..\WechatExporter\core;Z:\Documents\Programs\Github\WechatExporter\release\x64-windows-static\include;C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Tools\MSVC\14.16.27023\wtl\include;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Label="Vcpkg" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <VcpkgEnabled>false</VcpkgEnabled>
