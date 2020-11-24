@@ -243,8 +243,10 @@ bool Exporter::exportUser(Friend& user, Downloader& downloader)
 	}
     
     std::string portraitPath = combinePath(outputBase, "Portrait");
-    m_shell->makeDirectory(combinePath(outputBase, "Emoji"));
     m_shell->makeDirectory(portraitPath);
+    std::string defaultPortrait = combinePath(portraitPath, "DefaultProfileHead@2x.png");
+    m_shell->copyFile(combinePath(m_workDir, "res", "DefaultProfileHead@2x.png"), defaultPortrait, true);
+    m_shell->makeDirectory(combinePath(outputBase, "Emoji"));
     
 	m_logger->write(formatString(getLocaleString("Handling account: %s, Wechat Id: %s"), user.DisplayName().c_str(), user.getUsrName().c_str()));
     
