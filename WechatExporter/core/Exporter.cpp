@@ -8,6 +8,7 @@
 
 #include "Exporter.h"
 #include <json/json.h>
+#include "Downloader.h"
 #include "WechatParser.h"
 
 struct FriendDownloadHandler
@@ -24,7 +25,7 @@ struct FriendDownloadHandler
         std::string url = f.getPortraitUrl();
         if (!url.empty())
         {
-            downloadPool.addTask(url, combinePath(userRoot, f.getLocalPortrait()));
+            downloadPool.addTask(url, combinePath(userRoot, f.getLocalPortrait()), 0);
         }
     }
 };
@@ -95,6 +96,13 @@ void Exporter::setOrder(bool asc/* = true*/)
         m_options |= SPO_DESC;
 }
 
+void Exporter::saveFilesInSessionFolder(bool flag/* = true*/)
+{
+    if (flag)
+        m_options |= SPO_ICON_IN_SESSION;
+    else
+        m_options &= ~SPO_ICON_IN_SESSION;
+}
 
 bool Exporter::run()
 {
@@ -156,7 +164,8 @@ bool Exporter::runImpl()
 
     std::string userBody;
     
-    Downloader downloader;
+    
+    std::map<std::string, std::string> fileCopies;
 	for (std::vector<Friend>::iterator it = users.begin(); it != users.end(); ++it)
 	{
         if (m_cancelled)
@@ -164,7 +173,7 @@ bool Exporter::runImpl()
             break;
         }
 		fillUser(*it);
-		exportUser(*it, downloader);
+		exportUser(*it);
         
         std::string userItem = getTemplate("listitem");
         userItem = replace_all(userItem, "%%ITEMPICPATH%%", it->outputFileName + "/Portrait/" + it->getLocalPortrait());
@@ -187,21 +196,6 @@ bool Exporter::runImpl()
         htmlFile.close();
     }
     
-    if (m_cancelled)
-    {
-        downloader.cancel();
-    }
-    else
-    {
-        int dlCount = downloader.getRunningCount();
-        if (dlCount > 0)
-        {
-            m_logger->write(formatString(getLocaleString("Waiting for images(%d) downloading."), dlCount));
-        }
-    }
-
-	downloader.finishAndWaitForExit();
-
     time_t endTime = 0;
     std::time(&endTime);
     int seconds = static_cast<int>(difftime(endTime, startTime));
@@ -220,7 +214,7 @@ bool Exporter::runImpl()
 	return true;
 }
 
-bool Exporter::exportUser(Friend& user, Downloader& downloader)
+bool Exporter::exportUser(Friend& user)
 {
     std::string uidMd5 = user.getUidHash();
     
@@ -246,7 +240,11 @@ bool Exporter::exportUser(Friend& user, Downloader& downloader)
     m_shell->makeDirectory(portraitPath);
     std::string defaultPortrait = combinePath(portraitPath, "DefaultProfileHead@2x.png");
     m_shell->copyFile(combinePath(m_workDir, "res", "DefaultProfileHead@2x.png"), defaultPortrait, true);
-    m_shell->makeDirectory(combinePath(outputBase, "Emoji"));
+    if ((m_options & SPO_ICON_IN_SESSION) == 0)
+    {
+        std::string emojiPath = combinePath(outputBase, "Emoji");
+        m_shell->makeDirectory(emojiPath);
+    }
     
 	m_logger->write(formatString(getLocaleString("Handling account: %s, Wechat Id: %s"), user.DisplayName().c_str(), user.getUsrName().c_str()));
     
@@ -276,11 +274,12 @@ bool Exporter::exportUser(Friend& user, Downloader& downloader)
         myself = &user;
     }
     
-    friends.handleFriend(FriendDownloadHandler(downloader, portraitPath));
+    // friends.handleFriend(FriendDownloadHandler(downloader, portraitPath));
     
     std::string userBody;
 
-	SessionParser sessionParser(*myself, friends, *m_iTunesDb, *m_shell, m_templates, m_localeStrings, downloader, m_cancelled);
+    Downloader downloader;
+	SessionParser sessionParser(*myself, friends, *m_iTunesDb, *m_shell, m_templates, m_localeStrings, m_options, downloader, m_cancelled);
     
     for (std::vector<Session>::iterator it = sessions.begin(); it != sessions.end(); ++it)
     {
@@ -288,16 +287,6 @@ bool Exporter::exportUser(Friend& user, Downloader& downloader)
         {
             break;
         }
-        /*
-        if (isValidFileName(it->DisplayName))
-        {
-            it->outputFileName = it->DisplayName;
-        }
-        else if (isValidFileName(it->UsrName))
-        {
-            it->outputFileName = it->UsrName;
-        }
-         */
 #ifndef NDEBUG
         m_logger->write(formatString(getLocaleString("%d/%d: Handling the chat with %s"), (std::distance(sessions.begin(), it) + 1), sessions.size(), it->DisplayName.c_str()) + " uid:" + it->UsrName);
 #else
@@ -326,6 +315,20 @@ bool Exporter::exportUser(Friend& user, Downloader& downloader)
         }
     }
     
+    if (m_cancelled)
+    {
+        downloader.cancel();
+    }
+    else
+    {
+        int dlCount = downloader.getRunningCount();
+        if (dlCount > 0)
+        {
+            m_logger->write(formatString(getLocaleString("Waiting for images(%d) downloading."), dlCount));
+        }
+    }
+    downloader.finishAndWaitForExit();
+    
     std::string fileName = combinePath(outputBase, "index.html");
 
     std::string html = getTemplate("listframe");
@@ -348,6 +351,15 @@ int Exporter::exportSession(Friend& user, const SessionParser& sessionParser, co
 	{
 		return false;
 	}
+    
+    std::string sessionBasePath = combinePath(outputBase, session.UsrName + "_files");
+    std::string portraitPath = combinePath(sessionBasePath, "Portrait");
+    m_shell->makeDirectory(portraitPath);
+    m_shell->makeDirectory(combinePath(sessionBasePath, "Emoji"));
+
+    std::string defaultPortrait = combinePath(portraitPath, "DefaultProfileHead@2x.png");
+    m_shell->copyFile(combinePath(m_workDir, "res", "DefaultProfileHead@2x.png"), defaultPortrait, true);
+    
     std::string contents;
 	int count = sessionParser.parse(userBase, outputBase, session, contents);
 	if (count > 0)

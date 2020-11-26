@@ -27,6 +27,30 @@ public:
 		return ::SHCreateDirectoryEx(NULL, (LPCTSTR)pszT, NULL) == ERROR_SUCCESS;
 	}
 
+	bool deleteFile(const std::string& path) const
+	{
+		CW2T pszT(CA2W(path.c_str(), CP_UTF8));
+		return ::DeleteFile((LPCTSTR)pszT) == TRUE;
+	}
+	
+	bool deleteDirectory(const std::string& path) const
+    {
+		CW2T pszT(CA2W(path.c_str(), CP_UTF8));
+
+        SHFILEOPSTRUCT file_op = {
+        NULL,
+        FO_DELETE,
+        (LPCTSTR)pszT,
+        TEXT(""),
+        FOF_NOCONFIRMATION |
+        FOF_NOERRORUI |
+        FOF_SILENT,
+        FALSE,
+        0,
+        TEXT("") };
+    	return SHFileOperation(&file_op) == 0;
+    }
+
 	bool existsFile(const std::string& path) const
 	{
 		CW2T pszT(CA2W(path.c_str(), CP_UTF8));

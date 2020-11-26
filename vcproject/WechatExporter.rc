@@ -30,14 +30,6 @@ BEGIN
     BEGIN
         MENUITEM "E&xit",                       ID_APP_EXIT
     END
-    POPUP "&Edit"
-    BEGIN
-        MENUITEM "&Undo\tCtrl+Z",               ID_EDIT_UNDO
-        MENUITEM SEPARATOR
-        MENUITEM "Cu&t\tCtrl+X",                ID_EDIT_CUT
-        MENUITEM "&Copy\tCtrl+C",               ID_EDIT_COPY
-        MENUITEM "&Paste\tCtrl+V",              ID_EDIT_PASTE
-    END
     POPUP "&Help"
     BEGIN
         MENUITEM "&About WechatExporter",       ID_APP_ABOUT
@@ -79,13 +71,15 @@ BEGIN
     COMBOBOX        IDC_BACKUP,7,21,360,30,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
     PUSHBUTTON      "...",IDC_CHOOSE_BKP,371,20,15,14
     EDITTEXT        IDC_OUTPUT,7,54,359,14,ES_AUTOHSCROLL | ES_READONLY
-    LTEXT           "iTunes备份：",IDC_STATIC,7,7,321,8
+    LTEXT           "iTunes备份目录：",IDC_STATIC_BACKUP,7,7,321,8
     LTEXT           "聊天记录输出目录：",IDC_STATIC,7,39,361,8
     PUSHBUTTON      "...",IDC_CHOOSE_OUTPUT,371,53,15,14
-    LISTBOX         IDC_LOG,7,74,378,96,LBS_NOINTEGRALHEIGHT | WS_VSCROLL | WS_TABSTOP
+    LISTBOX         IDC_LOG,7,88,378,82,LBS_NOINTEGRALHEIGHT | WS_VSCROLL | WS_TABSTOP
     PUSHBUTTON      "导出(&E)",IDC_EXPORT,336,175,50,14
     CONTROL         "",IDC_PROGRESS,"msctls_progress32",PBS_MARQUEE | WS_BORDER,7,175,246,14
     PUSHBUTTON      "取消(&C)",IDC_CANCEL,275,175,50,14,WS_DISABLED
+    CONTROL         "按消息时间倒序导出",IDC_DESC_ORDER,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,7,73,83,10
+    CONTROL         "头像和表情文件存放到聊天记录子目录",IDC_FILES_IN_SESSION,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,123,73,143,10
 END
 
 
@@ -135,8 +129,8 @@ END
 //
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION 1,1,0,1
- PRODUCTVERSION 1,1,0,1
+ FILEVERSION 1,2,0,1
+ PRODUCTVERSION 1,2,0,1
  FILEFLAGSMASK 0x3fL
 #ifdef _DEBUG
  FILEFLAGS 0x1L
@@ -152,12 +146,12 @@ BEGIN
         BLOCK "080404b0"
         BEGIN
             VALUE "FileDescription", "WechatExporter Module"
-            VALUE "FileVersion", "1.1.0.1"
+            VALUE "FileVersion", "1.2.0.1"
             VALUE "InternalName", "WechatExporter"
             VALUE "LegalCopyright", "Copyright 2020"
             VALUE "OriginalFilename", "WechatExporter.exe"
             VALUE "ProductName", "WechatExporter Module"
-            VALUE "ProductVersion", "1.1.0.1"
+            VALUE "ProductVersion", "1.2.0.1"
         END
     END
     BLOCK "VarFileInfo"
@@ -189,6 +183,7 @@ BEGIN
     IDS_SEL_BACKUP_DIR      "请选择iTunes备份目录。"
     IDS_SEL_OUTPUT_DIR      "请选择聊天记录输出目录。"
     IDS_CANCEL_PROMPT       "确定要取消导出吗？"
+    IDS_STATIC_BACKUP       "iTunes备份目录：(例如:%s)"
 END
 
 STRINGTABLE
