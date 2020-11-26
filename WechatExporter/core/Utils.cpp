@@ -19,9 +19,13 @@
 #ifdef _WIN32
 #include <direct.h>
 #include <atlstr.h>
+#include <sys/utime.h>
+#else
+#include <utime.h>
 #endif
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <time.h>
 #include <sqlite3.h>
 #include <curl/curl.h>
 #include "OSDef.h"
@@ -106,6 +110,18 @@ std::string combinePath(const std::string& p1, const std::string& p2, const std:
 std::string combinePath(const std::string& p1, const std::string& p2, const std::string& p3, const std::string& p4)
 {
     return combinePath(combinePath(p1, p2, p3), p4);
+}
+
+std::string normalizePath(const std::string& path)
+{
+    std::string p = path;
+    normalizePath(p);
+    return p;
+}
+
+void normalizePath(std::string& path)
+{
+    std::replace(path.begin(), path.end(), DIR_SEP_R, DIR_SEP);
 }
 
 std::string safeHTML(const std::string& s)
@@ -337,6 +353,20 @@ std::string utf8ToLocalAnsi(std::string utf8Str)
 #else
 #endif
 
+void updateFileTime(const std::string& path, time_t mtime)
+{
+    const std::string& p = utf8ToLocalAnsi(path);
+    
+    struct stat st;
+    struct utimbuf new_times;
+
+    stat(p.c_str(), &st);
+    
+    new_times.actime = st.st_atime; /* keep atime unchanged */
+    new_times.modtime = mtime;
+    utime(p.c_str(), &new_times);
+}
+
 int openSqlite3ReadOnly(const std::string& path, sqlite3 **ppDb)
 {
     std::string pathWithQuery = "file:" + path;
@@ -417,4 +447,23 @@ std::string utcToLocal(const std::string& utcTime)
     strftime(buf, 30, "%Y-%m-%d %H:%M:%S", &localt);
 
     return std::string(buf);
+}
+
+std::string getCurrentTimestamp()
+{
+    using std::chrono::system_clock;
+    auto currentTime = std::chrono::system_clock::now();
+    char buffer[80];
+
+    auto transformed = currentTime.time_since_epoch().count() / 1000000;
+
+    auto millis = transformed % 1000;
+
+    std::time_t tt;
+    tt = system_clock::to_time_t ( currentTime );
+    auto timeinfo = localtime (&tt);
+    strftime (buffer, 80, "%F %H:%M:%S", timeinfo);
+    sprintf(buffer, "%s:%03d", buffer, (int)millis);
+
+    return std::string(buffer);
 }

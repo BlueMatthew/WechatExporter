@@ -193,7 +193,6 @@ private:
     bool parseCellData(const std::string& userRoot, Session& session);
     bool parseMessageDbs(const std::string& userRoot, std::vector<Session>& sessions);
     bool parseMessageDb(const std::string& mmPath, std::vector<std::string>& sessionIds);
-    unsigned int parseModifiedTime(std::vector<unsigned char>& data);
 };
 
 struct Record
@@ -208,7 +207,8 @@ struct Record
 enum SessionParsingOption
 {
     SPO_IGNORE_AUDIO = 1,
-    SPO_DESC = 2
+    SPO_DESC = 2,
+    SPO_ICON_IN_SESSION = 4     // Put Head Icon and Emoji files in the folder of session
 };
 
 class SessionParser
@@ -229,7 +229,7 @@ private:
     
 public:
     
-    SessionParser(Friend& myself, Friends& friends, const ITunesDb& iTunesDb, const Shell& shell, const std::map<std::string, std::string>& templates, const std::map<std::string, std::string>& localeStrings, Downloader& downloader, std::atomic<bool>& cancelled);
+    SessionParser(Friend& myself, Friends& friends, const ITunesDb& iTunesDb, const Shell& shell, const std::map<std::string, std::string>& templates, const std::map<std::string, std::string>& localeStrings, int options, Downloader& downloader, std::atomic<bool>& cancelled);
     void ignoreAudio(bool ignoreAudio = true)
     {
         if (ignoreAudio)
@@ -246,7 +246,7 @@ public:
     }
     
     int parse(const std::string& userBase, const std::string& outputBase, const Session& session, std::string& contents) const;
-    
+
 private:
     std::string getTemplate(const std::string& key) const;
 	std::string getLocaleString(const std::string& key) const;

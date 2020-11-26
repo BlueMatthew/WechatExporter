@@ -197,8 +197,9 @@ Gw
                                     <font key="font" metaFont="system"/>
                                 </buttonCell>
                             </button>
-                            <button hidden="YES" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="RXT-cv-bA8">
-                                <rect key="frame" x="189" y="266" width="89" height="18"/>
+                            <button hidden="YES" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="RXT-cv-bA8">
+                                <rect key="frame" x="470" y="266" width="89" height="18"/>
+                                <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                                 <buttonCell key="cell" type="check" title="不导出语音" bezelStyle="regularSquare" imagePosition="left" inset="2" id="Sei-7H-cuW">
                                     <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
                                     <font key="font" metaFont="system"/>
@@ -212,6 +213,14 @@ Gw
                                 <buttonCell key="cell" type="push" title="..." bezelStyle="rounded" alignment="center" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="1GT-FK-TVG">
                                     <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
                                     <font key="font" metaFont="system"/>
+                                </buttonCell>
+                            </button>
+                            <button toolTip="相同的文件会在不同的聊天记录子目录下重复保存，占用更多磁盘空间。" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="MHp-Fl-sSj">
+                                <rect key="frame" x="188" y="266" width="248" height="18"/>
+                                <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                                <buttonCell key="cell" type="check" title="头像和表情文件存放到聊天记录子目录" bezelStyle="regularSquare" imagePosition="left" state="on" inset="2" id="n8p-ki-ape">
+                                    <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
+                                    <font key="font" size="13" name=".PingFangSC-Regular"/>
                                 </buttonCell>
                             </button>
                         </subviews>
@@ -240,10 +249,8 @@ Gw
                             <constraint firstAttribute="bottom" secondItem="kaB-gl-s4B" secondAttribute="bottom" constant="14" id="foE-9q-1bT"/>
                             <constraint firstAttribute="trailing" secondItem="c7I-ig-uay" secondAttribute="trailing" constant="10" id="gGX-06-gvN"/>
                             <constraint firstAttribute="trailing" secondItem="8gl-oS-xn6" secondAttribute="trailing" constant="12" id="klv-ei-AHB"/>
-                            <constraint firstItem="RXT-cv-bA8" firstAttribute="leading" secondItem="pbK-5X-QkO" secondAttribute="trailing" constant="39" id="lKg-PF-CK8"/>
                             <constraint firstItem="MCy-Pf-KGR" firstAttribute="leading" secondItem="m2S-Jp-Qdl" secondAttribute="leading" constant="12" id="mHz-ZW-bsB"/>
                             <constraint firstItem="8gl-oS-xn6" firstAttribute="leading" secondItem="MCy-Pf-KGR" secondAttribute="trailing" constant="6" id="mJI-Gc-uyD"/>
-                            <constraint firstItem="RXT-cv-bA8" firstAttribute="top" secondItem="az7-4y-9PZ" secondAttribute="bottom" constant="10" id="mPL-In-thO"/>
                             <constraint firstItem="VMi-pK-9Z0" firstAttribute="leading" secondItem="m2S-Jp-Qdl" secondAttribute="leading" constant="12" id="nqu-vb-7x6"/>
                             <constraint firstAttribute="bottom" secondItem="VMi-pK-9Z0" secondAttribute="bottom" constant="14" id="sAM-OI-jbM"/>
                             <constraint firstAttribute="trailing" relation="greaterThanOrEqual" secondItem="OAQ-rY-5Vw" secondAttribute="trailing" constant="20" symbolic="YES" id="zYg-FS-khR"/>
@@ -258,6 +265,7 @@ Gw
                         <outlet property="btnOutput" destination="ybQ-bI-p2r" id="pAc-FC-1zh"/>
                         <outlet property="chkboxDesc" destination="pbK-5X-QkO" id="Pvr-1h-tch"/>
                         <outlet property="chkboxNoAudio" destination="RXT-cv-bA8" id="14v-WF-9Bu"/>
+                        <outlet property="chkboxSaveFilesInSessionFolder" destination="MHp-Fl-sSj" id="gqr-AA-VFP"/>
                         <outlet property="cmbboxBackup" destination="MCy-Pf-KGR" id="RR8-hc-S2u"/>
                         <outlet property="progressBar" destination="VMi-pK-9Z0" id="O1p-nX-RQW"/>
                         <outlet property="sclViewLogs" destination="Mkn-sk-kD7" id="42K-bF-yhL"/>

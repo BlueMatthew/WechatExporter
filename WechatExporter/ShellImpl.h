@@ -70,6 +70,18 @@ public:
         return [[NSFileManager defaultManager] createDirectoryAtPath:ocPath withIntermediateDirectories:YES attributes:nil error:nil] == YES;
     }
     
+    bool deleteFile(const std::string& path) const
+    {
+        NSString *ocPath = [NSString stringWithUTF8String: path.c_str()];
+        return [[NSFileManager defaultManager] removeItemAtPath:ocPath error:nil] == YES;
+    }
+    
+    bool deleteDirectory(const std::string& path) const
+    {
+        NSString *ocPath = [NSString stringWithUTF8String: path.c_str()];
+        return deleteDirectory(ocPath);
+    }
+
     bool copyFile(const std::string& src, const std::string& dest, bool overwrite) const
     {
         NSString *srcPath = [NSString stringWithUTF8String: src.c_str()];
@@ -100,56 +112,28 @@ public:
         return ofs.is_open();
     }
     
-    /*
-    bool convertPlist(const std::vector<unsigned char>& bplist, std::string& xml) const
+protected:
+    bool deleteDirectory(NSString *path) const
     {
-        std::string bplistPath = std::tmpnam(NULL);
-        if (!writeFile(bplistPath, bplist))
+        NSFileManager* fileManager = [NSFileManager defaultManager];
+        NSArray *files = [fileManager contentsOfDirectoryAtPath:path error:nil];
+        BOOL isDir = NO;
+        for (NSString *file in files)
         {
-            return false;
+            NSString *fullPath = [path stringByAppendingPathComponent:file];
+            BOOL existed = [[NSFileManager defaultManager] fileExistsAtPath:fullPath isDirectory:&isDir];
+            if (isDir)
+            {
+                deleteDirectory(fullPath);
+            }
+            else
+            {
+                [fileManager removeItemAtPath:fullPath error:nil];
+            }
         }
-        std::string xmlPath = std::tmpnam(NULL);
         
-        std::string cmd = "plutil -convert xml1 -o " + xmlPath + " " + bplistPath;
-        bool result = exec(cmd);
-        if (result)
-        {
-            xml = readFile(xmlPath);
-            std::remove(xmlPath.c_str());
-        }
-        
-        std::remove(bplistPath.c_str());
-        return result;
-    }
-    */
-    
-    int exec(const std::string& cmd) const
-    {
-        NSArray *arguments = [NSArray arrayWithObjects:
-                                  @"-c" ,
-                              [NSString stringWithUTF8String:cmd.c_str()],
-                                  nil];
-        
-        int pid = [[NSProcessInfo processInfo] processIdentifier];
-        NSPipe *pipe = [NSPipe pipe];
-        NSFileHandle *file = pipe.fileHandleForReading;
-
-        NSTask *task = [[NSTask alloc] init];
-        task.launchPath = @"/bin/sh";
-        [task setArguments:arguments];
-        task.standardOutput = pipe;
-
-        [task launch];
-        
-        [task waitUntilExit];
-
-        NSData *data = [file readDataToEndOfFile];
-        [file closeFile];
-
-        NSString *grepOutput = [[NSString alloc] initWithData: data encoding: NSUTF8StringEncoding];
-        NSLog (@"grep returned:\n%@", grepOutput);
-        
-        return task.terminationStatus == 0;
+        [fileManager removeItemAtPath:path error:nil];
+        return true;
     }
 
 };

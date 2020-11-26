@@ -28,6 +28,11 @@ size_t writeData(void *buffer, size_t size, size_t nmemb, void *user_p)
 
 void Task::run()
 {
+    m_localCopy ? copyFile() : downloadFile();
+}
+
+void Task::downloadFile()
+{
 	remove(utf8ToLocalAnsi(m_output).c_str());
     
 	CURLcode res;
@@ -55,6 +60,19 @@ void Task::run()
 	}
     
     curl_easy_cleanup(curl_handler);
+    
+    if (m_mtime > 0)
+    {
+        updateFileTime(m_output, m_mtime);
+    }
+}
+
+void Task::copyFile()
+{
+    std::ifstream  src(utf8ToLocalAnsi(m_url), std::ios::binary);
+    std::ofstream  dst(utf8ToLocalAnsi(m_output), std::ios::binary);
+
+    dst << src.rdbuf();
 }
 
 size_t Task::writeData(void *buffer, size_t size, size_t nmemb)
@@ -87,19 +105,25 @@ Downloader::~Downloader()
     curl_global_cleanup();
 }
 
-void Downloader::addTask(const std::string &url, const std::string& output)
+void Downloader::addTask(const std::string &url, const std::string& output, time_t mtime)
 {
     std::string formatedPath = output;
     std::replace(formatedPath.begin(), formatedPath.end(), DIR_SEP_R, DIR_SEP);
-
     std::string uid = url + output;
     bool existed = false;
-    Task task(url, formatedPath);
+    
     m_mtx.lock();
-    if (!(existed = (m_urls.find(uid) != m_urls.cend())))
+    std::map<std::string, std::string>::const_iterator it = m_urls.find(url);
+    if (!(existed = (it != m_urls.cend())))
     {
-        m_urls.insert(uid);
+        m_urls[url] = output;
+        Task task(url, formatedPath, mtime);
         m_queue.push(task);
+    }
+    else
+    {
+        Task task(it->second, formatedPath, mtime, true);
+        m_copyQueue.push(task);
     }
     m_mtx.unlock();
     
@@ -128,6 +152,8 @@ void Downloader::run(int idx)
         Task task;
         m_mtx.lock();
         
+        noMoreTask = m_noMoreTask;
+        
         size_t queueSize = m_queue.size();
         if (queueSize > 0)
         {
@@ -135,9 +161,16 @@ void Downloader::run(int idx)
             m_queue.pop();
             found = true;
         }
-        
-        noMoreTask = m_noMoreTask;
-        
+        else if (noMoreTask)
+        {
+            if (!m_copyQueue.empty())
+            {
+                task = m_copyQueue.front();
+                m_copyQueue.pop();
+                found = true;
+            }
+        }
+
         m_mtx.unlock();
         
         if (found)
@@ -146,7 +179,7 @@ void Downloader::run(int idx)
             task.run();
             continue;
         }
-        if (m_noMoreTask)
+        if (noMoreTask)
         {
             break;
         }
@@ -160,8 +193,10 @@ void Downloader::run(int idx)
 void Downloader::cancel()
 {
     std::queue<Task> empty;
+	std::queue<Task> empty2;
     m_mtx.lock();
     m_queue.swap(empty);
+	m_copyQueue.swap(empty2);
     m_mtx.unlock();
 }
 

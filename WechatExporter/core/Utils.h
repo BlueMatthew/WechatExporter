@@ -42,6 +42,9 @@ std::string combinePath(const std::string& p1, const std::string& p2);
 std::string combinePath(const std::string& p1, const std::string& p2, const std::string& p3);
 std::string combinePath(const std::string& p1, const std::string& p2, const std::string& p3, const std::string& p4);
 
+std::string normalizePath(const std::string& path);
+void normalizePath(std::string& path);
+
 // bool existsFile(const std::string &path);
 // int makePath(const std::string& path, mode_t mode);
 
@@ -66,6 +69,7 @@ std::string utf8ToLocalAnsi(std::string utf8Str);
 #else
 #define utf8ToLocalAnsi(utf8Str) utf8Str
 #endif
+void updateFileTime(const std::string& path, time_t mtime);
 
 int GetBigEndianInteger(const unsigned char* data, int startIndex = 0);
 int GetLittleEndianInteger(const unsigned char* data, int startIndex = 0);
