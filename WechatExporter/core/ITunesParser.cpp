@@ -12,6 +12,7 @@
 #include <sys/types.h>
 #include <sqlite3.h>
 #include <algorithm>
+#include <plist/plist.h>
 #include <libxml/tree.h>
 #include <libxml/parser.h>
 
@@ -226,18 +227,48 @@ bool ITunesDb::load(const std::string& domain, bool onlyFile)
     return true;
 }
 
+unsigned int ITunesDb::parseModifiedTime(const std::vector<unsigned char>& data)
+{
+    uint64_t val = 0;
+    plist_t node = NULL;
+    plist_from_memory(reinterpret_cast<const char *>(&data[0]), static_cast<uint32_t>(data.size()), &node);
+    if (NULL != node)
+    {
+        plist_t lastModified = plist_access_path(node, 3, "$objects", 1, "LastModified");
+        if (NULL != lastModified)
+        {
+            plist_get_uint_val(lastModified, &val);
+        }
+        
+        plist_free(node);
+    }
+
+    return static_cast<unsigned int>(val);
+}
+
 std::string ITunesDb::findFileId(const std::string& relativePath) const
+{
+    const ITunesFile* file = findITunesFile(relativePath);
+    
+    if (NULL == file)
+    {
+        return std::string();
+    }
+    return file->fileId;
+}
+
+const ITunesFile* ITunesDb::findITunesFile(const std::string& relativePath) const
 {
     std::string formatedPath = relativePath;
     std::replace(formatedPath.begin(), formatedPath.end(), '\\', '/');
 
-    typename std::vector<ITunesFile *>::const_iterator it = std::lower_bound(m_files.begin(), m_files.end(), formatedPath, __string_less());
+    typename std::vector<ITunesFile *>::iterator it = std::lower_bound(m_files.begin(), m_files.end(), formatedPath, __string_less());
     
     if (it == m_files.end() || (*it)->relativePath != formatedPath)
     {
-        return std::string();
+        return NULL;
     }
-    return (*it)->fileId;
+    return *it;
 }
 
 std::string ITunesDb::fileIdToRealPath(const std::string& fileId) const
@@ -248,6 +279,11 @@ std::string ITunesDb::fileIdToRealPath(const std::string& fileId) const
     }
     
     return std::string();
+}
+
+std::string ITunesDb::getRealPath(const ITunesFile& file) const
+{
+    return fileIdToRealPath(file.fileId);
 }
 
 std::string ITunesDb::findRealPath(const std::string& relativePath) const
@@ -261,12 +297,29 @@ ManifestParser::ManifestParser(const std::string& manifestPath, const std::strin
     
 }
 
-std::vector<BackupManifest> ManifestParser::parse()
+std::vector<BackupManifest> ManifestParser::parse() const
+{
+    std::vector<BackupManifest> manifests = parseDirectory(m_manifestPath);
+    if (!manifests.empty())
+    {
+        return manifests;
+    }
+    
+    std::string path = normalizePath(m_manifestPath);
+    if (endsWith(path, normalizePath("/MobileSync")) || endsWith(path, normalizePath("/MobileSync/")))
+    {
+        path = combinePath(path, "Backup");
+        manifests = parseDirectory(path);
+    }
+    return manifests;
+}
+
+std::vector<BackupManifest> ManifestParser::parseDirectory(const std::string& path) const
 {
     std::vector<BackupManifest> manifests;
     
     std::vector<std::string> subDirectories;
-    if (!m_shell->listSubDirectories(m_manifestPath, subDirectories))
+    if (!m_shell->listSubDirectories(path, subDirectories))
     {
         return manifests;
     }
@@ -277,7 +330,7 @@ std::vector<BackupManifest> ManifestParser::parse()
         {
             continue;
         }
-        BackupManifest manifest = parse(*it);
+        BackupManifest manifest = parse(path, *it);
         if (manifest.isValid())
         {
             manifests.push_back(manifest);
@@ -287,7 +340,7 @@ std::vector<BackupManifest> ManifestParser::parse()
     return manifests;
 }
 
-BackupManifest ManifestParser::parse(const std::string& backupId)
+BackupManifest ManifestParser::parse(const std::string& backupPath, const std::string& backupId) const
 {
     xmlSAXHandler saxHander;
     memset(&saxHander, 0, sizeof(xmlSAXHandler));
@@ -298,7 +351,7 @@ BackupManifest ManifestParser::parse(const std::string& backupId)
     saxHander.endElementNs = PlistDictionary::endElementNs;
     saxHander.characters = PlistDictionary::characters;
 
-    std::string path = combinePath(m_manifestPath, backupId);
+    std::string path = combinePath(backupPath, backupId);
     std::string fileName = combinePath(path, m_xml);
     
     const std::string NodePlist = "plist";

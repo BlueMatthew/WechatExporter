@@ -23,6 +23,8 @@
 @property (unsafe_unretained) IBOutlet NSTextView *txtViewLogs;
 @property (weak) IBOutlet NSButton *chkboxDesc;
 @property (weak) IBOutlet NSButton *chkboxNoAudio;
+@property (weak) IBOutlet NSButton *chkboxSaveFilesInSessionFolder;
+
 
 - (void)writeLog:(NSString *)log;
 - (void)onStart;

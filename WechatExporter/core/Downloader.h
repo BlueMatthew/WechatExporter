@@ -12,7 +12,7 @@
 #include <stdio.h>
 #include <string>
 #include <queue>
-#include <set>
+#include <map>
 #include <utility>
 #include <thread>
 #include <mutex>
@@ -22,16 +22,21 @@ class Task
 protected:
     std::string m_url;
     std::string m_output;
+    time_t m_mtime;
+    bool m_localCopy;
     
 public:
-    Task()
+    Task() : m_localCopy(false)
     {
     }
     
-    Task(const std::string &url, const std::string& output)
+    Task(const std::string &url, const std::string& output, time_t mtime, bool localCopy = false) : m_url(url), m_output(output), m_mtime(mtime), m_localCopy(localCopy)
     {
-        m_url = url;
-        m_output = output;
+    }
+    
+    bool isLocalCopy() const
+    {
+        return m_localCopy;
     }
     
     Task& operator=(const Task& task)
@@ -47,13 +52,18 @@ public:
     
     size_t writeData(void *buffer, size_t size, size_t nmemb);
     void run();
+    
+protected:
+    void downloadFile();
+    void copyFile();
 };
 
 class Downloader
 {
 protected:
     std::queue<Task> m_queue;
-    std::set<std::string> m_urls;
+    std::queue<Task> m_copyQueue;
+    std::map<std::string, std::string> m_urls;  // url => local file path for first download
     mutable std::mutex m_mtx;
     bool m_noMoreTask;
     std::vector<std::thread> m_threads;
@@ -62,7 +72,7 @@ public:
     Downloader();
     ~Downloader();
     
-    void addTask(const std::string &url, const std::string& output);
+    void addTask(const std::string &url, const std::string& output, time_t mtime);
     void setNoMoreTask();
     void run(int idx);
     
@@ -70,6 +80,9 @@ public:
     void finishAndWaitForExit();
     int getCount() const;
     int getRunningCount() const;
+    
+protected:
+    const Task& dequeue();
 };
 
 #endif /* Downloader_h */

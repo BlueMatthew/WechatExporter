@@ -17,7 +17,6 @@
 #include "Shell.h"
 #include "WechatObjects.h"
 #include "ITunesParser.h"
-#include "Downloader.h"
 #include "semaphore.h"
 #include "ExportNotifier.h"
 
@@ -63,10 +62,11 @@ public:
     
     void ignoreAudio(bool ignoreAudio = true);
     void setOrder(bool asc = true);
+    void saveFilesInSessionFolder(bool flags = true);
 
 protected:
 	bool runImpl();
-	bool exportUser(Friend& user, Downloader& downloadPool);
+	bool exportUser(Friend& user);
 	int exportSession(Friend& user, const SessionParser& sessionParser, const Session& session, const std::string& userBase, const std::string& outputBase);
 
     bool fillUser(Friend& user);

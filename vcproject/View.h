@@ -29,9 +29,6 @@ public:
 
 	LRESULT OnInitDialog(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 	{
-		CProgressBarCtrl progressCtrl = GetDlgItem(IDC_PROGRESS);
-		progressCtrl.ModifyStyle(0, PBS_MARQUEE);
-
 		m_logger = NULL;
 		m_notifier = NULL;
 		m_exporter = NULL;
@@ -42,30 +39,51 @@ public:
 		m_notifier = new ExportNotifierImpl(m_hWnd);
 		m_logger = new LoggerImpl(GetDlgItem(IDC_LOG));
 
-		// ::PostMessage(GetDlgItem(IDC_EXPORT), BM_CLICK, 0, 0L);
+		int stateDesc = BST_UNCHECKED;
+		int stateFilesFolder = BST_CHECKED;
+		TCHAR szOutput[MAX_PATH] = { 0 };
+		BOOL outputDirFound = FALSE;
 
-		TCHAR szPath[MAX_PATH] = { 0 };
 		CRegKey rk;
-		HRESULT result = S_OK;
-		BOOL found = FALSE;
 		if (rk.Open(HKEY_CURRENT_USER, TEXT("Software\\WechatExporter"), KEY_READ) == ERROR_SUCCESS)
 		{
-			ULONG chars = MAX_PATH;
-			if (rk.QueryStringValue(TEXT("OutputDir"), szPath, &chars) == ERROR_SUCCESS)
+			DWORD dwValue = 0;
+			if (rk.QueryDWORDValue(TEXT("DescOrder"), dwValue) == ERROR_SUCCESS)
 			{
-				found = TRUE;
+				stateDesc = static_cast<int>(dwValue);
+			}
+			if (rk.QueryDWORDValue(TEXT("SaveFilesInSF"), dwValue) == ERROR_SUCCESS)
+			{
+				stateFilesFolder = static_cast<int>(dwValue);
+			}
+			ULONG chars = MAX_PATH;
+			if (rk.QueryStringValue(TEXT("OutputDir"), szOutput, &chars) == ERROR_SUCCESS)
+			{
+				outputDirFound = TRUE;
 			}
 		}
-		if (!found)
+		CButton btn = GetDlgItem(IDC_DESC_ORDER);
+		btn.SetCheck(stateDesc);
+		btn = GetDlgItem(IDC_FILES_IN_SESSION);
+		btn.SetCheck(stateFilesFolder);
+		
+		HRESULT result = S_OK;
+		if (!outputDirFound)
 		{
-			result = SHGetFolderPath(NULL, CSIDL_MYDOCUMENTS, NULL, SHGFP_TYPE_CURRENT, szPath);
+			result = SHGetFolderPath(NULL, CSIDL_MYDOCUMENTS, NULL, SHGFP_TYPE_CURRENT, szOutput);
 		}
-		SetDlgItemText(IDC_OUTPUT, szPath);
+		SetDlgItemText(IDC_OUTPUT, szOutput);
 
+		TCHAR szPath[MAX_PATH] = { 0 };
 		// Check iTunes Folder
 		result = SHGetFolderPath(NULL, CSIDL_APPDATA, NULL, SHGFP_TYPE_CURRENT, szPath);
 		_tcscat(szPath, TEXT("\\Apple Computer\\MobileSync\\Backup"));
-		
+
+		CStatic label = GetDlgItem(IDC_STATIC_BACKUP);
+		CString text;
+		text.Format(IDS_STATIC_BACKUP, szPath);
+		label.SetWindowText(text);
+
 		DWORD dwAttrib = ::GetFileAttributes(szPath);
 		if (dwAttrib != INVALID_FILE_ATTRIBUTES && (dwAttrib & FILE_ATTRIBUTE_DIRECTORY))
 		{
@@ -113,6 +131,8 @@ public:
 		COMMAND_HANDLER(IDC_CHOOSE_OUTPUT, BN_CLICKED, OnBnClickedChooseOutput)
 		COMMAND_HANDLER(IDC_EXPORT, BN_CLICKED, OnBnClickedExport)
 		COMMAND_HANDLER(IDC_CANCEL, BN_CLICKED, OnBnClickedCancel)
+		COMMAND_HANDLER(IDC_DESC_ORDER, BN_CLICKED, OnBnClickedDescOrder)
+		COMMAND_HANDLER(IDC_FILES_IN_SESSION, BN_CLICKED, OnBnClickedFilesFolder)
 		MESSAGE_HANDLER(WM_START, OnStart)
 		MESSAGE_HANDLER(WM_COMPLETE, OnComplete)
 	END_MSG_MAP()
@@ -139,16 +159,13 @@ public:
 		text.LoadString(IDS_SEL_BACKUP_DIR);
 
 		CFolderDialog folder(NULL, text, BIF_RETURNONLYFSDIRS | BIF_USENEWUI | BIF_NONEWFOLDERBUTTON);
-		if (IDOK == folder.DoModal()) {
-			// std::wstring dir = folder.m_szFolderPath;
-			// if ([backupUrl.absoluteString hasSuffix : @"/Backup"] || [backupUrl.absoluteString hasSuffix:@" / Backup / "])
-			{
-				CT2A backupDir(folder.m_szFolderPath, CP_UTF8);
+		if (IDOK == folder.DoModal())
+		{
+			CT2A backupDir(folder.m_szFolderPath, CP_UTF8);
 
-				ManifestParser parser((LPCSTR)backupDir, "Info.plist", &m_shell);
-				std::vector<BackupManifest> manifests = parser.parse();
-				UpdateBackups(manifests);
-			}
+			ManifestParser parser((LPCSTR)backupDir, "Info.plist", &m_shell);
+			std::vector<BackupManifest> manifests = parser.parse();
+			UpdateBackups(manifests);
 		}
 
 		return 0;
@@ -171,7 +188,8 @@ public:
 			folder.SetInitialFolder(outputDir);
 		}
 		
-		if (IDOK == folder.DoModal()) {
+		if (IDOK == folder.DoModal())
+		{
 			CRegKey rk;
 			if (rk.Create(HKEY_CURRENT_USER, TEXT("Software\\WechatExporter"), REG_NONE, REG_OPTION_NON_VOLATILE, KEY_READ | KEY_WRITE) == ERROR_SUCCESS)
 			{
@@ -205,6 +223,32 @@ public:
 		return 0;
 	}
 
+	LRESULT OnBnClickedDescOrder(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled)
+	{
+		CButton btn = hWndCtl;
+		int state = btn.GetCheck();
+		CRegKey rk;
+		if (rk.Create(HKEY_CURRENT_USER, TEXT("Software\\WechatExporter"), REG_NONE, REG_OPTION_NON_VOLATILE, KEY_READ | KEY_WRITE) == ERROR_SUCCESS)
+		{
+			rk.SetDWORDValue(TEXT("DescOrder"), static_cast<DWORD>(state));
+		}
+
+		return 0;
+	}
+
+	LRESULT OnBnClickedFilesFolder(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled)
+	{
+		CButton btn = hWndCtl;
+		int state = btn.GetCheck();
+		CRegKey rk;
+		if (rk.Create(HKEY_CURRENT_USER, TEXT("Software\\WechatExporter"), REG_NONE, REG_OPTION_NON_VOLATILE, KEY_READ | KEY_WRITE) == ERROR_SUCCESS)
+		{
+			rk.SetDWORDValue(TEXT("SaveFilesInSF"), static_cast<DWORD>(state));
+		}
+
+		return 0;
+	}
+
 	LRESULT OnBnClickedExport(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/)
 	{
 		if (NULL != m_exporter)
@@ -234,11 +278,17 @@ public:
 			return 0;
 		}
 
+		CButton btn = GetDlgItem(IDC_DESC_ORDER);
+		bool descOrder = (btn.GetCheck() == BST_CHECKED);
+
+		btn = GetDlgItem(IDC_FILES_IN_SESSION);
+		bool saveFilesInSessionFolder = (btn.GetCheck() == BST_CHECKED);
+
 		CListBox lstboxLogs = GetDlgItem(IDC_LOG);
 		lstboxLogs.ResetContent();
 
 		CW2A resDir(CT2W(buffer), CP_UTF8);
-		Run((LPCSTR)resDir, backup, (LPCSTR)output);
+		Run((LPCSTR)resDir, backup, (LPCSTR)output, descOrder, saveFilesInSessionFolder);
 
 		return 0;
 	}
@@ -265,10 +315,15 @@ public:
 		return 0;
 	}
 
-	void Run(const std::string& resDir, const std::string& backup, const std::string& output)
+	void Run(const std::string& resDir, const std::string& backup, const std::string& output, bool descOrder, bool saveFilesInSessionFolder)
 	{
 		m_exporter = new Exporter(resDir, backup, output, &m_shell, m_logger);
 		m_exporter->setNotifier(m_notifier);
+		m_exporter->setOrder(!descOrder);
+		if (saveFilesInSessionFolder)
+		{
+			m_exporter->saveFilesInSessionFolder();
+		}
 		if (m_exporter->run())
 		{
 			EnableInteractiveCtrls(FALSE);
@@ -280,6 +335,8 @@ public:
 		::EnableWindow(GetDlgItem(IDC_BACKUP), enabled);
 		::EnableWindow(GetDlgItem(IDC_CHOOSE_BKP), enabled);
 		::EnableWindow(GetDlgItem(IDC_CHOOSE_OUTPUT), enabled);
+		::EnableWindow(GetDlgItem(IDC_DESC_ORDER), enabled);
+		::EnableWindow(GetDlgItem(IDC_FILES_IN_SESSION), enabled);
 		::EnableWindow(GetDlgItem(IDC_EXPORT), enabled);
 		::EnableWindow(GetDlgItem(IDC_CANCEL), !enabled);
 	}

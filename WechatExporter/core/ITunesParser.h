@@ -23,14 +23,12 @@ struct ITunesFile
 {
     std::string fileId;
     std::string relativePath;
-    // unsigned int modifiedTime;
+    unsigned int modifiedTime;
     std::vector<unsigned char> blob;
     
     ITunesFile()
     {
     }
-    
-    // unsigned int getModifiedTime() const;
 };
 
 using ITunesFileVector = std::vector<ITunesFile *>;
@@ -95,14 +93,19 @@ public:
     bool load(const std::string& domain);
     bool load(const std::string& domain, bool onlyFile);
     
+    const ITunesFile* findITunesFile(const std::string& relativePath) const;
     std::string findFileId(const std::string& relativePath) const;
     std::string fileIdToRealPath(const std::string& fileId) const;
     std::string findRealPath(const std::string& relativePath) const;
     template<class TFilter>
     ITunesFileVector filter(TFilter f) const;
-
+    
+    std::string getRealPath(const ITunesFile& file) const;
+    
+    static unsigned int parseModifiedTime(const std::vector<unsigned char>& data);
+    
 protected:
-    std::vector<ITunesFile *> m_files;
+    mutable std::vector<ITunesFile *> m_files;
     std::string m_rootPath;
     std::string m_manifestFileName;
 };
@@ -136,8 +139,11 @@ protected:
     
 public:
     ManifestParser(const std::string& m_manifestPath, const std::string& m_xml, const Shell* shell);
-    std::vector<BackupManifest> parse();
-    BackupManifest parse(const std::string& backupId);
+    std::vector<BackupManifest> parse() const;
+
+protected:
+    std::vector<BackupManifest> parseDirectory(const std::string& path) const;
+    BackupManifest parse(const std::string& backupPath, const std::string& backupId) const;
 };
 
 #endif /* ITunesParser_h */

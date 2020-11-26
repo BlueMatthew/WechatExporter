@@ -13,12 +13,15 @@
 #ifndef Shell_h
 #define Shell_h
 
+// At last, it is function collection of file system actually
 class Shell
 {
 public:
     
 	virtual bool existsDirectory(const std::string& path) const = 0;
     virtual bool makeDirectory(const std::string& path) const = 0;
+    virtual bool deleteFile(const std::string& path) const = 0;
+    virtual bool deleteDirectory(const std::string& path) const = 0;
     virtual bool existsFile(const std::string& path) const = 0;
 	virtual bool listSubDirectories(const std::string& path, std::vector<std::string>& subDirectories) const = 0;
     virtual bool copyFile(const std::string& src, const std::string& dest, bool overwrite) const = 0;

@@ -581,7 +581,7 @@ bool SessionsParser::parseCellData(const std::string& userRoot, Session& session
             unsigned int modifiedTime = 0;
             if (items.size() > 1)
             {
-                modifiedTime = parseModifiedTime((*it)->blob);
+                modifiedTime = ITunesDb::parseModifiedTime((*it)->blob);
             }
             if (session.DisplayName.empty() || (!displayName.empty() && modifiedTime > lastModifiedTime))
             {
@@ -594,26 +594,7 @@ bool SessionsParser::parseCellData(const std::string& userRoot, Session& session
 	return true;
 }
 
-unsigned int SessionsParser::parseModifiedTime(std::vector<unsigned char>& data)
-{
-    uint64_t val = 0;
-    plist_t node = NULL;
-    plist_from_memory(reinterpret_cast<const char *>(&data[0]), static_cast<uint32_t>(data.size()), &node);
-    if (NULL != node)
-    {
-        plist_t lastModified = plist_access_path(node, 3, "$objects", 1, "LastModified");
-        if (NULL != lastModified)
-        {
-            plist_get_uint_val(lastModified, &val);
-        }
-        
-        plist_free(node);
-    }
-
-    return static_cast<unsigned int>(val);
-}
-
-SessionParser::SessionParser(Friend& myself, Friends& friends, const ITunesDb& iTunesDb, const Shell& shell, const std::map<std::string, std::string>& templates, const std::map<std::string, std::string>& localeStrings, Downloader& downloader, std::atomic<bool>& cancelled) : m_templates(templates), m_localeStrings(localeStrings), m_options(0), m_myself(myself), m_friends(friends), m_iTunesDb(iTunesDb), m_shell(shell), m_downloader(downloader), m_cancelled(cancelled)
+SessionParser::SessionParser(Friend& myself, Friends& friends, const ITunesDb& iTunesDb, const Shell& shell, const std::map<std::string, std::string>& templates, const std::map<std::string, std::string>& localeStrings, int options, Downloader& downloader, std::atomic<bool>& cancelled) : m_templates(templates), m_localeStrings(localeStrings), m_options(options), m_myself(myself), m_friends(friends), m_iTunesDb(iTunesDb), m_shell(shell), m_downloader(downloader), m_cancelled(cancelled)
 {
 }
 
@@ -749,7 +730,12 @@ bool SessionParser::parseRow(Record& record, const std::string& userBase, const 
         // {
         //     voicelen = std::stoi(sm[1]);
         // }
-        std::string audioSrc = m_iTunesDb.findRealPath(combinePath(userBase, "Audio", session.Hash, msgIdStr + ".aud"));
+        const ITunesFile* audioSrcFile = m_iTunesDb.findITunesFile(combinePath(userBase, "Audio", session.Hash, msgIdStr + ".aud"));
+        std::string audioSrc;
+        if (NULL != audioSrcFile)
+        {
+            audioSrc = m_iTunesDb.getRealPath(*audioSrcFile);
+        }
         if (audioSrc.empty())
         {
             templateKey = "msg";
@@ -762,7 +748,8 @@ bool SessionParser::parseRow(Record& record, const std::string& userBase, const 
             if ((m_options & SPO_IGNORE_AUDIO) == 0)
             {
                 silkToPcm(audioSrc, m_pcmData);
-                pcmToMp3(m_pcmData, combinePath(assetsDir, msgIdStr + ".mp3"));
+                pcmToMp3(m_pcmData, mp3Path);
+                updateFileTime(mp3Path, ITunesDb::parseModifiedTime(audioSrcFile->blob));
             }
 
             templateKey = "audio";
@@ -801,8 +788,9 @@ bool SessionParser::parseRow(Record& record, const std::string& userBase, const 
                 localfile = std::to_string(uniqueFileName++);
             }
             
-            localfile = combinePath("Emoji", localfile + ".gif");
-            m_downloader.addTask(url, combinePath(outputPath, localfile));
+            std::string emojiPath = ((m_options & SPO_ICON_IN_SESSION) == SPO_ICON_IN_SESSION) ? session.UsrName + "_files/Emoji/" : "Emoji/";
+            localfile = emojiPath + localfile + ".gif";
+            m_downloader.addTask(url, combinePath(outputPath, localfile), record.createTime);
             templateKey = "emoji";
             templateValues["%%EMOJIPATH%%"] = localfile;
         }
@@ -986,7 +974,7 @@ bool SessionParser::parseRow(Record& record, const std::string& userBase, const 
             {
                 templateValues["%%CARDIMGPATH%%"] = "Portrait/" + attrs["username"] + ".jpg";
                 std::string localfile = combinePath("Portrait", attrs["username"] + ".jpg");
-                m_downloader.addTask(attrs["smallheadimgurl"], combinePath(outputPath, localfile));
+                m_downloader.addTask(attrs["smallheadimgurl"], combinePath(outputPath, localfile), 0);
             }
             else
             {
@@ -1003,6 +991,11 @@ bool SessionParser::parseRow(Record& record, const std::string& userBase, const 
         templateValues["%%MESSAGE%%"] = safeHTML(record.message);
     }
     
+    std::string portraitPath = ((m_options & SPO_ICON_IN_SESSION) == SPO_ICON_IN_SESSION) ? session.UsrName + "_files/Portrait/" : "Portrait/";
+    std::string emojiPath = ((m_options & SPO_ICON_IN_SESSION) == SPO_ICON_IN_SESSION) ? session.UsrName + "_files/Emoji/" : "Emoji/";
+    
+    std::string localPortrait;
+    std::string remotePortrait;
     if (session.isChatroom())
     {
         if (record.des == 0)
@@ -1011,8 +1004,10 @@ bool SessionParser::parseRow(Record& record, const std::string& userBase, const 
             
             templateValues["%%ALIGNMENT%%"] = "right";
             // templateValues.Add("%%NAME%%", txtsender);
-            templateValues["%%NAME%%"] = "";
-            templateValues["%%AVATAR%%"] = "Portrait/" + m_myself.getLocalPortrait();
+            templateValues["%%NAME%%"] = "";    // Don't show name for self
+            localPortrait = portraitPath + m_myself.getLocalPortrait();
+            templateValues["%%AVATAR%%"] = localPortrait;
+            remotePortrait = m_myself.getPortraitUrl();
         }
         else
         {
@@ -1020,15 +1015,15 @@ bool SessionParser::parseRow(Record& record, const std::string& userBase, const 
             if (!senderId.empty())
             {
                 std::string txtsender = session.getMemberName(md5(senderId));
-                
                 const Friend *f = m_friends.getFriendByUid(senderId);
                 if (txtsender.empty() && NULL != f)
                 {
                     txtsender = f->DisplayName();
                 }
-            
                 templateValues["%%NAME%%"] = txtsender.empty() ? senderId : txtsender;
-                templateValues["%%AVATAR%%"] = (NULL != f) ? ("Portrait/" + f->getLocalPortrait()) : "Portrait/DefaultProfileHead@2x.png";
+                localPortrait = portraitPath + ((NULL != f) ? f->getLocalPortrait() : "DefaultProfileHead@2x.png");
+                remotePortrait = (NULL != f) ? f->getPortraitUrl() : "";
+                templateValues["%%AVATAR%%"] = localPortrait;
             }
             else
             {
@@ -1043,7 +1038,9 @@ bool SessionParser::parseRow(Record& record, const std::string& userBase, const 
         {
             templateValues["%%ALIGNMENT%%"] = "right";
             templateValues["%%NAME%%"] = "";
-            templateValues["%%AVATAR%%"] = "Portrait/" + m_myself.getLocalPortrait();
+            localPortrait = portraitPath + m_myself.getLocalPortrait();
+            remotePortrait = m_myself.getPortraitUrl();
+            templateValues["%%AVATAR%%"] = localPortrait;
         }
         else
         {
@@ -1053,22 +1050,23 @@ bool SessionParser::parseRow(Record& record, const std::string& userBase, const 
             if (NULL == f)
             {
                 templateValues["%%NAME%%"] = session.DisplayName;
-                templateValues["%%AVATAR%%"] = "Portrait/" + session.Portrait;
+                localPortrait = portraitPath + (session.Portrait.empty() ? "DefaultProfileHead@2x.png" : session.getLocalPortrait());
+                remotePortrait = session.Portrait;
+                templateValues["%%AVATAR%%"] = localPortrait;
             }
             else
             {
                 templateValues["%%NAME%%"] = f->DisplayName();
-                templateValues["%%AVATAR%%"] = "Portrait/" + f->getLocalPortrait();
+                localPortrait = portraitPath + f->getLocalPortrait();
+                remotePortrait = f->getPortraitUrl();
+                templateValues["%%AVATAR%%"] = localPortrait;
             }
         }
-        /*
-        else
-        {
-            templateValues["%%ALIGNMENT%%"] = "left";
-            templateValues["%%NAME%%"] = displayname;
-            templateValues["%%AVATAR%%"] = "Portrait/DefaultProfileHead@2x.png";
-        }
-         */
+    }
+
+    if (!localPortrait.empty() && !remotePortrait.empty())
+    {
+        m_downloader.addTask(remotePortrait, combinePath(outputPath, localPortrait), record.createTime);
     }
 
     return true;
@@ -1083,17 +1081,27 @@ std::string SessionParser::getLocaleString(const std::string& key) const
 
 bool SessionParser::requireFile(const std::string& vpath, const std::string& dest) const
 {
-    std::string srcPath = m_iTunesDb.findRealPath(vpath);
-    if (!srcPath.empty())
-    {
 #ifndef NDEBUG
-        // Make debug more effective
-        if (m_shell.existsFile(srcPath))
-        {
-            return true;
-        }
+    // Make debug more effective
+    if (m_shell.existsFile(dest))
+    {
+        return true;
+    }
 #endif
-        return m_shell.copyFile(srcPath, dest, true);
+    
+    const ITunesFile* file = m_iTunesDb.findITunesFile(vpath);
+    
+    if (NULL != file)
+    {
+        std::string srcPath = m_iTunesDb.getRealPath(*file);
+        if (!srcPath.empty())
+        {
+            bool result = m_shell.copyFile(srcPath, dest, true);
+            if (result)
+            {
+                updateFileTime(dest, ITunesDb::parseModifiedTime(file->blob));
+            }
+        }
     }
     
     return false;

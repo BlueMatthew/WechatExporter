@@ -34,7 +34,7 @@ void errorLogCallback(void *pArg, int iErrCode, const char *zMsg)
     ShellImpl* m_shell;
     LoggerImpl* m_logger;
     ExportNotifierImpl *m_notifier;
-    Exporter* m_exp;
+    Exporter* m_exporter;
     
     std::vector<BackupManifest> m_manifests;
     NSInteger m_selectedIndex;
@@ -51,12 +51,12 @@ void errorLogCallback(void *pArg, int iErrCode, const char *zMsg)
 
 - (void)stopExporting
 {
-    if (NULL != m_exp)
+    if (NULL != m_exporter)
     {
-        m_exp->cancel();
-        m_exp->waitForComplition();
-        delete m_exp;
-        m_exp = NULL;
+        m_exporter->cancel();
+        m_exporter->waitForComplition();
+        delete m_exporter;
+        m_exporter = NULL;
     }
     if (NULL != m_notifier)
     {
@@ -96,7 +96,7 @@ void errorLogCallback(void *pArg, int iErrCode, const char *zMsg)
     m_shell = new ShellImpl();
     m_logger = new LoggerImpl(self);
     m_notifier = new ExportNotifierImpl(self);
-    m_exp = NULL;
+    m_exporter = NULL;
     
     [self.btnBackup setAction:@selector(btnBackupClicked:)];
     [self.btnOutput setAction:@selector(btnOutputClicked:)];
@@ -255,7 +255,7 @@ void errorLogCallback(void *pArg, int iErrCode, const char *zMsg)
 
 - (void)btnExportClicked:(id)sender
 {
-    if (NULL != m_exp)
+    if (NULL != m_exporter)
     {
         [self msgBox:@"导出已经在执行。"];
         return;
@@ -291,22 +291,23 @@ void errorLogCallback(void *pArg, int iErrCode, const char *zMsg)
     
     BOOL descOrder = (self.chkboxDesc.state == NSOnState);
     BOOL ignoreAudio = (self.chkboxNoAudio.state == NSOnState);
+    BOOL saveFilesInSessionFolder = (self.chkboxSaveFilesInSessionFolder.state == NSOnState);
     
     self.txtViewLogs.string = @"";
     [self onStart];
-    NSDictionary *dict = @{@"backup": backupPath, @"output": outputPath, @"descOrder": @(descOrder), @"ignoreAudio": @(ignoreAudio) };
+    NSDictionary *dict = @{@"backup": backupPath, @"output": outputPath, @"descOrder": @(descOrder), @"ignoreAudio": @(ignoreAudio), @"saveFilesInSessionFolder": @(saveFilesInSessionFolder) };
     [NSThread detachNewThreadSelector:@selector(run:) toTarget:self withObject:dict];
 }
 
 - (void)btnCancelClicked:(id)sender
 {
-    if (NULL == m_exp)
+    if (NULL == m_exporter)
     {
         // [self msgBox:@"当前未执行导出。"];
         return;
     }
     
-    m_exp->cancel();
+    m_exporter->cancel();
     [self.btnCancel setEnabled:NO];
 }
 
@@ -335,24 +336,29 @@ void errorLogCallback(void *pArg, int iErrCode, const char *zMsg)
     
     NSNumber *ignoreAudio = [dict objectForKey:@"ignoreAudio"];
     NSNumber *descOrder = [dict objectForKey:@"descOrder"];
+    NSNumber *saveFilesInSessionFolder = [dict objectForKey:@"saveFilesInSessionFolder"];
     
     NSString *workDir = [[NSFileManager defaultManager] currentDirectoryPath];
     
     workDir = [[NSBundle mainBundle] resourcePath];
     
-    m_exp = new Exporter([workDir UTF8String], [backup UTF8String], [output UTF8String], m_shell, m_logger);
+    m_exporter = new Exporter([workDir UTF8String], [backup UTF8String], [output UTF8String], m_shell, m_logger);
     if (nil != ignoreAudio && [ignoreAudio boolValue])
     {
-        m_exp->ignoreAudio();
+        m_exporter->ignoreAudio();
     }
     if (nil != descOrder && [descOrder boolValue])
     {
-        m_exp->setOrder(false);
+        m_exporter->setOrder(false);
+    }
+    if (nil != saveFilesInSessionFolder && [saveFilesInSessionFolder boolValue])
+    {
+        m_exporter->saveFilesInSessionFolder();
     }
 
-    m_exp->setNotifier(m_notifier);
+    m_exporter->setNotifier(m_notifier);
     
-    m_exp->run();
+    m_exporter->run();
 }
 
 - (void)msgBox:(NSString *)msg
@@ -375,6 +381,9 @@ void errorLogCallback(void *pArg, int iErrCode, const char *zMsg)
     [self.btnBackup setEnabled:NO];
     [self.btnExport setEnabled:NO];
     [self.btnCancel setEnabled:YES];
+    [self.chkboxDesc setEnabled:NO];
+    [self.chkboxNoAudio setEnabled:NO];
+    [self.chkboxSaveFilesInSessionFolder setEnabled:NO];
     [self.progressBar startAnimation:nil];
 }
 
@@ -386,7 +395,17 @@ void errorLogCallback(void *pArg, int iErrCode, const char *zMsg)
     [self.cmbboxBackup setEnabled:YES];
     [self.btnOutput setEnabled:YES];
     [self.btnBackup setEnabled:YES];
+    [self.chkboxDesc setEnabled:YES];
+    [self.chkboxNoAudio setEnabled:YES];
+    [self.chkboxSaveFilesInSessionFolder setEnabled:YES];
     [self.progressBar stopAnimation:nil];
+    
+    if (m_exporter)
+    {
+        m_exporter->waitForComplition();
+        delete m_exporter;
+        m_exporter = NULL;
+    }
 }
 
 - (void)writeLog:(NSString *)log

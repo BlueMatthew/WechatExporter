@@ -222,6 +222,11 @@ struct Session
         return it != Members.cend() ? it->second.second : "";
     }
     
+    std::string getLocalPortrait() const
+    {
+        return UsrName + ".jpg";
+    }
+    
     bool copyInfoFromFriend(const Friend& f)
     {
         if (UsrName != f.getUsrName())
