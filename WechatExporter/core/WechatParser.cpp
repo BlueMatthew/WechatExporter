@@ -257,19 +257,12 @@ bool FriendsParser::parseWcdb(const std::string& mmPath, Friends& friends)
     while (sqlite3_step(stmt) == SQLITE_ROW)
     {
         int userType = sqlite3_column_int(stmt, 4);
-#ifndef NDEBUG
-        if (userType == 1)
-        {
-            continue;
-        }
-#endif
         const char* val = reinterpret_cast<const char*>(sqlite3_column_text(stmt, 0));
         if (NULL == val)
         {
             continue;
         }
         std::string uid = val;
-        
         Friend& f = friends.addFriend(uid);
 
         parseRemark(sqlite3_column_blob(stmt, 1), sqlite3_column_bytes(stmt, 1), f);
@@ -1101,6 +1094,7 @@ bool SessionParser::requireFile(const std::string& vpath, const std::string& des
             {
                 updateFileTime(dest, ITunesDb::parseModifiedTime(file->blob));
             }
+            return result;
         }
     }
     
