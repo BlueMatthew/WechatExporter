@@ -30,8 +30,8 @@ MacOS版本：MacOS 10.10(Yosemite)+
 - silk: https://github.com/collects/silk (也参考了： https://github.com/kn007/silk-v3-decoder)  
 - libplist: https://github.com/libimobiledevice/libplist  https://github.com/libimobiledevice-win32/libplist  
 - libiconv(windows only): https://www.gnu.org/software/libiconv/  
-- openssl(windows only)  
-- WTL (windows only)
+- openssl(windows only)：https://github.com/openssl/openssl   
+- WTL (windows only)：https://sourceforge.net/projects/wtl/  
 
 MacOS下，libxml2,libcurl,libsqlite3直接使用了Xcode自带的库，其它第三方库需自行编译。  
 libmp3lame需手动删除文件include/libmp3lame.sym中的行：lame_init_old  
