@@ -45,6 +45,8 @@ public:
         {
             m_url = task.m_url;
             m_output = task.m_output;
+            m_mtime = task.m_mtime;
+            m_localCopy = task.m_localCopy;
         }
         
         return *this;
