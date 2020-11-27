@@ -39,15 +39,24 @@ void Task::downloadFile()
 	char errbuf[CURL_ERROR_SIZE] = { 0 };
 
     // User-Agent: WeChat/7.0.15.33 CFNetwork/978.0.7 Darwin/18.6.0
-    CURL *curl_handler = curl_easy_init();
-    curl_easy_setopt(curl_handler, CURLOPT_URL, m_url.c_str());
-    curl_easy_setopt(curl_handler, CURLOPT_TIMEOUT, 60);
-    curl_easy_setopt(curl_handler, CURLOPT_WRITEFUNCTION, &::writeData);
-    curl_easy_setopt(curl_handler, CURLOPT_WRITEDATA, this);
-	curl_easy_setopt(curl_handler, CURLOPT_SSL_VERIFYPEER, 0);
-	curl_easy_setopt(curl_handler, CURLOPT_SSL_VERIFYHOST, 0);
+    CURL *curl = curl_easy_init();
+    curl_easy_setopt(curl, CURLOPT_URL, m_url.c_str());
+    curl_easy_setopt(curl, CURLOPT_USERAGENT, "WeChat/7.0.15.33 CFNetwork/978.0.7 Darwin/18.6.0");
+    curl_easy_setopt(curl, CURLOPT_FORBID_REUSE, 1L);
+    curl_easy_setopt(curl, CURLOPT_TIMEOUT, 60);
+    curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, &::writeData);
+    curl_easy_setopt(curl, CURLOPT_WRITEDATA, this);
+    curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, true);
+	curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 0);
+	curl_easy_setopt(curl, CURLOPT_SSL_VERIFYHOST, 0);
+#ifndef NDEBUG
+    std::string logPath = m_output + ".log";
+    FILE* logFile = fopen(logPath.c_str(), "wb");
+    curl_easy_setopt(curl, CURLOPT_VERBOSE, 1L);
+    curl_easy_setopt(curl, CURLOPT_STDERR, logFile);
+#endif
 
-    res = curl_easy_perform(curl_handler);
+    res = curl_easy_perform(curl);
 	if (res != CURLE_OK)
 	{
 		size_t len = strlen(errbuf);
@@ -59,12 +68,18 @@ void Task::downloadFile()
 			fprintf(stderr, "%s: %s\n", curl_easy_strerror(res), m_url.c_str());
 	}
     
-    curl_easy_cleanup(curl_handler);
+    curl_easy_cleanup(curl);
     
     if (m_mtime > 0)
     {
         updateFileTime(m_output, m_mtime);
     }
+#ifndef NDEBUG
+    if (NULL != logFile)
+    {
+        fclose(logFile);
+    }
+#endif
 }
 
 void Task::copyFile()
@@ -114,13 +129,14 @@ void Downloader::addTask(const std::string &url, const std::string& output, time
     
     m_mtx.lock();
     std::map<std::string, std::string>::const_iterator it = m_urls.find(url);
-    if (!(existed = (it != m_urls.cend())))
+    existed = (it != m_urls.cend());
+    if (!existed)
     {
         m_urls[url] = output;
         Task task(url, formatedPath, mtime);
         m_queue.push(task);
     }
-    else
+    else if (output != it->second)
     {
         Task task(it->second, formatedPath, mtime, true);
         m_copyQueue.push(task);
