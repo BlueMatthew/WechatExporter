@@ -131,6 +131,7 @@ public:
 		COMMAND_HANDLER(IDC_CHOOSE_OUTPUT, BN_CLICKED, OnBnClickedChooseOutput)
 		COMMAND_HANDLER(IDC_EXPORT, BN_CLICKED, OnBnClickedExport)
 		COMMAND_HANDLER(IDC_CANCEL, BN_CLICKED, OnBnClickedCancel)
+		COMMAND_HANDLER(IDC_CLOSE, BN_CLICKED, OnBnClickedClose)
 		COMMAND_HANDLER(IDC_DESC_ORDER, BN_CLICKED, OnBnClickedDescOrder)
 		COMMAND_HANDLER(IDC_FILES_IN_SESSION, BN_CLICKED, OnBnClickedFilesFolder)
 		MESSAGE_HANDLER(WM_START, OnStart)
@@ -145,6 +146,7 @@ public:
 		DLGRESIZE_CONTROL(IDC_LOG, DLSZ_SIZE_X | DLSZ_SIZE_Y)
 		DLGRESIZE_CONTROL(IDC_PROGRESS, DLSZ_MOVE_Y)
 		DLGRESIZE_CONTROL(IDC_CANCEL, DLSZ_MOVE_X | DLSZ_MOVE_Y)
+		DLGRESIZE_CONTROL(IDC_CLOSE, DLSZ_MOVE_X | DLSZ_MOVE_Y)
 		DLGRESIZE_CONTROL(IDC_EXPORT, DLSZ_MOVE_X | DLSZ_MOVE_Y)
 	END_DLGRESIZE_MAP()
 
@@ -220,6 +222,12 @@ public:
 
 		m_exporter->cancel();
 
+		return 0;
+	}
+
+	LRESULT OnBnClickedClose(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/)
+	{
+		::PostMessage(GetParent(), WM_CLOSE, 0, 0);
 		return 0;
 	}
 
@@ -339,6 +347,8 @@ public:
 		::EnableWindow(GetDlgItem(IDC_FILES_IN_SESSION), enabled);
 		::EnableWindow(GetDlgItem(IDC_EXPORT), enabled);
 		::EnableWindow(GetDlgItem(IDC_CANCEL), !enabled);
+		::ShowWindow(GetDlgItem(IDC_CANCEL), enabled ? SW_HIDE : SW_SHOW);
+		::ShowWindow(GetDlgItem(IDC_CLOSE), enabled ? SW_SHOW : SW_HIDE);
 	}
 
 	void UpdateBackups(const std::vector<BackupManifest>& manifests)
