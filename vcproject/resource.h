@@ -10,8 +10,6 @@
 #define IDS_CANCEL_PROMPT               131
 #define IDS_STRING132                   132
 #define IDS_STATIC_BACKUP               132
-#define IDB_BITMAP1                     202
-#define IDB_WAITING                     202
 #define IDC_BACKUP                      1000
 #define IDC_CHOOSE_BKP                  1001
 #define IDC_OUTPUT                      1002
@@ -23,14 +21,16 @@
 #define IDC_DESC_ORDER                  1008
 #define IDC_FILES_IN_SESSION            1009
 #define IDC_STATIC_BACKUP               1010
+#define IDC_VERSION                     1011
+#define IDC_CLOSE                       1012
 
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        203
+#define _APS_NEXT_RESOURCE_VALUE        204
 #define _APS_NEXT_COMMAND_VALUE         32775
-#define _APS_NEXT_CONTROL_VALUE         1011
+#define _APS_NEXT_CONTROL_VALUE         1013
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif

@@ -280,7 +280,8 @@ bool Exporter::exportUser(Friend& user)
 
     Downloader downloader;
 	SessionParser sessionParser(*myself, friends, *m_iTunesDb, *m_shell, m_templates, m_localeStrings, m_options, downloader, m_cancelled);
-    
+
+    downloader.addTask(user.getPortraitUrl(), combinePath(outputBase, "Portrait", user.getLocalPortrait()), 0);
     for (std::vector<Session>::iterator it = sessions.begin(); it != sessions.end(); ++it)
     {
         if (m_cancelled)
@@ -297,7 +298,7 @@ bool Exporter::exportUser(Friend& user)
             m_logger->write(formatString(getLocaleString("Skip subscription: %s"), it->DisplayName.c_str()));
             continue;
         }
-        
+        downloader.addTask(it->Portrait, combinePath(outputBase, "Portrait", it->UsrName + ".jpg"), 0);
 		int count = exportSession(*myself, sessionParser, *it, userBase, outputBase);
         
         m_logger->write(formatString(getLocaleString("Succeeded handling %d messages."), count));
