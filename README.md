@@ -5,11 +5,12 @@
 ## 操作步骤：
 1. 通过iTunes将手机备份到电脑上（建议备份前杀掉微信），Windows操作系统一般位于目录：C:\用户[用户名]\AppData\Roaming\Apple Computer\MobileSync\Backup\。Android手机可以找一个iPad/iPhone设备，把聊天记录迁移到iPad/iPhone设备上，然后通过iTunes备份到电脑上。
 
-2. 下载本代码的执行文件：[Windows x64版本](https://github.com/BlueMatthew/WechatExporter/releases/download/v1.3/v1.3_x64_win.zip) 或者 [MacOS x64版本](https://github.com/BlueMatthew/WechatExporter/releases/download/v1.3/v1.3_x64_macos.zip)，然后解压压缩文件
+2. 下载本代码的执行文件：[Windows x64版本](https://github.com/BlueMatthew/WechatExporter/releases/download/v1.4/v1.4_x64_win.zip) 或者 [MacOS x64版本](https://github.com/BlueMatthew/WechatExporter/releases/download/v1.4/v1.4_x64_macos.zip)，然后解压压缩文件
 
 3. 执行解压出来的WechatExport.exe/WechatExporter (Windows下如果运行报缺少必须的dll文件，请安装[Visual C++ 2017 redist](https://aka.ms/vs/16/release/vc_redist.x64.exe)后再尝试运行)
 
-4. 按界面提示进行操作。
+4. 按界面提示进行操作。  
+![Windows界面截屏](https://github.com/BlueMatthew/WechatExporter/raw/main/docs/screenshots/screenshot-win.png) ![MacOS界面截屏](https://github.com/BlueMatthew/WechatExporter/raw/main/docs/screenshots/screenshot-mac.png)
 
 ## 模版修改
 解压目录下的res\templates(MacOS版本位于Contents\Resources\res)子目录里存放了输出聊天记录的html页面模版，其中通过两个%包含起来的字符串，譬如，%%NAME%%，不要修改之外，其它页面内容和格式都可以自行调整。
