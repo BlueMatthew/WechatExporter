@@ -66,7 +66,7 @@ public:
 
 protected:
 	bool runImpl();
-	bool exportUser(Friend& user);
+	bool exportUser(Friend& user, std::string& userOutputPath);
 	int exportSession(Friend& user, const SessionParser& sessionParser, const Session& session, const std::string& userBase, const std::string& outputBase);
 
     bool fillUser(Friend& user);

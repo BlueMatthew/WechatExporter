@@ -162,9 +162,8 @@ bool Exporter::runImpl()
 
 	m_logger->write(formatString(getLocaleString("%d Wechat account(s) found."), (int)(users.size())));
 
-    std::string userBody;
-    
-    
+    std::string htmlBody;
+
     std::map<std::string, std::string> fileCopies;
 	for (std::vector<Friend>::iterator it = users.begin(); it != users.end(); ++it)
 	{
@@ -173,21 +172,22 @@ bool Exporter::runImpl()
             break;
         }
 		fillUser(*it);
-		exportUser(*it);
+        std::string userOutputPath;
+		exportUser(*it, userOutputPath);
         
         std::string userItem = getTemplate("listitem");
-        userItem = replace_all(userItem, "%%ITEMPICPATH%%", it->outputFileName + "/Portrait/" + it->getLocalPortrait());
+        userItem = replace_all(userItem, "%%ITEMPICPATH%%", userOutputPath + "/Portrait/" + it->getLocalPortrait());
         userItem = replace_all(userItem, "%%ITEMLINK%%", encodeUrl(it->outputFileName) + "/index.html");
         userItem = replace_all(userItem, "%%ITEMTEXT%%", safeHTML(it->DisplayName()));
         
-        userBody += userItem;
+        htmlBody += userItem;
 	}
     
     std::string fileName = combinePath(m_output, "index.html");
 
     std::string html = getTemplate("listframe");
     html = replace_all(html, "%%USERNAME%%", "");
-    html = replace_all(html, "%%TBODY%%", userBody);
+    html = replace_all(html, "%%TBODY%%", htmlBody);
     
     std::ofstream htmlFile;
     if (m_shell->openOutputFile(htmlFile, fileName, std::ios::out | std::ios::in | std::ios::binary | std::ios::trunc))
@@ -214,18 +214,20 @@ bool Exporter::runImpl()
 	return true;
 }
 
-bool Exporter::exportUser(Friend& user)
+bool Exporter::exportUser(Friend& user, std::string& userOutputPath)
 {
     std::string uidMd5 = user.getUidHash();
     
     std::string userBase = combinePath("Documents", uidMd5);
 	// Use display name first, it it can't be created, use uid hash
-	std::string outputBase = combinePath(m_output, user.outputFileName);
+    userOutputPath = user.outputFileName;
+	std::string outputBase = combinePath(m_output, userOutputPath);
 	if (!m_shell->existsDirectory(outputBase))
 	{
 		if (!m_shell->makeDirectory(outputBase))
 		{
-			outputBase = combinePath(m_output, user.getUidHash());
+            userOutputPath = user.getUidHash();
+			outputBase = combinePath(m_output, userOutputPath);
 			if (!m_shell->existsDirectory(outputBase))
 			{
 				if (!m_shell->makeDirectory(outputBase))
@@ -306,7 +308,7 @@ bool Exporter::exportUser(Friend& user)
         if (count > 0)
         {
             std::string userItem = getTemplate("listitem");
-            userItem = replace_all(userItem, "%%ITEMPICPATH%%", it->Portrait);
+            userItem = replace_all(userItem, "%%ITEMPICPATH%%", "Portrait/" + it->getLocalPortrait());
             userItem = replace_all(userItem, "%%ITEMLINK%%", encodeUrl(it->UsrName) + ".html");
             std::string displayName = it->DisplayName;
             if (displayName.empty()) displayName = it->UsrName;
@@ -314,6 +316,19 @@ bool Exporter::exportUser(Friend& user)
             
             userBody += userItem;
         }
+    }
+
+    std::string fileName = combinePath(outputBase, "index.html");
+
+    std::string html = getTemplate("listframe");
+    html = replace_all(html, "%%USERNAME%%", " - " + user.DisplayName());
+    html = replace_all(html, "%%TBODY%%", userBody);
+    
+    std::ofstream htmlFile;
+    if (m_shell->openOutputFile(htmlFile, fileName, std::ios::out | std::ios::in | std::ios::binary | std::ios::trunc))
+    {
+        htmlFile.write(html.c_str(), html.size());
+        htmlFile.close();
     }
     
     if (m_cancelled)
@@ -329,19 +344,6 @@ bool Exporter::exportUser(Friend& user)
         }
     }
     downloader.finishAndWaitForExit();
-    
-    std::string fileName = combinePath(outputBase, "index.html");
-
-    std::string html = getTemplate("listframe");
-    html = replace_all(html, "%%USERNAME%%", " - " + user.DisplayName());
-    html = replace_all(html, "%%TBODY%%", userBody);
-    
-    std::ofstream htmlFile;
-    if (m_shell->openOutputFile(htmlFile, fileName, std::ios::out | std::ios::in | std::ios::binary | std::ios::trunc))
-    {
-        htmlFile.write(html.c_str(), html.size());
-        htmlFile.close();
-    }
 
     return true;
 }
