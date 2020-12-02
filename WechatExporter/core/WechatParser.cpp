@@ -477,8 +477,12 @@ bool SessionsParser::parseMessageDb(const std::string& mmPath, std::vector<std::
     
     while (sqlite3_step(stmt) == SQLITE_ROW)
     {
-        std::string name = reinterpret_cast<const char*>(sqlite3_column_text(stmt, 0));
-        
+        const unsigned char* pName = sqlite3_column_text(stmt, 0);
+        if (pName == NULL)
+        {
+            continue;
+        }
+        std::string name = reinterpret_cast<const char*>(pName);
         std::smatch sm;
         static std::regex pattern("^Chat_([0-9a-f]{32})$");
         if (std::regex_search(name, sm, pattern))
@@ -632,11 +636,16 @@ int SessionParser::parse(const std::string& userBase, const std::string& outputB
         templateKey = "";
         
         record.createTime = sqlite3_column_int(stmt, 0);
-        record.message = reinterpret_cast<const char*>(sqlite3_column_text(stmt, 1));
+        const unsigned char* pMessage = sqlite3_column_text(stmt, 1);
+        
+        record.message = pMessage != NULL ? reinterpret_cast<const char*>(pMessage) : "";
         record.des = sqlite3_column_int(stmt, 2);
         record.type = sqlite3_column_int(stmt, 3);
         record.msgid = sqlite3_column_int(stmt, 4);
-
+        if (pMessage == NULL)
+        {
+            int aa = 0;
+        }
         if (parseRow(record, userBase, outputBase, session, templateKey, values))
         {
             count++;
