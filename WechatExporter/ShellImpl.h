@@ -100,6 +100,11 @@ public:
         return [[NSFileManager defaultManager] copyItemAtPath:srcPath toPath:destPath error:nil] == YES;
     }
     
+    bool moveFile(const std::string& src, const std::string& dest) const
+    {
+        return rename(src.c_str(), dest.c_str()) == 0;
+    }
+    
     bool openOutputFile(std::ofstream& ofs, const std::string& fileName, std::ios_base::openmode mode/* = std::ios::out*/) const
     {
         if (ofs.is_open())

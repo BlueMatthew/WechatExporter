@@ -22,6 +22,7 @@ class Task
 protected:
     std::string m_url;
     std::string m_output;
+    std::string m_outputTmp;
     time_t m_mtime;
     bool m_localCopy;
     
