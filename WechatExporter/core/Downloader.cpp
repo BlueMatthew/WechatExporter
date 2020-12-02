@@ -33,8 +33,10 @@ void Task::run()
 
 void Task::downloadFile()
 {
+    m_outputTmp = m_output + ".tmp";
 	remove(utf8ToLocalAnsi(m_output).c_str());
-    
+    remove(utf8ToLocalAnsi(m_outputTmp).c_str());
+
 	CURLcode res;
 	char errbuf[CURL_ERROR_SIZE] = { 0 };
 
@@ -57,7 +59,11 @@ void Task::downloadFile()
 #endif
 
     res = curl_easy_perform(curl);
-	if (res != CURLE_OK)
+	if (res == CURLE_OK)
+    {
+        rename(utf8ToLocalAnsi(m_outputTmp).c_str(), utf8ToLocalAnsi(m_output).c_str());
+    }
+    else
 	{
 		size_t len = strlen(errbuf);
 		fprintf(stderr, "\nlibcurl: (%d) ", res);
@@ -93,7 +99,7 @@ void Task::copyFile()
 size_t Task::writeData(void *buffer, size_t size, size_t nmemb)
 {
     std::ofstream file;
-    file.open (utf8ToLocalAnsi(m_output), std::fstream::in | std::fstream::out | std::fstream::app | std::fstream::binary);
+    file.open (utf8ToLocalAnsi(m_outputTmp), std::fstream::in | std::fstream::out | std::fstream::app | std::fstream::binary);
 	size_t bytesToWrite = size * nmemb;
 	if (file.is_open())
 	{

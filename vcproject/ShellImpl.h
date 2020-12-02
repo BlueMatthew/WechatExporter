@@ -102,6 +102,14 @@ public:
 		return (bRet == TRUE);
 	}
 
+	bool moveFile(const std::string& src, const std::string& dest) const
+	{
+		CW2T pszSrc(CA2W(src.c_str(), CP_UTF8));
+		CW2T pszDest(CA2W(dest.c_str(), CP_UTF8));
+
+		return ::MoveFile((LPCTSTR)pszSrc, (LPCTSTR)pszDest) == TRUE;
+	}
+
 	bool openOutputFile(std::ofstream& ofs, const std::string& fileName, std::ios_base::openmode mode/* = std::ios::out*/) const
 	{
 		if (ofs.is_open())
