@@ -25,13 +25,15 @@ protected:
     std::string m_outputTmp;
     time_t m_mtime;
     bool m_localCopy;
-    
+    unsigned int m_retries;
+public:
+    static const unsigned int MAX_RETRIES = 3;
 public:
     Task() : m_localCopy(false)
     {
     }
     
-    Task(const std::string &url, const std::string& output, time_t mtime, bool localCopy = false) : m_url(url), m_output(output), m_mtime(mtime), m_localCopy(localCopy)
+    Task(const std::string &url, const std::string& output, time_t mtime, bool localCopy = false) : m_url(url), m_output(output), m_mtime(mtime), m_localCopy(localCopy), m_retries(0)
     {
     }
     
@@ -48,17 +50,19 @@ public:
             m_output = task.m_output;
             m_mtime = task.m_mtime;
             m_localCopy = task.m_localCopy;
+            m_retries = task.m_retries;
         }
         
         return *this;
     }
     
     size_t writeData(void *buffer, size_t size, size_t nmemb);
-    void run();
+    bool run();
+    unsigned int getRetries() const;
     
 protected:
-    void downloadFile();
-    void copyFile();
+    bool downloadFile();
+    bool copyFile();
 };
 
 class Downloader

@@ -26,13 +26,20 @@ size_t writeData(void *buffer, size_t size, size_t nmemb, void *user_p)
     return 0;
 }
 
-void Task::run()
+unsigned int Task::getRetries() const
 {
-    m_localCopy ? copyFile() : downloadFile();
+    return m_retries;
 }
 
-void Task::downloadFile()
+bool Task::run()
 {
+    return m_localCopy ? copyFile() : downloadFile();
+}
+
+bool Task::downloadFile()
+{
+    ++m_retries;
+    
     m_outputTmp = m_output + ".tmp";
 	remove(utf8ToLocalAnsi(m_output).c_str());
     remove(utf8ToLocalAnsi(m_outputTmp).c_str());
@@ -65,13 +72,16 @@ void Task::downloadFile()
     }
     else
 	{
-		size_t len = strlen(errbuf);
-		fprintf(stderr, "\nlibcurl: (%d) ", res);
-		if (len)
-			fprintf(stderr, "%s: %s%s", errbuf, m_url.c_str(),
-			((errbuf[len - 1] != '\n') ? "\n" : ""));
-		else
-			fprintf(stderr, "%s: %s\n", curl_easy_strerror(res), m_url.c_str());
+        if (m_retries >= MAX_RETRIES)
+        {
+            size_t len = strlen(errbuf);
+            fprintf(stderr, "\nlibcurl: (%d) ", res);
+            if (len)
+                fprintf(stderr, "%s: %s%s", errbuf, m_url.c_str(),
+                ((errbuf[len - 1] != '\n') ? "\n" : ""));
+            else
+                fprintf(stderr, "%s: %s\n", curl_easy_strerror(res), m_url.c_str());
+        }
 	}
     
     curl_easy_cleanup(curl);
@@ -86,14 +96,18 @@ void Task::downloadFile()
         fclose(logFile);
     }
 #endif
+    
+    return res == CURLE_OK;
 }
 
-void Task::copyFile()
+bool Task::copyFile()
 {
     std::ifstream  src(utf8ToLocalAnsi(m_url), std::ios::binary);
     std::ofstream  dst(utf8ToLocalAnsi(m_output), std::ios::binary);
 
     dst << src.rdbuf();
+    
+    return true;
 }
 
 size_t Task::writeData(void *buffer, size_t size, size_t nmemb)
@@ -198,7 +212,15 @@ void Downloader::run(int idx)
         if (found)
         {
             // run task
-            task.run();
+            if (!task.run())
+            {
+                if (!task.isLocalCopy() && task.getRetries() < Task::MAX_RETRIES)
+                {
+                    m_mtx.lock();
+                    m_queue.push(task);
+                    m_mtx.unlock();
+                }
+            }
             continue;
         }
         if (noMoreTask)
@@ -207,7 +229,7 @@ void Downloader::run(int idx)
         }
         else
         {
-            std::this_thread::sleep_for(std::chrono::milliseconds(100));
+            std::this_thread::sleep_for(std::chrono::milliseconds(10));
         }
     }
 }
