@@ -116,7 +116,7 @@ bool silkToPcm(const std::string& silkPath, std::vector<unsigned char>& pcmData)
            header_buf[ strlen( "!SILK_V3" ) ] = '\0'; /* Terminate with a null character */
            if( strcmp( header_buf, "!SILK_V3" ) != 0 ) {
                /* Non-equal strings */
-               printf( "Error: Wrong Header %s\n", header_buf );
+               printf( "SILK Error: Wrong Header %s: %s\n", silkPath.c_str(), header_buf );
                // exit( 0 );
                return false;
            }
@@ -125,7 +125,7 @@ bool silkToPcm(const std::string& silkPath, std::vector<unsigned char>& pcmData)
            header_buf[ strlen( "#!SILK_V3" ) ] = '\0'; /* Terminate with a null character */
            if( strcmp( header_buf, "#!SILK_V3" ) != 0 ) {
                /* Non-equal strings */
-               printf( "Error: Wrong Header %s\n", header_buf );
+               printf( "SILK Error: Wrong Header %s: %s\n", silkPath.c_str(), header_buf );
                // exit( 0 );
                return false;
            }
