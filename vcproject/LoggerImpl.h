@@ -19,18 +19,34 @@ public:
 		m_hWndLog = NULL;
 	}
 
-	void write(const std::string& log)
+	void outputLog(LPCTSTR pszLog)
 	{
-		CW2T pszT(CA2W(log.c_str(), CP_UTF8));
-
-		::SendMessage(m_hWndLog, LB_ADDSTRING, 0, (LPARAM)(LPCTSTR)pszT);
+		::SendMessage(m_hWndLog, LB_ADDSTRING, 0, (LPARAM)pszLog);
 		LRESULT count = ::SendMessage(m_hWndLog, LB_GETCOUNT, 0, 0L);
 		::SendMessage(m_hWndLog, LB_SETTOPINDEX, count - 1, 0L);
 	}
 
+	void write(const std::string& log)
+	{
+		CW2T pszT(CA2W(log.c_str(), CP_UTF8));
+		
+		std::string time = getCurrentTimestamp() + ": ";
+		CA2T szTime(time.c_str());
+
+		std::vector<TCHAR> szLog;
+		szLog.resize(_tcslen(pszT) + _tcslen(szTime) + 1, 0);
+
+		_tcscpy(&szLog[0], (LPCTSTR)szTime);
+		_tcscat(&szLog[0], (LPCTSTR)pszT);
+		
+		outputLog(&szLog[0]);
+	}
+
 	void debug(const std::string& log)
 	{
-		write(log);
+#ifndef NDEBUG
+		write("[DBG] " + log);
+#endif
 	}
 };
 

@@ -7,6 +7,7 @@
 //
 
 #include <cstdio>
+#include <set>
 #include <ctime>
 #include <string>
 #include <atomic>
@@ -49,24 +50,33 @@ protected:
     std::atomic<bool> m_cancelled;
     int m_options;
     
+    std::map<std::string, std::set<std::string>> m_usersAndSessions;
+    
 public:
     Exporter(const std::string& workDir, const std::string& backup, const std::string& output, Shell* shell, Logger* logger);
     ~Exporter();
 
 	void setNotifier(ExportNotifier *notifier);
     
+    bool loadUsersAndSessions(std::vector<std::pair<Friend, std::vector<Session>>>& usersAndSessions);
+
     bool run();
 	bool isRunning() const;
     void cancel();
 	void waitForComplition();
     
+	void filterUsersAndSessions(const std::map<std::string, std::set<std::string>>& usersAndSessions);
     void ignoreAudio(bool ignoreAudio = true);
     void setOrder(bool asc = true);
     void saveFilesInSessionFolder(bool flags = true);
+    
+    
 
 protected:
 	bool runImpl();
 	bool exportUser(Friend& user, std::string& userOutputPath);
+    // bool loadUserSessions(Friend& user, std::vector<Session>& sessions) const;
+    bool loadUserFriendsAndSessions(Friend& user, Friends friends, std::vector<Session>& sessions, bool detailedInfo = true) const;
 	int exportSession(Friend& user, const SessionParser& sessionParser, const Session& session, const std::string& userBase, const std::string& outputBase);
 
     bool fillUser(Friend& user);

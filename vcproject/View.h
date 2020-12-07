@@ -1,4 +1,4 @@
-// View.h : interface of the CView class
+﻿// View.h : interface of the CView class
 //
 /////////////////////////////////////////////////////////////////////////////
 
@@ -19,6 +19,9 @@ private:
 	Exporter* m_exporter;
 
 	std::vector<BackupManifest> m_manifests;
+	std::vector<std::pair<Friend, std::vector<Session>>> m_usersAndSessions;
+
+	int m_itemClicked;
 
 public:
 	enum { IDD = IDD_WECHATEXPORTER_FORM };
@@ -33,39 +36,40 @@ public:
 		m_notifier = NULL;
 		m_exporter = NULL;
 
+		m_itemClicked = -2;
+
 		// Init the CDialogResize code
 		DlgResize_Init();
+
+		InitializeSessionList();
 
 		m_notifier = new ExportNotifierImpl(m_hWnd);
 		m_logger = new LoggerImpl(GetDlgItem(IDC_LOG));
 
-		int stateDesc = BST_UNCHECKED;
-		int stateFilesFolder = BST_CHECKED;
+		BOOL descOrder = FALSE;
+		BOOL savingInSession = TRUE;
 		TCHAR szOutput[MAX_PATH] = { 0 };
 		BOOL outputDirFound = FALSE;
+#ifndef NDEBUG
+		TCHAR szPrevBackup[MAX_PATH] = { 0 };
+#endif
 
 		CRegKey rk;
 		if (rk.Open(HKEY_CURRENT_USER, TEXT("Software\\WechatExporter"), KEY_READ) == ERROR_SUCCESS)
 		{
-			DWORD dwValue = 0;
-			if (rk.QueryDWORDValue(TEXT("DescOrder"), dwValue) == ERROR_SUCCESS)
-			{
-				stateDesc = static_cast<int>(dwValue);
-			}
-			if (rk.QueryDWORDValue(TEXT("SaveFilesInSF"), dwValue) == ERROR_SUCCESS)
-			{
-				stateFilesFolder = static_cast<int>(dwValue);
-			}
+			descOrder = GetDescOrder(rk);
+			savingInSession = GetSavingInSession(rk);
 			ULONG chars = MAX_PATH;
 			if (rk.QueryStringValue(TEXT("OutputDir"), szOutput, &chars) == ERROR_SUCCESS)
 			{
 				outputDirFound = TRUE;
 			}
+#ifndef NDEBUG
+			chars = MAX_PATH;
+			rk.QueryStringValue(TEXT("BackupDir"), szPrevBackup, &chars);
+#endif
+			rk.Close();
 		}
-		CButton btn = GetDlgItem(IDC_DESC_ORDER);
-		btn.SetCheck(stateDesc);
-		btn = GetDlgItem(IDC_FILES_IN_SESSION);
-		btn.SetCheck(stateFilesFolder);
 		
 		HRESULT result = S_OK;
 		if (!outputDirFound)
@@ -87,12 +91,22 @@ public:
 		DWORD dwAttrib = ::GetFileAttributes(szPath);
 		if (dwAttrib != INVALID_FILE_ATTRIBUTES && (dwAttrib & FILE_ATTRIBUTE_DIRECTORY))
 		{
-			CT2A backupDir(szPath, CP_UTF8);
+			CW2A backupDir(CT2W(szPath), CP_UTF8);
 
 			ManifestParser parser((LPCSTR)backupDir, "Info.plist", &m_shell);
 			std::vector<BackupManifest> manifests = parser.parse();
 			UpdateBackups(manifests);
 		}
+#ifndef NDEBUG
+		else if (_tcslen(szPrevBackup) != 0)
+		{
+			CW2A backupDir(CT2W(szPrevBackup), CP_UTF8);
+			
+			ManifestParser parser((LPCSTR)backupDir, "Info.plist", &m_shell);
+			std::vector<BackupManifest> manifests = parser.parse();
+			UpdateBackups(manifests);
+		}
+#endif
 		
 		return TRUE;
 	}
@@ -127,15 +141,19 @@ public:
 	BEGIN_MSG_MAP(CView)
 		MESSAGE_HANDLER(WM_INITDIALOG, OnInitDialog)
 		CHAIN_MSG_MAP(CDialogResize<CView>)
+		COMMAND_HANDLER(IDC_BACKUP, CBN_SELCHANGE, OnBackupSelChange)
 		COMMAND_HANDLER(IDC_CHOOSE_BKP, BN_CLICKED, OnBnClickedChooseBkp)
 		COMMAND_HANDLER(IDC_CHOOSE_OUTPUT, BN_CLICKED, OnBnClickedChooseOutput)
+		COMMAND_HANDLER(IDC_USERS, CBN_SELCHANGE, OnUserSelChange)
 		COMMAND_HANDLER(IDC_EXPORT, BN_CLICKED, OnBnClickedExport)
 		COMMAND_HANDLER(IDC_CANCEL, BN_CLICKED, OnBnClickedCancel)
 		COMMAND_HANDLER(IDC_CLOSE, BN_CLICKED, OnBnClickedClose)
-		COMMAND_HANDLER(IDC_DESC_ORDER, BN_CLICKED, OnBnClickedDescOrder)
-		COMMAND_HANDLER(IDC_FILES_IN_SESSION, BN_CLICKED, OnBnClickedFilesFolder)
 		MESSAGE_HANDLER(WM_START, OnStart)
 		MESSAGE_HANDLER(WM_COMPLETE, OnComplete)
+		NOTIFY_HANDLER(IDC_SESSIONS, LVN_ITEMCHANGING, OnListItemChanging)
+		NOTIFY_HANDLER(IDC_SESSIONS, LVN_ITEMCHANGED, OnListItemChanged)
+		NOTIFY_CODE_HANDLER(HDN_ITEMSTATEICONCLICK, OnHeaderItemStateIconClick)
+		NOTIFY_HANDLER(IDC_SESSIONS, NM_CLICK, OnListClick)
 	END_MSG_MAP()
 
 	BEGIN_DLGRESIZE_MAP(CView)
@@ -143,6 +161,7 @@ public:
 		DLGRESIZE_CONTROL(IDC_BACKUP, DLSZ_SIZE_X)
 		DLGRESIZE_CONTROL(IDC_CHOOSE_OUTPUT, DLSZ_MOVE_X)
 		DLGRESIZE_CONTROL(IDC_OUTPUT, DLSZ_SIZE_X)
+		DLGRESIZE_CONTROL(IDC_SESSIONS, DLSZ_SIZE_Y)
 		DLGRESIZE_CONTROL(IDC_LOG, DLSZ_SIZE_X | DLSZ_SIZE_Y)
 		DLGRESIZE_CONTROL(IDC_PROGRESS, DLSZ_MOVE_Y)
 		DLGRESIZE_CONTROL(IDC_CANCEL, DLSZ_MOVE_X | DLSZ_MOVE_Y)
@@ -168,8 +187,79 @@ public:
 			ManifestParser parser((LPCSTR)backupDir, "Info.plist", &m_shell);
 			std::vector<BackupManifest> manifests = parser.parse();
 			UpdateBackups(manifests);
+#ifndef NDEBUG
+			CRegKey rk;
+			if (rk.Create(HKEY_CURRENT_USER, TEXT("Software\\WechatExporter"), REG_NONE, REG_OPTION_NON_VOLATILE, KEY_READ | KEY_WRITE) == ERROR_SUCCESS)
+			{
+				rk.SetStringValue(TEXT("BackupDir"), folder.m_szFolderPath);
+			}
+#endif
 		}
 
+		return 0;
+	}
+
+	LRESULT OnBackupSelChange(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/)
+	{
+		CComboBox cbmBox = GetDlgItem(IDC_USERS);
+		cbmBox.ResetContent();
+		
+		m_usersAndSessions.clear();
+		cbmBox = GetDlgItem(IDC_BACKUP);
+		if (cbmBox.GetCurSel() == -1)
+		{
+			CListViewCtrl listViewCtrl = GetDlgItem(IDC_SESSIONS);
+			listViewCtrl.SetRedraw(FALSE);
+			listViewCtrl.DeleteAllItems();
+			listViewCtrl.SetRedraw(TRUE);
+
+			return 0;
+		}
+
+		CWaitCursor waitCursor;
+#ifndef NDEBUG
+		m_logger->write("Start loading users and sessions.");
+#endif
+
+		std::string backup = m_manifests[cbmBox.GetCurSel()].getPath();
+		Exporter exp("", backup, "", &m_shell, m_logger);
+		exp.loadUsersAndSessions(m_usersAndSessions);
+
+#ifndef NDEBUG
+		m_logger->write("Data Loaded.");
+#endif
+
+		LoadUsers();
+
+#ifndef NDEBUG
+		m_logger->write("Display Completed.");
+#endif
+		return 0;
+	}
+
+	LRESULT OnUserSelChange(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/)
+	{
+		CListViewCtrl listViewCtrl = GetDlgItem(IDC_SESSIONS);
+
+		CComboBox cbmBox = GetDlgItem(IDC_USERS);
+		if (cbmBox.GetCurSel() == -1)
+		{
+			listViewCtrl.DeleteAllItems();
+			return 0;
+		}
+
+#ifndef NDEBUG
+		m_logger->debug("Display Sessions Start");
+#endif
+
+		std::vector<std::pair<Friend, std::vector<Session>>>::const_iterator it = m_usersAndSessions.cbegin() + cbmBox.GetCurSel();
+		listViewCtrl.SetRedraw(FALSE);
+		listViewCtrl.DeleteAllItems();
+		LoadSessions(it->first.getUsrName());
+		listViewCtrl.SetRedraw(TRUE);
+#ifndef NDEBUG
+		m_logger->debug("Display Sessions End");
+#endif
 		return 0;
 	}
 
@@ -231,29 +321,73 @@ public:
 		return 0;
 	}
 
-	LRESULT OnBnClickedDescOrder(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled)
+	LRESULT OnHeaderItemStateIconClick(int idCtrl, LPNMHDR pnmh, BOOL& /*bHandled*/)
 	{
-		CButton btn = hWndCtl;
-		int state = btn.GetCheck();
-		CRegKey rk;
-		if (rk.Create(HKEY_CURRENT_USER, TEXT("Software\\WechatExporter"), REG_NONE, REG_OPTION_NON_VOLATILE, KEY_READ | KEY_WRITE) == ERROR_SUCCESS)
+		CListViewCtrl listViewCtrl = GetDlgItem(IDC_SESSIONS);
+		HWND header = ListView_GetHeader(listViewCtrl);
+		
+		// Store the ID of the header control so we can handle its notification by ID
+		if (idCtrl == ::GetDlgCtrlID(header))
 		{
-			rk.SetDWORDValue(TEXT("DescOrder"), static_cast<DWORD>(state));
+			LPNMHEADER pnmHeader = (LPNMHEADER)pnmh;
+
+			if (pnmHeader->pitem->mask & HDI_FORMAT && pnmHeader->pitem->fmt & HDF_CHECKBOX)
+			{
+				CheckAllItems(!(pnmHeader->pitem->fmt & HDF_CHECKED));
+				SyncHeaderCheckbox();
+				return 1;
+			}
 		}
 
 		return 0;
 	}
 
-	LRESULT OnBnClickedFilesFolder(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled)
+	LRESULT OnListItemChanging(int /*idCtrl*/, LPNMHDR pnmh, BOOL& /*bHandled*/)
 	{
-		CButton btn = hWndCtl;
-		int state = btn.GetCheck();
-		CRegKey rk;
-		if (rk.Create(HKEY_CURRENT_USER, TEXT("Software\\WechatExporter"), REG_NONE, REG_OPTION_NON_VOLATILE, KEY_READ | KEY_WRITE) == ERROR_SUCCESS)
+		LPNMLISTVIEW pnmlv = (LPNMLISTVIEW)pnmh;
+
+		if (pnmlv->uChanged & LVIF_STATE)
 		{
-			rk.SetDWORDValue(TEXT("SaveFilesInSF"), static_cast<DWORD>(state));
+			return IsUIEnabled() ? FALSE : TRUE;
 		}
 
+		return 0; // FALSE
+	}
+
+	LRESULT OnListItemChanged(int /*idCtrl*/, LPNMHDR pnmh, BOOL& /*bHandled*/)
+	{
+		LPNMLISTVIEW pnmlv = (LPNMLISTVIEW)pnmh;
+
+		if (pnmlv->uChanged & LVIF_STATE)
+		{
+			if (pnmlv->iItem == m_itemClicked)
+			{
+				SyncHeaderCheckbox();
+				m_itemClicked = -2;
+			}
+			
+		}
+		return 0;
+	}
+
+	LRESULT OnListClick(int /*idCtrl*/, LPNMHDR pnmh, BOOL& bHandled)
+	{
+		LPNMITEMACTIVATE pnmia = (LPNMITEMACTIVATE)pnmh;
+		DWORD pos = GetMessagePos();
+		POINT pt = { LOWORD(pos), HIWORD(pos) };
+		CListViewCtrl listViewCtrl = GetDlgItem(IDC_SESSIONS);
+
+		listViewCtrl.ScreenToClient(&pt);
+		UINT flags = 0;
+		int nItem = listViewCtrl.HitTest(pt, &flags);
+		if (flags == LVHT_ONITEMSTATEICON)
+		{
+			m_itemClicked = nItem;
+			// listViewCtrl.SetCheckState(nItem, !listViewCtrl.GetCheckState(nItem));
+			// SetHeaderCheckbox();
+			// bHandled = TRUE;
+		}
+		
 		return 0;
 	}
 
@@ -286,17 +420,51 @@ public:
 			return 0;
 		}
 
-		CButton btn = GetDlgItem(IDC_DESC_ORDER);
-		bool descOrder = (btn.GetCheck() == BST_CHECKED);
-
-		btn = GetDlgItem(IDC_FILES_IN_SESSION);
-		bool saveFilesInSessionFolder = (btn.GetCheck() == BST_CHECKED);
+		// CButton btn = GetDlgItem(IDC_DESC_ORDER);
+		bool descOrder = GetDescOrder();
+		bool saveFilesInSessionFolder = GetSavingInSession();
 
 		CListBox lstboxLogs = GetDlgItem(IDC_LOG);
 		lstboxLogs.ResetContent();
 
 		CW2A resDir(CT2W(buffer), CP_UTF8);
-		Run((LPCSTR)resDir, backup, (LPCSTR)output, descOrder, saveFilesInSessionFolder);
+	
+		// Run((LPCSTR)resDir, backup, (LPCSTR)output, descOrder, saveFilesInSessionFolder);
+
+		// void filterUsersAndSessions(const std::map<std::string, std::set<std::string>>& usersAndSessions);
+		std::map<std::string, std::set<std::string>> usersAndSessions;
+		cbmBox = GetDlgItem(IDC_USERS);
+		int nCurSel = cbmBox.GetCurSel();
+		if (nCurSel != -1 && nCurSel < m_usersAndSessions.size())
+		{
+			std::pair<Friend, std::vector<Session>>& user = m_usersAndSessions[nCurSel];
+			std::string usrName = user.first.getUsrName();
+			usersAndSessions[usrName] = std::set<std::string>();
+			std::map<std::string, std::set<std::string>>::iterator it = usersAndSessions.find(usrName);
+			ATLASSERT(it != usersAndSessions.end());
+
+			CListViewCtrl listViewCtrl = GetDlgItem(IDC_SESSIONS);
+			for (int nItem = 0; nItem < listViewCtrl.GetItemCount(); nItem++)
+			{
+				if (listViewCtrl.GetCheckState(nItem) && nItem < user.second.size())
+				{
+					it->second.insert(user.second[nItem].UsrName);
+				}
+			}
+		}
+
+		m_exporter = new Exporter((LPCSTR)resDir, backup, (LPCSTR)output, &m_shell, m_logger);
+		m_exporter->setNotifier(m_notifier);
+		m_exporter->setOrder(!descOrder);
+		if (saveFilesInSessionFolder)
+		{
+			m_exporter->saveFilesInSessionFolder();
+		}
+		m_exporter->filterUsersAndSessions(usersAndSessions);
+		if (m_exporter->run())
+		{
+			EnableInteractiveCtrls(FALSE);
+		}
 
 		return 0;
 	}
@@ -323,21 +491,6 @@ public:
 		return 0;
 	}
 
-	void Run(const std::string& resDir, const std::string& backup, const std::string& output, bool descOrder, bool saveFilesInSessionFolder)
-	{
-		m_exporter = new Exporter(resDir, backup, output, &m_shell, m_logger);
-		m_exporter->setNotifier(m_notifier);
-		m_exporter->setOrder(!descOrder);
-		if (saveFilesInSessionFolder)
-		{
-			m_exporter->saveFilesInSessionFolder();
-		}
-		if (m_exporter->run())
-		{
-			EnableInteractiveCtrls(FALSE);
-		}
-	}
-
 	void EnableInteractiveCtrls(BOOL enabled)
 	{
 		::EnableWindow(GetDlgItem(IDC_BACKUP), enabled);
@@ -346,6 +499,8 @@ public:
 		::EnableWindow(GetDlgItem(IDC_DESC_ORDER), enabled);
 		::EnableWindow(GetDlgItem(IDC_FILES_IN_SESSION), enabled);
 		::EnableWindow(GetDlgItem(IDC_EXPORT), enabled);
+		::EnableWindow(GetDlgItem(IDC_USERS), enabled);
+		// ::EnableWindow(GetDlgItem(IDC_SESSIONS), enabled);
 		::EnableWindow(GetDlgItem(IDC_CANCEL), !enabled);
 		::ShowWindow(GetDlgItem(IDC_CANCEL), enabled ? SW_HIDE : SW_SHOW);
 		::ShowWindow(GetDlgItem(IDC_CLOSE), enabled ? SW_SHOW : SW_HIDE);
@@ -379,7 +534,7 @@ public:
 
 			// update
 			CComboBox cmb = GetDlgItem(IDC_BACKUP);
-			cmb.LockWindowUpdate();
+			cmb.SetRedraw(FALSE);
 			cmb.Clear();
 			for (std::vector<BackupManifest>::const_iterator it = m_manifests.cbegin(); it != m_manifests.cend(); ++it)
 			{
@@ -390,11 +545,269 @@ public:
 			}
 			if (selectedIndex != -1 && selectedIndex < cmb.GetCount())
 			{
-				cmb.SetCurSel(selectedIndex);
+				SetComboBoxCurSel(cmb, selectedIndex);
 			}
-			cmb.LockWindowUpdate(FALSE);
+			cmb.SetRedraw(TRUE);
 		}
 	}
+
+	void InitializeSessionList()
+	{
+		CString strColumn1;
+		CString strColumn2;
+		CString strColumn3;
+
+		strColumn1.LoadString(IDS_SESSION_NAME);
+		strColumn2.LoadString(IDS_SESSION_COUNT);
+		strColumn3.LoadString(IDS_SESSION_USER);
+
+		CListViewCtrl listViewCtrl = GetDlgItem(IDC_SESSIONS);
+
+		DWORD dwStyle = listViewCtrl.GetExStyle();
+		dwStyle |= LVS_EX_FULLROWSELECT | LVS_EX_LABELTIP | LVS_EX_GRIDLINES | LVS_EX_CHECKBOXES;
+		listViewCtrl.SetExtendedListViewStyle(dwStyle);
+
+		LVCOLUMN lvc = { 0 };
+		ListView_InsertColumn(listViewCtrl, 0, &lvc);
+		lvc.mask = LVCF_TEXT | LVCF_WIDTH;
+		lvc.iSubItem++;
+		lvc.pszText = (LPTSTR)(LPCTSTR)strColumn1;
+		lvc.cx = 192;
+		ListView_InsertColumn(listViewCtrl, 1, &lvc);
+		lvc.iSubItem++;
+		lvc.pszText = (LPTSTR)(LPCTSTR)strColumn2;
+		lvc.cx = 96;
+		ListView_InsertColumn(listViewCtrl, 2, &lvc);
+		lvc.iSubItem++;
+		lvc.pszText = (LPTSTR)(LPCTSTR)strColumn3;
+		lvc.cx = 128;
+		ListView_InsertColumn(listViewCtrl, 3, &lvc);
+
+		// Set column widths
+		ListView_SetColumnWidth(listViewCtrl, 0, LVSCW_AUTOSIZE_USEHEADER);
+		// ListView_SetColumnWidth(listViewCtrl, 1, LVSCW_AUTOSIZE_USEHEADER);
+		// ListView_SetColumnWidth(listViewCtrl, 2, LVSCW_AUTOSIZE_USEHEADER);
+		// ListView_SetColumnWidth(listViewCtrl, 3, LVSCW_AUTOSIZE_USEHEADER);
+
+
+		HWND header = ListView_GetHeader(listViewCtrl);
+		DWORD dwHeaderStyle = ::GetWindowLong(header, GWL_STYLE);
+		dwHeaderStyle |= HDS_CHECKBOXES;
+		::SetWindowLong(header, GWL_STYLE, dwHeaderStyle);
+
+		// Store the ID of the header control so we can handle its notification by ID
+		// m_HeaderId = ::GetDlgCtrlID(header);
 	
+		HDITEM hdi = { 0 };
+		hdi.mask = HDI_FORMAT;
+		Header_GetItem(header, 0, &hdi);
+		hdi.fmt |= HDF_CHECKBOX | HDF_FIXEDWIDTH;
+		Header_SetItem(header, 0, &hdi);
+	}
+	
+	void LoadUsers()
+	{
+		CComboBox cbmBox = GetDlgItem(IDC_USERS);
+		for (std::vector<std::pair<Friend, std::vector<Session>>>::const_iterator it = m_usersAndSessions.cbegin(); it != m_usersAndSessions.cend(); ++it)
+		{
+			std::string displayName = it->first.DisplayName();
+			CW2T pszDisplayName(CA2W(displayName.c_str(), CP_UTF8));
+			cbmBox.AddString(pszDisplayName);
+		}
+		if (cbmBox.GetCount() > 0)
+		{
+			SetComboBoxCurSel(cbmBox, 0);
+		}
+	}
+
+	void LoadSessions(const std::string& usrName)
+	{
+		CListViewCtrl listViewCtrl = GetDlgItem(IDC_SESSIONS);
+
+		int index = 0;
+		TCHAR recordCount[16] = { 0 };
+		for (std::vector<std::pair<Friend, std::vector<Session>>>::const_iterator it = m_usersAndSessions.cbegin(); it != m_usersAndSessions.cend(); ++it)
+		{
+			if (!usrName.empty() && it->first.getUsrName() != usrName)
+			{
+				index += it->second.size();
+				continue;
+			}
+
+			std::string userDisplayName = it->first.DisplayName();
+			CW2T pszUserDisplayName(CA2W(userDisplayName.c_str(), CP_UTF8));
+
+			for (std::vector<Session>::const_iterator it2 = it->second.cbegin(); it2 != it->second.cend(); ++it2)
+			{
+				std::string displayName = it2->DisplayName;
+				if (displayName.empty())
+				{
+					displayName = it2->UsrName;
+				}
+
+				CW2T pszDisplayName(CA2W(displayName.c_str(), CP_UTF8));
+				LVITEM lvItem = {};
+				lvItem.mask = LVIF_TEXT | LVIF_PARAM;
+				lvItem.iItem = listViewCtrl.GetItemCount();
+				lvItem.iSubItem = 0;
+				lvItem.pszText = TEXT("");
+				// lvItem.state = INDEXTOSTATEIMAGEMASK(2);
+				// lvItem.stateMask = LVIS_STATEIMAGEMASK;
+				lvItem.lParam = reinterpret_cast<LPARAM>(&(*it2));
+				int nItem = listViewCtrl.InsertItem(&lvItem);
+
+				_itot(it2->recordCount, recordCount, 10);
+				listViewCtrl.AddItem(nItem, 1, pszDisplayName);
+				listViewCtrl.AddItem(nItem, 2, recordCount);
+				listViewCtrl.AddItem(nItem, 3, pszUserDisplayName);
+				// BOOL bRet = listViewCtrl.SetItem(&lvSubItem);
+				listViewCtrl.SetCheckState(nItem, TRUE);
+				
+				// listViewCtrl.SetItemData(nItem, static_cast<DWORD_PTR>(index));
+
+				++index;
+			}
+		}
+
+		SetHeaderCheckState(TRUE);
+	}
+
+	void SetComboBoxCurSel(CComboBox &cbm, int nCurSel)
+	{
+		cbm.SetCurSel(nCurSel);
+		PostMessage(WM_COMMAND, MAKEWPARAM(cbm.GetDlgCtrlID(), CBN_SELCHANGE), LPARAM(cbm.m_hWnd));
+	}
+
+	void CheckAllItems(BOOL fChecked)
+	{
+		CListViewCtrl listViewCtrl = GetDlgItem(IDC_SESSIONS);
+		for (int nItem = 0; nItem < ListView_GetItemCount(listViewCtrl); nItem++)
+		{
+			ListView_SetCheckState(listViewCtrl, nItem, fChecked);
+		}
+	}
+
+	void SyncHeaderCheckbox()
+	{
+		// Loop through all of our items.  If any of them are
+		// unchecked, we'll want to uncheck the header checkbox.
+		CListViewCtrl listViewCtrl = GetDlgItem(IDC_SESSIONS);
+		BOOL fChecked = TRUE;
+		for (int nItem = 0; nItem < ListView_GetItemCount(listViewCtrl); nItem++)
+		{
+			if (!ListView_GetCheckState(listViewCtrl, nItem))
+			{
+				fChecked = FALSE;
+				break;
+			}
+		}
+
+		SetHeaderCheckState(fChecked);
+	}
+
+	void SetHeaderCheckState(BOOL fChecked)
+	{
+		CListViewCtrl listViewCtrl = GetDlgItem(IDC_SESSIONS);
+
+		// We need to get the current format of the header
+		// and set or remove the HDF_CHECKED flag
+		HWND header = ListView_GetHeader(listViewCtrl);
+		HDITEM hdi = { 0 };
+		hdi.mask = HDI_FORMAT;
+		Header_GetItem(header, 0, &hdi);
+		if (fChecked) {
+			hdi.fmt |= HDF_CHECKED;
+		}
+		else {
+			hdi.fmt &= ~HDF_CHECKED;
+		}
+		Header_SetItem(header, 0, &hdi);
+	}
+
+	BOOL SetHeaderCheckState()
+	{
+		CListViewCtrl listViewCtrl = GetDlgItem(IDC_SESSIONS);
+
+		HWND header = ListView_GetHeader(listViewCtrl);
+		HDITEM hdi = { 0 };
+		hdi.mask = HDI_FORMAT;
+		Header_GetItem(header, 0, &hdi);
+		return (hdi.fmt & HDF_CHECKED) == HDF_CHECKED ? TRUE : FALSE;
+	}
+
+	void SetDescOrder(BOOL descOrder)
+	{
+		CRegKey rk;
+		if (rk.Create(HKEY_CURRENT_USER, TEXT("Software\\WechatExporter"), REG_NONE, REG_OPTION_NON_VOLATILE, KEY_READ | KEY_WRITE) == ERROR_SUCCESS)
+		{
+			rk.SetDWORDValue(TEXT("DescOrder"), descOrder);
+		}
+	}
+
+	BOOL GetDescOrder() const
+	{
+		BOOL descOrder = FALSE;
+		CRegKey rk;
+		if (rk.Open(HKEY_CURRENT_USER, TEXT("Software\\WechatExporter"), KEY_READ) == ERROR_SUCCESS)
+		{
+			descOrder = GetDescOrder(rk);
+			rk.Close();
+		}
+
+		return descOrder;
+	}
+
+	void SetSavingInSession(BOOL savingInSession)
+	{
+		CRegKey rk;
+		if (rk.Create(HKEY_CURRENT_USER, TEXT("Software\\WechatExporter"), REG_NONE, REG_OPTION_NON_VOLATILE, KEY_READ | KEY_WRITE) == ERROR_SUCCESS)
+		{
+
+			rk.SetDWORDValue(TEXT("SaveFilesInSF"), savingInSession);
+		}
+	}
+
+	BOOL GetSavingInSession() const
+	{
+		CRegKey rk;
+		if (rk.Open(HKEY_CURRENT_USER, TEXT("Software\\WechatExporter"), KEY_READ) == ERROR_SUCCESS)
+		{
+			BOOL savingInSession = GetSavingInSession(rk);
+			rk.Close();
+
+			return savingInSession;
+		}
+
+		return TRUE;
+	}
+
+	BOOL IsUIEnabled() const
+	{
+		return ::IsWindowEnabled(GetDlgItem(IDC_EXPORT));
+	}
+
+private:
+	BOOL GetDescOrder(CRegKey& rk) const
+	{
+		BOOL descOrder = FALSE;
+		DWORD dwValue = 0;
+		if (rk.QueryDWORDValue(TEXT("DescOrder"), dwValue) == ERROR_SUCCESS)
+		{
+			descOrder = dwValue != 0 ? TRUE : FALSE;
+		}
+
+		return descOrder;
+	}
+
+	BOOL GetSavingInSession(CRegKey& rk) const
+	{
+		DWORD dwValue = 1;
+		if (rk.QueryDWORDValue(TEXT("SaveFilesInSF"), dwValue) == ERROR_SUCCESS)
+		{
+			return (dwValue != 0) ? TRUE : FALSE;
+		}
+
+		return TRUE;
+	}
 
 };
