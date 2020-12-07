@@ -31,16 +31,9 @@ public:
     
     void write(const std::string& log)
     {
-        time_t rawtime;
-        struct tm * timeinfo;
-        char buffer[16] = {0};
-        
-        std::time(&rawtime);
-        timeinfo = std::localtime(&rawtime);
+        std::string timeString = getCurrentTimestamp() + ": ";
 
-        strftime (buffer, 16, "%H:%M:%S ", timeinfo);
-        
-        __block NSString *logString = [NSString stringWithUTF8String:(buffer + log).c_str()];
+        __block NSString *logString = [NSString stringWithUTF8String:(timeString + log).c_str()];
         __block __weak ViewController* viewController = m_viewController;
         dispatch_async(dispatch_get_main_queue(), ^{
             __strong __typeof(viewController)strongVC = viewController;
