@@ -170,12 +170,16 @@ public:
 class FriendsParser
 {
 public:
+    FriendsParser(bool detailedInfo = true);
     bool parseWcdb(const std::string& mmPath, Friends& friends);
     
 private:
     bool parseRemark(const void *data, int length, Friend& f);
-    bool parseHeadImage(const void *data, int length, Friend& f);
+    bool parseAvatar(const void *data, int length, Friend& f);
     bool parseChatroom(const void *data, int length, Friend& f);
+    
+private:
+    bool m_detailedInfo;
 };
 
 class SessionsParser
@@ -183,9 +187,10 @@ class SessionsParser
 private:
     ITunesDb *m_iTunesDb;
     Shell*      m_shell;
+    bool        m_detailedInfo;
 
 public:
-    SessionsParser(ITunesDb *iTunesDb, Shell* shell);
+    SessionsParser(ITunesDb *iTunesDb, Shell* shell, bool detailedInfo = true);
     
     bool parse(const std::string& userRoot, std::vector<Session>& sessions, const Friends& friends);
 

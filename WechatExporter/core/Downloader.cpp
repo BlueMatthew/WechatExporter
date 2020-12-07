@@ -41,7 +41,6 @@ bool Task::downloadFile()
     ++m_retries;
     
     m_outputTmp = m_output + ".tmp";
-	remove(utf8ToLocalAnsi(m_output).c_str());
     remove(utf8ToLocalAnsi(m_outputTmp).c_str());
 
 	CURLcode res;
@@ -68,6 +67,7 @@ bool Task::downloadFile()
     res = curl_easy_perform(curl);
 	if (res == CURLE_OK)
     {
+		remove(utf8ToLocalAnsi(m_output).c_str());
         rename(utf8ToLocalAnsi(m_outputTmp).c_str(), utf8ToLocalAnsi(m_output).c_str());
     }
     else
@@ -127,6 +127,8 @@ size_t Task::writeData(void *buffer, size_t size, size_t nmemb)
 Downloader::Downloader()
 {
     m_noMoreTask = false;
+    m_downloadTaskSize = 0;
+    
     curl_global_init(CURL_GLOBAL_ALL);
     
     for (int idx = 0; idx < 4; idx++)
@@ -142,6 +144,12 @@ Downloader::~Downloader()
 
 void Downloader::addTask(const std::string &url, const std::string& output, time_t mtime)
 {
+#ifndef NDEBUG
+    if (url == "/0")
+    {
+        int aa = 0;
+    }
+#endif
     std::string formatedPath = output;
     std::replace(formatedPath.begin(), formatedPath.end(), DIR_SEP_R, DIR_SEP);
     std::string uid = url + output;
@@ -155,6 +163,7 @@ void Downloader::addTask(const std::string &url, const std::string& output, time
         m_urls[url] = output;
         Task task(url, formatedPath, mtime);
         m_queue.push(task);
+        m_downloadTaskSize++;
     }
     else if (output != it->second)
     {
@@ -188,7 +197,7 @@ void Downloader::run(int idx)
         Task task;
         m_mtx.lock();
         
-        noMoreTask = m_noMoreTask;
+        noMoreTask = m_noMoreTask && m_downloadTaskSize == 0;
         
         size_t queueSize = m_queue.size();
         if (queueSize > 0)
@@ -212,15 +221,23 @@ void Downloader::run(int idx)
         if (found)
         {
             // run task
-            if (!task.run())
+            bool succeeded = task.run();
+            if (!task.isLocalCopy())
             {
-                if (!task.isLocalCopy() && task.getRetries() < Task::MAX_RETRIES)
+                m_mtx.lock();
+                unsigned int dlTaskSizeChanging = 0;
+                if (succeeded || task.getRetries() >= Task::MAX_RETRIES)
                 {
-                    m_mtx.lock();
-                    m_queue.push(task);
-                    m_mtx.unlock();
+                    m_downloadTaskSize--;
                 }
+                if (!succeeded && task.getRetries() < Task::MAX_RETRIES)
+                {
+                    // Retry to download it
+                    m_queue.push(task);
+                }
+                m_mtx.unlock();
             }
+            
             continue;
         }
         if (noMoreTask)
@@ -229,7 +246,7 @@ void Downloader::run(int idx)
         }
         else
         {
-            std::this_thread::sleep_for(std::chrono::milliseconds(10));
+            std::this_thread::sleep_for(std::chrono::milliseconds(1000));
         }
     }
 }

@@ -8,8 +8,13 @@
 #define IDS_SEL_BACKUP_DIR              129
 #define IDS_SEL_OUTPUT_DIR              130
 #define IDS_CANCEL_PROMPT               131
-#define IDS_STRING132                   132
 #define IDS_STATIC_BACKUP               132
+#define IDS_SESSION_IDX                 133
+#define IDS_SESSION_NAME                134
+#define IDS_SESSION_COUNT               135
+#define IDS_ALL_USERS                   136
+#define IDS_SESSION_USER                137
+#define IDS_STRING138                   138
 #define IDC_BACKUP                      1000
 #define IDC_CHOOSE_BKP                  1001
 #define IDC_OUTPUT                      1002
@@ -22,15 +27,21 @@
 #define IDC_FILES_IN_SESSION            1009
 #define IDC_STATIC_BACKUP               1010
 #define IDC_VERSION                     1011
-#define IDC_CLOSE                       1012
+#define IDC_USERS                       1012
+#define IDC_CLOSE                       1013
+#define IDC_SESSIONS                    1014
+#define ID_FILE_32775                   32775
+#define ID_FILE_32776                   32776
+#define ID_FILE_DESC_ORDER              32777
+#define ID_FILE_SAVING_IN_SESSION       32778
 
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        204
-#define _APS_NEXT_COMMAND_VALUE         32775
-#define _APS_NEXT_CONTROL_VALUE         1013
+#define _APS_NEXT_COMMAND_VALUE         32779
+#define _APS_NEXT_CONTROL_VALUE         1015
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif

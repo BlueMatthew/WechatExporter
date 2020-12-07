@@ -43,9 +43,22 @@
                                     </items>
                                 </menu>
                             </menuItem>
-                            <menuItem title="Help" id="wpr-3q-Mcd">
+                            <menuItem title="File" id="UCE-Dj-bc1">
                                 <modifierMask key="keyEquivalentModifierMask"/>
-                                <menu key="submenu" title="Help" systemMenu="help" id="F2S-fz-NVQ">
+                                <menu key="submenu" title="File" id="yFn-8R-v2s">
+                                    <items>
+                                        <menuItem title="按消息时间倒序导出" id="GbO-lL-BLb" userLabel="DescOrder">
+                                            <modifierMask key="keyEquivalentModifierMask"/>
+                                        </menuItem>
+                                        <menuItem title="头像和表情存放到聊天记录子目录" state="on" id="tGU-e5-isp" userLabel="SavingInSession">
+                                            <modifierMask key="keyEquivalentModifierMask"/>
+                                        </menuItem>
+                                    </items>
+                                </menu>
+                            </menuItem>
+                            <menuItem title="帮助" id="wpr-3q-Mcd">
+                                <modifierMask key="keyEquivalentModifierMask"/>
+                                <menu key="submenu" title="帮助" systemMenu="help" id="F2S-fz-NVQ">
                                     <items>
                                         <menuItem title="WechatExporter Help" keyEquivalent="?" id="FKE-Sm-Kum">
                                             <connections>
@@ -220,7 +233,7 @@ Gw
                                 <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                                 <buttonCell key="cell" type="check" title="头像和表情文件存放到聊天记录子目录" bezelStyle="regularSquare" imagePosition="left" state="on" inset="2" id="n8p-ki-ape">
                                     <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
-                                    <font key="font" size="13" name=".PingFangSC-Regular"/>
+                                    <font key="font" metaFont="system"/>
                                 </buttonCell>
                             </button>
                         </subviews>

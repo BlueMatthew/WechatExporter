@@ -104,6 +104,11 @@ void Exporter::saveFilesInSessionFolder(bool flag/* = true*/)
         m_options &= ~SPO_ICON_IN_SESSION;
 }
 
+void Exporter::filterUsersAndSessions(const std::map<std::string, std::set<std::string>>& usersAndSessions)
+{
+    m_usersAndSessions = usersAndSessions;
+}
+
 bool Exporter::run()
 {
 	if (isRunning() || m_thread.joinable())
@@ -127,6 +132,41 @@ bool Exporter::run()
 	return true;
 }
 
+bool Exporter::loadUsersAndSessions(std::vector<std::pair<Friend, std::vector<Session>>>& usersAndSessions)
+{
+    if (NULL != m_iTunesDb)
+    {
+        delete m_iTunesDb;
+    }
+    m_iTunesDb = new ITunesDb(m_backup, "Manifest.db");
+
+    if (!m_iTunesDb->load("AppDomain-com.tencent.xin"))
+    {
+        return false;
+    }
+
+	m_logger->debug("ITunes Database loaded.");
+    
+    std::vector<Friend> users;
+    LoginInfo2Parser loginInfo2Parser(m_iTunesDb);
+    if (!loginInfo2Parser.parse(users))
+    {
+        return false;
+    }
+
+	m_logger->debug("Wechat Users loaded.");
+    for (std::vector<Friend>::iterator it = users.begin(); it != users.end(); ++it)
+    {
+        // fillUser(*it);
+        Friends friends;
+        usersAndSessions.push_back(std::make_pair(*it, std::vector<Session>()));
+        std::pair<Friend, std::vector<Session>>& item = usersAndSessions.back();
+        loadUserFriendsAndSessions(*it, friends, item.second, false);
+    }
+
+    return true;
+}
+
 bool Exporter::runImpl()
 {
     time_t startTime;
@@ -145,6 +185,7 @@ bool Exporter::runImpl()
         notifyComplete();
 		return false;
 	}
+	m_logger->debug("ITunes Database loaded.");
 
 	loadStrings();
 	loadTemplates();
@@ -170,6 +211,14 @@ bool Exporter::runImpl()
         if (m_cancelled)
         {
             break;
+        }
+        
+        if (!m_usersAndSessions.empty())
+        {
+            if (m_usersAndSessions.find(it->getUsrName()) == m_usersAndSessions.cend())
+            {
+                continue;
+            }
         }
 		fillUser(*it);
         std::string userOutputPath;
@@ -251,22 +300,13 @@ bool Exporter::exportUser(Friend& user, std::string& userOutputPath)
 	m_logger->write(formatString(getLocaleString("Handling account: %s, Wechat Id: %s"), user.DisplayName().c_str(), user.getUsrName().c_str()));
     
 	m_logger->write(getLocaleString("Reading account info."));
-    
-    std::string wcdbPath = m_iTunesDb->findRealPath(combinePath(userBase, "DB", "WCDB_Contact.sqlite"));
+	m_logger->write(getLocaleString("Reading chat info"));
     
     Friends friends;
-    
-    FriendsParser friendsParser;
-    friendsParser.parseWcdb(wcdbPath, friends);
-    
-	m_logger->write(getLocaleString("Reading chat info"));
-    SessionsParser sessionsParser(m_iTunesDb, m_shell);
     std::vector<Session> sessions;
+    loadUserFriendsAndSessions(user, friends, sessions);
     
-    sessionsParser.parse(userBase, sessions, friends);
- 
 	m_logger->write(formatString(getLocaleString("%d chats found."), (int)(sessions.size())));
-    std::sort(sessions.begin(), sessions.end(), SessionLastMsgTimeCompare());
     
     Friend* myself = friends.getFriend(user.getUidHash());
     if (NULL == myself)
@@ -279,6 +319,12 @@ bool Exporter::exportUser(Friend& user, std::string& userOutputPath)
     // friends.handleFriend(FriendDownloadHandler(downloader, portraitPath));
     
     std::string userBody;
+    
+    std::map<std::string, std::set<std::string>>::const_iterator itUser = m_usersAndSessions.cend();
+    if (!m_usersAndSessions.empty())
+    {
+        itUser = m_usersAndSessions.find(user.getUsrName());
+    }
 
     Downloader downloader;
 	SessionParser sessionParser(*myself, friends, *m_iTunesDb, *m_shell, m_templates, m_localeStrings, m_options, downloader, m_cancelled);
@@ -290,6 +336,15 @@ bool Exporter::exportUser(Friend& user, std::string& userOutputPath)
         {
             break;
         }
+        
+        if (!m_usersAndSessions.empty())
+        {
+            if (itUser == m_usersAndSessions.cend() || itUser->second.find(it->UsrName) == itUser->second.cend())
+            {
+                continue;
+            }
+        }
+        
 #ifndef NDEBUG
         m_logger->write(formatString(getLocaleString("%d/%d: Handling the chat with %s"), (std::distance(sessions.begin(), it) + 1), sessions.size(), it->DisplayName.c_str()) + " uid:" + it->UsrName);
 #else
@@ -300,7 +355,10 @@ bool Exporter::exportUser(Friend& user, std::string& userOutputPath)
             m_logger->write(formatString(getLocaleString("Skip subscription: %s"), it->DisplayName.c_str()));
             continue;
         }
-        downloader.addTask(it->Portrait, combinePath(outputBase, "Portrait", it->UsrName + ".jpg"), 0);
+        if (!(it->Portrait.empty()))
+        {
+            downloader.addTask(it->Portrait, combinePath(outputBase, "Portrait", it->UsrName + ".jpg"), 0);
+        }
 		int count = exportSession(*myself, sessionParser, *it, userBase, outputBase);
         
         m_logger->write(formatString(getLocaleString("Succeeded handling %d messages."), count));
@@ -345,6 +403,28 @@ bool Exporter::exportUser(Friend& user, std::string& userOutputPath)
     }
     downloader.finishAndWaitForExit();
 
+    return true;
+}
+
+bool Exporter::loadUserFriendsAndSessions(Friend& user, Friends friends, std::vector<Session>& sessions, bool detailedInfo/* = true*/) const
+{
+    std::string uidMd5 = user.getUidHash();
+    std::string userBase = combinePath("Documents", uidMd5);
+    
+    std::string wcdbPath = m_iTunesDb->findRealPath(combinePath(userBase, "DB", "WCDB_Contact.sqlite"));
+
+    FriendsParser friendsParser(detailedInfo);
+    friendsParser.parseWcdb(wcdbPath, friends);
+
+	m_logger->debug("Wechat Friends(" + std::to_string(friends.friends.size()) + ") for: " + user.DisplayName() + " loaded.");
+
+    SessionsParser sessionsParser(m_iTunesDb, m_shell, detailedInfo);
+    
+    sessionsParser.parse(userBase, sessions, friends);
+ 
+    std::sort(sessions.begin(), sessions.end(), SessionLastMsgTimeCompare());
+    
+	m_logger->debug("Wechat Sessions for: " + user.DisplayName() + " loaded.");
     return true;
 }
 

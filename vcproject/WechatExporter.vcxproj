@@ -123,7 +123,6 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
-      <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
@@ -131,6 +130,7 @@
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>_WINDOWS;STRICT;_DEBUG;CURL_STATICLIB;COMPILE_SDK;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalOptions>/source-charset:utf-8 %(AdditionalOptions)</AdditionalOptions>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -188,7 +188,6 @@ xcopy "$(ProjectDir)..\WechatExporter\res"  "$(OutDir)res"  /Y /S /E</Command>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
-      <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <ExceptionHandling />

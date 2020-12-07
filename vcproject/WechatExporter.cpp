@@ -5,6 +5,7 @@
 
 #include <atlframe.h>
 #include <atlctrls.h>
+#include <atlctrlx.h>
 #include <atldlgs.h>
 
 #include "resource.h"

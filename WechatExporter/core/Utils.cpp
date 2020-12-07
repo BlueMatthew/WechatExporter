@@ -449,7 +449,7 @@ std::string utcToLocal(const std::string& utcTime)
     return std::string(buf);
 }
 
-std::string getCurrentTimestamp()
+std::string getCurrentTimestamp(bool includingYMD/* = false*/)
 {
     using std::chrono::system_clock;
     auto currentTime = std::chrono::system_clock::now();
@@ -462,8 +462,8 @@ std::string getCurrentTimestamp()
     std::time_t tt;
     tt = system_clock::to_time_t ( currentTime );
     auto timeinfo = localtime (&tt);
-    strftime (buffer, 80, "%F %H:%M:%S", timeinfo);
-    sprintf(buffer, "%s:%03d", buffer, (int)millis);
+    strftime (buffer, 80, includingYMD ? "%F %H:%M:%S" : "%H:%M:%S", timeinfo);
+    sprintf(buffer, "%s.%03d", buffer, (int)millis);
 
     return std::string(buffer);
 }

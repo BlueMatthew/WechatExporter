@@ -92,6 +92,7 @@ public:
     bool load();
     bool load(const std::string& domain);
     bool load(const std::string& domain, bool onlyFile);
+    // bool loadSessions();
     
     const ITunesFile* findITunesFile(const std::string& relativePath) const;
     std::string findFileId(const std::string& relativePath) const;
