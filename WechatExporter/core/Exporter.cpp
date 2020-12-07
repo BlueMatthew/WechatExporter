@@ -345,14 +345,15 @@ bool Exporter::exportUser(Friend& user, std::string& userOutputPath)
             }
         }
         
+        std::string sessionDisplayName = it->DisplayName.empty() ? it->UsrName : it->DisplayName;
 #ifndef NDEBUG
-        m_logger->write(formatString(getLocaleString("%d/%d: Handling the chat with %s"), (std::distance(sessions.begin(), it) + 1), sessions.size(), it->DisplayName.c_str()) + " uid:" + it->UsrName);
+        m_logger->write(formatString(getLocaleString("%d/%d: Handling the chat with %s"), (std::distance(sessions.begin(), it) + 1), sessions.size(), sessionDisplayName.c_str()) + " uid:" + it->UsrName);
 #else
-        m_logger->write(formatString(getLocaleString("%d/%d: Handling the chat with %s"), (std::distance(sessions.begin(), it) + 1), sessions.size(), it->DisplayName.c_str()));
+        m_logger->write(formatString(getLocaleString("%d/%d: Handling the chat with %s"), (std::distance(sessions.begin(), it) + 1), sessions.size(), sessionDisplayName.c_str()));
 #endif
         if (it->isSubscription())
         {
-            m_logger->write(formatString(getLocaleString("Skip subscription: %s"), it->DisplayName.c_str()));
+            m_logger->write(formatString(getLocaleString("Skip subscription: %s"), sessionDisplayName.c_str()));
             continue;
         }
         if (!(it->Portrait.empty()))
