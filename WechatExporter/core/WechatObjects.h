@@ -26,7 +26,7 @@ public:
     std::string ConStrRes2;
     std::string Portrait;
     std::string PortraitHD;
-    mutable bool PortraitRequired;
+    // mutable bool PortraitRequired;
     std::string DefaultProfileHead;
     mutable bool IsChatroom;
     
@@ -42,16 +42,17 @@ public:
     
     Friend(const std::string& uid, const std::string& hash) : usrName(uid), uidHash(hash)
     {
-        IsChatroom = endsWith(uid, "@chatroom");
+        IsChatroom = isChatroom(uid);
     }
     
     static bool isSubscription(const std::string& usrName);
+    static bool isChatroom(const std::string& usrName);
     
     const std::string& getUsrName() const { return usrName; }
     const std::string& getUidHash() const { return uidHash; }
-    void setUsrName(const std::string& usrName) { this->usrName = usrName; uidHash = md5(usrName);  outputFileName = uidHash; IsChatroom = endsWith(usrName, "@chatroom"); }
+    void setUsrName(const std::string& usrName) { this->usrName = usrName; uidHash = md5(usrName);  outputFileName = uidHash; IsChatroom = isChatroom(usrName); }
     
-    Friend() : PortraitRequired(false), DefaultProfileHead("DefaultProfileHead@2x.png"), IsChatroom(false)
+    Friend() : DefaultProfileHead("DefaultProfileHead@2x.png"), IsChatroom(false)
     {
     }
     
@@ -67,6 +68,7 @@ public:
         return it != Members.cend() ? it->second.second : "";
     }
     
+    /*
     void ProcessConStrRes2()
     {
         static std::regex aliasPattern("<alias>(.*?)<\\/alias>");
@@ -95,6 +97,7 @@ public:
             PortraitHD = sm[1];
         }
     }
+     */
 
     std::string DisplayName() const
     {
@@ -124,6 +127,10 @@ public:
 inline bool Friend::isSubscription(const std::string& usrName)
 {
     return startsWith(usrName, "gh_") || (usrName.compare("brandsessionholder") == 0);
+}
+inline bool Friend::isChatroom(const std::string& usrName)
+{
+    return endsWith(usrName, "@chatroom") || endsWith(usrName, "@im.chatroom");
 }
 
 class Friends

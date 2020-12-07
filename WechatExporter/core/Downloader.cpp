@@ -225,7 +225,7 @@ void Downloader::run(int idx)
             if (!task.isLocalCopy())
             {
                 m_mtx.lock();
-                unsigned int dlTaskSizeChanging = 0;
+                // unsigned int dlTaskSizeChanging = 0;
                 if (succeeded || task.getRetries() >= Task::MAX_RETRIES)
                 {
                     m_downloadTaskSize--;
