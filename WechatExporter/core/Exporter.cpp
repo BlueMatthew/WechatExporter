@@ -407,7 +407,7 @@ bool Exporter::exportUser(Friend& user, std::string& userOutputPath)
     return true;
 }
 
-bool Exporter::loadUserFriendsAndSessions(Friend& user, Friends friends, std::vector<Session>& sessions, bool detailedInfo/* = true*/) const
+bool Exporter::loadUserFriendsAndSessions(const Friend& user, Friends& friends, std::vector<Session>& sessions, bool detailedInfo/* = true*/) const
 {
     std::string uidMd5 = user.getUidHash();
     std::string userBase = combinePath("Documents", uidMd5);
@@ -429,7 +429,7 @@ bool Exporter::loadUserFriendsAndSessions(Friend& user, Friends friends, std::ve
     return true;
 }
 
-int Exporter::exportSession(Friend& user, const SessionParser& sessionParser, const Session& session, const std::string& userBase, const std::string& outputBase)
+int Exporter::exportSession(const Friend& user, const SessionParser& sessionParser, const Session& session, const std::string& userBase, const std::string& outputBase)
 {
 	if (session.dbFile.empty())
 	{

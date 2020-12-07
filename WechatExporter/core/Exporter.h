@@ -69,15 +69,13 @@ public:
     void ignoreAudio(bool ignoreAudio = true);
     void setOrder(bool asc = true);
     void saveFilesInSessionFolder(bool flags = true);
-    
-    
 
 protected:
 	bool runImpl();
 	bool exportUser(Friend& user, std::string& userOutputPath);
     // bool loadUserSessions(Friend& user, std::vector<Session>& sessions) const;
-    bool loadUserFriendsAndSessions(Friend& user, Friends friends, std::vector<Session>& sessions, bool detailedInfo = true) const;
-	int exportSession(Friend& user, const SessionParser& sessionParser, const Session& session, const std::string& userBase, const std::string& outputBase);
+    bool loadUserFriendsAndSessions(const Friend& user, Friends& friends, std::vector<Session>& sessions, bool detailedInfo = true) const;
+	int exportSession(const Friend& user, const SessionParser& sessionParser, const Session& session, const std::string& userBase, const std::string& outputBase);
 
     bool fillUser(Friend& user);
 	bool fillSession(Session& session, const Friends& friends) const;
