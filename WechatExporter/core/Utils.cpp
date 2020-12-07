@@ -136,6 +136,20 @@ std::string safeHTML(const std::string& s)
     return result;
 }
 
+void removeHtmlTags(std::string& html)
+{
+    std::string::size_type startpos = 0;
+    while ((startpos = html.find("<", startpos)) != std::string::npos)
+    {
+        // auto startpos = html.find("<");
+        auto endpos = html.find(">", startpos + 1);
+        if (endpos != std::string::npos)
+        {
+            html.erase(startpos, endpos - startpos + 1);
+        }
+    }
+}
+
 std::string removeCdata(const std::string& str)
 {
     if (startsWith(str, "<![CDATA[") && endsWith(str, "]]>")) return str.substr(9, str.size() - 12);

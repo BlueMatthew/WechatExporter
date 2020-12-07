@@ -51,6 +51,7 @@ void normalizePath(std::string& path);
 std::string md5(const std::string& s);
 
 std::string safeHTML(const std::string& s);
+void removeHtmlTags(std::string& html);
 
 std::string removeCdata(const std::string& str);
 
