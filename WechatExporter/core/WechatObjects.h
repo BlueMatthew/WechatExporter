@@ -45,6 +45,8 @@ public:
         IsChatroom = endsWith(uid, "@chatroom");
     }
     
+    static bool isSubscription(const std::string& usrName);
+    
     const std::string& getUsrName() const { return usrName; }
     const std::string& getUidHash() const { return uidHash; }
     void setUsrName(const std::string& usrName) { this->usrName = usrName; uidHash = md5(usrName);  outputFileName = uidHash; IsChatroom = endsWith(usrName, "@chatroom"); }
@@ -119,6 +121,10 @@ public:
     }
     
 };
+inline bool Friend::isSubscription(const std::string& usrName)
+{
+    return startsWith(usrName, "gh_") || (usrName.compare("brandsessionholder") == 0);
+}
 
 class Friends
 {
@@ -202,6 +208,7 @@ struct Session
     std::string ExtFileName;
     
     int UnreadCount = 0;
+    int recordCount = 0;
     
     std::string dbFile;
     

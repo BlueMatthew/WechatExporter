@@ -233,6 +233,10 @@ std::string MMKVParser::findValue(const std::string& key)
     return value;
 }
 
+FriendsParser::FriendsParser(bool detailedInfo/* = true*/) : m_detailedInfo(detailedInfo)
+{
+}
+
 bool FriendsParser::parseWcdb(const std::string& mmPath, Friends& friends)
 {
     sqlite3 *db = NULL;
@@ -244,7 +248,6 @@ bool FriendsParser::parseWcdb(const std::string& mmPath, Friends& friends)
     }
     
     std::string sql = "SELECT userName,dbContactRemark,dbContactChatRoom,dbContactHeadImage,type FROM Friend";
-
     sqlite3_stmt* stmt = NULL;
     rc = sqlite3_prepare_v2(db, sql.c_str(), (int)(sql.size()), &stmt, NULL);
     if (rc != SQLITE_OK)
@@ -263,11 +266,20 @@ bool FriendsParser::parseWcdb(const std::string& mmPath, Friends& friends)
             continue;
         }
         std::string uid = val;
+        
+        if (Friend::isSubscription(uid))
+        {
+            continue;
+        }
+        
         Friend& f = friends.addFriend(uid);
 
         parseRemark(sqlite3_column_blob(stmt, 1), sqlite3_column_bytes(stmt, 1), f);
-        parseHeadImage(sqlite3_column_blob(stmt, 3), sqlite3_column_bytes(stmt, 3), f);
-        parseChatroom(sqlite3_column_blob(stmt, 2), sqlite3_column_bytes(stmt, 2), f);
+        if (m_detailedInfo)
+        {
+            parseAvatar(sqlite3_column_blob(stmt, 3), sqlite3_column_bytes(stmt, 3), f);
+            parseChatroom(sqlite3_column_blob(stmt, 2), sqlite3_column_bytes(stmt, 2), f);
+        }
     }
     
     sqlite3_finalize(stmt);
@@ -301,7 +313,7 @@ bool FriendsParser::parseRemark(const void *data, int length, Friend& f)
     return true;
 }
 
-bool FriendsParser::parseHeadImage(const void *data, int length, Friend& f)
+bool FriendsParser::parseAvatar(const void *data, int length, Friend& f)
 {
     RawMessage msg;
     if (!msg.merge(reinterpret_cast<const char *>(data), length))
@@ -339,7 +351,7 @@ bool FriendsParser::parseChatroom(const void *data, int length, Friend& f)
     return true;
 }
 
-SessionsParser::SessionsParser(ITunesDb *iTunesDb, Shell* shell) : m_iTunesDb(iTunesDb), m_shell(shell)
+SessionsParser::SessionsParser(ITunesDb *iTunesDb, Shell* shell, bool detailedInfo/* = true*/) : m_iTunesDb(iTunesDb), m_shell(shell), m_detailedInfo(detailedInfo)
 {
 }
 
@@ -408,7 +420,10 @@ bool SessionsParser::parse(const std::string& userRoot, std::vector<Session>& se
     sqlite3_finalize(stmt);
     sqlite3_close(db);
 
-    parseMessageDbs(userRoot, sessions);
+    if (m_detailedInfo)
+    {
+        parseMessageDbs(userRoot, sessions);
+    }
     
     return true;
 }
@@ -543,6 +558,10 @@ bool SessionsParser::parseCellData(const std::string& userRoot, Session& session
 	{
 		session.LastMessageTime = static_cast<unsigned int>(value2);
 	}
+    if (msg.parse("2.2", value2))
+    {
+        session.recordCount = value2;
+    }
     
     if (session.DisplayName.empty())
     {
@@ -774,8 +793,18 @@ bool SessionParser::parseRow(Record& record, const std::string& userBase, const 
         {
             url.clear();
         }
+        else
+        {
+            if (!startsWith(url, "http") && startsWith(url, "https"))
+            {
+                if (!xmlParser.parseAttributeValue("/msg/emoji", "thumburl", url))
+                {
+                    url.clear();
+                }
+            }
+        }
         
-		if (!url.empty())
+		if (startsWith(url, "http") || startsWith(url, "https"))
         {
             std::string localfile = url;
             std::smatch sm2;
