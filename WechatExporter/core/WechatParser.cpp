@@ -661,10 +661,6 @@ int SessionParser::parse(const std::string& userBase, const std::string& outputB
         record.des = sqlite3_column_int(stmt, 2);
         record.type = sqlite3_column_int(stmt, 3);
         record.msgid = sqlite3_column_int(stmt, 4);
-        if (pMessage == NULL)
-        {
-            int aa = 0;
-        }
         if (parseRow(record, userBase, outputBase, session, templateKey, values))
         {
             count++;
@@ -733,7 +729,9 @@ bool SessionParser::parseRow(Record& record, const std::string& userBase, const 
     if (record.type == 10000 || record.type == 10002)
     {
         templateKey = "system";
-        templateValues["%%MESSAGE%%"] = record.message;
+        std::string sysMsg = record.message;
+        removeHtmlTags(sysMsg);
+        templateValues["%%MESSAGE%%"] = sysMsg;
     }
     else if (record.type == 34)
     {
