@@ -10,7 +10,7 @@
 3. 执行解压出来的WechatExport.exe/WechatExporter (Windows下如果运行报缺少必须的dll文件，请安装[Visual C++ 2017 redist](https://aka.ms/vs/16/release/vc_redist.x64.exe)后再尝试运行)
 
 4. 按界面提示进行操作。  
-![Windows界面截屏](https://bj29.cn-beijing.data.alicloudccp.com/5fc5b078a70e0f0dabfb4d208176501620cea4a7%2F5fc5b078c30cf01332ce4d2b83d0afd0f413256c?Expires=1606792195&OSSAccessKeyId=LTAIsE5mAn2F493Q&Signature=Zin3iLvXt%2BBHelRauHBkolYC1%2Bk%3D) ![MacOS界面截屏](https://bj29.cn-beijing.data.alicloudccp.com/5fc5af6b3c8db703be4942f195f77b3cf29a9f1c%2F5fc5af6b74725dfeca69432caeefbac9b1a29028?domain_id=bj29&drive_id=881999&file_id=5fc5af6b3c8db703be4942f195f77b3cf29a9f1c&response-content-disposition=attachment%3B%20filename%2A%3DUTF-8%27%27screenshot-mac.png&user_id=88b77f1ebb0c4d72968cb84326971ff0&x-oss-access-key-id=LTAIsE5mAn2F493Q&x-oss-expires=1606798302&x-oss-signature=SD%2Fz1UbHWYTV2iK1I6pxTug5poGLhopSOI4F45MeHr8%3D&x-oss-signature-version=OSS2)
+![Windows界面截屏](http://src.wakin.org/github/wxexp/screenshot-win.png) ![MacOS界面截屏](http://src.wakin.org/github/wxexp/screenshot-mac.png)
 
 ## 模版修改
 解压目录下的res\templates(MacOS版本位于Contents\Resources\res)子目录里存放了输出聊天记录的html页面模版，其中通过两个%包含起来的字符串，譬如，%%NAME%%，不要修改之外，其它页面内容和格式都可以自行调整。
