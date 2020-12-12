@@ -80,7 +80,7 @@ bool parseMembers(const std::string& xml, T& f)
             }
         
             std::string uidHash = md5(uid);
-            f.Members[uidHash] = std::make_pair(uid, displayName);
+            f.addMember(uidHash, std::make_pair(uid, displayName));
         }
     }
     
@@ -167,7 +167,7 @@ int LoginInfo2Parser::parseUser(const char* data, int length, std::vector<Friend
     }
     if (msg.parse("3", value))
     {
-        user.NickName = value;
+        user.setDisplayName(value);
     }
 #ifndef NDEBUG
     if (msg.parse("10.1.2", value))
@@ -273,7 +273,8 @@ bool FriendsParser::parseWcdb(const std::string& mmPath, Friends& friends)
         }
         
         Friend& f = friends.addFriend(uid);
-
+        f.setUserType(userType);
+        
         parseRemark(sqlite3_column_blob(stmt, 1), sqlite3_column_bytes(stmt, 1), f);
         if (m_detailedInfo)
         {
@@ -290,25 +291,22 @@ bool FriendsParser::parseWcdb(const std::string& mmPath, Friends& friends)
 
 bool FriendsParser::parseRemark(const void *data, int length, Friend& f)
 {
-    // if (f.alias.empty())
+    RawMessage msg;
+    if (!msg.merge(reinterpret_cast<const char *>(data), length))
     {
-        RawMessage msg;
-        if (!msg.merge(reinterpret_cast<const char *>(data), length))
-        {
-            return false;
-        }
-        
-        std::string value;
-        if (msg.parse("1", value))
-        {
-            f.NickName = value;
-        }
-        /*
-        if (msg.parse("6", value))
-        {
-        }
-        */
+        return false;
     }
+    
+    std::string value;
+    if (msg.parse("1", value))
+    {
+        f.setDisplayName(value);
+    }
+    /*
+    if (msg.parse("6", value))
+    {
+    }
+    */
     
     return true;
 }
@@ -324,11 +322,11 @@ bool FriendsParser::parseAvatar(const void *data, int length, Friend& f)
     std::string value;
     if (msg.parse("2", value))
     {
-        f.Portrait = value;
+        f.setPortrait(value);
     }
     if (msg.parse("3", value))
     {
-        f.PortraitHD = value;
+        f.setPortraitHD(value);
     }
 
     return true;
@@ -393,26 +391,21 @@ bool SessionsParser::parse(const std::string& userRoot, std::vector<Session>& se
         Session& session = sessions.back();
         
         session.setUsrName(usrName);
-        session.CreateTime = static_cast<unsigned int>(sqlite3_column_int(stmt, 1));
+        session.setCreateTime(static_cast<unsigned int>(sqlite3_column_int(stmt, 1)));
         const char* extFileName = reinterpret_cast<const char*>(sqlite3_column_text(stmt, 0));
-        if (NULL != extFileName) session.ExtFileName = extFileName;
-        session.UnreadCount = sqlite3_column_int(stmt, 2);
-        
-        if (session.UsrName == "sun_yunfeng")
-        {
-            int aa = 1;
-        }
-        
-        if (!session.ExtFileName.empty())
+        if (NULL != extFileName) session.setExtFileName(extFileName);
+        session.setUnreadCount(sqlite3_column_int(stmt, 2));
+
+        if (!session.isExtFileNameEmpty())
         {
             parseCellData(userRoot, session);
         }
-        const Friend* f = friends.getFriend(session.Hash);
+        const Friend* f = friends.getFriend(session.getHash());
         if (NULL != f)
         {
             if (!session.isChatroom())
             {
-                session.copyInfoFromFriend(*f);
+                session.update(*f);
             }
         }
     }
@@ -444,9 +437,9 @@ bool SessionsParser::parseMessageDbs(const std::string& userRoot, std::vector<Se
 	for (typename std::vector<std::string>::const_iterator it = sessionIds.cbegin(); it != sessionIds.cend(); ++it)
 	{
 		std::vector<Session>::iterator itSession = std::lower_bound(sessions.begin(), sessions.end(), *it, comp);
-		if (itSession != sessions.end() && itSession->Hash == *it)
+		if (itSession != sessions.end() && itSession->getHash() == *it)
 		{
-			itSession->dbFile = dbPath;
+			itSession->setDbFile(dbPath);
 		}
 	}
 
@@ -459,9 +452,9 @@ bool SessionsParser::parseMessageDbs(const std::string& userRoot, std::vector<Se
 		for (typename std::vector<std::string>::const_iterator itId = sessionIds.cbegin(); itId != sessionIds.cend(); ++itId)
 		{
 			std::vector<Session>::iterator itSession = std::lower_bound(sessions.begin(), sessions.end(), *itId, comp);
-			if (itSession != sessions.end() && itSession->Hash == *itId)
+			if (itSession != sessions.end() && itSession->getHash() == *itId)
 			{
-				itSession->dbFile = dbPath;
+				itSession->setDbFile(dbPath);
 			}
 		}
     }
@@ -514,7 +507,7 @@ bool SessionsParser::parseMessageDb(const std::string& mmPath, std::vector<std::
 
 bool SessionsParser::parseCellData(const std::string& userRoot, Session& session)
 {
-	std::string fileName = session.ExtFileName;
+	std::string fileName = session.getExtFileName();
 	if (startsWith(fileName, DIR_SEP) || startsWith(fileName, DIR_SEP_R))
 	{
 		fileName = fileName.substr(1);
@@ -537,18 +530,18 @@ bool SessionsParser::parseCellData(const std::string& userRoot, Session& session
 	int value2;
     if (msg.parse("1.1.6", value))
     {
-        session.DisplayName = value;
+        session.setDisplayName(value);
     }
     if (msg.parse("1.1.4", value))
     {
-        if (session.DisplayName.empty())
+        if (session.isDisplayNameEmpty())
         {
-            session.DisplayName = value;
+            session.setDisplayName(value);
         }
     }
 	if (msg.parse("1.1.14", value))
 	{
-		session.Portrait = value;
+		session.setPortrait(value);
 	}
 	if (msg.parse("1.5", value))
 	{
@@ -556,14 +549,14 @@ bool SessionsParser::parseCellData(const std::string& userRoot, Session& session
 	}
 	if (msg.parse("2.7", value2))
 	{
-		session.LastMessageTime = static_cast<unsigned int>(value2);
+		session.setLastMessageTime(static_cast<unsigned int>(value2));
 	}
     if (msg.parse("2.2", value2))
     {
-        session.recordCount = value2;
+        session.setRecordCount(value2);
     }
     
-    if (session.DisplayName.empty())
+    if (session.isDisplayNameEmpty())
     {
         SessionCellDataFilter filter(cellDataPath);
         ITunesFileVector items = m_iTunesDb->filter(filter);
@@ -599,9 +592,9 @@ bool SessionsParser::parseCellData(const std::string& userRoot, Session& session
             {
                 modifiedTime = ITunesDb::parseModifiedTime((*it)->blob);
             }
-            if (session.DisplayName.empty() || (!displayName.empty() && modifiedTime > lastModifiedTime))
+            if (session.isDisplayNameEmpty() || (!displayName.empty() && modifiedTime > lastModifiedTime))
             {
-                session.DisplayName = displayName;
+                session.setDisplayName(displayName);
                 lastModifiedTime = modifiedTime;
             }
         }
@@ -619,14 +612,14 @@ int SessionParser::parse(const std::string& userBase, const std::string& outputB
     int count = 0;
     contents.clear();
     sqlite3 *db = NULL;
-    int rc = openSqlite3ReadOnly(session.dbFile, &db);
+    int rc = openSqlite3ReadOnly(session.getDbFile(), &db);
     if (rc != SQLITE_OK)
     {
         sqlite3_close(db);
         return false;
     }
     
-    std::string sql = "SELECT CreateTime,Message,Des,Type,MesLocalID FROM Chat_" + session.Hash + " ORDER BY CreateTime";
+    std::string sql = "SELECT CreateTime,Message,Des,Type,MesLocalID FROM Chat_" + session.getHash() + " ORDER BY CreateTime";
     if ((m_options & SPO_DESC) == SPO_DESC)
     {
         sql += " DESC";
@@ -701,7 +694,7 @@ bool SessionParser::parseRow(Record& record, const std::string& userBase, const 
     templateKey = "msg";
     
 	std::string msgIdStr = std::to_string(record.msgid);
-    std::string assetsDir = combinePath(outputPath, session.UsrName + "_files");
+    std::string assetsDir = combinePath(outputPath, session.getUsrName() + "_files");
 	m_shell.makeDirectory(assetsDir);
     
     templateValues["%%MSGID%%"] = std::to_string(record.msgid);
@@ -749,7 +742,7 @@ bool SessionParser::parseRow(Record& record, const std::string& userBase, const 
         // {
         //     voicelen = std::stoi(sm[1]);
         // }
-        const ITunesFile* audioSrcFile = m_iTunesDb.findITunesFile(combinePath(userBase, "Audio", session.Hash, msgIdStr + ".aud"));
+        const ITunesFile* audioSrcFile = m_iTunesDb.findITunesFile(combinePath(userBase, "Audio", session.getHash(), msgIdStr + ".aud"));
         std::string audioSrc;
         if (NULL != audioSrcFile)
         {
@@ -772,7 +765,7 @@ bool SessionParser::parseRow(Record& record, const std::string& userBase, const 
             }
 
             templateKey = "audio";
-            templateValues["%%AUDIOPATH%%"] = session.UsrName + "_files/" + msgIdStr + ".mp3";
+            templateValues["%%AUDIOPATH%%"] = session.getUsrName() + "_files/" + msgIdStr + ".mp3";
         }
     }
     else if (record.type == 47)
@@ -817,7 +810,7 @@ bool SessionParser::parseRow(Record& record, const std::string& userBase, const 
                 localfile = std::to_string(uniqueFileName++);
             }
             
-            std::string emojiPath = ((m_options & SPO_ICON_IN_SESSION) == SPO_ICON_IN_SESSION) ? session.UsrName + "_files/Emoji/" : "Emoji/";
+            std::string emojiPath = ((m_options & SPO_ICON_IN_SESSION) == SPO_ICON_IN_SESSION) ? session.getUsrName() + "_files/Emoji/" : "Emoji/";
             localfile = emojiPath + localfile + ".gif";
             m_downloader.addTask(url, combinePath(outputPath, localfile), record.createTime);
             templateKey = "emoji";
@@ -838,13 +831,13 @@ bool SessionParser::parseRow(Record& record, const std::string& userBase, const 
             {
             }
         }
-        bool hasthum = requireFile(combinePath(userBase, "Video", session.Hash, msgIdStr + ".video_thum"), combinePath(assetsDir, msgIdStr + "_thum.jpg"));
-        bool hasvid = requireFile(combinePath(userBase, "Video", session.Hash, msgIdStr + ".mp4"), combinePath(assetsDir, msgIdStr + ".mp4"));
+        bool hasthum = requireFile(combinePath(userBase, "Video", session.getHash(), msgIdStr + ".video_thum"), combinePath(assetsDir, msgIdStr + "_thum.jpg"));
+        bool hasvid = requireFile(combinePath(userBase, "Video", session.getHash(), msgIdStr + ".mp4"), combinePath(assetsDir, msgIdStr + ".mp4"));
 
 		std::string msgFile;
 		if (hasthum || hasvid)
 		{
-			msgFile = session.UsrName + "_files/";
+			msgFile = session.getUsrName() + "_files/";
 			msgFile += msgIdStr;
 		}
         if (hasvid)
@@ -883,7 +876,7 @@ bool SessionParser::parseRow(Record& record, const std::string& userBase, const 
     }
     else if (record.type == 3)
     {
-		std::string vfile = combinePath(userBase, "Img", session.Hash, msgIdStr);
+		std::string vfile = combinePath(userBase, "Img", session.getHash(), msgIdStr);
 
         bool hasthum = requireFile(vfile + ".pic_thum", combinePath(assetsDir, msgIdStr + "_thum.jpg"));
         bool haspic = requireFile(vfile + ".pic", combinePath(assetsDir, msgIdStr + ".jpg"));
@@ -891,7 +884,7 @@ bool SessionParser::parseRow(Record& record, const std::string& userBase, const 
 		std::string msgFile;
 		if (hasthum || haspic)
 		{
-			msgFile = session.UsrName + "_files/";
+			msgFile = session.getUsrName() + "_files/";
 			msgFile += msgIdStr;
 		}
 
@@ -1020,8 +1013,8 @@ bool SessionParser::parseRow(Record& record, const std::string& userBase, const 
         templateValues["%%MESSAGE%%"] = safeHTML(record.message);
     }
     
-    std::string portraitPath = ((m_options & SPO_ICON_IN_SESSION) == SPO_ICON_IN_SESSION) ? session.UsrName + "_files/Portrait/" : "Portrait/";
-    std::string emojiPath = ((m_options & SPO_ICON_IN_SESSION) == SPO_ICON_IN_SESSION) ? session.UsrName + "_files/Emoji/" : "Emoji/";
+    std::string portraitPath = ((m_options & SPO_ICON_IN_SESSION) == SPO_ICON_IN_SESSION) ? session.getUsrName() + "_files/Portrait/" : "Portrait/";
+    std::string emojiPath = ((m_options & SPO_ICON_IN_SESSION) == SPO_ICON_IN_SESSION) ? session.getUsrName() + "_files/Emoji/" : "Emoji/";
     
     std::string localPortrait;
     std::string remotePortrait;
@@ -1029,14 +1022,14 @@ bool SessionParser::parseRow(Record& record, const std::string& userBase, const 
     {
         if (record.des == 0)
         {
-            std::string txtsender = m_myself.DisplayName();
+            std::string txtsender = m_myself.getDisplayName();
             
             templateValues["%%ALIGNMENT%%"] = "right";
             // templateValues.Add("%%NAME%%", txtsender);
             templateValues["%%NAME%%"] = "";    // Don't show name for self
             localPortrait = portraitPath + m_myself.getLocalPortrait();
             templateValues["%%AVATAR%%"] = localPortrait;
-            remotePortrait = m_myself.getPortraitUrl();
+            remotePortrait = m_myself.getPortrait();
         }
         else
         {
@@ -1047,11 +1040,11 @@ bool SessionParser::parseRow(Record& record, const std::string& userBase, const 
                 const Friend *f = m_friends.getFriendByUid(senderId);
                 if (txtsender.empty() && NULL != f)
                 {
-                    txtsender = f->DisplayName();
+                    txtsender = f->getDisplayName();
                 }
                 templateValues["%%NAME%%"] = txtsender.empty() ? senderId : txtsender;
                 localPortrait = portraitPath + ((NULL != f) ? f->getLocalPortrait() : "DefaultProfileHead@2x.png");
-                remotePortrait = (NULL != f) ? f->getPortraitUrl() : "";
+                remotePortrait = (NULL != f) ? f->getPortrait() : "";
                 templateValues["%%AVATAR%%"] = localPortrait;
             }
             else
@@ -1063,31 +1056,31 @@ bool SessionParser::parseRow(Record& record, const std::string& userBase, const 
     }
     else
     {
-        if (record.des == 0 || session.UsrName == m_myself.getUsrName())
+        if (record.des == 0 || session.getUsrName() == m_myself.getUsrName())
         {
             templateValues["%%ALIGNMENT%%"] = "right";
             templateValues["%%NAME%%"] = "";
             localPortrait = portraitPath + m_myself.getLocalPortrait();
-            remotePortrait = m_myself.getPortraitUrl();
+            remotePortrait = m_myself.getPortrait();
             templateValues["%%AVATAR%%"] = localPortrait;
         }
         else
         {
             templateValues["%%ALIGNMENT%%"] = "left";
 
-            const Friend *f = m_friends.getFriend(session.Hash);
+            const Friend *f = m_friends.getFriend(session.getHash());
             if (NULL == f)
             {
-                templateValues["%%NAME%%"] = session.DisplayName;
-                localPortrait = portraitPath + (session.Portrait.empty() ? "DefaultProfileHead@2x.png" : session.getLocalPortrait());
-                remotePortrait = session.Portrait;
+                templateValues["%%NAME%%"] = session.getDisplayName();
+                localPortrait = portraitPath + (session.isPortraitEmpty() ? "DefaultProfileHead@2x.png" : session.getLocalPortrait());
+                remotePortrait = session.getPortrait();
                 templateValues["%%AVATAR%%"] = localPortrait;
             }
             else
             {
-                templateValues["%%NAME%%"] = f->DisplayName();
+                templateValues["%%NAME%%"] = f->getDisplayName();
                 localPortrait = portraitPath + f->getLocalPortrait();
-                remotePortrait = f->getPortraitUrl();
+                remotePortrait = f->getPortrait();
                 templateValues["%%AVATAR%%"] = localPortrait;
             }
         }

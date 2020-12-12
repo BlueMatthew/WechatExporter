@@ -219,7 +219,7 @@ Gw
                                 </buttonCell>
                             </button>
                             <button verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="ybQ-bI-p2r">
-                                <rect key="frame" x="584" y="285" width="52" height="32"/>
+                                <rect key="frame" x="584" y="282" width="52" height="32"/>
                                 <constraints>
                                     <constraint firstAttribute="width" constant="40" id="BIz-hX-l0p"/>
                                 </constraints>
@@ -249,7 +249,7 @@ Gw
                             <constraint firstItem="az7-4y-9PZ" firstAttribute="leading" secondItem="m2S-Jp-Qdl" secondAttribute="leading" constant="12" id="B0s-ss-tP0"/>
                             <constraint firstItem="pbK-5X-QkO" firstAttribute="top" secondItem="az7-4y-9PZ" secondAttribute="bottom" constant="8" symbolic="YES" id="C1s-RF-WgN"/>
                             <constraint firstItem="OAQ-rY-5Vw" firstAttribute="top" secondItem="m2S-Jp-Qdl" secondAttribute="top" constant="8" id="CTV-no-3NO"/>
-                            <constraint firstItem="ybQ-bI-p2r" firstAttribute="top" secondItem="8gl-oS-xn6" secondAttribute="bottom" constant="31" id="FTQ-t6-1rb"/>
+                            <constraint firstItem="ybQ-bI-p2r" firstAttribute="top" secondItem="8gl-oS-xn6" secondAttribute="bottom" constant="34" id="FTQ-t6-1rb"/>
                             <constraint firstItem="Mkn-sk-kD7" firstAttribute="top" secondItem="pbK-5X-QkO" secondAttribute="bottom" constant="12" id="K0B-0D-nxV"/>
                             <constraint firstItem="c7I-ig-uay" firstAttribute="top" secondItem="Mkn-sk-kD7" secondAttribute="bottom" constant="13" id="SQu-mg-d5v"/>
                             <constraint firstItem="MCy-Pf-KGR" firstAttribute="top" secondItem="OAQ-rY-5Vw" secondAttribute="bottom" constant="11" id="TJk-r6-eox"/>
