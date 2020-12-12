@@ -18,109 +18,165 @@
 class Friend
 {
 public:
-    std::string NickName;
-    std::string Alias;
-    std::string ConRemark;
-    int UserType;
-    std::string ConChatRoomMem;
-    std::string ConStrRes2;
-    std::string Portrait;
-    std::string PortraitHD;
-    // mutable bool PortraitRequired;
-    std::string DefaultProfileHead;
-    mutable bool IsChatroom;
     
-    std::string outputFileName;
     
-    std::map<std::string, std::pair<std::string, std::string>> Members; // uidHash => <uid,NickName>
+protected:
+    std::string m_usrName;
+    std::string m_uidHash;
+    std::string m_displayName;
+    int m_userType;
+    bool m_isChatroom;
+    std::string m_portrait;
+    std::string m_portraitHD;
     
-private:
-    std::string usrName;
-    std::string uidHash;
-
+    std::string m_outputFileName; // Use displayName first and then usrName
+    
+    std::map<std::string, std::pair<std::string, std::string>> m_members; // uidHash => <uid,NickName>
+    
 public:
     
-    Friend(const std::string& uid, const std::string& hash) : usrName(uid), uidHash(hash)
+    Friend() : m_isChatroom(false)
     {
-        IsChatroom = isChatroom(uid);
+    }
+    
+    Friend(const std::string& uid, const std::string& hash) : m_usrName(uid), m_uidHash(hash)
+    {
+        m_isChatroom = isChatroom(uid);
     }
     
     static bool isSubscription(const std::string& usrName);
     static bool isChatroom(const std::string& usrName);
     
-    const std::string& getUsrName() const { return usrName; }
-    const std::string& getUidHash() const { return uidHash; }
-    void setUsrName(const std::string& usrName) { this->usrName = usrName; uidHash = md5(usrName);  outputFileName = uidHash; IsChatroom = isChatroom(usrName); }
-    
-    Friend() : DefaultProfileHead("DefaultProfileHead@2x.png"), IsChatroom(false)
+    inline bool isSubscription() const
     {
+        return isSubscription(m_usrName);
     }
     
+    inline std::string getUsrName() const { return m_usrName; }
+    inline std::string getHash() const { return m_uidHash; }
+    void setUsrName(const std::string& usrName) { this->m_usrName = usrName; m_uidHash = md5(usrName);  m_outputFileName = m_uidHash; m_isChatroom = isChatroom(usrName); }
+
     bool containMember(const std::string& uidHash) const
     {
-        std::map<std::string, std::pair<std::string, std::string>>::const_iterator it = Members.find(uidHash);
-        return it != Members.cend();
+        std::map<std::string, std::pair<std::string, std::string>>::const_iterator it = m_members.find(uidHash);
+        return it != m_members.cend();
     }
     
     std::string getMemberName(const std::string& uidHash) const
     {
-        std::map<std::string, std::pair<std::string, std::string>>::const_iterator it = Members.find(uidHash);
-        return it != Members.cend() ? it->second.second : "";
+        std::map<std::string, std::pair<std::string, std::string>>::const_iterator it = m_members.find(uidHash);
+        return it != m_members.cend() ? it->second.second : "";
     }
-    
-    /*
-    void ProcessConStrRes2()
-    {
-        static std::regex aliasPattern("<alias>(.*?)<\\/alias>");
-        
-        std::smatch sm;
-        bool matched = std::regex_search(ConStrRes2, sm, aliasPattern);
-        if (matched)
-        {
-            Alias = sm[1];
-        }
-        // alias = match.Success ? match.Groups[1].Value : null;
-        static std::regex headImgUrlPattern("<HeadImgUrl>(.+?)<\\/HeadImgUrl>");
-        
-        std::smatch sm2;
-        matched = std::regex_search(ConStrRes2, sm2, headImgUrlPattern);
-        if (matched)
-        {
-            Portrait = sm[1];
-        }
-        static std::regex headImgHDUrlPattern("<HeadImgHDUrl>(.+?)<\\/HeadImgHDUrl>");
-        
-        std::smatch sm3;
-        matched = std::regex_search(ConStrRes2, sm3, headImgHDUrlPattern);
-        if (matched)
-        {
-            PortraitHD = sm[1];
-        }
-    }
-     */
 
-    std::string DisplayName() const
+    void addMember(const std::string& uidHash, const std::pair<std::string, std::string>& uidAndDisplayName)
     {
-        if (ConRemark != "") return ConRemark;
-        if (NickName != "") return NickName;
-        return ID();
+        typename std::map<std::string, std::pair<std::string, std::string>>::iterator it = m_members.find(uidHash);
+        if (it != m_members.end())
+        {
+            if (it->second.second != uidAndDisplayName.second)
+            {
+                it->second.second = uidAndDisplayName.second;
+            }
+        }
+        else
+        {
+            m_members[uidHash] = uidAndDisplayName;
+        }
     }
     
-    std::string ID() const
+    inline std::string getDisplayName() const
     {
-        if (Alias != "") return Alias;
-        if (usrName != "") return usrName;
-        return std::string("");
+        return m_displayName.empty() ? m_usrName : m_displayName;
     }
     
-    std::string getPortraitUrl() const
+    inline bool isDisplayNameEmpty() const
     {
-        return PortraitHD.empty() ? Portrait : PortraitHD;
+        return m_displayName.empty();
     }
     
-    std::string getLocalPortrait() const
+    inline void setDisplayName(const std::string& displayName)
     {
-        return usrName + ".jpg";
+        m_displayName = displayName;
+    }
+    
+    inline void setUserType(int userType)
+    {
+        m_userType = userType;
+    }
+    
+    inline void setPortrait(const std::string& portrait)
+    {
+        m_portrait = portrait;
+    }
+    
+    inline void setPortraitHD(const std::string& portraitHD)
+    {
+        m_portraitHD = portraitHD;
+    }
+    
+    inline std::string getOutputFileName() const
+    {
+        return m_outputFileName;
+    }
+    
+    inline void setOutputFileName(const std::string& outputFileName)
+    {
+        m_outputFileName = outputFileName;
+    }
+    
+    inline bool isChatroom() const
+    {
+        return m_isChatroom;
+    }
+    
+    inline bool isPortraitEmpty() const
+    {
+        return m_portrait.empty() && m_portraitHD.empty();
+    }
+    
+    inline std::string getPortrait() const
+    {
+        return m_portraitHD.empty() ? m_portrait : m_portraitHD;
+    }
+    
+    inline std::string getLocalPortrait() const
+    {
+        return m_usrName + ".jpg";
+    }
+    
+protected:
+    bool update(const Friend& f)
+    {
+        if (m_usrName != f.m_usrName)
+        {
+            return false;
+        }
+        
+        if (m_displayName.empty() && !f.m_displayName.empty())
+        {
+            m_displayName = f.m_displayName;
+        }
+        if (m_portrait.empty() && !f.m_portrait.empty())
+        {
+            m_portrait = f.m_portrait;
+        }
+        if (m_portraitHD.empty() && !f.m_portraitHD.empty())
+        {
+            m_portraitHD = f.m_portraitHD;
+        }
+        for (std::map<std::string, std::pair<std::string, std::string>>::iterator it = m_members.begin(); it != m_members.end(); ++it)
+        {
+            if (it->second.second.empty())
+            {
+                std::map<std::string, std::pair<std::string, std::string>>::const_iterator it2 = f.m_members.find(it->first);
+                if (it2 != f.m_members.cend())
+                {
+                    it->second.second = it2->second.second;
+                }
+            }
+        }
+        
+        return true;
     }
     
 };
@@ -171,13 +227,27 @@ public:
     {
         std::map<std::string, std::string>::const_iterator it = hashes.find(uid);
         std::string hash = it == hashes.cend() ? md5(uid) : it->second;
-        return getFriend(hash);
+        
+        std::map<std::string, Friend>::const_iterator it2 = friends.find(hash);
+        if (it2 == friends.cend())
+        {
+            return NULL;
+        }
+        return &(it2->second);
+        // return getFriend(hash);
     }
     Friend* getFriendByUid(const std::string& uid)
     {
         std::map<std::string, std::string>::const_iterator it = hashes.find(uid);
         std::string hash = it == hashes.cend() ? md5(uid) : it->second;
-        return getFriend(hash);
+        
+        std::map<std::string, Friend>::iterator it2 = friends.find(hash);
+        if (it2 == friends.end())
+        {
+            return NULL;
+        }
+        return &(it2->second);
+        // return getFriend(hash);
     }
     
     Friend& addFriend(const std::string& uid)
@@ -204,110 +274,109 @@ public:
     
 };
 
-struct Session
+class Session : public Friend
 {
-    std::string UsrName;
-    std::string Hash;
-    std::string DisplayName;
-    std::string Portrait;
-    unsigned int CreateTime;
-    unsigned int LastMessageTime;
-    std::string ExtFileName;
+protected:
+    int m_unreadCount;
+    int m_recordCount;
     
-    int UnreadCount = 0;
-    int recordCount = 0;
+    unsigned int m_createTime;
+    unsigned int m_lastMessageTime;
+    std::string m_extFileName;
+    std::string m_dbFile;
     
-    std::string dbFile;
-    
-    std::string outputFileName;
-    
-    bool isChatroom() const { return endsWith(UsrName, "@chatroom") || endsWith(UsrName, "@im.chatroom"); }
-    bool isSubscription() const { return isSubscription(UsrName); }
-    
-    static bool isSubscription(const std::string& usrName);
-    
-    std::map<std::string, std::pair<std::string, std::string>> Members; // uidHash => <uid,NickName>
-    
-    void setUsrName(const std::string& usrName) { this->UsrName = usrName; Hash = md5(UsrName); outputFileName = UsrName; }
-    
-    std::string getMemberName(const std::string& uidHash) const
+public:
+    Session() : Friend(), m_unreadCount(0), m_recordCount(0), m_createTime(0), m_lastMessageTime(0)
     {
-        std::map<std::string, std::pair<std::string, std::string>>::const_iterator it = Members.find(uidHash);
-        return it != Members.cend() ? it->second.second : "";
     }
     
-    std::string getLocalPortrait() const
+    inline unsigned int getCreateTime() const
     {
-        return UsrName + ".jpg";
+        return m_createTime;
     }
     
-    bool copyInfoFromFriend(const Friend& f)
+    inline void setCreateTime(unsigned int createTime)
     {
-        if (UsrName != f.getUsrName())
-        {
-            return false;
-        }
-        
-        if (DisplayName.empty())
-        {
-            DisplayName = f.DisplayName();
-        }
-        if (Portrait.empty())
-        {
-            Portrait = f.getPortraitUrl();
-        }
-        
-        return true;
+        m_createTime = createTime;
     }
     
-    bool exportToFriend(Friend& f)
+    inline unsigned int getLastMessageTime() const
     {
-        if (UsrName != f.getUsrName() && !isChatroom())
-        {
-            return false;
-        }
-        
-        if (f.NickName.empty())
-        {
-            f.NickName = DisplayName;
-        }
-        
-        for (typename std::map<std::string, std::pair<std::string, std::string>>::const_iterator it = Members.cbegin(); it != Members.cend(); ++it)
-        {
-            typename std::map<std::string, std::pair<std::string, std::string>>::iterator itFriend = f.Members.find(it->first);
-            if (itFriend != f.Members.end())
-            {
-                if (itFriend->second.second != it->second.second)
-                {
-                    itFriend->second.second = it->second.second;
-                }
-            }
-            else
-            {
-                f.Members[it->first] = it->second;
-            }
-        }
-        
-        return true;
+        return m_lastMessageTime;
+    }
+    
+    inline void setLastMessageTime(unsigned int lastMessageTime)
+    {
+        m_lastMessageTime = lastMessageTime;
+    }
+    
+    inline bool isExtFileNameEmpty() const
+    {
+        return m_extFileName.empty();
+    }
+    
+    inline std::string getExtFileName() const
+    {
+        return m_extFileName;
+    }
+    
+    inline void setExtFileName(const std::string& extFileName)
+    {
+        m_extFileName = extFileName;
+    }
+    
+    inline int getUnreadCount() const
+    {
+        return m_unreadCount;
+    }
+    
+    inline void setUnreadCount(int unreadCount)
+    {
+        m_unreadCount = unreadCount;
+    }
+    
+    inline int getRecordCount() const
+    {
+        return m_recordCount;
+    }
+    
+    inline void setRecordCount(int rc)
+    {
+        m_recordCount = rc;
+    }
+    
+    inline bool isDbFileEmpty() const
+    {
+        return m_dbFile.empty();
+    }
+    
+    inline std::string getDbFile() const
+    {
+        return m_dbFile;
+    }
+    
+    inline void setDbFile(const std::string& dbFile)
+    {
+        m_dbFile = dbFile;
     }
 
+    bool update(const Friend& f)
+    {
+        return Friend::update(f);
+    }
+    
 };
-
-inline bool Session::isSubscription(const std::string& usrName)
-{
-    return startsWith(usrName, "gh_") || (usrName.compare("brandsessionholder") == 0);
-}
 
 struct SessionHashCompare
 {
     bool operator()(const Session& s1, const Session& s2) const
     {
-        return s1.Hash.compare(s2.Hash) < 0;
+        return s1.getHash().compare(s2.getHash()) < 0;
     }
     
     bool operator()(const Session& s1, const std::string& s2) const
     {
-        return s1.Hash.compare(s2) < 0;
+        return s1.getHash().compare(s2) < 0;
     }
 };
 
@@ -315,7 +384,7 @@ struct SessionLastMsgTimeCompare
 {
     bool operator()(const Session& s1, const Session& s2) const
     {
-        return s1.LastMessageTime > s2.LastMessageTime;
+        return s1.getLastMessageTime() > s2.getLastMessageTime();
     }
 };
 

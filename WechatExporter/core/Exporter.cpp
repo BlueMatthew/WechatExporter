@@ -22,7 +22,7 @@ struct FriendDownloadHandler
     
     void operator()(const Friend& f)
     {
-        std::string url = f.getPortraitUrl();
+        std::string url = f.getPortrait();
         if (!url.empty())
         {
             downloadPool.addTask(url, combinePath(userRoot, f.getLocalPortrait()), 0);
@@ -226,8 +226,8 @@ bool Exporter::runImpl()
         
         std::string userItem = getTemplate("listitem");
         userItem = replace_all(userItem, "%%ITEMPICPATH%%", userOutputPath + "/Portrait/" + it->getLocalPortrait());
-        userItem = replace_all(userItem, "%%ITEMLINK%%", encodeUrl(it->outputFileName) + "/index.html");
-        userItem = replace_all(userItem, "%%ITEMTEXT%%", safeHTML(it->DisplayName()));
+        userItem = replace_all(userItem, "%%ITEMLINK%%", encodeUrl(it->getOutputFileName()) + "/index.html");
+        userItem = replace_all(userItem, "%%ITEMTEXT%%", safeHTML(it->getDisplayName()));
         
         htmlBody += userItem;
 	}
@@ -265,17 +265,17 @@ bool Exporter::runImpl()
 
 bool Exporter::exportUser(Friend& user, std::string& userOutputPath)
 {
-    std::string uidMd5 = user.getUidHash();
+    std::string uidMd5 = user.getHash();
     
     std::string userBase = combinePath("Documents", uidMd5);
 	// Use display name first, it it can't be created, use uid hash
-    userOutputPath = user.outputFileName;
+    userOutputPath = user.getOutputFileName();
 	std::string outputBase = combinePath(m_output, userOutputPath);
 	if (!m_shell->existsDirectory(outputBase))
 	{
 		if (!m_shell->makeDirectory(outputBase))
 		{
-            userOutputPath = user.getUidHash();
+            userOutputPath = user.getHash();
 			outputBase = combinePath(m_output, userOutputPath);
 			if (!m_shell->existsDirectory(outputBase))
 			{
@@ -297,7 +297,7 @@ bool Exporter::exportUser(Friend& user, std::string& userOutputPath)
         m_shell->makeDirectory(emojiPath);
     }
     
-	m_logger->write(formatString(getLocaleString("Handling account: %s, Wechat Id: %s"), user.DisplayName().c_str(), user.getUsrName().c_str()));
+	m_logger->write(formatString(getLocaleString("Handling account: %s, Wechat Id: %s"), user.getDisplayName().c_str(), user.getUsrName().c_str()));
     
 	m_logger->write(getLocaleString("Reading account info."));
 	m_logger->write(getLocaleString("Reading chat info"));
@@ -308,10 +308,10 @@ bool Exporter::exportUser(Friend& user, std::string& userOutputPath)
     
 	m_logger->write(formatString(getLocaleString("%d chats found."), (int)(sessions.size())));
     
-    Friend* myself = friends.getFriend(user.getUidHash());
+    Friend* myself = friends.getFriend(user.getHash());
     if (NULL == myself)
     {
-		Friend& newUser = friends.addFriend(user.getUidHash());
+		Friend& newUser = friends.addFriend(user.getHash());
 		newUser = user;
         myself = &user;
     }
@@ -329,7 +329,7 @@ bool Exporter::exportUser(Friend& user, std::string& userOutputPath)
     Downloader downloader;
 	SessionParser sessionParser(*myself, friends, *m_iTunesDb, *m_shell, m_templates, m_localeStrings, m_options, downloader, m_cancelled);
 
-    downloader.addTask(user.getPortraitUrl(), combinePath(outputBase, "Portrait", user.getLocalPortrait()), 0);
+    downloader.addTask(user.getPortrait(), combinePath(outputBase, "Portrait", user.getLocalPortrait()), 0);
     for (std::vector<Session>::iterator it = sessions.begin(); it != sessions.end(); ++it)
     {
         if (m_cancelled)
@@ -339,15 +339,15 @@ bool Exporter::exportUser(Friend& user, std::string& userOutputPath)
         
         if (!m_usersAndSessions.empty())
         {
-            if (itUser == m_usersAndSessions.cend() || itUser->second.find(it->UsrName) == itUser->second.cend())
+            if (itUser == m_usersAndSessions.cend() || itUser->second.find(it->getUsrName()) == itUser->second.cend())
             {
                 continue;
             }
         }
         
-        std::string sessionDisplayName = it->DisplayName.empty() ? it->UsrName : it->DisplayName;
+        std::string sessionDisplayName = it->getDisplayName();
 #ifndef NDEBUG
-        m_logger->write(formatString(getLocaleString("%d/%d: Handling the chat with %s"), (std::distance(sessions.begin(), it) + 1), sessions.size(), sessionDisplayName.c_str()) + " uid:" + it->UsrName);
+        m_logger->write(formatString(getLocaleString("%d/%d: Handling the chat with %s"), (std::distance(sessions.begin(), it) + 1), sessions.size(), sessionDisplayName.c_str()) + " uid:" + it->getUsrName());
 #else
         m_logger->write(formatString(getLocaleString("%d/%d: Handling the chat with %s"), (std::distance(sessions.begin(), it) + 1), sessions.size(), sessionDisplayName.c_str()));
 #endif
@@ -356,9 +356,9 @@ bool Exporter::exportUser(Friend& user, std::string& userOutputPath)
             m_logger->write(formatString(getLocaleString("Skip subscription: %s"), sessionDisplayName.c_str()));
             continue;
         }
-        if (!(it->Portrait.empty()))
+        if (!(it->isPortraitEmpty()))
         {
-            downloader.addTask(it->Portrait, combinePath(outputBase, "Portrait", it->UsrName + ".jpg"), 0);
+            downloader.addTask(it->getPortrait(), combinePath(outputBase, "Portrait", it->getLocalPortrait()), 0);
         }
 		int count = exportSession(*myself, sessionParser, *it, userBase, outputBase);
         
@@ -368,10 +368,8 @@ bool Exporter::exportUser(Friend& user, std::string& userOutputPath)
         {
             std::string userItem = getTemplate("listitem");
             userItem = replace_all(userItem, "%%ITEMPICPATH%%", "Portrait/" + it->getLocalPortrait());
-            userItem = replace_all(userItem, "%%ITEMLINK%%", encodeUrl(it->UsrName) + ".html");
-            std::string displayName = it->DisplayName;
-            if (displayName.empty()) displayName = it->UsrName;
-            userItem = replace_all(userItem, "%%ITEMTEXT%%", safeHTML(displayName));
+            userItem = replace_all(userItem, "%%ITEMLINK%%", encodeUrl(it->getUsrName()) + ".html");
+            userItem = replace_all(userItem, "%%ITEMTEXT%%", safeHTML(sessionDisplayName));
             
             userBody += userItem;
         }
@@ -380,7 +378,7 @@ bool Exporter::exportUser(Friend& user, std::string& userOutputPath)
     std::string fileName = combinePath(outputBase, "index.html");
 
     std::string html = getTemplate("listframe");
-    html = replace_all(html, "%%USERNAME%%", " - " + user.DisplayName());
+    html = replace_all(html, "%%USERNAME%%", " - " + user.getDisplayName());
     html = replace_all(html, "%%TBODY%%", userBody);
     
     std::ofstream htmlFile;
@@ -409,7 +407,7 @@ bool Exporter::exportUser(Friend& user, std::string& userOutputPath)
 
 bool Exporter::loadUserFriendsAndSessions(const Friend& user, Friends& friends, std::vector<Session>& sessions, bool detailedInfo/* = true*/) const
 {
-    std::string uidMd5 = user.getUidHash();
+    std::string uidMd5 = user.getHash();
     std::string userBase = combinePath("Documents", uidMd5);
     
     std::string wcdbPath = m_iTunesDb->findRealPath(combinePath(userBase, "DB", "WCDB_Contact.sqlite"));
@@ -417,7 +415,7 @@ bool Exporter::loadUserFriendsAndSessions(const Friend& user, Friends& friends, 
     FriendsParser friendsParser(detailedInfo);
     friendsParser.parseWcdb(wcdbPath, friends);
 
-	m_logger->debug("Wechat Friends(" + std::to_string(friends.friends.size()) + ") for: " + user.DisplayName() + " loaded.");
+	m_logger->debug("Wechat Friends(" + std::to_string(friends.friends.size()) + ") for: " + user.getDisplayName() + " loaded.");
 
     SessionsParser sessionsParser(m_iTunesDb, m_shell, detailedInfo);
     
@@ -425,18 +423,18 @@ bool Exporter::loadUserFriendsAndSessions(const Friend& user, Friends& friends, 
  
     std::sort(sessions.begin(), sessions.end(), SessionLastMsgTimeCompare());
     
-	m_logger->debug("Wechat Sessions for: " + user.DisplayName() + " loaded.");
+	m_logger->debug("Wechat Sessions for: " + user.getDisplayName() + " loaded.");
     return true;
 }
 
 int Exporter::exportSession(const Friend& user, const SessionParser& sessionParser, const Session& session, const std::string& userBase, const std::string& outputBase)
 {
-	if (session.dbFile.empty())
+	if (session.isDbFileEmpty())
 	{
 		return false;
 	}
     
-    std::string sessionBasePath = combinePath(outputBase, session.UsrName + "_files");
+    std::string sessionBasePath = combinePath(outputBase, session.getUsrName() + "_files");
     std::string portraitPath = combinePath(sessionBasePath, "Portrait");
     m_shell->makeDirectory(portraitPath);
     m_shell->makeDirectory(combinePath(sessionBasePath, "Emoji"));
@@ -448,10 +446,10 @@ int Exporter::exportSession(const Friend& user, const SessionParser& sessionPars
 	int count = sessionParser.parse(userBase, outputBase, session, contents);
 	if (count > 0)
 	{
-        std::string fileName = combinePath(outputBase, session.UsrName + ".html");
+        std::string fileName = combinePath(outputBase, session.getUsrName() + ".html");
 
         std::string html = getTemplate("frame");
-        html = replace_all(html, "%%DISPLAYNAME%%", session.DisplayName);
+        html = replace_all(html, "%%DISPLAYNAME%%", session.getDisplayName());
         html = replace_all(html, "%%BODY%%", contents);
         
         std::ofstream htmlFile;
@@ -477,16 +475,16 @@ bool Exporter::fillUser(Friend& user)
     
     MMKVParser parser(realPath);
     
-    user.Portrait = parser.findValue("headimgurl");
-    user.PortraitHD = parser.findValue("headhdimgurl");
+    user.setPortrait(parser.findValue("headimgurl"));
+    user.setPortraitHD(parser.findValue("headhdimgurl"));
     
-    if (isValidFileName(user.DisplayName()))
+    if (isValidFileName(user.getDisplayName()))
     {
-        user.outputFileName = user.DisplayName();
+        user.setOutputFileName(user.getDisplayName());
     }
     else if (isValidFileName(user.getUsrName()))
     {
-        user.outputFileName = user.getUsrName();
+        user.setOutputFileName(user.getUsrName());
     }
     
     return true;
@@ -494,12 +492,12 @@ bool Exporter::fillUser(Friend& user)
 
 bool Exporter::fillSession(Session& session, const Friends& friends) const
 {
-	if (session.DisplayName.empty())
+	if (session.isDisplayNameEmpty())
 	{
-		const Friend* f = friends.getFriend(session.Hash);
+		const Friend* f = friends.getFriend(session.getHash());
 		if (NULL != f)
 		{
-			session.DisplayName = f->DisplayName();
+			session.setDisplayName(f->getDisplayName());
 		}
 	}
 
