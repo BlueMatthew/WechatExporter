@@ -9,8 +9,6 @@
 #import "ViewController.h"
 #include "ITunesParser.h"
 
-#import "BackupItem.h"
-
 #include "LoggerImpl.h"
 #include "ShellImpl.h"
 #include "ExportNotifierImpl.h"
@@ -147,7 +145,20 @@ void errorLogCallback(void *pArg, int iErrCode, const char *zMsg)
         std::vector<BackupManifest> manifests = parser.parse();
         [self updateBackups:manifests];
     }
-}
+    
+    self.cmbboxBackup.autoresizingMask = NSViewMinYMargin | NSViewWidthSizable;
+    self.btnBackup.autoresizingMask = NSViewMinXMargin | NSViewMinYMargin;
+    
+    self.txtboxOutput.autoresizingMask = NSViewMinYMargin | NSViewWidthSizable;
+    self.btnOutput.autoresizingMask = NSViewMinXMargin | NSViewMinYMargin;
+    
+    self.sclViewLogs.autoresizingMask = NSViewWidthSizable | NSViewHeightSizable;
+    self.progressBar.autoresizingMask = NSViewMaxYMargin;
+    self.btnCancel.autoresizingMask = NSViewMinXMargin | NSViewMaxYMargin;
+    self.btnExport.autoresizingMask = NSViewMinXMargin | NSViewMaxYMargin;
+};
+
+
 
 - (void)updateBackups:(const std::vector<BackupManifest>&) manifests
 {
@@ -216,8 +227,19 @@ void errorLogCallback(void *pArg, int iErrCode, const char *zMsg)
             if ([backupUrl.absoluteString hasSuffix:@"/Backup"] || [backupUrl.absoluteString hasSuffix:@"/Backup/"])
             {
                 ManifestParser parser([backupUrl.path UTF8String], "Info.plist", self->m_shell);
-                std::vector<BackupManifest> manifests = parser.parse();
-                [self updateBackups:manifests];
+                std::vector<BackupManifest> manifests;
+                if (parser.parse(manifests))
+                {
+                    [self updateBackups:manifests];
+                }
+                else
+                {
+                    [self msgBox:@"解析iTunes Backup文件失败。"];
+                }
+            }
+            else
+            {
+                [self msgBox:@"请选择iTunes Backup目录。"];
             }
         }
     })];

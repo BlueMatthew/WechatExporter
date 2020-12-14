@@ -314,6 +314,23 @@ std::vector<BackupManifest> ManifestParser::parse() const
     return manifests;
 }
 
+bool ManifestParser::parse(std::vector<BackupManifest>& manifests) const
+{
+    bool res = parseDirectory(m_manifestPath, manifests);
+    if (res)
+    {
+        return res;
+    }
+    
+    std::string path = normalizePath(m_manifestPath);
+    if (endsWith(path, normalizePath("/MobileSync")) || endsWith(path, normalizePath("/MobileSync/")))
+    {
+        path = combinePath(path, "Backup");
+        res = parseDirectory(path, manifests);
+    }
+    return res;
+}
+
 std::vector<BackupManifest> ManifestParser::parseDirectory(const std::string& path) const
 {
     std::vector<BackupManifest> manifests;
@@ -339,6 +356,33 @@ std::vector<BackupManifest> ManifestParser::parseDirectory(const std::string& pa
 
     return manifests;
 }
+
+bool ManifestParser::parseDirectory(const std::string& path, std::vector<BackupManifest>& manifests) const
+{
+    std::vector<std::string> subDirectories;
+    if (!m_shell->listSubDirectories(path, subDirectories))
+    {
+        return false;
+    }
+    
+    bool res = false;
+    for (std::vector<std::string>::const_iterator it = subDirectories.cbegin(); it != subDirectories.cend(); ++it)
+    {
+        if (it->size() != 40)
+        {
+            continue;
+        }
+        BackupManifest manifest;
+        if (parse(path, *it, manifest) && manifest.isValid())
+        {
+            res = true;
+            manifests.push_back(manifest);
+        }
+    }
+
+    return res;
+}
+
 
 BackupManifest ManifestParser::parse(const std::string& backupPath, const std::string& backupId) const
 {
@@ -384,6 +428,52 @@ BackupManifest ManifestParser::parse(const std::string& backupPath, const std::s
     BackupManifest manifest(path, plistDict[ValueDeviceName], plistDict[ValueDisplayName], plistDict[ValueLastBackupDate]);
 
     return manifest;
+    
+    
+}
+
+bool ManifestParser::parse(const std::string& backupPath, const std::string& backupId, BackupManifest& manifest) const
+{
+    xmlSAXHandler saxHander;
+    memset(&saxHander, 0, sizeof(xmlSAXHandler));
+
+    saxHander.initialized = XML_SAX2_MAGIC;
+    saxHander.startElementNs = PlistDictionary::startElementNs;
+    saxHander.startElement = PlistDictionary::startElement;
+    saxHander.endElementNs = PlistDictionary::endElementNs;
+    saxHander.characters = PlistDictionary::characters;
+
+    std::string path = combinePath(backupPath, backupId);
+    std::string fileName = combinePath(path, m_xml);
+    
+    const std::string NodePlist = "plist";
+    const std::string NodeDict = "dict";
+    
+    const std::string NodeValueString = "string";
+    const std::string NodeValueDate = "date";
+    const std::string ValueLastBackupDate = "Last Backup Date";
+    const std::string ValueDisplayName = "Display Name";
+    const std::string ValueDeviceName = "Device Name";
+    
+    std::vector<std::string> tags;
+    std::vector<std::string> keys;
+    
+    tags.push_back(NodePlist);
+    tags.push_back(NodeDict);
+    
+    keys.push_back(ValueLastBackupDate);
+    keys.push_back(ValueDisplayName);
+    keys.push_back(ValueDeviceName);
+    
+    PlistDictionary plistDict(tags, keys);
+    int res = xmlSAXUserParseFile(&saxHander, &plistDict, fileName.c_str());
+    xmlCleanupParser();
+    if (res == 0)
+    {
+        manifest = {path, plistDict[ValueDeviceName], plistDict[ValueDisplayName], plistDict[ValueLastBackupDate]};
+    }
+
+    return res == 0;
 }
 
 void PlistDictionary::startElement(void * ctx, const xmlChar * fullName, const xmlChar ** attrs)

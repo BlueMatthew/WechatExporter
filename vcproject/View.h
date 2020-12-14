@@ -9,10 +9,13 @@
 #include "LoggerImpl.h"
 #include "ShellImpl.h"
 #include "ExportNotifierImpl.h"
+#include "ColoredControls.h"
 
 class CView : public CDialogImpl<CView>, public CDialogResize<CView>
 {
 private:
+
+	CColoredStaticCtrl	m_iTunesLabel;
 	ShellImpl			m_shell;
 	LoggerImpl*			m_logger;
 	ExportNotifierImpl* m_notifier;
@@ -32,6 +35,8 @@ public:
 
 	LRESULT OnInitDialog(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 	{
+		m_iTunesLabel.SubclassWindow(GetDlgItem(IDC_ITUNES));
+
 		m_logger = NULL;
 		m_notifier = NULL;
 		m_exporter = NULL;
@@ -70,7 +75,27 @@ public:
 #endif
 			rk.Close();
 		}
-		
+
+		BOOL iTunesInstalled = FALSE;
+		TCHAR iTunesVersion[MAX_PATH] = { 0 };
+		CRegKey rkITunes;
+		if (rkITunes.Open(HKEY_LOCAL_MACHINE, TEXT("SOFTWARE\\Apple Computer, Inc.\\iTunes"), KEY_READ) == ERROR_SUCCESS)
+		{
+			ULONG chars = MAX_PATH;
+			if (rkITunes.QueryStringValue(TEXT("Version"), iTunesVersion, &chars) == ERROR_SUCCESS)
+			{
+				iTunesInstalled = TRUE;
+			}
+			rkITunes.Close();
+		}
+
+		CString iTunesStatus;
+		iTunesInstalled ? iTunesStatus.Format(IDS_ITUNES_VERSION, iTunesVersion) : iTunesStatus.LoadString(IDS_ITUNES_NOT_INSTALLED);
+		m_iTunesLabel.SetWindowText(iTunesStatus);
+		// iTunesInstalled ? m_iTunesLabel.SetNormalColors(RGB(0, 0xFF, 0), RGB(0xFF, 0xFF, 0xFF)) : m_iTunesLabel.SetNormalColors(RGB(0xFF, 0, 0), CLR_INVALID);
+		iTunesInstalled ? m_iTunesLabel.SetNormalColors(RGB(0, 0xFF, 0), CLR_INVALID) : m_iTunesLabel.SetNormalColors(RGB(0xFF, 0, 0), CLR_INVALID);
+		// m_iTunesLabel.
+
 		HRESULT result = S_OK;
 		if (!outputDirFound)
 		{
@@ -154,9 +179,11 @@ public:
 		NOTIFY_HANDLER(IDC_SESSIONS, LVN_ITEMCHANGED, OnListItemChanged)
 		NOTIFY_CODE_HANDLER(HDN_ITEMSTATEICONCLICK, OnHeaderItemStateIconClick)
 		NOTIFY_HANDLER(IDC_SESSIONS, NM_CLICK, OnListClick)
+		REFLECT_NOTIFICATIONS()
 	END_MSG_MAP()
 
 	BEGIN_DLGRESIZE_MAP(CView)
+		DLGRESIZE_CONTROL(IDC_ITUNES, DLSZ_MOVE_X)
 		DLGRESIZE_CONTROL(IDC_CHOOSE_BKP, DLSZ_MOVE_X)
 		DLGRESIZE_CONTROL(IDC_BACKUP, DLSZ_SIZE_X)
 		DLGRESIZE_CONTROL(IDC_CHOOSE_OUTPUT, DLSZ_MOVE_X)
@@ -448,7 +475,7 @@ public:
 			{
 				if (listViewCtrl.GetCheckState(nItem) && nItem < user.second.size())
 				{
-					it->second.insert(user.second[nItem].UsrName);
+					it->second.insert(user.second[nItem].getUsrName());
 				}
 			}
 		}
@@ -610,7 +637,7 @@ public:
 		CComboBox cbmBox = GetDlgItem(IDC_USERS);
 		for (std::vector<std::pair<Friend, std::vector<Session>>>::const_iterator it = m_usersAndSessions.cbegin(); it != m_usersAndSessions.cend(); ++it)
 		{
-			std::string displayName = it->first.DisplayName();
+			std::string displayName = it->first.getDisplayName();
 			CW2T pszDisplayName(CA2W(displayName.c_str(), CP_UTF8));
 			cbmBox.AddString(pszDisplayName);
 		}
@@ -634,15 +661,15 @@ public:
 				continue;
 			}
 
-			std::string userDisplayName = it->first.DisplayName();
+			std::string userDisplayName = it->first.getDisplayName();
 			CW2T pszUserDisplayName(CA2W(userDisplayName.c_str(), CP_UTF8));
 
 			for (std::vector<Session>::const_iterator it2 = it->second.cbegin(); it2 != it->second.cend(); ++it2)
 			{
-				std::string displayName = it2->DisplayName;
+				std::string displayName = it2->getDisplayName();
 				if (displayName.empty())
 				{
-					displayName = it2->UsrName;
+					displayName = it2->getUsrName();
 				}
 
 				CW2T pszDisplayName(CA2W(displayName.c_str(), CP_UTF8));
@@ -656,7 +683,7 @@ public:
 				lvItem.lParam = reinterpret_cast<LPARAM>(&(*it2));
 				int nItem = listViewCtrl.InsertItem(&lvItem);
 
-				_itot(it2->recordCount, recordCount, 10);
+				_itot(it2->getRecordCount(), recordCount, 10);
 				listViewCtrl.AddItem(nItem, 1, pszDisplayName);
 				listViewCtrl.AddItem(nItem, 2, recordCount);
 				listViewCtrl.AddItem(nItem, 3, pszUserDisplayName);

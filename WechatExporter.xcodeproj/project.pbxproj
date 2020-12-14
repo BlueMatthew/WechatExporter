@@ -8,7 +8,6 @@
 
 /* Begin PBXBuildFile section */
 		341A5B2F253828F300914BE3 /* res in Resources */ = {isa = PBXBuildFile; fileRef = 341A5B2E253828F300914BE3 /* res */; };
-		342EDAF825236A63006A295A /* BackupItem.m in Sources */ = {isa = PBXBuildFile; fileRef = 342EDAF725236A63006A295A /* BackupItem.m */; };
 		342EDAFC25241D91006A295A /* WechatParser.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 342EDAFA25241D91006A295A /* WechatParser.cpp */; };
 		342EDB00252450EB006A295A /* libcurl.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 342EDAFF252450EB006A295A /* libcurl.tbd */; };
 		342EDB0325245206006A295A /* Downloader.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 342EDB0125245206006A295A /* Downloader.cpp */; };
@@ -34,8 +33,6 @@
 /* Begin PBXFileReference section */
 		34140A12254988C4003CE75A /* ExportNotifierImpl.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ExportNotifierImpl.h; sourceTree = "<group>"; };
 		341A5B2E253828F300914BE3 /* res */ = {isa = PBXFileReference; lastKnownFileType = folder; path = res; sourceTree = "<group>"; };
-		342EDAF725236A63006A295A /* BackupItem.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = BackupItem.m; sourceTree = "<group>"; };
-		342EDAF925236A7C006A295A /* BackupItem.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = BackupItem.h; sourceTree = "<group>"; };
 		342EDAFA25241D91006A295A /* WechatParser.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = WechatParser.cpp; sourceTree = "<group>"; };
 		342EDAFB25241D91006A295A /* WechatParser.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = WechatParser.h; sourceTree = "<group>"; };
 		342EDAFD25241E64006A295A /* WechatObjects.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = WechatObjects.h; sourceTree = "<group>"; };
@@ -124,8 +121,6 @@
 				343F6115252322D500FFE085 /* AppDelegate.h */,
 				343F6116252322D500FFE085 /* AppDelegate.m */,
 				343F611B252322D600FFE085 /* Assets.xcassets */,
-				342EDAF925236A7C006A295A /* BackupItem.h */,
-				342EDAF725236A63006A295A /* BackupItem.m */,
 				343F612A25234BBE00FFE085 /* core */,
 				34140A12254988C4003CE75A /* ExportNotifierImpl.h */,
 				343F6120252322D600FFE085 /* Info.plist */,
@@ -273,7 +268,6 @@
 				342EDB0925247852006A295A /* Utils.cpp in Sources */,
 				349DAD32255E6A0700BFE204 /* Utils_thread.cpp in Sources */,
 				343F6117252322D500FFE085 /* AppDelegate.m in Sources */,
-				342EDAF825236A63006A295A /* BackupItem.m in Sources */,
 				349DAD2C255D3BB800BFE204 /* XmlParser.cpp in Sources */,
 				342EDB062524700A006A295A /* Exporter.cpp in Sources */,
 				34ED32082552A98600C42698 /* Utils_silk.cpp in Sources */,

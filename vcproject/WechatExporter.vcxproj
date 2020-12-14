@@ -256,6 +256,7 @@ xcopy "$(ProjectDir)..\WechatExporter\res"  "$(OutDir)res"  /Y /S /E</Command>
     <ClInclude Include="..\WechatExporter\core\WechatParser.h" />
     <ClInclude Include="..\WechatExporter\core\XmlParser.h" />
     <ClInclude Include="AboutDlg.h" />
+    <ClInclude Include="ColoredControls.h" />
     <ClInclude Include="Core.h" />
     <ClInclude Include="ExportNotifierImpl.h" />
     <ClInclude Include="LoggerImpl.h" />

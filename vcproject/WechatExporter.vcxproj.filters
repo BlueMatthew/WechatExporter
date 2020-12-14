@@ -134,6 +134,9 @@
     <ClInclude Include="..\WechatExporter\core\XmlParser.h">
       <Filter>core</Filter>
     </ClInclude>
+    <ClInclude Include="ColoredControls.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="WechatExporter.rc">
