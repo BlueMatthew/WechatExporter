@@ -43,11 +43,16 @@ protected:
     std::string m_deviceName;
     std::string m_displayName;
     std::string m_backupTime;
+	bool m_encrypted;
     
 public:
-    BackupManifest()
+    BackupManifest() : m_encrypted(false)
     {
     }
+
+	BackupManifest(const std::string& path, const std::string& deviceName, const std::string& displayName, const std::string& backupTime) : m_path(path), m_deviceName(deviceName), m_displayName(displayName), m_encrypted(false)
+	{
+	}
     
     bool operator==(const BackupManifest& rhs) const
     {
@@ -59,13 +64,35 @@ public:
         return m_path == rhs.m_path;
     }
 
-    BackupManifest(std::string path, std::string deviceName, std::string displayName, std::string backupTime) : m_path(path), m_deviceName(deviceName), m_displayName(displayName)
-    {
-		if (!backupTime.empty())
-		{
-			m_backupTime = utcToLocal(backupTime);
-		}
-    }
+	void setPath(const std::string& path)
+	{
+		m_path = path;
+	}
+
+	void setDeviceName(const std::string& deviceName)
+	{
+		m_deviceName = deviceName;
+	}
+
+	void setDisplayName(const std::string& displayName)
+	{
+		m_displayName = displayName;
+	}
+
+	void setBackupTime(const std::string& backupTime)
+	{
+		m_backupTime = backupTime;
+	}
+
+	void setEncrypted(bool encrypted)
+	{
+		m_encrypted = encrypted;
+	}
+    
+	bool isEncrypted() const
+	{
+		return m_encrypted;
+	}
 
     bool isValid() const
     {
@@ -74,7 +101,7 @@ public:
     
     std::string toString() const
     {
-        return m_displayName + " " + m_backupTime + " (" + m_path + ")";
+        return m_displayName + " (" + m_backupTime + ") [" + m_path + "]";
     }
     
     std::string getPath() const
@@ -134,19 +161,14 @@ class ManifestParser
 {
 protected:
     std::string m_manifestPath;
-    std::string m_xml;
 	const Shell* m_shell;
-	
-    
+
 public:
-    ManifestParser(const std::string& m_manifestPath, const std::string& m_xml, const Shell* shell);
-    std::vector<BackupManifest> parse() const;
+    ManifestParser(const std::string& m_manifestPath, const Shell* shell);
     bool parse(std::vector<BackupManifest>& manifets) const;
 
 protected:
-    std::vector<BackupManifest> parseDirectory(const std::string& path) const;
     bool parseDirectory(const std::string& path, std::vector<BackupManifest>& manifests) const;
-    BackupManifest parse(const std::string& backupPath, const std::string& backupId) const;
     bool parse(const std::string& backupPath, const std::string& backupId, BackupManifest& manifest) const;
 };
 

@@ -16,6 +16,8 @@
 #define IDS_SESSION_USER                137
 #define IDS_ITUNES_VERSION              138
 #define IDS_ITUNES_NOT_INSTALLED        139
+#define IDS_ENC_BKP_NOT_SUPPORTED		140
+#define IDS_FAILED_TO_LOAD_BKP			141
 #define IDC_BACKUP                      1000
 #define IDC_CHOOSE_BKP                  1001
 #define IDC_OUTPUT                      1002
