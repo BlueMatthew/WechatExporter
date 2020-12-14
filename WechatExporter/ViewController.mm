@@ -141,9 +141,12 @@ void errorLogCallback(void *pArg, int iErrCode, const char *zMsg)
     {
         NSString *backupDir = [NSString pathWithComponents:components];
 
-        ManifestParser parser([backupDir UTF8String], "Info.plist", m_shell);
-        std::vector<BackupManifest> manifests = parser.parse();
-        [self updateBackups:manifests];
+        ManifestParser parser([backupDir UTF8String], m_shell);
+        std::vector<BackupManifest> manifests;
+        if (parser.parse(manifests))
+        {
+            [self updateBackups:manifests];
+        }
     }
     
     self.cmbboxBackup.autoresizingMask = NSViewMinYMargin | NSViewWidthSizable;
@@ -157,8 +160,6 @@ void errorLogCallback(void *pArg, int iErrCode, const char *zMsg)
     self.btnCancel.autoresizingMask = NSViewMinXMargin | NSViewMaxYMargin;
     self.btnExport.autoresizingMask = NSViewMinXMargin | NSViewMaxYMargin;
 };
-
-
 
 - (void)updateBackups:(const std::vector<BackupManifest>&) manifests
 {
@@ -226,7 +227,7 @@ void errorLogCallback(void *pArg, int iErrCode, const char *zMsg)
             
             if ([backupUrl.absoluteString hasSuffix:@"/Backup"] || [backupUrl.absoluteString hasSuffix:@"/Backup/"])
             {
-                ManifestParser parser([backupUrl.path UTF8String], "Info.plist", self->m_shell);
+                ManifestParser parser([backupUrl.path UTF8String], self->m_shell);
                 std::vector<BackupManifest> manifests;
                 if (parser.parse(manifests))
                 {
@@ -288,7 +289,15 @@ void errorLogCallback(void *pArg, int iErrCode, const char *zMsg)
         [self msgBox:@"请选择iTunes备份目录。"];
         return;
     }
-    std::string backup = m_manifests[self.cmbboxBackup.indexOfSelectedItem].getPath();
+    
+    const BackupManifest& manifest = m_manifests[self.cmbboxBackup.indexOfSelectedItem];
+    if (manifest.isEncrypted())
+    {
+        [self msgBox:@"不支持加密的iTunes Backup。请使用不加密形式备份iPhone/iPad设备。"];
+        return;
+    }
+    
+    std::string backup = manifest.getPath();
     NSString *backupPath = [NSString stringWithUTF8String:backup.c_str()];
     BOOL isDir = NO;
     if (![[NSFileManager defaultManager] fileExistsAtPath:backupPath isDirectory:&isDir] || !isDir)
