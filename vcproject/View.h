@@ -93,7 +93,7 @@ public:
 		iTunesInstalled ? iTunesStatus.Format(IDS_ITUNES_VERSION, iTunesVersion) : iTunesStatus.LoadString(IDS_ITUNES_NOT_INSTALLED);
 		m_iTunesLabel.SetWindowText(iTunesStatus);
 		// iTunesInstalled ? m_iTunesLabel.SetNormalColors(RGB(0, 0xFF, 0), RGB(0xFF, 0xFF, 0xFF)) : m_iTunesLabel.SetNormalColors(RGB(0xFF, 0, 0), CLR_INVALID);
-		iTunesInstalled ? m_iTunesLabel.SetNormalColors(RGB(0, 0xFF, 0), CLR_INVALID) : m_iTunesLabel.SetNormalColors(RGB(0xFF, 0, 0), CLR_INVALID);
+		iTunesInstalled ? m_iTunesLabel.SetNormalColors(RGB(0x32, 0xCD, 0x32), CLR_INVALID) : m_iTunesLabel.SetNormalColors(RGB(0xFF, 0, 0), CLR_INVALID);
 		// m_iTunesLabel.
 
 		HRESULT result = S_OK;
@@ -118,18 +118,25 @@ public:
 		{
 			CW2A backupDir(CT2W(szPath), CP_UTF8);
 
-			ManifestParser parser((LPCSTR)backupDir, "Info.plist", &m_shell);
-			std::vector<BackupManifest> manifests = parser.parse();
-			UpdateBackups(manifests);
+			ManifestParser parser((LPCSTR)backupDir, &m_shell);
+			std::vector<BackupManifest> manifests;
+			if (parser.parse(manifests))
+			{
+				UpdateBackups(manifests);
+			}
+			
 		}
 #ifndef NDEBUG
 		else if (_tcslen(szPrevBackup) != 0)
 		{
 			CW2A backupDir(CT2W(szPrevBackup), CP_UTF8);
 			
-			ManifestParser parser((LPCSTR)backupDir, "Info.plist", &m_shell);
-			std::vector<BackupManifest> manifests = parser.parse();
-			UpdateBackups(manifests);
+			ManifestParser parser((LPCSTR)backupDir, &m_shell);
+			std::vector<BackupManifest> manifests;
+			if (parser.parse(manifests))
+			{
+				UpdateBackups(manifests);
+			}
 		}
 #endif
 		
@@ -211,16 +218,23 @@ public:
 		{
 			CT2A backupDir(folder.m_szFolderPath, CP_UTF8);
 
-			ManifestParser parser((LPCSTR)backupDir, "Info.plist", &m_shell);
-			std::vector<BackupManifest> manifests = parser.parse();
-			UpdateBackups(manifests);
-#ifndef NDEBUG
-			CRegKey rk;
-			if (rk.Create(HKEY_CURRENT_USER, TEXT("Software\\WechatExporter"), REG_NONE, REG_OPTION_NON_VOLATILE, KEY_READ | KEY_WRITE) == ERROR_SUCCESS)
+			ManifestParser parser((LPCSTR)backupDir, &m_shell);
+			std::vector<BackupManifest> manifests;
+			if (parser.parse(manifests))
 			{
-				rk.SetStringValue(TEXT("BackupDir"), folder.m_szFolderPath);
-			}
+				UpdateBackups(manifests);
+#ifndef NDEBUG
+				CRegKey rk;
+				if (rk.Create(HKEY_CURRENT_USER, TEXT("Software\\WechatExporter"), REG_NONE, REG_OPTION_NON_VOLATILE, KEY_READ | KEY_WRITE) == ERROR_SUCCESS)
+				{
+					rk.SetStringValue(TEXT("BackupDir"), folder.m_szFolderPath);
+				}
 #endif
+			}
+			else
+			{
+				MsgBox(IDS_FAILED_TO_LOAD_BKP);
+			}
 		}
 
 		return 0;
@@ -240,6 +254,18 @@ public:
 			listViewCtrl.DeleteAllItems();
 			listViewCtrl.SetRedraw(TRUE);
 
+			return 0;
+		}
+
+		const BackupManifest& manifest = m_manifests[cbmBox.GetCurSel()];
+		if (manifest.isEncrypted())
+		{
+			CListViewCtrl listViewCtrl = GetDlgItem(IDC_SESSIONS);
+			listViewCtrl.SetRedraw(FALSE);
+			listViewCtrl.DeleteAllItems();
+			listViewCtrl.SetRedraw(TRUE);
+
+			MsgBox(IDS_ENC_BKP_NOT_SUPPORTED);
 			return 0;
 		}
 
@@ -323,11 +349,7 @@ public:
 
 	LRESULT OnBnClickedCancel(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/)
 	{
-		CString text;
-		CString caption;
-		caption.LoadString(IDR_MAINFRAME);
-		text.LoadString(IDS_CANCEL_PROMPT);
-		if (MessageBox(text, caption, MB_OKCANCEL) == IDCANCEL)
+		if (MsgBox(IDS_CANCEL_PROMPT, MB_OKCANCEL) == IDCANCEL)
 		{
 			return 0;
 		}
@@ -428,13 +450,18 @@ public:
 		CComboBox cbmBox = GetDlgItem(IDC_BACKUP);
 		if (cbmBox.GetCurSel() == -1)
 		{
-			CString text;
-			text.LoadString(IDS_SEL_BACKUP_DIR);
-			MessageBox(text);
+			MsgBox(IDS_SEL_BACKUP_DIR);
 			return 0;
 		}
 
-		std::string backup = m_manifests[cbmBox.GetCurSel()].getPath();
+		const BackupManifest& manifest = m_manifests[cbmBox.GetCurSel()];
+		if (manifest.isEncrypted())
+		{
+			MsgBox(IDS_ENC_BKP_NOT_SUPPORTED);
+			return 0;
+		}
+
+		std::string backup = manifest.getPath();
 
 		TCHAR buffer[MAX_PATH] = { 0 };
 		GetDlgItemText(IDC_OUTPUT, buffer, MAX_PATH);
@@ -835,6 +862,20 @@ private:
 		}
 
 		return TRUE;
+	}
+
+	int MsgBox(UINT uStdId, UINT uType = MB_OK)
+	{
+		CString text;
+		text.LoadString(uStdId);
+		return MsgBox(text, uType);
+	}
+
+	int MsgBox(const CString& text, UINT uType = MB_OK)
+	{
+		CString caption;
+		caption.LoadString(IDR_MAINFRAME);
+		return MessageBox(text, caption, uType);
 	}
 
 };
