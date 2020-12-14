@@ -141,10 +141,13 @@ protected:
 public:
     ManifestParser(const std::string& m_manifestPath, const std::string& m_xml, const Shell* shell);
     std::vector<BackupManifest> parse() const;
+    bool parse(std::vector<BackupManifest>& manifets) const;
 
 protected:
     std::vector<BackupManifest> parseDirectory(const std::string& path) const;
+    bool parseDirectory(const std::string& path, std::vector<BackupManifest>& manifests) const;
     BackupManifest parse(const std::string& backupPath, const std::string& backupId) const;
+    bool parse(const std::string& backupPath, const std::string& backupId, BackupManifest& manifest) const;
 };
 
 #endif /* ITunesParser_h */

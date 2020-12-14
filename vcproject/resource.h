@@ -14,7 +14,8 @@
 #define IDS_SESSION_COUNT               135
 #define IDS_ALL_USERS                   136
 #define IDS_SESSION_USER                137
-#define IDS_STRING138                   138
+#define IDS_ITUNES_VERSION              138
+#define IDS_ITUNES_NOT_INSTALLED        139
 #define IDC_BACKUP                      1000
 #define IDC_CHOOSE_BKP                  1001
 #define IDC_OUTPUT                      1002
@@ -30,6 +31,7 @@
 #define IDC_USERS                       1012
 #define IDC_CLOSE                       1013
 #define IDC_SESSIONS                    1014
+#define IDC_ITUNES                      1015
 #define ID_FILE_32775                   32775
 #define ID_FILE_32776                   32776
 #define ID_FILE_DESC_ORDER              32777
@@ -41,7 +43,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        204
 #define _APS_NEXT_COMMAND_VALUE         32779
-#define _APS_NEXT_CONTROL_VALUE         1015
+#define _APS_NEXT_CONTROL_VALUE         1016
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif

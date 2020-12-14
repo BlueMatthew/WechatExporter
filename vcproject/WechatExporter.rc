@@ -74,7 +74,7 @@ BEGIN
     COMBOBOX        IDC_BACKUP,7,18,360,30,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
     PUSHBUTTON      "...",IDC_CHOOSE_BKP,371,17,15,14
     EDITTEXT        IDC_OUTPUT,7,44,359,14,ES_AUTOHSCROLL | ES_READONLY
-    LTEXT           "iTunes备份目录：",IDC_STATIC_BACKUP,7,7,321,8
+    LTEXT           "iTunes备份目录：",IDC_STATIC_BACKUP,7,7,201,8
     LTEXT           "聊天记录输出目录：",IDC_STATIC,7,33,361,8
     PUSHBUTTON      "...",IDC_CHOOSE_OUTPUT,371,44,15,14
     LISTBOX         IDC_LOG,278,76,107,94,LBS_NOINTEGRALHEIGHT | LBS_EXTENDEDSEL | WS_VSCROLL | WS_HSCROLL | WS_TABSTOP
@@ -84,6 +84,7 @@ BEGIN
     PUSHBUTTON      "关闭(&X)",IDC_CLOSE,336,175,50,14
     CONTROL         "",IDC_SESSIONS,"SysListView32",LVS_REPORT | LVS_ALIGNLEFT | WS_BORDER | WS_TABSTOP,7,76,267,94
     COMBOBOX        IDC_USERS,7,61,267,30,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    RTEXT           "",IDC_ITUNES,237,7,146,8
 END
 
 
@@ -198,24 +199,13 @@ BEGIN
     IDS_SESSION_COUNT       "聊天记录数"
     IDS_ALL_USERS           "所有微信账号"
     IDS_SESSION_USER        "微信账号"
+    IDS_ITUNES_VERSION      "iTunes已安装， 版本：%s"
+    IDS_ITUNES_NOT_INSTALLED "iTunes未安装"
 END
 
 STRINGTABLE
 BEGIN
-    ID_FILE_NEW             "Create a new document\nNew"
-    ID_FILE_OPEN            "Open an existing document\nOpen"
-    ID_FILE_CLOSE           "Close the active document\nClose"
-END
-
-STRINGTABLE
-BEGIN
-    ID_APP_ABOUT            "Display program information, version number and copyright\nAbout"
     ID_APP_EXIT             "Quit the application; prompts to save documents\nExit"
-END
-
-STRINGTABLE
-BEGIN
-    ATL_IDS_SCSIZE          "Change the window size"
 END
 
 STRINGTABLE

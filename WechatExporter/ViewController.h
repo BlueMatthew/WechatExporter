@@ -10,6 +10,7 @@
 
 @interface ViewController : NSViewController
 
+@property (weak) IBOutlet NSTextField *lblITunes;
 @property (weak) IBOutlet NSButton *btnExport;
 @property (weak) IBOutlet NSButton *btnCancel;
 @property (weak) IBOutlet NSTextField *txtboxOutput;
