@@ -101,7 +101,7 @@ public:
     
     std::string toString() const
     {
-        return m_displayName + " (" + m_backupTime + ") [" + m_path + "]";
+        return m_displayName + " [" + m_backupTime + "] (" + m_path + ")";
     }
     
     std::string getPath() const
