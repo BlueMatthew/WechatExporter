@@ -16,6 +16,7 @@
 #include <utility>
 #include <thread>
 #include <mutex>
+#include "Logger.h"
 
 class Task
 {
@@ -23,6 +24,8 @@ protected:
     std::string m_url;
     std::string m_output;
     std::string m_outputTmp;
+    std::string m_error;
+    std::string m_userAgent;
     time_t m_mtime;
     bool m_localCopy;
     unsigned int m_retries;
@@ -35,6 +38,26 @@ public:
     
     Task(const std::string &url, const std::string& output, time_t mtime, bool localCopy = false) : m_url(url), m_output(output), m_mtime(mtime), m_localCopy(localCopy), m_retries(0)
     {
+    }
+    
+    void setUserAgent(const std::string& userAgent)
+    {
+        m_userAgent = userAgent;
+    }
+    
+    inline std::string getUrl() const
+    {
+        return m_url;
+    }
+    
+    inline std::string getOutput() const
+    {
+        return m_output;
+    }
+    
+    inline std::string getError() const
+    {
+        return m_error;
     }
     
     bool isLocalCopy() const
@@ -75,10 +98,15 @@ protected:
     bool m_noMoreTask;
     unsigned m_downloadTaskSize;    // +1 when task is added, -1 when download is completed
     std::vector<std::thread> m_threads;
+    std::string m_userAgent;
+    
+    Logger* m_logger;
     
 public:
-    Downloader();
+    Downloader(Logger* logger);
     ~Downloader();
+    
+    void setUserAgent(const std::string& userAgent);
     
     void addTask(const std::string &url, const std::string& output, time_t mtime);
     void setNoMoreTask();
