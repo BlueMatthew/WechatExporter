@@ -46,10 +46,12 @@ bool Task::downloadFile()
 	CURLcode res;
 	char errbuf[CURL_ERROR_SIZE] = { 0 };
 
+    std::string userAgent = m_userAgent.empty() ? "WeChat/7.0.15.33 CFNetwork/978.0.7 Darwin/18.6.0" : m_userAgent;
+    
     // User-Agent: WeChat/7.0.15.33 CFNetwork/978.0.7 Darwin/18.6.0
     CURL *curl = curl_easy_init();
     curl_easy_setopt(curl, CURLOPT_URL, m_url.c_str());
-    curl_easy_setopt(curl, CURLOPT_USERAGENT, "WeChat/7.0.15.33 CFNetwork/978.0.7 Darwin/18.6.0");
+    curl_easy_setopt(curl, CURLOPT_USERAGENT, userAgent.c_str());
     curl_easy_setopt(curl, CURLOPT_FORBID_REUSE, 1L);
     curl_easy_setopt(curl, CURLOPT_TIMEOUT, 60);
     curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, &::writeData);
@@ -72,6 +74,7 @@ bool Task::downloadFile()
     }
     else
 	{
+        m_error = errbuf;
         if (m_retries >= MAX_RETRIES)
         {
             size_t len = strlen(errbuf);
@@ -124,7 +127,7 @@ size_t Task::writeData(void *buffer, size_t size, size_t nmemb)
     return bytesToWrite;
 }
 
-Downloader::Downloader()
+Downloader::Downloader(Logger* logger) : m_logger(logger)
 {
     m_noMoreTask = false;
     m_downloadTaskSize = 0;
@@ -140,6 +143,11 @@ Downloader::Downloader()
 Downloader::~Downloader()
 {
     curl_global_cleanup();
+}
+
+void Downloader::setUserAgent(const std::string& userAgent)
+{
+    m_userAgent = userAgent;
 }
 
 void Downloader::addTask(const std::string &url, const std::string& output, time_t mtime)
@@ -162,6 +170,7 @@ void Downloader::addTask(const std::string &url, const std::string& output, time
     {
         m_urls[url] = output;
         Task task(url, formatedPath, mtime);
+        task.setUserAgent(m_userAgent);
         m_queue.push(task);
         m_downloadTaskSize++;
     }
@@ -221,21 +230,40 @@ void Downloader::run(int idx)
         if (found)
         {
             // run task
+#ifndef NDEBUG
+            if (!task.isLocalCopy())
+            {
+                std::string log = "Start downloading: " + task.getUrl() + " (" + std::to_string(task.getRetries() + 1) + ")";
+                m_logger->debug(log);
+            }
+#endif
             bool succeeded = task.run();
             if (!task.isLocalCopy())
             {
                 m_mtx.lock();
                 // unsigned int dlTaskSizeChanging = 0;
-                if (succeeded || task.getRetries() >= Task::MAX_RETRIES)
-                {
-                    m_downloadTaskSize--;
-                }
                 if (!succeeded && task.getRetries() < Task::MAX_RETRIES)
                 {
                     // Retry to download it
                     m_queue.push(task);
                 }
+                if (succeeded || task.getRetries() >= Task::MAX_RETRIES)
+                {
+                    m_downloadTaskSize--;
+                }
                 m_mtx.unlock();
+#ifndef NDEBUG
+                std::string log = "Downloading ";
+                log += succeeded ? "Succeeded" : "Failed";
+                log += ":" + task.getUrl() + " => " + task.getOutput() + " (" + std::to_string(task.getRetries() + 1) + ")";
+                m_logger->debug(log);
+#endif
+                
+                if (!succeeded && task.getRetries() >= Task::MAX_RETRIES)
+                {
+                    std::string log = "Failed Download: " + task.getUrl() + " => " + task.getOutput() + " ERR:" + task.getError();
+                    m_logger->write(log);
+                }
             }
             
             continue;
