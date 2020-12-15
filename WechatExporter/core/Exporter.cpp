@@ -326,7 +326,7 @@ bool Exporter::exportUser(Friend& user, std::string& userOutputPath)
         itUser = m_usersAndSessions.find(user.getUsrName());
     }
 
-    Downloader downloader;
+    Downloader downloader(m_logger);
 	SessionParser sessionParser(*myself, friends, *m_iTunesDb, *m_shell, m_templates, m_localeStrings, m_options, downloader, m_cancelled);
 
     downloader.addTask(user.getPortrait(), combinePath(outputBase, "Portrait", user.getLocalPortrait()), 0);
