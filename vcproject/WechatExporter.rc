@@ -191,7 +191,7 @@ END
 
 STRINGTABLE
 BEGIN
-    IDR_MAINFRAME           "WechatExporter"
+    IDR_MAINFRAME           "Wechat Exporter"
     IDS_SEL_BACKUP_DIR      "请选择iTunes备份目录。"
     IDS_SEL_OUTPUT_DIR      "请选择聊天记录输出目录。"
     IDS_CANCEL_PROMPT       "确定要取消导出吗？"
