@@ -10,16 +10,19 @@
 #include "ShellImpl.h"
 #include "ExportNotifierImpl.h"
 #include "ColoredControls.h"
+#include "LogListBox.h"
 
 class CView : public CDialogImpl<CView>, public CDialogResize<CView>
 {
 private:
 
 	CColoredStaticCtrl	m_iTunesLabel;
+	CLogListBox			m_logListBox;
+
 	ShellImpl			m_shell;
 	LoggerImpl*			m_logger;
 	ExportNotifierImpl* m_notifier;
-	Exporter* m_exporter;
+	Exporter*			m_exporter;
 
 	std::vector<BackupManifest> m_manifests;
 	std::vector<std::pair<Friend, std::vector<Session>>> m_usersAndSessions;
@@ -36,6 +39,7 @@ public:
 	LRESULT OnInitDialog(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 	{
 		m_iTunesLabel.SubclassWindow(GetDlgItem(IDC_ITUNES));
+		m_logListBox.SubclassWindow(GetDlgItem(IDC_LOGS));
 
 		m_logger = NULL;
 		m_notifier = NULL;
@@ -49,7 +53,7 @@ public:
 		InitializeSessionList();
 
 		m_notifier = new ExportNotifierImpl(m_hWnd);
-		m_logger = new LoggerImpl(GetDlgItem(IDC_LOG));
+		m_logger = new LoggerImpl(GetDlgItem(IDC_LOGS));
 
 		BOOL descOrder = FALSE;
 		BOOL savingInSession = TRUE;
@@ -180,6 +184,7 @@ public:
 		COMMAND_HANDLER(IDC_EXPORT, BN_CLICKED, OnBnClickedExport)
 		COMMAND_HANDLER(IDC_CANCEL, BN_CLICKED, OnBnClickedCancel)
 		COMMAND_HANDLER(IDC_CLOSE, BN_CLICKED, OnBnClickedClose)
+		MESSAGE_HANDLER(WM_KEYUP, OnKeyUp)
 		MESSAGE_HANDLER(WM_START, OnStart)
 		MESSAGE_HANDLER(WM_COMPLETE, OnComplete)
 		NOTIFY_HANDLER(IDC_SESSIONS, LVN_ITEMCHANGING, OnListItemChanging)
@@ -195,8 +200,10 @@ public:
 		DLGRESIZE_CONTROL(IDC_BACKUP, DLSZ_SIZE_X)
 		DLGRESIZE_CONTROL(IDC_CHOOSE_OUTPUT, DLSZ_MOVE_X)
 		DLGRESIZE_CONTROL(IDC_OUTPUT, DLSZ_SIZE_X)
+		DLGRESIZE_CONTROL(IDC_GRP_USR_CHAT, DLSZ_SIZE_Y)
 		DLGRESIZE_CONTROL(IDC_SESSIONS, DLSZ_SIZE_Y)
-		DLGRESIZE_CONTROL(IDC_LOG, DLSZ_SIZE_X | DLSZ_SIZE_Y)
+		DLGRESIZE_CONTROL(IDC_GRP_LOGS, DLSZ_SIZE_X | DLSZ_SIZE_Y)
+		DLGRESIZE_CONTROL(IDC_LOGS, DLSZ_SIZE_X | DLSZ_SIZE_Y)
 		DLGRESIZE_CONTROL(IDC_PROGRESS, DLSZ_MOVE_Y)
 		DLGRESIZE_CONTROL(IDC_CANCEL, DLSZ_MOVE_X | DLSZ_MOVE_Y)
 		DLGRESIZE_CONTROL(IDC_CLOSE, DLSZ_MOVE_X | DLSZ_MOVE_Y)
@@ -478,7 +485,7 @@ public:
 		bool descOrder = GetDescOrder();
 		bool saveFilesInSessionFolder = GetSavingInSession();
 
-		CListBox lstboxLogs = GetDlgItem(IDC_LOG);
+		CListBox lstboxLogs = GetDlgItem(IDC_LOGS);
 		lstboxLogs.ResetContent();
 
 		CW2A resDir(CT2W(buffer), CP_UTF8);
@@ -520,6 +527,15 @@ public:
 			EnableInteractiveCtrls(FALSE);
 		}
 
+		return 0;
+	}
+
+	
+	LRESULT OnKeyUp(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+	{
+		EnableInteractiveCtrls(FALSE);
+		CProgressBarCtrl progressCtrl = GetDlgItem(IDC_PROGRESS);
+		progressCtrl.SetMarquee(TRUE, 0);
 		return 0;
 	}
 

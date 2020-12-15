@@ -260,6 +260,7 @@ xcopy "$(ProjectDir)..\WechatExporter\res"  "$(OutDir)res"  /Y /S /E</Command>
     <ClInclude Include="Core.h" />
     <ClInclude Include="ExportNotifierImpl.h" />
     <ClInclude Include="LoggerImpl.h" />
+    <ClInclude Include="LogListBox.h" />
     <ClInclude Include="MainFrm.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="ShellImpl.h" />
