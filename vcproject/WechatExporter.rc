@@ -205,6 +205,7 @@ BEGIN
     IDS_ITUNES_NOT_INSTALLED "iTunes 未安装"
     IDS_ENC_BKP_NOT_SUPPORTED "不支持加密的iTunes Backup。请使用不加密形式备份iPhone/iPad设备。"
     IDS_FAILED_TO_LOAD_BKP  "解析iTunes Backup失败。"
+    IDS_INVALID_OUTPUT_DIR  "无效的输出目录，请重新选择。"
 END
 
 STRINGTABLE

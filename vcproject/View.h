@@ -472,6 +472,11 @@ public:
 
 		TCHAR buffer[MAX_PATH] = { 0 };
 		GetDlgItemText(IDC_OUTPUT, buffer, MAX_PATH);
+		if (!::PathFileExists(buffer))
+		{
+			MsgBox(IDS_INVALID_OUTPUT_DIR);
+			return 0;
+		}
 		CW2A output(CT2W(buffer), CP_UTF8);
 
 		DWORD dwRet = GetCurrentDirectory(MAX_PATH, buffer);
@@ -529,7 +534,6 @@ public:
 
 		return 0;
 	}
-
 	
 	LRESULT OnKeyUp(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 	{
