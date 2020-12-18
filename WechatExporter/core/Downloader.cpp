@@ -44,7 +44,6 @@ bool Task::downloadFile()
     remove(utf8ToLocalAnsi(m_outputTmp).c_str());
 
 	CURLcode res;
-	char errbuf[CURL_ERROR_SIZE] = { 0 };
 
     std::string userAgent = m_userAgent.empty() ? "WeChat/7.0.15.33 CFNetwork/978.0.7 Darwin/18.6.0" : m_userAgent;
     
@@ -74,16 +73,10 @@ bool Task::downloadFile()
     }
     else
 	{
-        m_error = errbuf;
+        m_error = curl_easy_strerror(res);
         if (m_retries >= MAX_RETRIES)
         {
-            size_t len = strlen(errbuf);
-            fprintf(stderr, "\nlibcurl: (%d) ", res);
-            if (len)
-                fprintf(stderr, "%s: %s%s", errbuf, m_url.c_str(),
-                ((errbuf[len - 1] != '\n') ? "\n" : ""));
-            else
-                fprintf(stderr, "%s: %s\n", curl_easy_strerror(res), m_url.c_str());
+            fprintf(stderr, "%s: %s\n", m_error.c_str(), m_url.c_str());
         }
 	}
     
@@ -234,7 +227,7 @@ void Downloader::run(int idx)
             if (!task.isLocalCopy())
             {
                 std::string log = "Start downloading: " + task.getUrl() + " (" + std::to_string(task.getRetries() + 1) + ")";
-                m_logger->debug(log);
+                // m_logger->debug(log);
             }
 #endif
             bool succeeded = task.run();
@@ -256,7 +249,7 @@ void Downloader::run(int idx)
                 std::string log = "Downloading ";
                 log += succeeded ? "Succeeded" : "Failed";
                 log += ":" + task.getUrl() + " => " + task.getOutput() + " (" + std::to_string(task.getRetries() + 1) + ")";
-                m_logger->debug(log);
+                // m_logger->debug(log);
 #endif
                 
                 if (!succeeded && task.getRetries() >= Task::MAX_RETRIES)

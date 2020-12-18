@@ -102,16 +102,31 @@ public:
     }
 };
 
+class WechatInfoParser
+{
+private:
+    ITunesDb *m_iTunesDb;
+    
+public:
+    
+    WechatInfoParser(ITunesDb *iTunesDb);
+    
+    bool parse(WechatInfo& wechatInfo);
+    
+protected:
+    bool parsePreferences(WechatInfo& wechatInfo);
+};
+
 class SessionCellDataFilter : public FilterBase<SessionCellDataFilter>
 {
 public:
-    SessionCellDataFilter(const std::string& cellDataBasePath) : FilterBase()
+    SessionCellDataFilter(const std::string& cellDataBasePath, const std::string& cellDataVersion) : FilterBase()
     {
         std::string vpath = cellDataBasePath;
         std::replace(vpath.begin(), vpath.end(), '\\', '/');
         
         m_path = vpath;
-        m_pattern = "celldataV7";
+        m_pattern = "celldata" + cellDataVersion;    // celldataV7
     }
 };
 
@@ -187,10 +202,11 @@ class SessionsParser
 private:
     ITunesDb *m_iTunesDb;
     Shell*      m_shell;
+    std::string m_cellDataVersion;
     bool        m_detailedInfo;
 
 public:
-    SessionsParser(ITunesDb *iTunesDb, Shell* shell, bool detailedInfo = true);
+    SessionsParser(ITunesDb *iTunesDb, Shell* shell, const std::string& cellDataVersion, bool detailedInfo = true);
     
     bool parse(const std::string& userRoot, std::vector<Session>& sessions, const Friends& friends);
 

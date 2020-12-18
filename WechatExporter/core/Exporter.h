@@ -29,12 +29,13 @@ class SessionParser;
 class Exporter
 {
 protected:
-	std::atomic_bool m_running;
+    std::atomic_bool m_running;
 	std::thread m_thread;
 
 	// semaphore& m_signal;
     std::string m_workDir;
     
+    WechatInfo m_wechatInfo;
     std::string m_backup;
     std::string m_output;
     Logger* m_logger;
