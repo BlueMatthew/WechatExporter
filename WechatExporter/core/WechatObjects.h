@@ -15,6 +15,53 @@
 #ifndef WechatObjects_h
 #define WechatObjects_h
 
+class WechatInfo
+{
+private:
+    std::string m_version;
+    std::string m_shortVersion;
+    std::string m_cellDataVersion;
+    
+public:
+    void setVersion(std::string version)
+    {
+        m_version = version;
+        m_shortVersion = version;
+        
+        std::vector<std::string> parts = split(version, ".");
+        if (parts.size() > 3)
+        {
+            parts.erase(parts.begin() + 3, parts.end());
+            m_shortVersion = join(parts, ".");
+        }
+    }
+    
+    std::string getVersion() const
+    {
+        return m_version;
+    }
+    
+    std::string getShortVersion() const
+    {
+        return m_shortVersion;
+    }
+    void setCellDataVersion(std::string cellDataVersion)
+    {
+        m_cellDataVersion = cellDataVersion;
+    }
+    
+    std::string getCellDataVersion() const
+    {
+        return m_cellDataVersion;
+    }
+    
+    std::string buildUserAgent() const
+    {
+        if (m_version.empty()) return "WeChat/7.0.15.33 CFNetwork/978.0.7 Darwin/18.6.0"; // default
+        return "WeChat/" + m_version + " CFNetwork/978.0.7 Darwin/18.6.0";
+    }
+};
+
 class Friend
 {
 public:

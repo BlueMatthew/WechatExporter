@@ -131,8 +131,8 @@
 		"value": "等待%d张图片下载。"
 	},
 	{
-		"key": "",
-		"value": ""
+		"key": "Wechat Version: %s",
+		"value": "微信版本：%s"
 	},
 	{
 		"key": "",
