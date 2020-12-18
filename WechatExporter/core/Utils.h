@@ -22,12 +22,15 @@ typedef int mode_t;
 #ifndef Utils_h
 #define Utils_h
 
-std::string replace_all(std::string input, std::string search, std::string format);
+std::string replaceAll(std::string input, std::string search, std::string format);
 
 bool endsWith(const std::string& str, const std::string& suffix);
 bool endsWith(const std::string& str, std::string::value_type ch);
 bool startsWith(const std::string& str, const std::string& prefix);
 bool startsWith(const std::string& str, const std::string::value_type ch);
+
+std::vector<std::string> split(const std::string& str, const std::string& delim);
+std::string join(const std::vector<std::string>& elements, const char *const delimiter);
 
 template <typename ...Args>
 std::string formatString(const std::string& format, Args && ...args)

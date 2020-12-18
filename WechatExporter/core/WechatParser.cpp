@@ -349,8 +349,81 @@ bool FriendsParser::parseChatroom(const void *data, int length, Friend& f)
     return true;
 }
 
-SessionsParser::SessionsParser(ITunesDb *iTunesDb, Shell* shell, bool detailedInfo/* = true*/) : m_iTunesDb(iTunesDb), m_shell(shell), m_detailedInfo(detailedInfo)
+WechatInfoParser::WechatInfoParser(ITunesDb *iTunesDb) : m_iTunesDb(iTunesDb)
 {
+}
+
+bool WechatInfoParser::parse(WechatInfo& wechatInfo)
+{
+    return parsePreferences(wechatInfo);
+}
+
+bool WechatInfoParser::parsePreferences(WechatInfo& wechatInfo)
+{
+    std::string preferencesPath = m_iTunesDb->findRealPath("Library/Preferences/com.tencent.xin.plist");
+    if (preferencesPath.empty())
+    {
+        return false;
+    }
+    
+    std::vector<unsigned char> data;
+    if (!readFile(preferencesPath, data))
+    {
+        return false;
+    }
+    
+    plist_t node = NULL;
+    plist_from_memory(reinterpret_cast<const char *>(&data[0]), static_cast<uint32_t>(data.size()), &node);
+    if (NULL == node)
+    {
+        return false;
+    }
+    
+    plist_t startupVersions = plist_access_path(node, 1, "prevStartupVersions");
+    if (NULL != startupVersions && PLIST_IS_ARRAY(startupVersions))
+    {
+        uint32_t startupVersionsSize = plist_array_get_size(startupVersions);
+        if (startupVersionsSize > 0)
+        {
+            plist_t currentVersion = plist_array_get_item(startupVersions, startupVersionsSize - 1);
+            if (NULL != currentVersion)
+            {
+                uint64_t versionLength = 0;
+                const char* pVersion = plist_get_string_ptr(currentVersion, &versionLength);
+                if (NULL != pVersion && versionLength > 0)
+                {
+                    std::string version;
+                    version.assign(pVersion, versionLength);
+                    wechatInfo.setVersion(version);
+                }
+            }
+        }
+    }
+    
+    plist_t cellDataVersion = plist_access_path(node, 1, "FrameCellDataVersion");
+    if (NULL != cellDataVersion)
+    {
+        uint64_t versionLength = 0;
+        const char* pVersion = plist_get_string_ptr(cellDataVersion, &versionLength);
+        if (NULL != pVersion && versionLength > 0)
+        {
+            std::string cellDataVersion;
+            cellDataVersion.assign(pVersion, versionLength);
+            wechatInfo.setCellDataVersion(cellDataVersion);
+        }
+    }
+    
+    plist_free(node);
+    
+    return true;
+}
+
+SessionsParser::SessionsParser(ITunesDb *iTunesDb, Shell* shell, const std::string& cellDataVersion, bool detailedInfo/* = true*/) : m_iTunesDb(iTunesDb), m_shell(shell), m_cellDataVersion(cellDataVersion), m_detailedInfo(detailedInfo)
+{
+    if (cellDataVersion.empty())
+    {
+        m_cellDataVersion = "V";
+    }
 }
 
 bool SessionsParser::parse(const std::string& userRoot, std::vector<Session>& sessions, const Friends& friends)
@@ -558,7 +631,7 @@ bool SessionsParser::parseCellData(const std::string& userRoot, Session& session
     
     if (session.isDisplayNameEmpty())
     {
-        SessionCellDataFilter filter(cellDataPath);
+        SessionCellDataFilter filter(cellDataPath, m_cellDataVersion);
         ITunesFileVector items = m_iTunesDb->filter(filter);
 
         unsigned int lastModifiedTime = 0;
@@ -660,7 +733,7 @@ int SessionParser::parse(const std::string& userBase, const std::string& outputB
             std::string ts = getTemplate(templateKey);
             for (std::map<std::string, std::string>::const_iterator it = values.cbegin(); it != values.cend(); ++it)
             {
-                ts = replace_all(ts, it->first, it->second);
+                ts = replaceAll(ts, it->first, it->second);
             }
             
 			contents.append(ts);

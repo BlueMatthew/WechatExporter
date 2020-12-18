@@ -147,6 +147,12 @@ bool Exporter::loadUsersAndSessions(std::vector<std::pair<Friend, std::vector<Se
 
 	m_logger->debug("ITunes Database loaded.");
     
+    WechatInfoParser wechatInfoParser(m_iTunesDb);
+    if (wechatInfoParser.parse(m_wechatInfo))
+    {
+        m_logger->write(formatString(getLocaleString("Wechat Version: %s"), m_wechatInfo.getShortVersion().c_str()));
+    }
+    
     std::vector<Friend> users;
     LoginInfo2Parser loginInfo2Parser(m_iTunesDb);
     if (!loginInfo2Parser.parse(users))
@@ -189,6 +195,12 @@ bool Exporter::runImpl()
 
 	loadStrings();
 	loadTemplates();
+    
+    WechatInfoParser wechatInfoParser(m_iTunesDb);
+    if (wechatInfoParser.parse(m_wechatInfo))
+    {
+        m_logger->write(formatString(getLocaleString("Wechat Version: %s"), m_wechatInfo.getShortVersion().c_str()));
+    }
 
 	m_logger->write(getLocaleString("Finding Wechat accounts..."));
 
@@ -205,7 +217,6 @@ bool Exporter::runImpl()
 
     std::string htmlBody;
 
-    std::map<std::string, std::string> fileCopies;
 	for (std::vector<Friend>::iterator it = users.begin(); it != users.end(); ++it)
 	{
         if (m_cancelled)
@@ -225,9 +236,9 @@ bool Exporter::runImpl()
 		exportUser(*it, userOutputPath);
         
         std::string userItem = getTemplate("listitem");
-        userItem = replace_all(userItem, "%%ITEMPICPATH%%", userOutputPath + "/Portrait/" + it->getLocalPortrait());
-        userItem = replace_all(userItem, "%%ITEMLINK%%", encodeUrl(it->getOutputFileName()) + "/index.html");
-        userItem = replace_all(userItem, "%%ITEMTEXT%%", safeHTML(it->getDisplayName()));
+        userItem = replaceAll(userItem, "%%ITEMPICPATH%%", userOutputPath + "/Portrait/" + it->getLocalPortrait());
+        userItem = replaceAll(userItem, "%%ITEMLINK%%", encodeUrl(it->getOutputFileName()) + "/index.html");
+        userItem = replaceAll(userItem, "%%ITEMTEXT%%", safeHTML(it->getDisplayName()));
         
         htmlBody += userItem;
 	}
@@ -235,8 +246,8 @@ bool Exporter::runImpl()
     std::string fileName = combinePath(m_output, "index.html");
 
     std::string html = getTemplate("listframe");
-    html = replace_all(html, "%%USERNAME%%", "");
-    html = replace_all(html, "%%TBODY%%", htmlBody);
+    html = replaceAll(html, "%%USERNAME%%", "");
+    html = replaceAll(html, "%%TBODY%%", htmlBody);
     
     std::ofstream htmlFile;
     if (m_shell->openOutputFile(htmlFile, fileName, std::ios::out | std::ios::in | std::ios::binary | std::ios::trunc))
@@ -327,6 +338,7 @@ bool Exporter::exportUser(Friend& user, std::string& userOutputPath)
     }
 
     Downloader downloader(m_logger);
+    downloader.setUserAgent(m_wechatInfo.buildUserAgent());
 	SessionParser sessionParser(*myself, friends, *m_iTunesDb, *m_shell, m_templates, m_localeStrings, m_options, downloader, m_cancelled);
 
     downloader.addTask(user.getPortrait(), combinePath(outputBase, "Portrait", user.getLocalPortrait()), 0);
@@ -367,9 +379,9 @@ bool Exporter::exportUser(Friend& user, std::string& userOutputPath)
         if (count > 0)
         {
             std::string userItem = getTemplate("listitem");
-            userItem = replace_all(userItem, "%%ITEMPICPATH%%", "Portrait/" + it->getLocalPortrait());
-            userItem = replace_all(userItem, "%%ITEMLINK%%", encodeUrl(it->getUsrName()) + ".html");
-            userItem = replace_all(userItem, "%%ITEMTEXT%%", safeHTML(sessionDisplayName));
+            userItem = replaceAll(userItem, "%%ITEMPICPATH%%", "Portrait/" + it->getLocalPortrait());
+            userItem = replaceAll(userItem, "%%ITEMLINK%%", encodeUrl(it->getUsrName()) + ".html");
+            userItem = replaceAll(userItem, "%%ITEMTEXT%%", safeHTML(sessionDisplayName));
             
             userBody += userItem;
         }
@@ -378,8 +390,8 @@ bool Exporter::exportUser(Friend& user, std::string& userOutputPath)
     std::string fileName = combinePath(outputBase, "index.html");
 
     std::string html = getTemplate("listframe");
-    html = replace_all(html, "%%USERNAME%%", " - " + user.getDisplayName());
-    html = replace_all(html, "%%TBODY%%", userBody);
+    html = replaceAll(html, "%%USERNAME%%", " - " + user.getDisplayName());
+    html = replaceAll(html, "%%TBODY%%", userBody);
     
     std::ofstream htmlFile;
     if (m_shell->openOutputFile(htmlFile, fileName, std::ios::out | std::ios::in | std::ios::binary | std::ios::trunc))
@@ -417,7 +429,7 @@ bool Exporter::loadUserFriendsAndSessions(const Friend& user, Friends& friends, 
 
 	m_logger->debug("Wechat Friends(" + std::to_string(friends.friends.size()) + ") for: " + user.getDisplayName() + " loaded.");
 
-    SessionsParser sessionsParser(m_iTunesDb, m_shell, detailedInfo);
+    SessionsParser sessionsParser(m_iTunesDb, m_shell, m_wechatInfo.getCellDataVersion(), detailedInfo);
     
     sessionsParser.parse(userBase, sessions, friends);
  
@@ -449,8 +461,8 @@ int Exporter::exportSession(const Friend& user, const SessionParser& sessionPars
         std::string fileName = combinePath(outputBase, session.getUsrName() + ".html");
 
         std::string html = getTemplate("frame");
-        html = replace_all(html, "%%DISPLAYNAME%%", session.getDisplayName());
-        html = replace_all(html, "%%BODY%%", contents);
+        html = replaceAll(html, "%%DISPLAYNAME%%", session.getDisplayName());
+        html = replaceAll(html, "%%BODY%%", contents);
         
         std::ofstream htmlFile;
         if (m_shell->openOutputFile(htmlFile, fileName, std::ios::out | std::ios::binary | std::ios::trunc))

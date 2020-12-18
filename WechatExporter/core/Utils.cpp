@@ -31,7 +31,7 @@
 #include "OSDef.h"
 
 
-std::string replace_all(std::string input, std::string search, std::string replace)
+std::string replaceAll(std::string input, std::string search, std::string replace)
 {
     std::string result = input;
     size_t pos = 0;
@@ -63,15 +63,42 @@ bool startsWith(const std::string& str, std::string::value_type ch)
     return !str.empty() && str[0] == ch;
 }
 
-std::string utf8ToString(const std::string& utf8str, const std::locale& loc)
+std::vector<std::string> split(const std::string& str, const std::string& delimiter)
 {
-	// UTF-8 to wstring
-	std::wstring_convert<std::codecvt_utf8<wchar_t>> wconv;
-	std::wstring wstr = wconv.from_bytes(utf8str);
-	// wstring to string
-	std::vector<char> buf(wstr.size());
-	std::use_facet<std::ctype<wchar_t>>(loc).narrow(wstr.data(), wstr.data() + wstr.size(), '?', buf.data());
-	return std::string(buf.data(), buf.size());
+    std::vector<std::string> tokens;
+    size_t prev = 0, pos = 0;
+    do
+    {
+        pos = str.find(delimiter, prev);
+        if (pos == std::string::npos) pos = str.length();
+        std::string token = str.substr(prev, pos-prev);
+        if (!token.empty()) tokens.push_back(token);
+        prev = pos + delimiter.length();
+    }
+    while (pos < str.length() && prev < str.length());
+    return tokens;
+}
+
+std::string join(const std::vector<std::string>& elements, const char *const delimiter)
+{
+    std::ostringstream os;
+    auto b = begin(elements), e = end(elements);
+    if (b != e)
+    {
+        auto pe = prev(e);
+        for (std::vector<std::string>::const_iterator it = b; it != pe; ++it)
+        {
+            os << *it;
+            os << delimiter;
+        }
+        b = pe;
+    }
+    if (b != e)
+    {
+        os << *b;
+    }
+
+    return os.str();
 }
 
 std::string combinePath(const std::string& p1, const std::string& p2)
@@ -85,7 +112,6 @@ std::string combinePath(const std::string& p1, const std::string& p2)
     if (!p1.empty())
     {
         path = p1;
-        // std::replace(path.begin(), path.end(), '\\', '/');
         if (path[path.size() - 1] != DIR_SEP && path[path.size() - 1] != DIR_SEP_R)
         {
             path += DIR_SEP;
@@ -97,8 +123,7 @@ std::string combinePath(const std::string& p1, const std::string& p2)
     {
         path = p2;
     }
-    
-    // std::replace(path.begin(), path.end(), DIR_SEP_R, DIR_SEP);
+ 
     return path;
 }
 
@@ -126,13 +151,13 @@ void normalizePath(std::string& path)
 
 std::string safeHTML(const std::string& s)
 {
-    std::string result = replace_all(s, "&", "&amp;");
-    result = replace_all(result, " ", "&nbsp;");
-    result = replace_all(result, "<", "&lt;");
-    result = replace_all(result, ">", "&gt;");
-    result = replace_all(result, "\r\n", "<br/>");
-    result = replace_all(result, "\r", "<br/>");
-    result = replace_all(result, "\n", "<br/>");
+    std::string result = replaceAll(s, "&", "&amp;");
+    result = replaceAll(result, " ", "&nbsp;");
+    result = replaceAll(result, "<", "&lt;");
+    result = replaceAll(result, ">", "&gt;");
+    result = replaceAll(result, "\r\n", "<br/>");
+    result = replaceAll(result, "\r", "<br/>");
+    result = replaceAll(result, "\n", "<br/>");
     return result;
 }
 
