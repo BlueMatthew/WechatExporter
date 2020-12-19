@@ -38,3 +38,7 @@ MacOS下，libxml2,libcurl,libsqlite3直接使用了Xcode自带的库，其它�
 libmp3lame需手动删除文件include/libmp3lame.sym中的行：lame_init_old  
 
 Windows环境下，silk自带Visual Studio工程文件，可以直接利用Visual Studio编译，其余除了libplist之外，都通过vcpkg可以编译。libplist在vcpkg中也存在，但是在编译x64-windows-static target的时候报了错，于是直接通过Visual Studio建了工程进行编译。
+  
+已测试iTunes和微信版本  
+iTunes 12.10.10.2 + 微信7.0.2  
+iTunes 12.10.9.3 + 微信 7.0.15
