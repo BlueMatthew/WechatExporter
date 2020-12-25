@@ -1292,6 +1292,7 @@ public:
             XmlParser::getNodeAttributeValue(cur, "subtype", fmsg.subType);
             
             xmlNodePtr childNode = xmlFirstElementChild(cur);
+            bool hasDataTitle = false;
             while (NULL != childNode)
             {
                 if (xmlStrcmp(childNode->name, BAD_CAST("sourcename")) == 0)
@@ -1304,7 +1305,10 @@ public:
                 }
                 else if (xmlStrcmp(childNode->name, BAD_CAST("datadesc")) == 0)
                 {
-                    fmsg.message = XmlParser::getNodeInnerText(childNode);
+                    if (!hasDataTitle)
+                    {
+                        fmsg.message = XmlParser::getNodeInnerText(childNode);
+                    }
                 }
                 else if (xmlStrcmp(childNode->name, BAD_CAST("dataitemsource")) == 0)
                 {
@@ -1329,6 +1333,7 @@ public:
                 else if (xmlStrcmp(childNode->name, BAD_CAST("datatitle")) == 0)
                 {
                     fmsg.message = XmlParser::getNodeInnerText(childNode);
+                    hasDataTitle = true;
                 }
                 else if (xmlStrcmp(childNode->name, BAD_CAST("recordxml")) == 0)
                 {
@@ -1377,6 +1382,7 @@ bool SessionParser::parseForwardedMsgs(const std::string& userBase, const std::s
             // 8: File
             // 16: Card
             // 17: Nested Forwarded Messages
+            // 19: mini program
              
             if (it->dataType == "1")
             {
@@ -1450,6 +1456,11 @@ bool SessionParser::parseForwardedMsgs(const std::string& userBase, const std::s
             else if (it->dataType == "17")
             {
                 // parseForwardedMsgs(userBase, outputPath, session, record, title, it->message, tvs);
+                tv["%%MESSAGE%%"] = it->message;
+            }
+            else if (it->dataType == "19")
+            {
+                // Mini Program
                 tv["%%MESSAGE%%"] = it->message;
             }
             else
