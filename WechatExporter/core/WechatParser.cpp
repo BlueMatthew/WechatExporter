@@ -12,6 +12,7 @@
 #include <fstream>
 #include <cmath>
 #include <cstdio>
+#include <cstring>
 #include <sqlite3.h>
 #include <libxml/parser.h>
 #include <libxml/tree.h>
@@ -231,6 +232,88 @@ std::string MMKVParser::findValue(const std::string& key)
     }
 
     return value;
+}
+
+MMSettingParser::MMSettingParser(ITunesDb *iTunesDb) : m_iTunesDb(iTunesDb)
+{
+}
+
+bool MMSettingParser::parse(const std::string& usrNameHash)
+{
+    std::string vpath = "Documents/" + usrNameHash + "/mmsetting.archive";
+    std::string mmsettingPath = m_iTunesDb->findRealPath(vpath);
+    if (mmsettingPath.empty())
+    {
+        return false;
+    }
+    
+    std::vector<unsigned char> data;
+    if (!readFile(mmsettingPath, data))
+    {
+        return false;
+    }
+    
+    plist_t node = NULL;
+    plist_from_memory(reinterpret_cast<const char *>(&data[0]), static_cast<uint32_t>(data.size()), &node);
+    if (NULL == node)
+    {
+        return false;
+    }
+    
+    plist_t objectsNode = plist_access_path(node, 1, "$objects");
+    if (NULL != objectsNode && PLIST_IS_ARRAY(objectsNode))
+    {
+        uint32_t objectsNodeSize = plist_array_get_size(objectsNode);
+        for (uint32_t idx = 0; idx < objectsNodeSize; ++idx)
+        {
+            plist_t item = plist_array_get_item(objectsNode, idx);
+            if (NULL == item || !PLIST_IS_STRING(item))
+            {
+                continue;
+            }
+            
+            uint64_t valueLength = 0;
+            const char* pValue = plist_get_string_ptr(item, &valueLength);
+            if (NULL != pValue && valueLength > 0)
+            {
+                std::string value;
+                value.assign(pValue, valueLength);
+                if (startsWith(value, "https://wx.qlogo.cn/mmhead/") || startsWith(value, "http://wx.qlogo.cn/mmhead/"))
+                {
+                    // Avatar
+                    if (endsWith(value, "/0"))
+                    {
+                        m_portraitHD = value;
+                    }
+                    else // (endsWith(value, "/132"))
+                    {
+                        m_portrait = value;
+                    }
+                }
+            }
+        }
+    }
+    
+    plist_free(node);
+    return true;
+}
+
+std::string MMSettingParser::getUsrName() const
+{
+    return m_usrName;
+}
+
+std::string MMSettingParser::getDisplayName() const
+{
+    return m_displayName;
+}
+std::string MMSettingParser::getPortrait() const
+{
+    return m_portrait;
+}
+std::string MMSettingParser::getPortraitHD() const
+{
+    return m_portraitHD;
 }
 
 FriendsParser::FriendsParser(bool detailedInfo/* = true*/) : m_detailedInfo(detailedInfo)
@@ -705,10 +788,9 @@ int SessionParser::parse(const std::string& userBase, const std::string& outputB
         sqlite3_close(db);
         return false;
     }
-    
-    std::map<std::string, std::string> values;
-    std::string templateKey;
-    Record record;
+
+    std::vector<TemplateValues> tvs;
+    MsgRecord record;
 
     while (sqlite3_step(stmt) == SQLITE_ROW)
     {
@@ -717,8 +799,7 @@ int SessionParser::parse(const std::string& userBase, const std::string& outputB
             break;
         }
         
-        values.clear();
-        templateKey = "";
+        tvs.clear();
         
         record.createTime = sqlite3_column_int(stmt, 0);
         const unsigned char* pMessage = sqlite3_column_text(stmt, 1);
@@ -726,26 +807,14 @@ int SessionParser::parse(const std::string& userBase, const std::string& outputB
         record.message = pMessage != NULL ? reinterpret_cast<const char*>(pMessage) : "";
         record.des = sqlite3_column_int(stmt, 2);
         record.type = sqlite3_column_int(stmt, 3);
-        record.msgid = sqlite3_column_int(stmt, 4);
-        if (parseRow(record, userBase, outputBase, session, templateKey, values))
+        record.msgId = sqlite3_column_int(stmt, 4);
+        if (parseRow(record, userBase, outputBase, session, tvs))
         {
             count++;
-            std::string ts = getTemplate(templateKey);
-            for (std::map<std::string, std::string>::const_iterator it = values.cbegin(); it != values.cend(); ++it)
+            for (std::vector<TemplateValues>::const_iterator it = tvs.cbegin(); it != tvs.cend(); ++it)
             {
-                ts = replaceAll(ts, it->first, it->second);
+                contents.append(buildContentFromTemplateValues(*it));
             }
-            
-			contents.append(ts);
-#ifndef NDEBUG
-            static std::map<std::string, int> types;
-            std::string key = templateKey + "_" + values["%%ALIGNMENT%%"];
-            if (types.find(key) == types.end())
-            {
-                types[key] = record.type;
-                writeFile(combinePath(outputBase, "type_" + key + ".html"), ts);
-            }
-#endif
         }
     }
     
@@ -761,19 +830,21 @@ std::string SessionParser::getTemplate(const std::string& key) const
     return (it == m_templates.cend()) ? "" : it->second;
 }
 
-bool SessionParser::parseRow(Record& record, const std::string& userBase, const std::string& outputPath, const Session& session, std::string& templateKey, std::map<std::string, std::string>& templateValues) const
+bool SessionParser::parseRow(MsgRecord& record, const std::string& userBase, const std::string& outputPath, const Session& session, std::vector<TemplateValues>& tvs) const
 {
-    templateValues.clear();
-    templateKey = "msg";
+    TemplateValues& templateValues = *(tvs.emplace(tvs.end(), "msg"));
     
-	std::string msgIdStr = std::to_string(record.msgid);
+	std::string msgIdStr = std::to_string(record.msgId);
     std::string assetsDir = combinePath(outputPath, session.getUsrName() + "_files");
 	m_shell.makeDirectory(assetsDir);
     
-    templateValues["%%MSGID%%"] = std::to_string(record.msgid);
+    templateValues["%%MSGID%%"] = std::to_string(record.msgId);
 	templateValues["%%NAME%%"] = "";
 	templateValues["%%TIME%%"] = fromUnixTime(record.createTime);
 	templateValues["%%MESSAGE%%"] = "";
+    
+    std::string forwardedMsg;
+    std::string forwardedMsgTitle;
 
     std::string senderId = "";
     if (session.isChatroom())
@@ -794,7 +865,7 @@ bool SessionParser::parseRow(Record& record, const std::string& userBase, const 
 #endif
     if (record.type == 10000 || record.type == 10002)
     {
-        templateKey = "system";
+        templateValues.setName("system");
         std::string sysMsg = record.message;
         removeHtmlTags(sysMsg);
         templateValues["%%MESSAGE%%"] = sysMsg;
@@ -823,7 +894,7 @@ bool SessionParser::parseRow(Record& record, const std::string& userBase, const 
         }
         if (audioSrc.empty())
         {
-            templateKey = "msg";
+            templateValues.setName("msg");
             templateValues["%%MESSAGE%%"] = voicelen == -1 ? getLocaleString("[Audio]") : formatString(getLocaleString("[Audio %s]"), getDisplayTime(voicelen).c_str());
         }
         else
@@ -837,7 +908,7 @@ bool SessionParser::parseRow(Record& record, const std::string& userBase, const 
                 updateFileTime(mp3Path, ITunesDb::parseModifiedTime(audioSrcFile->blob));
             }
 
-            templateKey = "audio";
+            templateValues.setName("audio");
             templateValues["%%AUDIOPATH%%"] = session.getUsrName() + "_files/" + msgIdStr + ".mp3";
         }
     }
@@ -886,12 +957,12 @@ bool SessionParser::parseRow(Record& record, const std::string& userBase, const 
             std::string emojiPath = ((m_options & SPO_ICON_IN_SESSION) == SPO_ICON_IN_SESSION) ? session.getUsrName() + "_files/Emoji/" : "Emoji/";
             localfile = emojiPath + localfile + ".gif";
             m_downloader.addTask(url, combinePath(outputPath, localfile), record.createTime);
-            templateKey = "emoji";
+            templateValues.setName("emoji");
             templateValues["%%EMOJIPATH%%"] = localfile;
         }
         else
         {
-            templateKey = "msg";
+            templateValues.setName("msg");
             templateValues["%%MESSAGE%%"] = getLocaleString("[Emoji]");
         }
     }
@@ -904,41 +975,18 @@ bool SessionParser::parseRow(Record& record, const std::string& userBase, const 
             {
             }
         }
-        bool hasthum = requireFile(combinePath(userBase, "Video", session.getHash(), msgIdStr + ".video_thum"), combinePath(assetsDir, msgIdStr + "_thum.jpg"));
-        bool hasvid = requireFile(combinePath(userBase, "Video", session.getHash(), msgIdStr + ".mp4"), combinePath(assetsDir, msgIdStr + ".mp4"));
-
-		std::string msgFile;
-		if (hasthum || hasvid)
-		{
-			msgFile = session.getUsrName() + "_files/";
-			msgFile += msgIdStr;
-		}
-        if (hasvid)
-        {
-            templateKey = "video";
-            templateValues["%%THUMBPATH%%"] = hasthum ? (msgFile + "_thum.jpg") : "";
-            templateValues["%%VIDEOPATH%%"] = hasthum ? (msgFile + ".mp4") : "";
-        }
-        else if (hasthum)
-        {
-            templateKey = "thumb";
-            templateValues["%%IMGTHUMBPATH%%"] = hasthum ? (msgFile + "_thum.jpg") : "";
-            templateValues["%%MESSAGE%%"] = getLocaleString("(Video Missed)");
-        }
-        else
-        {
-            templateKey = "msg";
-            templateValues["%%MESSAGE%%"] = getLocaleString("[Video]");
-        }
+        
+        std::string vfile = combinePath(userBase, "Video", session.getHash(), msgIdStr);
+        copyVideo(outputPath, vfile + ".mp4", session.getUsrName() + "_files/" + msgIdStr + ".mp4", vfile + ".video_thum", session.getUsrName() + "_files/" + msgIdStr + "_thum.jpg", templateValues);
     }
     else if (record.type == 50)
     {
-        templateKey = "msg";
+        templateValues.setName("msg");
         templateValues["%%MESSAGE%%"] = getLocaleString("[Video/Audio Call]");
     }
     else if (record.type == 64)
     {
-		templateKey = "notice";
+        templateValues.setName("notice");
 
 		Json::Reader reader;
 		Json::Value root;
@@ -950,34 +998,7 @@ bool SessionParser::parseRow(Record& record, const std::string& userBase, const 
     else if (record.type == 3)
     {
 		std::string vfile = combinePath(userBase, "Img", session.getHash(), msgIdStr);
-
-        bool hasthum = requireFile(vfile + ".pic_thum", combinePath(assetsDir, msgIdStr + "_thum.jpg"));
-        bool haspic = requireFile(vfile + ".pic", combinePath(assetsDir, msgIdStr + ".jpg"));
-        
-		std::string msgFile;
-		if (hasthum || haspic)
-		{
-			msgFile = session.getUsrName() + "_files/";
-			msgFile += msgIdStr;
-		}
-
-        if (haspic)
-        {
-            templateKey = "image";
-            templateValues["%%IMGPATH%%"] = msgFile + ".jpg";
-            templateValues["%%IMGTHUMBPATH%%"] = hasthum ? (msgFile + "_thum.jpg") : (msgFile + ".jpg");
-        }
-        else if (hasthum)
-        {
-            templateKey = "thumb";
-            templateValues["%%IMGTHUMBPATH%%"] = hasthum ? (msgFile + "_thum.jpg") : "";
-            templateValues["%%MESSAGE%%"] = "";
-        }
-        else
-        {
-            templateKey = "msg";
-            templateValues["%%MESSAGE%%"] = getLocaleString("[Picture]");
-        }
+        copyImage(outputPath, vfile + ".pic", "", session.getUsrName() + "_files/" + msgIdStr + ".jpg", vfile + ".pic_thum", session.getUsrName() + "_files/" + msgIdStr + "_thumb.jpg", templateValues);
     }
     else if (record.type == 48)
     {
@@ -992,45 +1013,35 @@ bool SessionParser::parseRow(Record& record, const std::string& userBase, const 
         {
             templateValues["%%MESSAGE%%"] = getLocaleString("[Location]");
         }
-		templateKey = "msg";
+        templateValues.setName("msg");
     }
     else if (record.type == 49)
     {
-        if (record.message.find("<type>2001<") != std::string::npos) templateValues["%%MESSAGE%%"] = getLocaleString("[Red Packet]");
-        else if (record.message.find("<type>2000<") != std::string::npos) templateValues["%%MESSAGE%%"] = getLocaleString("[Transfer]");
-        else if (record.message.find("<type>17<") != std::string::npos) templateValues["%%MESSAGE%%"] = getLocaleString("[Real-time Location]");
-        else if (record.message.find("<type>6<") != std::string::npos) templateValues["%%MESSAGE%%"] = getLocaleString("[File]");
-        else
+        std::map<std::string, std::string> nodes = { {"title", ""}, {"type", ""}, {"des", ""}, {"url", ""}, {"thumburl", ""}, {"recorditem", ""} };
+        XmlParser xmlParser(record.message, true);
+        if (xmlParser.parseNodesValue("/msg/appmsg/*", nodes))
         {
-            std::map<std::string, std::string> nodes = { {"title", ""}, {"des", ""}, {"url", ""}, {"thumburl", ""} };
-            
-#ifndef NDEBUG
-            static std::regex pattern49_1("<title>(.+?)<\\/title>");
-            static std::regex pattern49_2("<des>(.*?)<\\/des>");
-            static std::regex pattern49_3("<url>(.+?)<\\/url>");
-            static std::regex pattern49_4("<thumburl>(.+?)<\\/thumburl>");
-            
-            std::smatch sm1;
-            std::smatch sm2;
-            std::smatch sm3;
-            std::smatch sm4;
-            bool match1 = std::regex_search(record.message, sm1, pattern49_1);
-            bool match2 = std::regex_search(record.message, sm2, pattern49_2);
-            bool match3 = std::regex_search(record.message, sm3, pattern49_3);
-            bool match4 = std::regex_search(record.message, sm4, pattern49_4);
-#endif
-            XmlParser xmlParser(record.message, true);
-            if (xmlParser .parseNodesValue("/msg/appmsg/*", nodes))
+            std::string appMsgType = nodes["type"];
+            if (appMsgType == "2001") templateValues["%%MESSAGE%%"] = getLocaleString("[Red Packet]");
+            else if (appMsgType == "2000") templateValues["%%MESSAGE%%"] = getLocaleString("[Transfer]");
+            else if (appMsgType == "17") templateValues["%%MESSAGE%%"] = getLocaleString("[Real-time Location]");
+            else if (appMsgType == "6") templateValues["%%MESSAGE%%"] = getLocaleString("[File]");
+            else if (appMsgType == "19")    // Forwarded Msgs
             {
 #ifndef NDEBUG
-                if (nodes["title"] != sm1[1].str() || nodes["des"] != sm2[1].str() || nodes["url"] != sm3[1].str() || nodes["thumburl"] != sm4[1].str())
-                {
-                    int aa = 1;
-                }
+                writeFile(combinePath(outputPath, "msg" + std::to_string(record.type) + "_19.txt"), nodes["recorditem"]);
 #endif
+                templateValues.setName("msg");
+                templateValues["%%MESSAGE%%"] = nodes["title"];
+                
+                forwardedMsg = nodes["recorditem"];
+                forwardedMsgTitle = nodes["title"];
+            }
+            else
+            {
                 if (!nodes["title"].empty() && !nodes["url"].empty())
                 {
-                    templateKey = "share";
+                    templateValues.setName(nodes["thumburl"].empty() ? "plainshare" : "share");
 
                     templateValues["%%SHARINGIMGPATH%%"] = nodes["thumburl"];
                     templateValues["%%SHARINGURL%%"] = nodes["url"];
@@ -1046,10 +1057,10 @@ bool SessionParser::parseRow(Record& record, const std::string& userBase, const 
                     templateValues["%%MESSAGE%%"] = getLocaleString("[Link]");
                 }
             }
-            else
-            {
-                templateValues["%%MESSAGE%%"] = getLocaleString("[Link]");
-            }
+        }
+        else
+        {
+            templateValues["%%MESSAGE%%"] = getLocaleString("[Link]");
         }
     }
     else if (record.type == 42)
@@ -1062,7 +1073,7 @@ bool SessionParser::parseRow(Record& record, const std::string& userBase, const 
         XmlParser xmlParser(record.message, true);
         if (xmlParser.parseAttributesValue("/msg", attrs) && !attrs["nickname"].empty())
         {
-            templateKey = "card";
+            templateValues.setName("card");
             templateValues["%%CARDNAME%%"] = attrs["nickname"];
             
             if (!attrs["username"].empty() && !attrs["smallheadimgurl"].empty())
@@ -1159,11 +1170,313 @@ bool SessionParser::parseRow(Record& record, const std::string& userBase, const 
         }
     }
 
-    if (!localPortrait.empty() && !remotePortrait.empty())
+    if (!remotePortrait.empty() && !localPortrait.empty())
     {
         m_downloader.addTask(remotePortrait, combinePath(outputPath, localPortrait), record.createTime);
     }
 
+    if (!forwardedMsg.empty())
+    {
+        // This funtion will change tvs and causes templateValues invalid, so we do it at last
+        parseForwardedMsgs(userBase, outputPath, session, record, forwardedMsgTitle, forwardedMsg, tvs);
+    }
+    return true;
+}
+
+void SessionParser::copyVideo(const std::string& sessionPath, const std::string& srcVideo, const std::string& destVideo, const std::string& srcThumb, const std::string& destThumb, TemplateValues& templateValues) const
+{
+    bool hasThumb = requireFile(srcThumb, combinePath(sessionPath, destThumb));
+    bool hasVideo = requireFile(srcVideo, combinePath(sessionPath, destVideo));
+
+    if (hasVideo)
+    {
+        templateValues.setName("video");
+        templateValues["%%THUMBPATH%%"] = hasThumb ? destThumb : "";
+        templateValues["%%VIDEOPATH%%"] = destVideo;
+    }
+    else if (hasThumb)
+    {
+        templateValues.setName("thumb");
+        templateValues["%%IMGTHUMBPATH%%"] = destThumb;
+        templateValues["%%MESSAGE%%"] = getLocaleString("(Video Missed)");
+    }
+    else
+    {
+        templateValues.setName("msg");
+        templateValues["%%MESSAGE%%"] = getLocaleString("[Video]");
+    }
+}
+
+void SessionParser::copyImage(const std::string& sessionPath, const std::string& src, const std::string& srcPre, const std::string& dest, const std::string& srcThumb, const std::string& destThumb, TemplateValues& templateValues) const
+{
+    bool hasThumb = requireFile(srcThumb, combinePath(sessionPath, destThumb));
+    bool hasImage = false;
+    if (!srcPre.empty())
+    {
+        hasImage = requireFile(srcPre, combinePath(sessionPath, dest));
+    }
+    if (!hasImage)
+    {
+        hasImage = requireFile(src, combinePath(sessionPath, dest));
+    }
+
+    if (hasImage)
+    {
+        templateValues.setName("image");
+        templateValues["%%IMGPATH%%"] = dest;
+        templateValues["%%IMGTHUMBPATH%%"] = hasThumb ? destThumb : dest;
+    }
+    else if (hasThumb)
+    {
+        templateValues.setName("thumb");
+        templateValues["%%IMGTHUMBPATH%%"] = destThumb;
+        templateValues["%%MESSAGE%%"] = "";
+    }
+    else
+    {
+        templateValues.setName("msg");
+        templateValues["%%MESSAGE%%"] = getLocaleString("[Picture]");
+    }
+}
+
+void SessionParser::copyFile(const std::string& sessionPath, const std::string& src, const std::string& dest, const std::string& fileName, TemplateValues& templateValues) const
+{
+    bool hasFile = requireFile(src, combinePath(sessionPath, dest));
+
+    if (hasFile)
+    {
+        templateValues.setName("plainshare");
+        templateValues["%%SHARINGURL%%"] = dest;
+        templateValues["%%SHARINGTITLE%%"] = fileName;
+        templateValues["%%MESSAGE%%"] = "";
+    }
+    else
+    {
+        templateValues.setName("msg");
+        templateValues["%%MESSAGE%%"] = formatString(getLocaleString("[File: %s]"), fileName.c_str());
+    }
+}
+
+class ForwardMsgsHandler
+{
+private:
+    XmlParser& m_xmlParser;
+    int m_msgId;
+    std::vector<ForwardMsg>& m_forwardedMsgs;
+public:
+    
+    ForwardMsgsHandler(XmlParser& xmlParser, int msgId, std::vector<ForwardMsg>& forwardedMsgs) : m_xmlParser(xmlParser), m_msgId(msgId), m_forwardedMsgs(forwardedMsgs)
+    {
+    }
+    
+    bool operator() (xmlNodeSetPtr xpathNodes)
+    {
+        for (int idx = 0; idx < xpathNodes->nodeNr; ++idx)
+        {
+            ForwardMsg fmsg = {m_msgId};
+            
+            // templateValues.setName("msg");
+            // templateValues["%%ALIGNMENT%%"] = "left";
+            
+            xmlNode *cur = xpathNodes->nodeTab[idx];
+            
+            XmlParser::getNodeAttributeValue(cur, "datatype", fmsg.dataType);
+            XmlParser::getNodeAttributeValue(cur, "dataid", fmsg.dataId);
+            XmlParser::getNodeAttributeValue(cur, "subtype", fmsg.subType);
+            
+            xmlNodePtr childNode = xmlFirstElementChild(cur);
+            while (NULL != childNode)
+            {
+                if (xmlStrcmp(childNode->name, BAD_CAST("sourcename")) == 0)
+                {
+                    fmsg.displayName = XmlParser::getNodeInnerText(childNode);
+                }
+                else if (xmlStrcmp(childNode->name, BAD_CAST("sourcetime")) == 0)
+                {
+                    fmsg.msgTime = XmlParser::getNodeInnerText(childNode);
+                }
+                else if (xmlStrcmp(childNode->name, BAD_CAST("datadesc")) == 0)
+                {
+                    fmsg.message = XmlParser::getNodeInnerText(childNode);
+                }
+                else if (xmlStrcmp(childNode->name, BAD_CAST("dataitemsource")) == 0)
+                {
+                    if (!XmlParser::getChildNodeContent(childNode, "realchatname", fmsg.usrName))
+                    {
+                        XmlParser::getChildNodeContent(childNode, "fromusr", fmsg.usrName);
+                    }
+                }
+                else if (xmlStrcmp(childNode->name, BAD_CAST("srcMsgCreateTime")) == 0)
+                {
+                    fmsg.srcMsgTime = XmlParser::getNodeInnerText(childNode);
+                }
+                else if (xmlStrcmp(childNode->name, BAD_CAST("datafmt")) == 0)
+                {
+                    fmsg.dataFormat = XmlParser::getNodeInnerText(childNode);
+                }
+                else if (xmlStrcmp(childNode->name, BAD_CAST("weburlitem")) == 0)
+                {
+                    XmlParser::getChildNodeContent(childNode, "title", fmsg.message);
+                    XmlParser::getChildNodeContent(childNode, "link", fmsg.link);
+                }
+                else if (xmlStrcmp(childNode->name, BAD_CAST("datatitle")) == 0)
+                {
+                    fmsg.message = XmlParser::getNodeInnerText(childNode);
+                }
+                else if (xmlStrcmp(childNode->name, BAD_CAST("recordxml")) == 0)
+                {
+                    fmsg.nestedMsgs = XmlParser::getNodeInnerXml(childNode);
+                }
+
+                childNode = childNode->next;
+            }
+            
+            m_forwardedMsgs.push_back(fmsg);
+        }
+        return true;
+    }
+};
+
+bool SessionParser::parseForwardedMsgs(const std::string& userBase, const std::string& outputPath, const Session& session, const MsgRecord& record, const std::string& title, const std::string& message, std::vector<TemplateValues>& tvs) const
+{
+    XmlParser xmlParser(message);
+    std::vector<ForwardMsg> forwardedMsgs;
+    ForwardMsgsHandler handler(xmlParser, record.msgId, forwardedMsgs);
+    std::string portraitPath = ((m_options & SPO_ICON_IN_SESSION) == SPO_ICON_IN_SESSION) ? session.getUsrName() + "_files/Portrait/" : "Portrait/";
+    std::string localPortrait;
+    std::string remotePortrait;
+    
+    std::string msgIdStr = std::to_string(record.msgId);
+    
+    tvs.push_back(TemplateValues("notice"));
+    TemplateValues& beginTv = tvs.back();
+    beginTv["%%MESSAGE%%"] = formatString(getLocaleString("<< %s >>"), title.c_str());
+    beginTv["%%EXTRA_CLS%%"] = "fmsgtag";   // tag for forwarded msg
+    
+    std::string destDir = combinePath(outputPath, session.getUsrName() + "_files/", msgIdStr);
+    bool assertDirExisted = m_shell.existsDirectory(destDir);
+    
+    if (xmlParser.parseWithHandler("/recordinfo/datalist/dataitem", handler))
+    {
+        for (std::vector<ForwardMsg>::const_iterator it = forwardedMsgs.begin(); it != forwardedMsgs.end(); ++it)
+        {
+            TemplateValues& tv = *(tvs.emplace(tvs.end(), "msg"));
+            tv["%%ALIGNMENT%%"] = "left";
+            tv["%%EXTRA_CLS%%"] = "fmsg";   // forwarded msg
+            // 1: message
+            // 2: image
+            // 4: video
+            // 5: link
+            // 8: File
+            // 17: Forwarded Messages
+             
+            if (it->dataType == "1")
+            {
+                tv["%%MESSAGE%%"] = replaceAll(replaceAll(replaceAll(it->message, "\r\n", "<br />"), "\r", "<br />"), "\n", "<br />");
+            }
+            else if (it->dataType == "2")
+            {
+                if (!assertDirExisted)
+                {
+                    assertDirExisted = m_shell.makeDirectory(destDir);
+                }
+                std::string fileExtName = it->dataFormat.empty() ? "" : ("." + it->dataFormat);
+                std::string vfile = userBase + "/OpenData/" + session.getHash() + "/" + msgIdStr + "/" + it->dataId;
+                copyImage(outputPath, vfile + fileExtName, vfile + fileExtName + "_pre3", session.getUsrName() + "_files/" + msgIdStr + "/" + it->dataId + ".jpg", vfile + ".record_thumb", session.getUsrName() + "_files/" + msgIdStr + "/" + it->dataId + "_thumb.jpg", tv);
+            }
+            else if (it->dataType == "3")
+            {
+                tv["%%MESSAGE%%"] = it->message;
+            }
+            else if (it->dataType == "4")
+            {
+                if (!assertDirExisted)
+                {
+                    assertDirExisted = m_shell.makeDirectory(destDir);
+                }
+                std::string fileExtName = it->dataFormat.empty() ? "" : ("." + it->dataFormat);
+                std::string vfile = userBase + "/OpenData/" + session.getHash() + "/" + msgIdStr + "/" + it->dataId;
+                copyVideo(outputPath, vfile + fileExtName, session.getUsrName() + "_files/" + msgIdStr + "/" + it->dataId + fileExtName, vfile + ".record_thumb", session.getUsrName() + "_files/" + msgIdStr + "/" + it->dataId + "_thumb.jpg", tv);
+                
+            }
+            else if (it->dataType == "5")
+            {
+                if (!assertDirExisted)
+                {
+                    assertDirExisted = m_shell.makeDirectory(destDir);
+                }
+                std::string vfile = userBase + "/OpenData/" + session.getHash() + "/" + msgIdStr + "/" + it->dataId + ".record_thumb";
+                std::string dest = session.getUsrName() + "_files/" + msgIdStr + "/" + it->dataId + "_thumb.jpg";
+                bool hasThumb = requireFile(vfile, combinePath(outputPath, dest));
+                
+                if (!it->link.empty())
+                {
+                    tv.setName(hasThumb ? "share" : "plainshare");
+
+                    tv["%%SHARINGIMGPATH%%"] = dest;
+                    tv["%%SHARINGURL%%"] = it->link;
+                    tv["%%SHARINGTITLE%%"] = it->message;
+                    // tv["%%MESSAGE%%"] = nodes["des"];
+                }
+                else
+                {
+                    tv["%%MESSAGE%%"] = it->message;
+                }
+            }
+            else if (it->dataType == "8")
+            {
+                if (!assertDirExisted)
+                {
+                    assertDirExisted = m_shell.makeDirectory(destDir);
+                }
+                std::string fileExtName = it->dataFormat.empty() ? "" : ("." + it->dataFormat);
+                std::string vfile = userBase + "/OpenData/" + session.getHash() + "/" + msgIdStr + "/" + it->dataId;
+                copyFile(outputPath, vfile + fileExtName, session.getUsrName() + "_files/" + msgIdStr + "/" + it->dataId + fileExtName, it->message, tv);
+            }
+            else if (it->dataType == "17")
+            {
+                // parseForwardedMsgs(userBase, outputPath, session, record, title, it->message, tvs);
+                tv["%%MESSAGE%%"] = it->message;
+            }
+            else
+            {
+                tv["%%MESSAGE%%"] = it->message;
+            }
+            
+            tv["%%NAME%%"] = it->displayName;
+            tv["%%MSGID%%"] = msgIdStr + "_" + it->dataId;
+            tv["%%TIME%%"] = it->srcMsgTime.empty() ? it->msgTime : fromUnixTime(static_cast<unsigned int>(std::atoi(it->srcMsgTime.c_str())));
+            
+            localPortrait = portraitPath + (it->protrait.empty() ? "DefaultProfileHead@2x.png" : session.getLocalPortrait());
+            remotePortrait = it->protrait;
+            tv["%%AVATAR%%"] = localPortrait;
+            if (!it->usrName.empty() && it->protrait.empty())
+            {
+                const Friend *f = (m_myself.getUsrName() == it->usrName) ? &m_myself : m_friends.getFriendByUid(it->usrName);
+                std::string localPortrait = portraitPath + ((NULL != f) ? f->getLocalPortrait() : "DefaultProfileHead@2x.png");
+                remotePortrait = (NULL != f) ? f->getPortrait() : "";
+                
+                tv["%%AVATAR%%"] = localPortrait;
+                
+                if (!remotePortrait.empty() && !localPortrait.empty())
+                {
+                    m_downloader.addTask(remotePortrait, combinePath(outputPath, localPortrait), record.createTime);
+                }
+            }
+            
+            if (!it->nestedMsgs.empty())
+            {
+                // parseForwardedMsgs(userBase, outputPath, session, record, it->message, it->nestedMsgs, tvs);
+            }
+        }
+        
+    }
+    
+    tvs.push_back(TemplateValues("notice"));
+    TemplateValues& endTv = tvs.back();
+    endTv["%%MESSAGE%%"] = formatString(getLocaleString("<< %s Ends >>"), title.c_str());
+    endTv["%%EXTRA_CLS%%"] = "fmsgtag";   // tag for forwarded msg
+    
     return true;
 }
 
@@ -1178,20 +1491,21 @@ bool SessionParser::requireFile(const std::string& vpath, const std::string& des
 {
 #ifndef NDEBUG
     // Make debug more effective
-    if (m_shell.existsFile(dest))
+    if (m_shell.existsFile(normalizePath(dest)))
     {
         return true;
     }
 #endif
     
     const ITunesFile* file = m_iTunesDb.findITunesFile(vpath);
-    
     if (NULL != file)
     {
         std::string srcPath = m_iTunesDb.getRealPath(*file);
         if (!srcPath.empty())
         {
-            bool result = m_shell.copyFile(srcPath, dest, true);
+            normalizePath(srcPath);
+            std::string destPath = normalizePath(dest);
+            bool result = m_shell.copyFile(srcPath, destPath, true);
             if (result)
             {
                 updateFileTime(dest, ITunesDb::parseModifiedTime(file->blob));
@@ -1207,4 +1521,30 @@ std::string SessionParser::getDisplayTime(int ms) const
 {
     if (ms < 1000) return "1\"";
     return std::to_string(std::round((double)ms)) + "\"";
+}
+
+std::string SessionParser::buildContentFromTemplateValues(const TemplateValues& values) const
+{
+    std::string content = getTemplate(values.getName());
+    for (TemplateValues::const_iterator it = values.cbegin(); it != values.cend(); ++it)
+    {
+        if (startsWith(it->first, "%"))
+        {
+            content = replaceAll(content, it->first, it->second);
+        }
+    }
+    
+    std::string::size_type pos = 0;
+    while ((pos = content.find("%%", pos)) != std::string::npos)
+    {
+        std::string::size_type posEnd = content.find("%%", pos + 2);
+        if (posEnd == std::string::npos)
+        {
+            break;
+        }
+        
+        content.erase(pos, posEnd + 2 - pos);
+    }
+    
+    return content;
 }

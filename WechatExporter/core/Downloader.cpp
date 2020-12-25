@@ -252,7 +252,7 @@ void Downloader::run(int idx)
                 // m_logger->debug(log);
 #endif
                 
-                if (!succeeded && task.getRetries() >= Task::MAX_RETRIES)
+                if (!succeeded/* && task.getRetries() >= Task::MAX_RETRIES*/)
                 {
                     std::string log = "Failed Download: " + task.getUrl() + " => " + task.getOutput() + " ERR:" + task.getError();
                     m_logger->write(log);

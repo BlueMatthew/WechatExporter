@@ -182,6 +182,27 @@ public:
     std::string findValue(const std::string& key);
 };
 
+
+class MMSettingParser
+{
+private:
+    ITunesDb *m_iTunesDb;
+    
+    std::string m_usrName;
+    std::string m_displayName;
+    std::string m_portrait;
+    std::string m_portraitHD;
+public:
+    MMSettingParser(ITunesDb *iTunesDb);
+    bool parse(const std::string& usrNameHash);
+    
+    std::string getUsrName() const;
+    std::string getDisplayName() const;
+    std::string getPortrait() const;
+    std::string getPortraitHD() const;
+    
+};
+
 class FriendsParser
 {
 public:
@@ -216,13 +237,31 @@ private:
     bool parseMessageDb(const std::string& mmPath, std::vector<std::string>& sessionIds);
 };
 
-struct Record
+struct MsgRecord
 {
     int createTime;
     std::string message;
     int des;
     int type;
+    int msgId;
+};
+
+
+struct ForwardMsg
+{
     int msgid;
+    std::string usrName;
+    std::string displayName;
+    std::string protrait;
+    std::string dataType;
+    std::string subType;
+    std::string dataId;
+    std::string dataFormat;
+    std::string msgTime;
+    std::string srcMsgTime;
+    std::string message;
+    std::string link;
+    std::string nestedMsgs;
 };
 
 enum SessionParsingOption
@@ -230,6 +269,60 @@ enum SessionParsingOption
     SPO_IGNORE_AUDIO = 1,
     SPO_DESC = 2,
     SPO_ICON_IN_SESSION = 4     // Put Head Icon and Emoji files in the folder of session
+};
+
+class TemplateValues
+{
+private:
+    std::string m_name;
+    std::map<std::string, std::string> m_values;
+    
+public:
+    using const_iterator = std::map<std::string, std::string>::const_iterator;
+ 
+public:
+    TemplateValues()
+    {
+    }
+    TemplateValues(const std::string& name) : m_name(name)
+    {
+    }
+    std::string getName() const
+    {
+        return m_name;
+    }
+    void setName(const std::string& name)
+    {
+        m_name = name;
+    }
+    std::string& operator[](const std::string& k)
+    {
+        return m_values[k];
+    }
+    bool hasValue(const std::string& key) const
+    {
+        return m_values.find(key) != m_values.cend();
+    }
+    
+    const_iterator cbegin() const
+    {
+        return m_values.cbegin();
+    }
+    
+    const_iterator cend() const
+    {
+        return m_values.cend();
+    }
+    
+    void clear()
+    {
+        m_values.clear();
+    }
+    
+    void clearName()
+    {
+        m_name.clear();
+    }
 };
 
 class SessionParser
@@ -266,14 +359,20 @@ public:
             m_options |= SPO_DESC;
     }
     
-    int parse(const std::string& userBase, const std::string& outputBase, const Session& session, std::string& contents) const;
+    int parse(const std::string& userBase, const std::string& outputPath, const Session& session, std::string& contents) const;
 
 private:
     std::string getTemplate(const std::string& key) const;
 	std::string getLocaleString(const std::string& key) const;
     std::string getDisplayTime(int ms) const;
     bool requireFile(const std::string& vpath, const std::string& dest) const;
-    bool parseRow(Record& record, const std::string& userBase, const std::string& path, const Session& session, std::string& templateKey, std::map<std::string, std::string>& templateValues) const;
+    bool parseRow(MsgRecord& record, const std::string& userBase, const std::string& path, const Session& session, std::vector<TemplateValues>& tvs) const;
+    bool parseForwardedMsgs(const std::string& userBase, const std::string& outputPath, const Session& session, const MsgRecord& record, const std::string& title, const std::string& message, std::vector<TemplateValues>& tvs) const;
+    std::string buildContentFromTemplateValues(const TemplateValues& values) const;
+    void copyImage(const std::string& sessionPath, const std::string& src, const std::string& srcPre, const std::string& dest, const std::string& srcThumb, const std::string& destThumb, TemplateValues& templateValues) const;
+    void copyVideo(const std::string& sessionPath, const std::string& src, const std::string& dest, const std::string& srcThumb, const std::string& destThumb, TemplateValues& templateValues) const;
+    void copyFile(const std::string& sessionPath, const std::string& src, const std::string& dest, const std::string& fileName, TemplateValues& templateValues) const;
+    
 };
 
 
