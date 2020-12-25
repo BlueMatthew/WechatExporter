@@ -763,7 +763,7 @@ SessionParser::SessionParser(Friend& myself, Friends& friends, const ITunesDb& i
 {
 }
 
-int SessionParser::parse(const std::string& userBase, const std::string& outputBase, const Session& session, std::string& contents) const
+int SessionParser::parse(const std::string& userBase, const std::string& outputBase, const Session& session, std::string& contents)
 {
     int count = 0;
     contents.clear();
@@ -830,7 +830,7 @@ std::string SessionParser::getTemplate(const std::string& key) const
     return (it == m_templates.cend()) ? "" : it->second;
 }
 
-bool SessionParser::parseRow(MsgRecord& record, const std::string& userBase, const std::string& outputPath, const Session& session, std::vector<TemplateValues>& tvs) const
+bool SessionParser::parseRow(MsgRecord& record, const std::string& userBase, const std::string& outputPath, const Session& session, std::vector<TemplateValues>& tvs)
 {
     TemplateValues& templateValues = *(tvs.emplace(tvs.end(), "msg"));
     
@@ -977,7 +977,7 @@ bool SessionParser::parseRow(MsgRecord& record, const std::string& userBase, con
         }
         
         std::string vfile = combinePath(userBase, "Video", session.getHash(), msgIdStr);
-        copyVideo(outputPath, vfile + ".mp4", session.getUsrName() + "_files/" + msgIdStr + ".mp4", vfile + ".video_thum", session.getUsrName() + "_files/" + msgIdStr + "_thum.jpg", templateValues);
+        parseVideo(outputPath, vfile + ".mp4", session.getUsrName() + "_files/" + msgIdStr + ".mp4", vfile + ".video_thum", session.getUsrName() + "_files/" + msgIdStr + "_thum.jpg", templateValues);
     }
     else if (record.type == 50)
     {
@@ -998,7 +998,7 @@ bool SessionParser::parseRow(MsgRecord& record, const std::string& userBase, con
     else if (record.type == 3)
     {
 		std::string vfile = combinePath(userBase, "Img", session.getHash(), msgIdStr);
-        copyImage(outputPath, vfile + ".pic", "", session.getUsrName() + "_files/" + msgIdStr + ".jpg", vfile + ".pic_thum", session.getUsrName() + "_files/" + msgIdStr + "_thumb.jpg", templateValues);
+        parseImage(outputPath, vfile + ".pic", "", session.getUsrName() + "_files/" + msgIdStr + ".jpg", vfile + ".pic_thum", session.getUsrName() + "_files/" + msgIdStr + "_thumb.jpg", templateValues);
     }
     else if (record.type == 48)
     {
@@ -1065,32 +1065,8 @@ bool SessionParser::parseRow(MsgRecord& record, const std::string& userBase, con
     }
     else if (record.type == 42)
     {
-		// static std::regex pattern42_1("nickname ?= ?\"(.+?)\"");
-		// static std::regex pattern42_2("smallheadimgurl ?= ?\"(.+?)\"");
-        
-        std::map<std::string, std::string> attrs = { {"nickname", ""}, {"smallheadimgurl", ""}, {"username", ""} };
-        
-        XmlParser xmlParser(record.message, true);
-        if (xmlParser.parseAttributesValue("/msg", attrs) && !attrs["nickname"].empty())
-        {
-            templateValues.setName("card");
-            templateValues["%%CARDNAME%%"] = attrs["nickname"];
-            
-            if (!attrs["username"].empty() && !attrs["smallheadimgurl"].empty())
-            {
-                templateValues["%%CARDIMGPATH%%"] = "Portrait/" + attrs["username"] + ".jpg";
-                std::string localfile = combinePath("Portrait", attrs["username"] + ".jpg");
-                m_downloader.addTask(attrs["smallheadimgurl"], combinePath(outputPath, localfile), 0);
-            }
-            else
-            {
-                templateValues["%%CARDIMGPATH%%"] = attrs["smallheadimgurl"];
-            }
-        }
-        else
-        {
-            templateValues["%%MESSAGE%%"] = getLocaleString("[Contact Card]");
-        }
+        std::string portraitDir = ((m_options & SPO_ICON_IN_SESSION) == SPO_ICON_IN_SESSION) ? session.getUsrName() + "_files/Portrait" : "Portrait";
+        parseCard(outputPath, portraitDir, record.message, templateValues);
     }
     else
     {
@@ -1183,7 +1159,7 @@ bool SessionParser::parseRow(MsgRecord& record, const std::string& userBase, con
     return true;
 }
 
-void SessionParser::copyVideo(const std::string& sessionPath, const std::string& srcVideo, const std::string& destVideo, const std::string& srcThumb, const std::string& destThumb, TemplateValues& templateValues) const
+void SessionParser::parseVideo(const std::string& sessionPath, const std::string& srcVideo, const std::string& destVideo, const std::string& srcThumb, const std::string& destThumb, TemplateValues& templateValues)
 {
     bool hasThumb = requireFile(srcThumb, combinePath(sessionPath, destThumb));
     bool hasVideo = requireFile(srcVideo, combinePath(sessionPath, destVideo));
@@ -1207,7 +1183,7 @@ void SessionParser::copyVideo(const std::string& sessionPath, const std::string&
     }
 }
 
-void SessionParser::copyImage(const std::string& sessionPath, const std::string& src, const std::string& srcPre, const std::string& dest, const std::string& srcThumb, const std::string& destThumb, TemplateValues& templateValues) const
+void SessionParser::parseImage(const std::string& sessionPath, const std::string& src, const std::string& srcPre, const std::string& dest, const std::string& srcThumb, const std::string& destThumb, TemplateValues& templateValues)
 {
     bool hasThumb = requireFile(srcThumb, combinePath(sessionPath, destThumb));
     bool hasImage = false;
@@ -1239,7 +1215,7 @@ void SessionParser::copyImage(const std::string& sessionPath, const std::string&
     }
 }
 
-void SessionParser::copyFile(const std::string& sessionPath, const std::string& src, const std::string& dest, const std::string& fileName, TemplateValues& templateValues) const
+void SessionParser::parseFile(const std::string& sessionPath, const std::string& src, const std::string& dest, const std::string& fileName, TemplateValues& templateValues)
 {
     bool hasFile = requireFile(src, combinePath(sessionPath, dest));
 
@@ -1254,6 +1230,37 @@ void SessionParser::copyFile(const std::string& sessionPath, const std::string& 
     {
         templateValues.setName("msg");
         templateValues["%%MESSAGE%%"] = formatString(getLocaleString("[File: %s]"), fileName.c_str());
+    }
+}
+
+void SessionParser::parseCard(const std::string& sessionPath, const std::string& portraitDir, const std::string& cardMessage, TemplateValues& templateValues)
+{
+    // static std::regex pattern42_1("nickname ?= ?\"(.+?)\"");
+    // static std::regex pattern42_2("smallheadimgurl ?= ?\"(.+?)\"");
+    
+    std::map<std::string, std::string> attrs = { {"nickname", ""}, {"smallheadimgurl", ""}, {"bigheadimgurl", ""}, {"username", ""} };
+    
+    XmlParser xmlParser(cardMessage, true);
+    if (xmlParser.parseAttributesValue("/msg", attrs) && !attrs["nickname"].empty())
+    {
+        templateValues.setName("card");
+        templateValues["%%CARDNAME%%"] = attrs["nickname"];
+        
+        std::string portraitUrl = attrs["bigheadimgurl"].empty() ? attrs["smallheadimgurl"] : attrs["bigheadimgurl"];
+        if (!attrs["username"].empty() && !portraitUrl.empty())
+        {
+            templateValues["%%CARDIMGPATH%%"] = portraitDir + "/" + attrs["username"] + ".jpg";
+            std::string localfile = combinePath(portraitDir, attrs["username"] + ".jpg");
+            m_downloader.addTask(portraitUrl, combinePath(sessionPath, localfile), 0);
+        }
+        else
+        {
+            templateValues["%%CARDIMGPATH%%"] = portraitUrl;
+        }
+    }
+    else
+    {
+        templateValues["%%MESSAGE%%"] = getLocaleString("[Contact Card]");
     }
 }
 
@@ -1337,7 +1344,7 @@ public:
     }
 };
 
-bool SessionParser::parseForwardedMsgs(const std::string& userBase, const std::string& outputPath, const Session& session, const MsgRecord& record, const std::string& title, const std::string& message, std::vector<TemplateValues>& tvs) const
+bool SessionParser::parseForwardedMsgs(const std::string& userBase, const std::string& outputPath, const Session& session, const MsgRecord& record, const std::string& title, const std::string& message, std::vector<TemplateValues>& tvs)
 {
     XmlParser xmlParser(message);
     std::vector<ForwardMsg> forwardedMsgs;
@@ -1368,7 +1375,8 @@ bool SessionParser::parseForwardedMsgs(const std::string& userBase, const std::s
             // 4: video
             // 5: link
             // 8: File
-            // 17: Forwarded Messages
+            // 16: Card
+            // 17: Nested Forwarded Messages
              
             if (it->dataType == "1")
             {
@@ -1382,7 +1390,7 @@ bool SessionParser::parseForwardedMsgs(const std::string& userBase, const std::s
                 }
                 std::string fileExtName = it->dataFormat.empty() ? "" : ("." + it->dataFormat);
                 std::string vfile = userBase + "/OpenData/" + session.getHash() + "/" + msgIdStr + "/" + it->dataId;
-                copyImage(outputPath, vfile + fileExtName, vfile + fileExtName + "_pre3", session.getUsrName() + "_files/" + msgIdStr + "/" + it->dataId + ".jpg", vfile + ".record_thumb", session.getUsrName() + "_files/" + msgIdStr + "/" + it->dataId + "_thumb.jpg", tv);
+                parseImage(outputPath, vfile + fileExtName, vfile + fileExtName + "_pre3", session.getUsrName() + "_files/" + msgIdStr + "/" + it->dataId + ".jpg", vfile + ".record_thumb", session.getUsrName() + "_files/" + msgIdStr + "/" + it->dataId + "_thumb.jpg", tv);
             }
             else if (it->dataType == "3")
             {
@@ -1396,7 +1404,7 @@ bool SessionParser::parseForwardedMsgs(const std::string& userBase, const std::s
                 }
                 std::string fileExtName = it->dataFormat.empty() ? "" : ("." + it->dataFormat);
                 std::string vfile = userBase + "/OpenData/" + session.getHash() + "/" + msgIdStr + "/" + it->dataId;
-                copyVideo(outputPath, vfile + fileExtName, session.getUsrName() + "_files/" + msgIdStr + "/" + it->dataId + fileExtName, vfile + ".record_thumb", session.getUsrName() + "_files/" + msgIdStr + "/" + it->dataId + "_thumb.jpg", tv);
+                parseVideo(outputPath, vfile + fileExtName, session.getUsrName() + "_files/" + msgIdStr + "/" + it->dataId + fileExtName, vfile + ".record_thumb", session.getUsrName() + "_files/" + msgIdStr + "/" + it->dataId + "_thumb.jpg", tv);
                 
             }
             else if (it->dataType == "5")
@@ -1431,7 +1439,13 @@ bool SessionParser::parseForwardedMsgs(const std::string& userBase, const std::s
                 }
                 std::string fileExtName = it->dataFormat.empty() ? "" : ("." + it->dataFormat);
                 std::string vfile = userBase + "/OpenData/" + session.getHash() + "/" + msgIdStr + "/" + it->dataId;
-                copyFile(outputPath, vfile + fileExtName, session.getUsrName() + "_files/" + msgIdStr + "/" + it->dataId + fileExtName, it->message, tv);
+                parseFile(outputPath, vfile + fileExtName, session.getUsrName() + "_files/" + msgIdStr + "/" + it->dataId + fileExtName, it->message, tv);
+            }
+            else if (it->dataType == "16")
+            {
+                // Card
+                std::string portraitDir = ((m_options & SPO_ICON_IN_SESSION) == SPO_ICON_IN_SESSION) ? session.getUsrName() + "_files/Portrait" : "Portrait";
+                parseCard(outputPath, portraitDir, it->message, tv);
             }
             else if (it->dataType == "17")
             {

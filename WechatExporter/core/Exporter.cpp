@@ -439,7 +439,7 @@ bool Exporter::loadUserFriendsAndSessions(const Friend& user, Friends& friends, 
     return true;
 }
 
-int Exporter::exportSession(const Friend& user, const SessionParser& sessionParser, const Session& session, const std::string& userBase, const std::string& outputBase)
+int Exporter::exportSession(const Friend& user, SessionParser& sessionParser, const Session& session, const std::string& userBase, const std::string& outputBase)
 {
 	if (session.isDbFileEmpty())
 	{
