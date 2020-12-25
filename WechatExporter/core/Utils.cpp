@@ -185,7 +185,7 @@ std::string fromUnixTime(unsigned int unixtime)
 {
     std::uint32_t time_date_stamp = unixtime;
     std::time_t temp = time_date_stamp;
-    std::tm* t = std::gmtime(&temp);
+    std::tm* t = std::localtime(&temp);
     std::stringstream ss; // or if you're going to print, just input directly into the output stream
     ss << std::put_time(t, "%Y-%m-%d %I:%M:%S %p");
     
