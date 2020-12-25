@@ -221,6 +221,7 @@ bool ITunesDb::load(const std::string& domain, bool onlyFile)
             file->relativePath = relativePath;
         }
         int flags = sqlite3_column_int(stmt, 2);
+        file->flags = static_cast<unsigned int>(flags);
         if (flags == 1)
         {
             // Files

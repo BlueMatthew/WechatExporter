@@ -94,6 +94,10 @@ public:
 #ifndef NDEBUG
             return true;
 #else
+            if (!overwrite)
+            {
+                return false;
+            }
             [fileManager removeItemAtPath:destPath error:nil];
 #endif
         }

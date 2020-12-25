@@ -23,11 +23,17 @@ struct ITunesFile
 {
     std::string fileId;
     std::string relativePath;
+    unsigned int flags;
     unsigned int modifiedTime;
     std::vector<unsigned char> blob;
     
     ITunesFile()
     {
+    }
+    
+    bool isDir() const
+    {
+        return flags == 2;
     }
 };
 
@@ -127,6 +133,8 @@ public:
     std::string findRealPath(const std::string& relativePath) const;
     template<class TFilter>
     ITunesFileVector filter(TFilter f) const;
+    template<class THandler>
+    void enumFiles(THandler handler) const;
     
     std::string getRealPath(const ITunesFile& file) const;
     
@@ -155,6 +163,18 @@ ITunesFileVector ITunesDb::filter(TFilter f) const
     }
     
     return files;
+}
+
+template<class THandler>
+void ITunesDb::enumFiles(THandler handler) const
+{
+    for (ITunesFilesConstIterator it = m_files.cbegin(); it != m_files.cend(); ++it)
+    {
+        if (!handler(*it))
+        {
+            break;
+        }
+    }
 }
 
 class ManifestParser
