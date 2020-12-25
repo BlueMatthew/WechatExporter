@@ -106,8 +106,36 @@ struct AttributesHandler
     }
 };
 
+bool XmlParser::getChildNodeContent(xmlNodePtr node, const std::string& childName, std::string& value)
+{
+    bool found = false;
+    xmlNodePtr childNode = xmlFirstElementChild(node);
+    while (NULL != childNode)
+    {
+        if (xmlStrcmp(childNode->name, BAD_CAST(childName.c_str())) == 0)
+        {
+            value = getNodeInnerText(childNode);
+            found = true;
+            break;
+        }
+        
+        childNode = childNode->next;
+    }
 
+    return found;
+}
 
+bool XmlParser::getNodeAttributeValue(xmlNodePtr node, const std::string& attributeName, std::string& value)
+{
+    xmlChar* attr = xmlGetProp(node, BAD_CAST(attributeName.c_str()));
+    if (NULL != attr)
+    {
+        value = reinterpret_cast<char *>(attr);
+        xmlFree(attr);
+        return true;
+    }
+    return false;
+}
 
 XmlParser::XmlParser(const std::string& xml, bool noError/* = false*/) : m_doc(NULL), m_xpathCtx(NULL)
 {
@@ -133,26 +161,31 @@ XmlParser::~XmlParser()
     if (m_doc) { xmlFreeDoc(m_doc); }
 }
 
+xmlXPathObjectPtr XmlParser::evalXPathOnNode(xmlNodePtr node, const std::string& xpath)
+{
+    return xmlXPathNodeEval(node, BAD_CAST(xpath.c_str()), m_xpathCtx);
+}
+
 bool XmlParser::parseNodeValue(const std::string& xpath, std::string& value)
 {
     NodeValueHandler handler = {value};
-    return parseImpl(xpath, handler);
+    return parseWithHandler(xpath, handler);
 }
 
 bool XmlParser::parseNodesValue(const std::string& xpath, std::map<std::string, std::string>& values)
 {
     NodesValueHandler handler = {values};
-    return parseImpl(xpath, handler);
+    return parseWithHandler(xpath, handler);
 }
 
 bool XmlParser::parseAttributeValue(const std::string& xpath, const std::string& attributeName, std::string& value)
 {
     AttributeHandler handler = {attributeName, value};
-    return parseImpl(xpath, handler);
+    return parseWithHandler(xpath, handler);
 }
 
 bool XmlParser::parseAttributesValue(const std::string& xpath, std::map<std::string, std::string>& attributes)
 {
     AttributesHandler handler = {attributes};
-    return parseImpl(xpath, handler);
+    return parseWithHandler(xpath, handler);
 }

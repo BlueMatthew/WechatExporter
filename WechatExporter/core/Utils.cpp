@@ -296,22 +296,7 @@ bool readFile(const std::string& path, std::vector<unsigned char>& data)
 
 bool writeFile(const std::string& path, const std::vector<unsigned char>& data)
 {
-    std::ofstream ofs;
-#ifdef _WIN32
-	CW2A pszA(CA2W(path.c_str(), CP_UTF8));
-	ofs.open(pszA, std::ios::out | std::ios::binary | std::ios::trunc);
-#else
-	ofs.open(path, std::ios::out | std::ios::binary | std::ios::trunc);
-#endif
-    
-    if (ofs.is_open())
-    {
-        ofs.write(reinterpret_cast<const char *>(&(data[0])), data.size());
-        ofs.close();
-        return true;
-    }
-    
-    return false;
+    return writeFile(path, &(data[0]), data.size());
 }
 
 bool writeFile(const std::string& path, const std::string& data)
@@ -326,6 +311,26 @@ bool writeFile(const std::string& path, const std::string& data)
     if (ofs.is_open())
     {
         ofs.write(reinterpret_cast<const char *>(data.c_str()), data.size());
+        ofs.close();
+        return true;
+    }
+    
+    return false;
+}
+
+bool writeFile(const std::string& path, const unsigned char* data, unsigned int dataLength)
+{
+    std::ofstream ofs;
+#ifdef _WIN32
+    CW2A pszA(CA2W(path.c_str(), CP_UTF8));
+    ofs.open(pszA, std::ios::out | std::ios::binary | std::ios::trunc);
+#else
+    ofs.open(path, std::ios::out | std::ios::binary | std::ios::trunc);
+#endif
+    
+    if (ofs.is_open())
+    {
+        ofs.write(reinterpret_cast<const char *>(data), dataLength);
         ofs.close();
         return true;
     }

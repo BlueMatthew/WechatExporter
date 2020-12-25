@@ -477,18 +477,25 @@ int Exporter::exportSession(const Friend& user, const SessionParser& sessionPars
 
 bool Exporter::fillUser(Friend& user)
 {
-    std::string path = combinePath("Documents", "MMappedKV", "mmsetting.archive." + user.getUsrName());
-    std::string realPath = m_iTunesDb->findRealPath(path);
-    
-    if (realPath.empty())
+    MMSettingParser mmsettingParser(m_iTunesDb);
+    if (mmsettingParser.parse(user.getHash()))
     {
-        return false;
+        user.setPortrait(mmsettingParser.getPortrait());
+        user.setPortraitHD(mmsettingParser.getPortraitHD());
     }
-    
-    MMKVParser parser(realPath);
-    
-    user.setPortrait(parser.findValue("headimgurl"));
-    user.setPortraitHD(parser.findValue("headhdimgurl"));
+    else
+    {
+        std::string vpath = "Documents/MMappedKV/mmsetting.archive." + user.getUsrName();
+        std::string realPath = m_iTunesDb->findRealPath(vpath);
+        
+        if (!realPath.empty())
+        {
+            MMKVParser parser(realPath);
+            
+            user.setPortrait(parser.findValue("headimgurl"));
+            user.setPortraitHD(parser.findValue("headhdimgurl"));
+        }
+    }
     
     if (isValidFileName(user.getDisplayName()))
     {
@@ -518,7 +525,7 @@ bool Exporter::fillSession(Session& session, const Friends& friends) const
 
 bool Exporter::loadTemplates()
 {
-    const char* names[] = {"frame", "msg", "video", "notice", "system", "audio", "image", "card", "emoji", "share", "thumb", "listframe", "listitem"};
+    const char* names[] = {"frame", "msg", "video", "notice", "system", "audio", "image", "card", "emoji", "plainshare", "share", "thumb", "listframe", "listitem"};
     for (int idx = 0; idx < sizeof(names) / sizeof(const char*); idx++)
     {
         std::string name = names[idx];
