@@ -109,7 +109,7 @@
                         <rect key="frame" x="0.0" y="0.0" width="642" height="400"/>
                         <autoresizingMask key="autoresizingMask"/>
                         <subviews>
-                            <comboBox horizontalHuggingPriority="249" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="MCy-Pf-KGR">
+                            <comboBox horizontalHuggingPriority="249" verticalHuggingPriority="750" fixedFrame="YES" allowsExpansionToolTips="YES" translatesAutoresizingMaskIntoConstraints="NO" id="MCy-Pf-KGR">
                                 <rect key="frame" x="12" y="342" width="597" height="25"/>
                                 <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                                 <comboBoxCell key="cell" scrollable="YES" lineBreakMode="clipping" selectable="YES" sendsActionOnEndEditing="YES" borderStyle="bezel" drawsBackground="YES" completes="NO" numberOfVisibleItems="5" id="3GG-gE-HUp">
