@@ -43,6 +43,10 @@ private:
 
 inline std::string XmlParser::getNodeInnerText(xmlNodePtr node)
 {
+    if (NULL == node->children)
+    {
+        return "";
+    }
     const char* content = reinterpret_cast<const char*>(XML_GET_CONTENT(node->children));
     return NULL == content ? "" : std::string(content);
 }
