@@ -1339,6 +1339,10 @@ public:
                 {
                     fmsg.nestedMsgs = XmlParser::getNodeInnerXml(childNode);
                 }
+                else if (xmlStrcmp(childNode->name, BAD_CAST("locitem")) == 0)
+                {
+                    fmsg.nestedMsgs = XmlParser::getNodeInnerXml(childNode);
+                }
 
                 childNode = childNode->next;
             }
@@ -1379,6 +1383,7 @@ bool SessionParser::parseForwardedMsgs(const std::string& userBase, const std::s
             // 2: image
             // 4: video
             // 5: link
+            // 6: location
             // 8: File
             // 16: Card
             // 17: Nested Forwarded Messages
@@ -1436,6 +1441,22 @@ bool SessionParser::parseForwardedMsgs(const std::string& userBase, const std::s
                 {
                     tv["%%MESSAGE%%"] = it->message;
                 }
+            }
+            else if (it->dataType == "6")
+            {
+                // Location
+                std::map<std::string, std::string> attrs = { {"poiname", ""}, {"lng", ""}, {"lat", ""}, {"label", ""} };
+                
+                XmlParser xmlParser(it->nestedMsgs);
+                if (xmlParser.parseNodesValue("/locitem", attrs) && !attrs["lat"].empty() && !attrs["lng"].empty() && !attrs["poiname"].empty())
+                {
+                    tv["%%MESSAGE%%"] = formatString(getLocaleString("[Location (%s,%s) %s]"), attrs["lat"].c_str(), attrs["lng"].c_str(), attrs["poiname"].c_str());
+                }
+                else
+                {
+                    tv["%%MESSAGE%%"] = getLocaleString("[Location]");
+                }
+                tv.setName("msg");
             }
             else if (it->dataType == "8")
             {
