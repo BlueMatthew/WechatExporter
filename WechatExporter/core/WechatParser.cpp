@@ -1448,7 +1448,7 @@ bool SessionParser::parseForwardedMsgs(const std::string& userBase, const std::s
                 std::map<std::string, std::string> attrs = { {"poiname", ""}, {"lng", ""}, {"lat", ""}, {"label", ""} };
                 
                 XmlParser xmlParser(it->nestedMsgs);
-                if (xmlParser.parseNodesValue("/locitem", attrs) && !attrs["lat"].empty() && !attrs["lng"].empty() && !attrs["poiname"].empty())
+                if (xmlParser.parseNodesValue("/locitem/*", attrs) && !attrs["lat"].empty() && !attrs["lng"].empty() && !attrs["poiname"].empty())
                 {
                     tv["%%MESSAGE%%"] = formatString(getLocaleString("[Location (%s,%s) %s]"), attrs["lat"].c_str(), attrs["lng"].c_str(), attrs["poiname"].c_str());
                 }
