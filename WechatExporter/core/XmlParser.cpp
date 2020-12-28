@@ -125,6 +125,24 @@ bool XmlParser::getChildNodeContent(xmlNodePtr node, const std::string& childNam
     return found;
 }
 
+xmlNodePtr XmlParser::getChildNode(xmlNodePtr node, const std::string& childName)
+{
+    xmlNodePtr result = NULL;
+    xmlNodePtr childNode = xmlFirstElementChild(node);
+    while (NULL != childNode)
+    {
+        if (xmlStrcmp(childNode->name, BAD_CAST(childName.c_str())) == 0)
+        {
+            result = childNode;
+            break;
+        }
+        
+        childNode = childNode->next;
+    }
+
+    return result;
+}
+
 bool XmlParser::getNodeAttributeValue(xmlNodePtr node, const std::string& attributeName, std::string& value)
 {
     xmlChar* attr = xmlGetProp(node, BAD_CAST(attributeName.c_str()));
