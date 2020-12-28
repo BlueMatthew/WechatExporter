@@ -1337,11 +1337,15 @@ public:
                 }
                 else if (xmlStrcmp(childNode->name, BAD_CAST("recordxml")) == 0)
                 {
-                    fmsg.nestedMsgs = XmlParser::getNodeInnerXml(childNode);
+                    xmlNodePtr nodeRecordInfo = XmlParser::getChildNode(childNode, "recordinfo");
+                    if (NULL != nodeRecordInfo)
+                    {
+                        fmsg.nestedMsgs = XmlParser::getNodeOuterXml(nodeRecordInfo);
+                    }
                 }
                 else if (xmlStrcmp(childNode->name, BAD_CAST("locitem")) == 0)
                 {
-                    fmsg.nestedMsgs = XmlParser::getNodeInnerXml(childNode);
+                    fmsg.nestedMsgs = XmlParser::getNodeOuterXml(childNode);
                 }
 
                 childNode = childNode->next;
@@ -1366,7 +1370,7 @@ bool SessionParser::parseForwardedMsgs(const std::string& userBase, const std::s
     
     tvs.push_back(TemplateValues("notice"));
     TemplateValues& beginTv = tvs.back();
-    beginTv["%%MESSAGE%%"] = formatString(getLocaleString("<< %s >>"), title.c_str());
+    beginTv["%%MESSAGE%%"] = formatString(getLocaleString("<< %s"), title.c_str());
     beginTv["%%EXTRA_CLS%%"] = "fmsgtag";   // tag for forwarded msg
     
     std::string destDir = combinePath(outputPath, session.getUsrName() + "_files/", msgIdStr);
@@ -1510,9 +1514,9 @@ bool SessionParser::parseForwardedMsgs(const std::string& userBase, const std::s
                 }
             }
             
-            if (!it->nestedMsgs.empty())
+            if ((it->dataType == "17") && !it->nestedMsgs.empty())
             {
-                // parseForwardedMsgs(userBase, outputPath, session, record, it->message, it->nestedMsgs, tvs);
+                parseForwardedMsgs(userBase, outputPath, session, record, it->message, it->nestedMsgs, tvs);
             }
         }
         
@@ -1520,7 +1524,7 @@ bool SessionParser::parseForwardedMsgs(const std::string& userBase, const std::s
     
     tvs.push_back(TemplateValues("notice"));
     TemplateValues& endTv = tvs.back();
-    endTv["%%MESSAGE%%"] = formatString(getLocaleString("<< %s Ends >>"), title.c_str());
+    endTv["%%MESSAGE%%"] = formatString(getLocaleString("%s Ends >>"), title.c_str());
     endTv["%%EXTRA_CLS%%"] = "fmsgtag";   // tag for forwarded msg
     
     return true;

@@ -26,8 +26,10 @@ public:
     bool parseAttributeValue(const std::string& xpath, const std::string& attributeName, std::string& value);
     bool parseAttributesValue(const std::string& xpath, std::map<std::string, std::string>& attributes);
     
+    static xmlNodePtr getChildNode(xmlNodePtr node, const std::string& childName);
     static std::string getNodeInnerText(xmlNodePtr node);
     static std::string getNodeInnerXml(xmlNodePtr node);
+    static std::string getNodeOuterXml(xmlNodePtr node);
     static bool getChildNodeContent(xmlNodePtr node, const std::string& childName, std::string& value);
     static bool getNodeAttributeValue(xmlNodePtr node, const std::string& attributeName, std::string& value);
     
@@ -52,6 +54,15 @@ inline std::string XmlParser::getNodeInnerText(xmlNodePtr node)
 }
 
 inline std::string XmlParser::getNodeInnerXml(xmlNodePtr node)
+{
+    xmlChar* content = xmlNodeGetContent(node);
+    // const char* szContent = reinterpret_cast<const char*>(content);
+    std::string xml = (NULL == content) ? "" : reinterpret_cast<const char*>(content);
+    xmlFree(content);
+    return xml;
+}
+
+inline std::string XmlParser::getNodeOuterXml(xmlNodePtr node)
 {
     xmlBufferPtr buffer = xmlBufferCreate();
 #ifndef NDEBUG
