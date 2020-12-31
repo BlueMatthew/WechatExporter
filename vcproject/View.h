@@ -609,7 +609,7 @@ public:
 			// update
 			CComboBox cmb = GetDlgItem(IDC_BACKUP);
 			cmb.SetRedraw(FALSE);
-			cmb.Clear();
+			cmb.ResetContent();
 			for (std::vector<BackupManifest>::const_iterator it = m_manifests.cbegin(); it != m_manifests.cend(); ++it)
 			{
 				std::string itemTitle = it->toString();
