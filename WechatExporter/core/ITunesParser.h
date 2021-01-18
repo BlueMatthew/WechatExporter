@@ -182,10 +182,12 @@ class ManifestParser
 protected:
     std::string m_manifestPath;
 	const Shell* m_shell;
+	mutable std::string m_lastError;
 
 public:
     ManifestParser(const std::string& m_manifestPath, const Shell* shell);
     bool parse(std::vector<BackupManifest>& manifets) const;
+	std::string getLastError() const;
 
 protected:
     bool parseDirectory(const std::string& path, std::vector<BackupManifest>& manifests) const;
