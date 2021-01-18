@@ -92,6 +92,40 @@ public:
 			}
 			rkITunes.Close();
 		}
+		if (!iTunesInstalled)
+		{
+			// Check if there is iTunes installed in MS Store
+			CRegKey rkITAppunes;
+			if (rkITunes.Open(HKEY_LOCAL_MACHINE, TEXT("SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\App Paths\\iTunes.exe"), KEY_READ) == ERROR_SUCCESS)
+			{
+				ULONG chars = MAX_PATH;
+				if (rkITunes.QueryStringValue(TEXT("Path"), iTunesVersion, &chars) == ERROR_SUCCESS)
+				{
+					iTunesInstalled = TRUE;
+					CString strVersion = iTunesVersion;
+					iTunesVersion[0] = 0;
+					// C:\Program Files\WindowsApps\AppleInc.iTunes_12110.26.53016.0_x64__nzyj5cx40ttqa
+					int pos = strVersion.ReverseFind('\\');
+					if (pos != -1)
+					{
+						strVersion = strVersion.Mid(pos + 1);
+						pos = strVersion.Find('_');
+						if (pos != -1)
+						{
+							strVersion = strVersion.Mid(pos + 1);
+							pos = strVersion.Find('_');
+							if (pos != -1)
+							{
+								strVersion = strVersion.Left(pos);
+								_tcscpy(iTunesVersion, (LPCTSTR)strVersion);
+							}
+						}
+					}
+					
+				}
+				rkITunes.Close();
+			}
+		}
 
 		CString iTunesStatus;
 		iTunesInstalled ? iTunesStatus.Format(IDS_ITUNES_VERSION, iTunesVersion) : iTunesStatus.LoadString(IDS_ITUNES_NOT_INSTALLED);
@@ -108,9 +142,13 @@ public:
 		SetDlgItemText(IDC_OUTPUT, szOutput);
 
 		TCHAR szPath[MAX_PATH] = { 0 };
+		TCHAR szPath2[MAX_PATH] = { 0 };
 		// Check iTunes Folder
 		result = SHGetFolderPath(NULL, CSIDL_APPDATA, NULL, SHGFP_TYPE_CURRENT, szPath);
 		_tcscat(szPath, TEXT("\\Apple Computer\\MobileSync\\Backup"));
+
+		result = SHGetFolderPath(NULL, CSIDL_PROFILE, NULL, SHGFP_TYPE_CURRENT, szPath2);
+		_tcscat(szPath2, TEXT("\\Apple\\MobileSync\\Backup"));
 
 		CStatic label = GetDlgItem(IDC_STATIC_BACKUP);
 		CString text;
@@ -118,6 +156,7 @@ public:
 		label.SetWindowText(text);
 
 		DWORD dwAttrib = ::GetFileAttributes(szPath);
+		DWORD dwAttrib2 = ::GetFileAttributes(szPath2);
 		if (dwAttrib != INVALID_FILE_ATTRIBUTES && (dwAttrib & FILE_ATTRIBUTE_DIRECTORY))
 		{
 			CW2A backupDir(CT2W(szPath), CP_UTF8);
@@ -128,7 +167,17 @@ public:
 			{
 				UpdateBackups(manifests);
 			}
-			
+		}
+		else if (dwAttrib2 != INVALID_FILE_ATTRIBUTES && (dwAttrib2 & FILE_ATTRIBUTE_DIRECTORY))
+		{
+			CW2A backupDir(CT2W(szPath2), CP_UTF8);
+
+			ManifestParser parser((LPCSTR)backupDir, &m_shell);
+			std::vector<BackupManifest> manifests;
+			if (parser.parse(manifests))
+			{
+				UpdateBackups(manifests);
+			}
 		}
 #ifndef NDEBUG
 		else if (_tcslen(szPrevBackup) != 0)
@@ -227,7 +276,7 @@ public:
 
 			ManifestParser parser((LPCSTR)backupDir, &m_shell);
 			std::vector<BackupManifest> manifests;
-			if (parser.parse(manifests))
+			if (parser.parse(manifests) && !manifests.empty())
 			{
 				UpdateBackups(manifests);
 #ifndef NDEBUG
@@ -240,6 +289,9 @@ public:
 			}
 			else
 			{
+#ifndef NDEBUG
+				m_logger->debug(parser.getLastError());
+#endif
 				MsgBox(IDS_FAILED_TO_LOAD_BKP);
 			}
 		}
