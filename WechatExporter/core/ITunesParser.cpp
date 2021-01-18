@@ -344,7 +344,7 @@ bool ManifestParser::parseDirectory(const std::string& path, std::vector<BackupM
     {
 #ifndef NDEBUG
 #endif
-		m_lastError = "Failed to list subfolder in:" + path;
+		m_lastError += "Failed to list subfolder in:" + path + "\r\n";
         return false;
     }
     
@@ -363,10 +363,10 @@ bool ManifestParser::parseDirectory(const std::string& path, std::vector<BackupM
         }
     }
 
-	if (res)
+	if (!res)
 	{
-		m_lastError = "No valid backup id found in:" + path;
-		res = false;
+		m_lastError += "No valid backup id found in:" + path + "\r\n";
+		// res = false;
 	}
 
     return res;
@@ -389,7 +389,7 @@ bool ManifestParser::parse(const std::string& backupPath, const std::string& bac
 
 	if (!m_shell->existsFile(fileName))
 	{
-		m_lastError = "Info.plist not found";
+		m_lastError += "Info.plist not found\r\n";
 		return false;
 	}
     
@@ -417,7 +417,7 @@ bool ManifestParser::parse(const std::string& backupPath, const std::string& bac
     xmlCleanupParser();
     if (res != 0)
     {
-		m_lastError = "Failed to parse xml: Info.plist";
+		m_lastError += "Failed to parse xml: Info.plist\r\n";
         return false;
     }
     
@@ -448,7 +448,7 @@ bool ManifestParser::parse(const std::string& backupPath, const std::string& bac
     }
 	else
 	{
-		m_lastError = "Failed to read Manifest.plist";
+		m_lastError = "Failed to read Manifest.plist\r\n";
 		return false;
 	}
 
