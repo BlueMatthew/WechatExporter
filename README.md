@@ -41,5 +41,5 @@ Windows环境下，silk自带Visual Studio工程文件，可以直接利用Visua
   
 已测试iTunes和微信版本  
 iTunes 12.10.10.2 + 微信7.0.2  
-iTunes 12.10.9.3 + 微信 7.0.15
+iTunes 12.10.9.3 + 微信 7.0.15  
 Windows 10 + iTunes 12.11.0.26(Microsoft Store) + 微信 7.0.2
