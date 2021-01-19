@@ -351,10 +351,11 @@ bool ManifestParser::parseDirectory(const std::string& path, std::vector<BackupM
     bool res = false;
     for (std::vector<std::string>::const_iterator it = subDirectories.cbegin(); it != subDirectories.cend(); ++it)
     {
-        if (it->size() != 40)
-        {
-            continue;
-        }
+		if (!isValidBackupId(path, *it))
+		{
+			continue;
+		}
+        
         BackupManifest manifest;
         if (parse(path, *it, manifest) && manifest.isValid())
         {
@@ -372,6 +373,38 @@ bool ManifestParser::parseDirectory(const std::string& path, std::vector<BackupM
     return res;
 }
 
+bool ManifestParser::isValidBackupId(const std::string& backupPath, const std::string& backupId) const
+{
+	std::string path = combinePath(backupPath, backupId);
+	std::string fileName = combinePath(path, "Info.plist");
+
+	// if (it->size() != 40)
+	// {
+	//	return false;
+	// }
+
+	if (!m_shell->existsFile(fileName))
+	{
+		m_lastError += "Info.plist not found\r\n";
+		return false;
+	}
+
+	fileName = combinePath(path, "Manifest.plist");
+	if (!m_shell->existsFile(fileName))
+	{
+		m_lastError += "Manifest.plist not found\r\n";
+		return false;
+	}
+
+	fileName = combinePath(path, "Manifest.db");
+	if (!m_shell->existsFile(fileName))
+	{
+		m_lastError += "Manifest.db not found\r\n";
+		return false;
+	}
+	return true;
+}
+
 bool ManifestParser::parse(const std::string& backupPath, const std::string& backupId, BackupManifest& manifest) const
 {
     //Info.plist is a xml file
@@ -387,12 +420,6 @@ bool ManifestParser::parse(const std::string& backupPath, const std::string& bac
     std::string path = combinePath(backupPath, backupId);
     std::string fileName = combinePath(path, "Info.plist");
 
-	if (!m_shell->existsFile(fileName))
-	{
-		m_lastError += "Info.plist not found\r\n";
-		return false;
-	}
-    
     const std::string NodePlist = "plist";
     const std::string NodeDict = "dict";
     

@@ -192,6 +192,7 @@ public:
 protected:
     bool parseDirectory(const std::string& path, std::vector<BackupManifest>& manifests) const;
     bool parse(const std::string& backupPath, const std::string& backupId, BackupManifest& manifest) const;
+	bool isValidBackupId(const std::string& backupPath, const std::string& backupId) const;
 };
 
 #endif /* ITunesParser_h */
