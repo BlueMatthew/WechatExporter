@@ -220,7 +220,7 @@ void errorLogCallback(void *pArg, int iErrCode, const char *zMsg)
     [panel setDirectoryURL:[NSURL URLWithString:NSHomeDirectory()]]; // Set panel's default directory.
     // [panel setDirectoryURL:[NSURL URLWithString:@"/Users/matthew/Documents/reebes/Backup"]]; // Set panel's default directory.
     
-    [panel beginSheetModalForWindow:[self.view window] completionHandler: (^(NSInteger result){
+    [panel beginSheetModalForWindow:[self.view window] completionHandler: (^(NSInteger result) {
         if (result == NSOKButton)
         {
             NSURL *backupUrl = panel.directoryURL;
