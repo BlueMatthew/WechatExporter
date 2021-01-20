@@ -123,6 +123,43 @@ public:
 		return ofs.is_open();
 	}
 
+	std::string removeInvalidCharsForFileName(const std::string& fileName) const
+	{
+		/*
+		Do not use any of the following characters when naming your files or folders:
+			/ ? < > \ : * | ” and any character you can type with the Ctrl key
+		File and folder names may be up to 256 characters long
+		The maximum length of a full path is 260 characters
+		Placing a space at the end of the name
+		Placing a period at the end of the name
+		 */
+
+		static std::string invalidChars = "[\\/:*?\"<>|]";
+
+		std::string validFileName = fileName;
+		for (unsigned int i = 0; i < invalidChars.size(); ++i)
+		{
+			validFileName.erase(remove(validFileName.begin(), validFileName.end(), invalidChars[i]), validFileName.end());
+		}
+
+		
+		size_t pos = validFileName.find_last_not_of(" .");
+		if (pos == std::string::npos)
+		{
+			return "";
+		}
+		else
+		{
+			validFileName.erase(pos + 1);
+		}
+
+		if (validFileName.size() > 256)
+		{
+			validFileName = validFileName.substr(0, 256);
+		}
+		return validFileName;
+	}
+
 protected:
 	
 };
