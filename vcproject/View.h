@@ -19,6 +19,7 @@ private:
 
 	CColoredStaticCtrl	m_iTunesLabel;
 	CLogListBox			m_logListBox;
+	CSortListViewCtrl	m_sessionsListCtrl;
 
 	ShellImpl			m_shell;
 	LoggerImpl*			m_logger;
@@ -521,7 +522,8 @@ public:
 			{
 				if (listViewCtrl.GetCheckState(nItem) && nItem < user.second.size())
 				{
-					it->second.insert(user.second[nItem].getUsrName());
+					int idx = static_cast<int>(listViewCtrl.GetItemData(nItem));
+					it->second.insert(user.second[idx].getUsrName());
 				}
 			}
 		}
@@ -634,6 +636,8 @@ public:
 
 	void InitializeSessionList()
 	{
+		m_sessionsListCtrl.SubclassWindow(GetDlgItem(IDC_SESSIONS));
+
 		CString strColumn1;
 		CString strColumn2;
 		CString strColumn3;
@@ -642,42 +646,43 @@ public:
 		strColumn2.LoadString(IDS_SESSION_COUNT);
 		strColumn3.LoadString(IDS_SESSION_USER);
 
-		CListViewCtrl listViewCtrl = GetDlgItem(IDC_SESSIONS);
-
-		DWORD dwStyle = listViewCtrl.GetExStyle();
+		DWORD dwStyle = m_sessionsListCtrl.GetExStyle();
 		dwStyle |= LVS_EX_FULLROWSELECT | LVS_EX_LABELTIP | LVS_EX_GRIDLINES | LVS_EX_CHECKBOXES;
-		listViewCtrl.SetExtendedListViewStyle(dwStyle);
+		m_sessionsListCtrl.SetExtendedListViewStyle(dwStyle);
 
 		LVCOLUMN lvc = { 0 };
-		ListView_InsertColumn(listViewCtrl, 0, &lvc);
+		ListView_InsertColumn(m_sessionsListCtrl, 0, &lvc);
 		lvc.mask = LVCF_TEXT | LVCF_WIDTH;
 		lvc.iSubItem++;
 		lvc.pszText = (LPTSTR)(LPCTSTR)strColumn1;
 		lvc.cx = 192;
-		ListView_InsertColumn(listViewCtrl, 1, &lvc);
+		ListView_InsertColumn(m_sessionsListCtrl, 1, &lvc);
 		lvc.iSubItem++;
 		lvc.pszText = (LPTSTR)(LPCTSTR)strColumn2;
 		lvc.cx = 96;
-		ListView_InsertColumn(listViewCtrl, 2, &lvc);
+		ListView_InsertColumn(m_sessionsListCtrl, 2, &lvc);
 		lvc.iSubItem++;
 		lvc.pszText = (LPTSTR)(LPCTSTR)strColumn3;
 		lvc.cx = 128;
-		ListView_InsertColumn(listViewCtrl, 3, &lvc);
+		ListView_InsertColumn(m_sessionsListCtrl, 3, &lvc);
 
 		// Set column widths
-		ListView_SetColumnWidth(listViewCtrl, 0, LVSCW_AUTOSIZE_USEHEADER);
+		ListView_SetColumnWidth(m_sessionsListCtrl, 0, LVSCW_AUTOSIZE_USEHEADER);
 		// ListView_SetColumnWidth(listViewCtrl, 1, LVSCW_AUTOSIZE_USEHEADER);
 		// ListView_SetColumnWidth(listViewCtrl, 2, LVSCW_AUTOSIZE_USEHEADER);
 		// ListView_SetColumnWidth(listViewCtrl, 3, LVSCW_AUTOSIZE_USEHEADER);
+		m_sessionsListCtrl.SetColumnSortType(0, LVCOLSORT_NONE);
+		m_sessionsListCtrl.SetColumnSortType(2, LVCOLSORT_LONG);
+		m_sessionsListCtrl.SetColumnSortType(3, LVCOLSORT_NONE);
 
-
-		HWND header = ListView_GetHeader(listViewCtrl);
+		HWND header = ListView_GetHeader(m_sessionsListCtrl);
 		DWORD dwHeaderStyle = ::GetWindowLong(header, GWL_STYLE);
 		dwHeaderStyle |= HDS_CHECKBOXES;
 		::SetWindowLong(header, GWL_STYLE, dwHeaderStyle);
 
 		// Store the ID of the header control so we can handle its notification by ID
 		// m_HeaderId = ::GetDlgCtrlID(header);
+		
 	
 		HDITEM hdi = { 0 };
 		hdi.mask = HDI_FORMAT;
@@ -734,7 +739,8 @@ public:
 				lvItem.pszText = TEXT("");
 				// lvItem.state = INDEXTOSTATEIMAGEMASK(2);
 				// lvItem.stateMask = LVIS_STATEIMAGEMASK;
-				lvItem.lParam = reinterpret_cast<LPARAM>(&(*it2));
+				int idx = std::distance(it->second.cbegin(), it2);
+				lvItem.lParam = static_cast<LPARAM>(idx);
 				int nItem = listViewCtrl.InsertItem(&lvItem);
 
 				_itot(it2->getRecordCount(), recordCount, 10);
