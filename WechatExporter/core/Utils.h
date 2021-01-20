@@ -68,6 +68,7 @@ bool readFile(const std::string& path, std::vector<unsigned char>& data);
 bool writeFile(const std::string& path, const std::vector<unsigned char>& data);
 bool writeFile(const std::string& path, const std::string& data);
 bool writeFile(const std::string& path, const unsigned char* data, unsigned int dataLength);
+std::string removeInvalidCharsForFileName(const std::string& fileName);
 bool isValidFileName(const std::string& fileName);
 #ifdef _WIN32
 std::string utf8ToLocalAnsi(std::string utf8Str);
