@@ -29,6 +29,7 @@ public:
 	virtual bool openOutputFile(std::ofstream& ofs, const std::string& fileName, std::ios_base::openmode mode = std::ios::out) const = 0;
     // virtual bool convertPlist(const std::vector<unsigned char>& bplist, std::string& xml) const = 0;
     // virtual int exec(const std::string& cmd) const = 0;
+    virtual std::string removeInvalidCharsForFileName(const std::string& fileName) const = 0;
     virtual ~Shell() {}
     
     
