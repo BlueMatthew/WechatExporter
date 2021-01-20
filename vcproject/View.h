@@ -11,6 +11,7 @@
 #include "ExportNotifierImpl.h"
 #include "ColoredControls.h"
 #include "LogListBox.h"
+#include "ITunesDetector.h"
 
 class CView : public CDialogImpl<CView>, public CDialogResize<CView>
 {
@@ -80,58 +81,12 @@ public:
 			rk.Close();
 		}
 
-		BOOL iTunesInstalled = FALSE;
-		TCHAR iTunesVersion[MAX_PATH] = { 0 };
-		CRegKey rkITunes;
-		if (rkITunes.Open(HKEY_LOCAL_MACHINE, TEXT("SOFTWARE\\Apple Computer, Inc.\\iTunes"), KEY_READ) == ERROR_SUCCESS)
-		{
-			ULONG chars = MAX_PATH;
-			if (rkITunes.QueryStringValue(TEXT("Version"), iTunesVersion, &chars) == ERROR_SUCCESS)
-			{
-				iTunesInstalled = TRUE;
-			}
-			rkITunes.Close();
-		}
-		if (!iTunesInstalled)
-		{
-			// Check if there is iTunes installed in MS Store
-			CRegKey rkITAppunes;
-			if (rkITunes.Open(HKEY_LOCAL_MACHINE, TEXT("SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\App Paths\\iTunes.exe"), KEY_READ) == ERROR_SUCCESS)
-			{
-				ULONG chars = MAX_PATH;
-				if (rkITunes.QueryStringValue(TEXT("Path"), iTunesVersion, &chars) == ERROR_SUCCESS)
-				{
-					iTunesInstalled = TRUE;
-					CString strVersion = iTunesVersion;
-					iTunesVersion[0] = 0;
-					// C:\Program Files\WindowsApps\AppleInc.iTunes_12110.26.53016.0_x64__nzyj5cx40ttqa
-					int pos = strVersion.ReverseFind('\\');
-					if (pos != -1)
-					{
-						strVersion = strVersion.Mid(pos + 1);
-						pos = strVersion.Find('_');
-						if (pos != -1)
-						{
-							strVersion = strVersion.Mid(pos + 1);
-							pos = strVersion.Find('_');
-							if (pos != -1)
-							{
-								strVersion = strVersion.Left(pos);
-								_tcscpy(iTunesVersion, (LPCTSTR)strVersion);
-							}
-						}
-					}
-					
-				}
-				rkITunes.Close();
-			}
-		}
+		ITunesDetector iTunesDetector;
 
 		CString iTunesStatus;
-		iTunesInstalled ? iTunesStatus.Format(IDS_ITUNES_VERSION, iTunesVersion) : iTunesStatus.LoadString(IDS_ITUNES_NOT_INSTALLED);
+		iTunesDetector.isInstalled() ? iTunesStatus.Format(IDS_ITUNES_VERSION, (LPCTSTR)iTunesDetector.getVersion()) : iTunesStatus.LoadString(IDS_ITUNES_NOT_INSTALLED);
 		m_iTunesLabel.SetWindowText(iTunesStatus);
-		// iTunesInstalled ? m_iTunesLabel.SetNormalColors(RGB(0, 0xFF, 0), RGB(0xFF, 0xFF, 0xFF)) : m_iTunesLabel.SetNormalColors(RGB(0xFF, 0, 0), CLR_INVALID);
-		iTunesInstalled ? m_iTunesLabel.SetNormalColors(RGB(0x32, 0xCD, 0x32), CLR_INVALID) : m_iTunesLabel.SetNormalColors(RGB(0xFF, 0, 0), CLR_INVALID);
+		iTunesDetector.isInstalled() ? m_iTunesLabel.SetNormalColors(RGB(0x32, 0xCD, 0x32), CLR_INVALID) : m_iTunesLabel.SetNormalColors(RGB(0xFF, 0, 0), CLR_INVALID);
 		// m_iTunesLabel.
 
 		HRESULT result = S_OK;
