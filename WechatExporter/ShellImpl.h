@@ -121,6 +121,32 @@ public:
         return ofs.is_open();
     }
     
+    std::string removeInvalidCharsForFileName(const std::string& fileName) const
+    {
+        /*
+         The only illegal character for file and folder names in Mac OS X is the colon “:”
+         File and folder names are not permitted to begin with a dot “.”
+         File and folder names may be up to 255 characters in length
+         */
+        
+        std::string validFileName = replaceAll(fileName, ":", "");
+        size_t pos = validFileName.find_first_not_of(".");
+        if (pos == std::string::npos)
+        {
+            return "";
+        }
+        else if (pos != 0)
+        {
+            validFileName.erase(0, pos);
+        }
+        
+        if (validFileName.size() > 255)
+        {
+            validFileName = validFileName.substr(0, 255);
+        }
+        return validFileName;
+    }
+    
 protected:
     bool deleteDirectory(NSString *path) const
     {
