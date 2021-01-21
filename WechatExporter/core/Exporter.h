@@ -88,6 +88,7 @@ protected:
     void notifyStart();
     void notifyComplete(bool cancelled = false);
     void notifyProgress(double progress);
+    bool buildFileNameForUser(Friend& user, std::set<std::string>& existingFileNames);
 };
 
 #endif /* Exporter_h */
