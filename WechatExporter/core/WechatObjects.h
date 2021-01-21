@@ -64,9 +64,6 @@ public:
 
 class Friend
 {
-public:
-    
-    
 protected:
     std::string m_usrName;
     std::string m_uidHash;
