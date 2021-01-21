@@ -68,6 +68,9 @@ bool readFile(const std::string& path, std::vector<unsigned char>& data);
 bool writeFile(const std::string& path, const std::vector<unsigned char>& data);
 bool writeFile(const std::string& path, const std::string& data);
 bool writeFile(const std::string& path, const unsigned char* data, unsigned int dataLength);
+bool appendFile(const std::string& path, const unsigned char* data, unsigned int dataLength);
+bool moveFile(const std::string& src, const std::string& dest, bool overwrite = true);
+bool copyFile(const std::string& src, const std::string& dest);
 std::string removeInvalidCharsForFileName(const std::string& fileName);
 bool isValidFileName(const std::string& fileName);
 #ifdef _WIN32

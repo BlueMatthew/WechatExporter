@@ -20,6 +20,7 @@
 #include <direct.h>
 #include <atlstr.h>
 #include <sys/utime.h>
+#include "Shlwapi.h"
 #else
 #include <utime.h>
 #endif
@@ -107,8 +108,19 @@ std::string combinePath(const std::string& p1, const std::string& p2)
     {
         return "";
     }
+
+	std::string path;
+#ifdef _WIN32
+	TCHAR buffer[MAX_PATH] = { 0 };
+	CW2T pszT1(CA2W(p1.c_str(), CP_UTF8));
+	CW2T pszT2(CA2W(p2.c_str(), CP_UTF8));
+
+	::PathCombine(buffer, pszT1, pszT2);
+
+	CW2A pszU8(CT2W(buffer), CP_UTF8);
+	path = pszU8;
+#else
     
-    std::string path;
     if (!p1.empty())
     {
         path = p1;
@@ -123,7 +135,7 @@ std::string combinePath(const std::string& p1, const std::string& p2)
     {
         path = p2;
     }
- 
+#endif
     return path;
 }
 
@@ -301,41 +313,108 @@ bool writeFile(const std::string& path, const std::vector<unsigned char>& data)
 
 bool writeFile(const std::string& path, const std::string& data)
 {
-    std::ofstream ofs;
-#ifdef _WIN32
-	CW2A pszA(CA2W(path.c_str(), CP_UTF8));
-	ofs.open(pszA, std::ios::out | std::ios::binary | std::ios::trunc);
-#else
-	ofs.open(path, std::ios::out | std::ios::binary | std::ios::trunc);
-#endif
-    if (ofs.is_open())
-    {
-        ofs.write(reinterpret_cast<const char *>(data.c_str()), data.size());
-        ofs.close();
-        return true;
-    }
-    
-    return false;
+	return writeFile(path, reinterpret_cast<const unsigned char*>(data.c_str()), data.size());
 }
 
 bool writeFile(const std::string& path, const unsigned char* data, unsigned int dataLength)
 {
-    std::ofstream ofs;
 #ifdef _WIN32
-    CW2A pszA(CA2W(path.c_str(), CP_UTF8));
-    ofs.open(pszA, std::ios::out | std::ios::binary | std::ios::trunc);
+	CW2T pszT(CA2W(path.c_str(), CP_UTF8));
+
+	HANDLE hFile = CreateFile(pszT, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+	if (hFile == INVALID_HANDLE_VALUE)
+	{
+		return false;
+	}
+
+	DWORD dwBytesToWrite = static_cast<DWORD>(dataLength);
+	DWORD dwBytesWritten = 0;
+	BOOL bErrorFlag = WriteFile(hFile, data, dwBytesToWrite, &dwBytesWritten, NULL);
+
+	::CloseHandle(hFile);
+	return (TRUE == bErrorFlag);
 #else
-    ofs.open(path, std::ios::out | std::ios::binary | std::ios::trunc);
+
+	std::ofstream ofs;
+	ofs.open(path, std::ios::out | std::ios::binary | std::ios::trunc);
+	if (ofs.is_open())
+	{
+		ofs.write(reinterpret_cast<const char *>(data), dataLength);
+		ofs.close();
+		return true;
+	}
+
+	return false;
 #endif
-    
-    if (ofs.is_open())
-    {
-        ofs.write(reinterpret_cast<const char *>(data), dataLength);
-        ofs.close();
-        return true;
-    }
-    
-    return false;
+}
+
+bool appendFile(const std::string& path, const unsigned char* data, unsigned int dataLength)
+{
+#ifdef _WIN32
+	CW2T pszT(CA2W(path.c_str(), CP_UTF8));
+
+	HANDLE hFile = ::CreateFile(pszT, GENERIC_WRITE, 0, NULL, OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+	if (hFile == INVALID_HANDLE_VALUE)
+	{
+		return false;
+	}
+
+	::SetFilePointer(hFile, 0, 0, FILE_END);
+	DWORD dwBytesToWrite = static_cast<DWORD>(dataLength);
+	DWORD dwBytesWritten = 0;
+	BOOL bErrorFlag = WriteFile(hFile, data, dwBytesToWrite, &dwBytesWritten, NULL);
+	::CloseHandle(hFile);
+	return (TRUE == bErrorFlag);
+#else
+	std::ofstream ofs;
+	ofs.open(path, std::fstream::in | std::fstream::out | std::fstream::app | std::fstream::binary);
+	if (ofs.is_open())
+	{
+		ofs.write(reinterpret_cast<const char *>(data), dataLength);
+		ofs.close();
+		return true;
+	}
+
+	return false;
+#endif
+}
+
+bool moveFile(const std::string& src, const std::string& dest, bool overwrite/* = true*/)
+{
+#ifdef _WIN32
+	CW2T pszSrc(CA2W(src.c_str(), CP_UTF8));
+	CW2T pszDest(CA2W(dest.c_str(), CP_UTF8));
+	if (overwrite)
+	{
+		::DeleteFile(pszDest);
+	}
+	BOOL bErrorFlag = ::MoveFile(pszSrc, pszDest);
+	return (TRUE == bErrorFlag);
+#else
+	if (overwrite)
+	{
+		remove(dest.c_str());
+	}
+	return 0 == rename(src.c_str(), dest.c_str());
+#endif
+}
+
+bool copyFile(const std::string& src, const std::string& dest)
+{
+#ifdef _WIN32
+	CW2T pszSrc(CA2W(src.c_str(), CP_UTF8));
+	CW2T pszDest(CA2W(dest.c_str(), CP_UTF8));
+
+	BOOL bErrorFlag = ::CopyFile(pszSrc, pszDest, FALSE);
+	return (TRUE == bErrorFlag);
+#else
+	std::ifstream  ss(src, std::ios::binary);
+	std::ofstream  ds(dest, std::ios::binary);
+
+	ds << ss.rdbuf();
+
+	return true;
+#endif
 }
 
 std::string removeInvalidCharsForFileName(const std::string& fileName)
@@ -394,44 +473,44 @@ std::string removeInvalidCharsForFileName(const std::string& fileName)
 bool isValidFileName(const std::string& fileName)
 {
 #if defined(_WIN32)
-	// tmpdir = "/tmp";
-	char const *tmpdir = getenv("TEMP");
+	TCHAR tmpPath[MAX_PATH] = { 0 };
+	if (GetTempPath(MAX_PATH, tmpPath))
+	{
+		// CT2A t2a(charPath);
+		// tempDir = (LPCSTR)t2a;
+	}
+
+	TCHAR path[MAX_PATH] = { 0 };
+	CW2T pszT(CA2W(fileName.c_str(), CP_UTF8));
+	::PathCombine(path, tmpPath, (LPCTSTR)pszT);
+
+	bool valid = false;
+	if (::CreateDirectory(path, NULL))
+	{
+		valid = true;
+		RemoveDirectory(path);
+	}
+	else
+	{
+		valid = (::GetLastError() == ERROR_ALREADY_EXISTS);
+	}
+	return valid;
 #else
 	char const *tmpdir = getenv("TMPDIR");
-#endif
     
 	std::string tempDir;
 
     if (tmpdir == NULL)
     {
-#if defined(_WIN32)
-		TCHAR charPath[MAX_PATH] = { 0 };
-		if (GetTempPath(MAX_PATH, charPath))
-		{
-			CT2A t2a(charPath);
-			tempDir = (LPCSTR)t2a;
-		}
-#else
 		tempDir = "/tmp";
-#endif
     }
 	else
 	{
 		tempDir = tmpdir;
 	}
     
-#if defined(_WIN32)
-	CW2A pszA(CA2W(fileName.c_str(), CP_UTF8));
-    std::string path = combinePath(tempDir, (LPCSTR)pszA);
-#else
 	std::string path = combinePath(tempDir, fileName);
-#endif
-    
-#ifdef _WIN32
-	int status = mkdir(path.c_str());
-#else
     int status = mkdir(path.c_str(), 0);
-#endif
     int lastErrorNo = errno;
     if (status == 0)
     {
@@ -439,7 +518,10 @@ bool isValidFileName(const std::string& fileName)
     }
     
     return status == 0 || lastErrorNo == EEXIST;
+#endif
 }
+
+
 
 #ifdef _WIN32
 std::string utf8ToLocalAnsi(std::string utf8Str)

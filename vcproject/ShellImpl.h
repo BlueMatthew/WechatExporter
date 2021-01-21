@@ -124,41 +124,49 @@ public:
 	}
 
 	std::string removeInvalidCharsForFileName(const std::string& fileName) const
-	{
-		/*
-		Do not use any of the following characters when naming your files or folders:
-			/ ? < > \ : * | � and any character you can type with the Ctrl key
-		File and folder names may be up to 256 characters long
-		The maximum length of a full path is 260 characters
-		Placing a space at the end of the name
-		Placing a period at the end of the name
-		 */
+    {
+		CW2T pszT(CA2W(fileName.c_str(), CP_UTF8));
 
-		static std::string invalidChars = "[\\/:*?\"<>|]";
+		CString validFileName = removeInvalidCharsForFileName(CString(pszT));
+        
+		CW2A pszU8(CT2W(validFileName), CP_UTF8);
+        return std::string(pszU8);
+    }
 
-		std::string validFileName = fileName;
-		for (unsigned int i = 0; i < invalidChars.size(); ++i)
-		{
-			validFileName.erase(remove(validFileName.begin(), validFileName.end(), invalidChars[i]), validFileName.end());
-		}
+	CString removeInvalidCharsForFileName(const CString& fileName) const
+    {
+        /*
+        Windows NT:
+        Do not use any of the following characters when naming your files or folders:
+            / ? < > \ : * | ” and any character you can type with the Ctrl key
+        File and folder names may be up to 256 characters long
+        The maximum length of a full path is 260 characters
+        Placing a space at the end of the name
+        Placing a period at the end of the name
 
-		
-		size_t pos = validFileName.find_last_not_of(" .");
-		if (pos == std::string::npos)
+         MAC:
+         The only illegal character for file and folder names in Mac OS X is the colon “:”
+         File and folder names are not permitted to begin with a dot “.”
+         File and folder names may be up to 255 characters in length
+         */
+        
+		LPCTSTR invalidChars = TEXT("[\\/:*?\"<>|]");
+		CString validFileName = fileName;
+		for (LPCTSTR ptr = invalidChars; *ptr != '\0'; ptr++)
 		{
-			return "";
+			validFileName.Remove(*ptr);
 		}
-		else
-		{
-			validFileName.erase(pos + 1);
-		}
+		validFileName.TrimLeft(TEXT("."));
+		validFileName.TrimRight(TEXT(" ."));
 
-		if (validFileName.size() > 256)
-		{
-			validFileName = validFileName.substr(0, 256);
-		}
-		return validFileName;
-	}
+        if (validFileName.GetLength() > 255)
+        {
+            validFileName = validFileName.Left(255);
+        }
+        return validFileName;
+    }
+
+
 
 protected:
 	

@@ -68,8 +68,7 @@ bool Task::downloadFile()
     res = curl_easy_perform(curl);
 	if (res == CURLE_OK)
     {
-		remove(utf8ToLocalAnsi(m_output).c_str());
-        rename(utf8ToLocalAnsi(m_outputTmp).c_str(), utf8ToLocalAnsi(m_output).c_str());
+        ::moveFile(m_outputTmp, m_output);
     }
     else
 	{
@@ -98,26 +97,17 @@ bool Task::downloadFile()
 
 bool Task::copyFile()
 {
-    std::ifstream  src(utf8ToLocalAnsi(m_url), std::ios::binary);
-    std::ofstream  dst(utf8ToLocalAnsi(m_output), std::ios::binary);
-
-    dst << src.rdbuf();
-    
-    return true;
+	return ::copyFile(m_url, m_output);
 }
 
 size_t Task::writeData(void *buffer, size_t size, size_t nmemb)
 {
-    std::ofstream file;
-    file.open (utf8ToLocalAnsi(m_outputTmp), std::fstream::in | std::fstream::out | std::fstream::app | std::fstream::binary);
 	size_t bytesToWrite = size * nmemb;
-	if (file.is_open())
+	if (appendFile(m_outputTmp, reinterpret_cast<const unsigned char *>(buffer), bytesToWrite))
 	{
-		file.write(reinterpret_cast<const char *>(buffer), bytesToWrite);
-		file.close();
+		return bytesToWrite;
 	}
-
-    return bytesToWrite;
+	return 0;
 }
 
 Downloader::Downloader(Logger* logger) : m_logger(logger)
