@@ -428,7 +428,7 @@
 					"@executable_path/../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 10.10;
-				MARKETING_VERSION = 1.7.4;
+				MARKETING_VERSION = 1.7.5;
 				OTHER_LDFLAGS = (
 					"-L/usr/local/lib",
 					"-lprotobuf",
@@ -463,7 +463,7 @@
 					"@executable_path/../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 10.10;
-				MARKETING_VERSION = 1.7.4;
+				MARKETING_VERSION = 1.7.5;
 				OTHER_LDFLAGS = (
 					"-L/usr/local/lib",
 					"-lprotobuf",
