@@ -217,6 +217,7 @@ bool Exporter::runImpl()
 
     std::string htmlBody;
 
+    std::set<std::string> userFileNames;
 	for (std::vector<Friend>::iterator it = users.begin(); it != users.end(); ++it)
 	{
         if (m_cancelled)
@@ -231,6 +232,13 @@ bool Exporter::runImpl()
                 continue;
             }
         }
+        
+        if (!buildFileNameForUser(*it, userFileNames))
+        {
+            m_logger->write(formatString(getLocaleString("Can't build directory name for user: %s. Skip it."), it->getUsrName().c_str()));
+            continue;
+        }
+        
 		fillUser(*it);
         std::string userOutputPath;
 		exportUser(*it, userOutputPath);
@@ -249,12 +257,7 @@ bool Exporter::runImpl()
     html = replaceAll(html, "%%USERNAME%%", "");
     html = replaceAll(html, "%%TBODY%%", htmlBody);
     
-    std::ofstream htmlFile;
-    if (m_shell->openOutputFile(htmlFile, fileName, std::ios::out | std::ios::in | std::ios::binary | std::ios::trunc))
-    {
-        htmlFile.write(html.c_str(), html.size());
-        htmlFile.close();
-    }
+    writeFile(fileName, html);
     
     time_t endTime = 0;
     std::time(&endTime);
@@ -342,6 +345,7 @@ bool Exporter::exportUser(Friend& user, std::string& userOutputPath)
 	SessionParser sessionParser(*myself, friends, *m_iTunesDb, *m_shell, m_templates, m_localeStrings, m_options, downloader, m_cancelled);
 
     downloader.addTask(user.getPortrait(), combinePath(outputBase, "Portrait", user.getLocalPortrait()), 0);
+    std::set<std::string> sessionFileNames;
     for (std::vector<Session>::iterator it = sessions.begin(); it != sessions.end(); ++it)
     {
         if (m_cancelled)
@@ -355,6 +359,12 @@ bool Exporter::exportUser(Friend& user, std::string& userOutputPath)
             {
                 continue;
             }
+        }
+        
+        if (!buildFileNameForUser(*it, sessionFileNames))
+        {
+            m_logger->write(formatString(getLocaleString("Can't build directory name for chat: %s. Skip it."), it->getDisplayName().c_str()));
+            continue;
         }
         
         std::string sessionDisplayName = it->getDisplayName();
@@ -380,25 +390,19 @@ bool Exporter::exportUser(Friend& user, std::string& userOutputPath)
         {
             std::string userItem = getTemplate("listitem");
             userItem = replaceAll(userItem, "%%ITEMPICPATH%%", "Portrait/" + it->getLocalPortrait());
-            userItem = replaceAll(userItem, "%%ITEMLINK%%", encodeUrl(it->getUsrName()) + ".html");
+            userItem = replaceAll(userItem, "%%ITEMLINK%%", encodeUrl(it->getOutputFileName()) + ".html");
             userItem = replaceAll(userItem, "%%ITEMTEXT%%", safeHTML(sessionDisplayName));
             
             userBody += userItem;
         }
     }
 
-    std::string fileName = combinePath(outputBase, "index.html");
-
     std::string html = getTemplate("listframe");
     html = replaceAll(html, "%%USERNAME%%", " - " + user.getDisplayName());
     html = replaceAll(html, "%%TBODY%%", userBody);
     
-    std::ofstream htmlFile;
-    if (m_shell->openOutputFile(htmlFile, fileName, std::ios::out | std::ios::in | std::ios::binary | std::ios::trunc))
-    {
-        htmlFile.write(html.c_str(), html.size());
-        htmlFile.close();
-    }
+    std::string fileName = combinePath(outputBase, "index.html");
+    writeFile(fileName, html);
     
     if (m_cancelled)
     {
@@ -446,7 +450,7 @@ int Exporter::exportSession(const Friend& user, SessionParser& sessionParser, co
 		return false;
 	}
     
-    std::string sessionBasePath = combinePath(outputBase, session.getUsrName() + "_files");
+    std::string sessionBasePath = combinePath(outputBase, session.getOutputFileName() + "_files");
     std::string portraitPath = combinePath(sessionBasePath, "Portrait");
     m_shell->makeDirectory(portraitPath);
     m_shell->makeDirectory(combinePath(sessionBasePath, "Emoji"));
@@ -458,18 +462,14 @@ int Exporter::exportSession(const Friend& user, SessionParser& sessionParser, co
 	int count = sessionParser.parse(userBase, outputBase, session, contents);
 	if (count > 0)
 	{
-        std::string fileName = combinePath(outputBase, session.getUsrName() + ".html");
+        std::string fileName = combinePath(outputBase, session.getOutputFileName() + ".html");
 
         std::string html = getTemplate("frame");
         html = replaceAll(html, "%%DISPLAYNAME%%", session.getDisplayName());
         html = replaceAll(html, "%%BODY%%", contents);
         
-        std::ofstream htmlFile;
-        if (m_shell->openOutputFile(htmlFile, fileName, std::ios::out | std::ios::binary | std::ios::trunc))
-        {
-            htmlFile.write(html.c_str(), html.size());
-            htmlFile.close();
-        }
+        writeFile(fileName, html);
+        
 	}
     
 	return count;
@@ -497,16 +497,27 @@ bool Exporter::fillUser(Friend& user)
         }
     }
     
-    if (isValidFileName(user.getDisplayName()))
+    return true;
+}
+
+bool Exporter::buildFileNameForUser(Friend& user, std::set<std::string>& existingFileNames)
+{
+    std::string names[] = {user.getDisplayName(), user.getUsrName(), user.getHash()};
+    
+    bool succeeded = false;
+    for (int idx = 0; idx < 3; ++idx)
     {
-        user.setOutputFileName(user.getDisplayName());
-    }
-    else if (isValidFileName(user.getUsrName()))
-    {
-        user.setOutputFileName(user.getUsrName());
+        std::string outputFileName = m_shell->removeInvalidCharsForFileName(names[idx]);
+        if (isValidFileName(outputFileName) && existingFileNames.find(outputFileName) == existingFileNames.cend())
+        {
+            user.setOutputFileName(outputFileName);
+            existingFileNames.insert(outputFileName);
+            succeeded = true;
+            break;
+        }
     }
     
-    return true;
+    return succeeded;
 }
 
 bool Exporter::fillSession(Session& session, const Friends& friends) const

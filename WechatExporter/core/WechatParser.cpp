@@ -835,7 +835,7 @@ bool SessionParser::parseRow(MsgRecord& record, const std::string& userBase, con
     TemplateValues& templateValues = *(tvs.emplace(tvs.end(), "msg"));
     
 	std::string msgIdStr = std::to_string(record.msgId);
-    std::string assetsDir = combinePath(outputPath, session.getUsrName() + "_files");
+    std::string assetsDir = combinePath(outputPath, session.getOutputFileName() + "_files");
 	m_shell.makeDirectory(assetsDir);
     
     templateValues["%%MSGID%%"] = std::to_string(record.msgId);
@@ -861,7 +861,7 @@ bool SessionParser::parseRow(MsgRecord& record, const std::string& userBase, con
     }
 
 #ifndef NDEBUG
-    writeFile(combinePath(outputPath, "msg" + std::to_string(record.type) + ".txt"), record.message);
+    writeFile(combinePath(outputPath, "../dbg", "msg" + std::to_string(record.type) + ".txt"), record.message);
 #endif
     if (record.type == 10000 || record.type == 10002)
     {
@@ -909,7 +909,7 @@ bool SessionParser::parseRow(MsgRecord& record, const std::string& userBase, con
             }
 
             templateValues.setName("audio");
-            templateValues["%%AUDIOPATH%%"] = session.getUsrName() + "_files/" + msgIdStr + ".mp3";
+            templateValues["%%AUDIOPATH%%"] = session.getOutputFileName() + "_files/" + msgIdStr + ".mp3";
         }
     }
     else if (record.type == 47)
@@ -954,7 +954,7 @@ bool SessionParser::parseRow(MsgRecord& record, const std::string& userBase, con
                 localfile = std::to_string(uniqueFileName++);
             }
             
-            std::string emojiPath = ((m_options & SPO_ICON_IN_SESSION) == SPO_ICON_IN_SESSION) ? session.getUsrName() + "_files/Emoji/" : "Emoji/";
+            std::string emojiPath = ((m_options & SPO_ICON_IN_SESSION) == SPO_ICON_IN_SESSION) ? session.getOutputFileName() + "_files/Emoji/" : "Emoji/";
             localfile = emojiPath + localfile + ".gif";
             m_downloader.addTask(url, combinePath(outputPath, localfile), record.createTime);
             templateValues.setName("emoji");
@@ -977,7 +977,7 @@ bool SessionParser::parseRow(MsgRecord& record, const std::string& userBase, con
         }
         
         std::string vfile = combinePath(userBase, "Video", session.getHash(), msgIdStr);
-        parseVideo(outputPath, vfile + ".mp4", session.getUsrName() + "_files/" + msgIdStr + ".mp4", vfile + ".video_thum", session.getUsrName() + "_files/" + msgIdStr + "_thum.jpg", templateValues);
+        parseVideo(outputPath, vfile + ".mp4", session.getOutputFileName() + "_files/" + msgIdStr + ".mp4", vfile + ".video_thum", session.getOutputFileName() + "_files/" + msgIdStr + "_thum.jpg", templateValues);
     }
     else if (record.type == 50)
     {
@@ -998,7 +998,7 @@ bool SessionParser::parseRow(MsgRecord& record, const std::string& userBase, con
     else if (record.type == 3)
     {
 		std::string vfile = combinePath(userBase, "Img", session.getHash(), msgIdStr);
-        parseImage(outputPath, vfile + ".pic", "", session.getUsrName() + "_files/" + msgIdStr + ".jpg", vfile + ".pic_thum", session.getUsrName() + "_files/" + msgIdStr + "_thumb.jpg", templateValues);
+        parseImage(outputPath, vfile + ".pic", "", session.getOutputFileName() + "_files/" + msgIdStr + ".jpg", vfile + ".pic_thum", session.getOutputFileName() + "_files/" + msgIdStr + "_thumb.jpg", templateValues);
     }
     else if (record.type == 48)
     {
@@ -1029,7 +1029,7 @@ bool SessionParser::parseRow(MsgRecord& record, const std::string& userBase, con
             else if (appMsgType == "19")    // Forwarded Msgs
             {
 #ifndef NDEBUG
-                writeFile(combinePath(outputPath, "msg" + std::to_string(record.type) + "_19.txt"), nodes["recorditem"]);
+                writeFile(combinePath(outputPath, "../dbg", "msg" + std::to_string(record.type) + "_19.txt"), nodes["recorditem"]);
 #endif
                 templateValues.setName("msg");
                 templateValues["%%MESSAGE%%"] = nodes["title"];
@@ -1065,7 +1065,7 @@ bool SessionParser::parseRow(MsgRecord& record, const std::string& userBase, con
     }
     else if (record.type == 42)
     {
-        std::string portraitDir = ((m_options & SPO_ICON_IN_SESSION) == SPO_ICON_IN_SESSION) ? session.getUsrName() + "_files/Portrait" : "Portrait";
+        std::string portraitDir = ((m_options & SPO_ICON_IN_SESSION) == SPO_ICON_IN_SESSION) ? session.getOutputFileName() + "_files/Portrait" : "Portrait";
         parseCard(outputPath, portraitDir, record.message, templateValues);
     }
     else
@@ -1073,8 +1073,8 @@ bool SessionParser::parseRow(MsgRecord& record, const std::string& userBase, con
         templateValues["%%MESSAGE%%"] = safeHTML(record.message);
     }
     
-    std::string portraitPath = ((m_options & SPO_ICON_IN_SESSION) == SPO_ICON_IN_SESSION) ? session.getUsrName() + "_files/Portrait/" : "Portrait/";
-    std::string emojiPath = ((m_options & SPO_ICON_IN_SESSION) == SPO_ICON_IN_SESSION) ? session.getUsrName() + "_files/Emoji/" : "Emoji/";
+    std::string portraitPath = ((m_options & SPO_ICON_IN_SESSION) == SPO_ICON_IN_SESSION) ? session.getOutputFileName() + "_files/Portrait/" : "Portrait/";
+    std::string emojiPath = ((m_options & SPO_ICON_IN_SESSION) == SPO_ICON_IN_SESSION) ? session.getOutputFileName() + "_files/Emoji/" : "Emoji/";
     
     std::string localPortrait;
     std::string remotePortrait;
@@ -1362,7 +1362,7 @@ bool SessionParser::parseForwardedMsgs(const std::string& userBase, const std::s
     XmlParser xmlParser(message);
     std::vector<ForwardMsg> forwardedMsgs;
     ForwardMsgsHandler handler(xmlParser, record.msgId, forwardedMsgs);
-    std::string portraitPath = ((m_options & SPO_ICON_IN_SESSION) == SPO_ICON_IN_SESSION) ? session.getUsrName() + "_files/Portrait/" : "Portrait/";
+    std::string portraitPath = ((m_options & SPO_ICON_IN_SESSION) == SPO_ICON_IN_SESSION) ? session.getOutputFileName() + "_files/Portrait/" : "Portrait/";
     std::string localPortrait;
     std::string remotePortrait;
     
@@ -1373,7 +1373,7 @@ bool SessionParser::parseForwardedMsgs(const std::string& userBase, const std::s
     beginTv["%%MESSAGE%%"] = formatString(getLocaleString("<< %s"), title.c_str());
     beginTv["%%EXTRA_CLS%%"] = "fmsgtag";   // tag for forwarded msg
     
-    std::string destDir = combinePath(outputPath, session.getUsrName() + "_files/", msgIdStr);
+    std::string destDir = combinePath(outputPath, session.getOutputFileName() + "_files/", msgIdStr);
     bool assertDirExisted = m_shell.existsDirectory(destDir);
     
     if (xmlParser.parseWithHandler("/recordinfo/datalist/dataitem", handler))
@@ -1405,7 +1405,7 @@ bool SessionParser::parseForwardedMsgs(const std::string& userBase, const std::s
                 }
                 std::string fileExtName = it->dataFormat.empty() ? "" : ("." + it->dataFormat);
                 std::string vfile = userBase + "/OpenData/" + session.getHash() + "/" + msgIdStr + "/" + it->dataId;
-                parseImage(outputPath, vfile + fileExtName, vfile + fileExtName + "_pre3", session.getUsrName() + "_files/" + msgIdStr + "/" + it->dataId + ".jpg", vfile + ".record_thumb", session.getUsrName() + "_files/" + msgIdStr + "/" + it->dataId + "_thumb.jpg", tv);
+                parseImage(outputPath, vfile + fileExtName, vfile + fileExtName + "_pre3", session.getOutputFileName() + "_files/" + msgIdStr + "/" + it->dataId + ".jpg", vfile + ".record_thumb", session.getOutputFileName() + "_files/" + msgIdStr + "/" + it->dataId + "_thumb.jpg", tv);
             }
             else if (it->dataType == "3")
             {
@@ -1419,7 +1419,7 @@ bool SessionParser::parseForwardedMsgs(const std::string& userBase, const std::s
                 }
                 std::string fileExtName = it->dataFormat.empty() ? "" : ("." + it->dataFormat);
                 std::string vfile = userBase + "/OpenData/" + session.getHash() + "/" + msgIdStr + "/" + it->dataId;
-                parseVideo(outputPath, vfile + fileExtName, session.getUsrName() + "_files/" + msgIdStr + "/" + it->dataId + fileExtName, vfile + ".record_thumb", session.getUsrName() + "_files/" + msgIdStr + "/" + it->dataId + "_thumb.jpg", tv);
+                parseVideo(outputPath, vfile + fileExtName, session.getOutputFileName() + "_files/" + msgIdStr + "/" + it->dataId + fileExtName, vfile + ".record_thumb", session.getOutputFileName() + "_files/" + msgIdStr + "/" + it->dataId + "_thumb.jpg", tv);
                 
             }
             else if (it->dataType == "5")
@@ -1429,7 +1429,7 @@ bool SessionParser::parseForwardedMsgs(const std::string& userBase, const std::s
                     assertDirExisted = m_shell.makeDirectory(destDir);
                 }
                 std::string vfile = userBase + "/OpenData/" + session.getHash() + "/" + msgIdStr + "/" + it->dataId + ".record_thumb";
-                std::string dest = session.getUsrName() + "_files/" + msgIdStr + "/" + it->dataId + "_thumb.jpg";
+                std::string dest = session.getOutputFileName() + "_files/" + msgIdStr + "/" + it->dataId + "_thumb.jpg";
                 bool hasThumb = requireFile(vfile, combinePath(outputPath, dest));
                 
                 if (!it->link.empty())
@@ -1470,12 +1470,12 @@ bool SessionParser::parseForwardedMsgs(const std::string& userBase, const std::s
                 }
                 std::string fileExtName = it->dataFormat.empty() ? "" : ("." + it->dataFormat);
                 std::string vfile = userBase + "/OpenData/" + session.getHash() + "/" + msgIdStr + "/" + it->dataId;
-                parseFile(outputPath, vfile + fileExtName, session.getUsrName() + "_files/" + msgIdStr + "/" + it->dataId + fileExtName, it->message, tv);
+                parseFile(outputPath, vfile + fileExtName, session.getOutputFileName() + "_files/" + msgIdStr + "/" + it->dataId + fileExtName, it->message, tv);
             }
             else if (it->dataType == "16")
             {
                 // Card
-                std::string portraitDir = ((m_options & SPO_ICON_IN_SESSION) == SPO_ICON_IN_SESSION) ? session.getUsrName() + "_files/Portrait" : "Portrait";
+                std::string portraitDir = ((m_options & SPO_ICON_IN_SESSION) == SPO_ICON_IN_SESSION) ? session.getOutputFileName() + "_files/Portrait" : "Portrait";
                 parseCard(outputPath, portraitDir, it->message, tv);
             }
             else if (it->dataType == "17")
