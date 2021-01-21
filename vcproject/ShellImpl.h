@@ -110,19 +110,6 @@ public:
 		return ::MoveFile((LPCTSTR)pszSrc, (LPCTSTR)pszDest) == TRUE;
 	}
 
-	bool openOutputFile(std::ofstream& ofs, const std::string& fileName, std::ios_base::openmode mode/* = std::ios::out*/) const
-	{
-		if (ofs.is_open())
-		{
-			return false;
-		}
-
-		CW2A psz(CA2W(fileName.c_str(), CP_UTF8));
-		ofs.open((LPCSTR)psz, mode);
-
-		return ofs.is_open();
-	}
-
 	std::string removeInvalidCharsForFileName(const std::string& fileName) const
     {
 		CW2T pszT(CA2W(fileName.c_str(), CP_UTF8));

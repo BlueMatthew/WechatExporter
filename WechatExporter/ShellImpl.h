@@ -108,19 +108,7 @@ public:
     {
         return rename(src.c_str(), dest.c_str()) == 0;
     }
-    
-    bool openOutputFile(std::ofstream& ofs, const std::string& fileName, std::ios_base::openmode mode/* = std::ios::out*/) const
-    {
-        if (ofs.is_open())
-        {
-            return false;
-        }
 
-        ofs.open(fileName, mode);
-
-        return ofs.is_open();
-    }
-    
     std::string removeInvalidCharsForFileName(const std::string& fileName) const
     {
         /*
