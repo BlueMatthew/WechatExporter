@@ -225,22 +225,15 @@ void errorLogCallback(void *pArg, int iErrCode, const char *zMsg)
         {
             NSURL *backupUrl = panel.directoryURL;
             
-            if ([backupUrl.absoluteString hasSuffix:@"/Backup"] || [backupUrl.absoluteString hasSuffix:@"/Backup/"])
+            ManifestParser parser([backupUrl.path UTF8String], self->m_shell);
+            std::vector<BackupManifest> manifests;
+            if (parser.parse(manifests) && !manifests.empty())
             {
-                ManifestParser parser([backupUrl.path UTF8String], self->m_shell);
-                std::vector<BackupManifest> manifests;
-                if (parser.parse(manifests))
-                {
-                    [self updateBackups:manifests];
-                }
-                else
-                {
-                    [self msgBox:@"解析iTunes Backup文件失败。"];
-                }
+                [self updateBackups:manifests];
             }
             else
             {
-                [self msgBox:@"请选择iTunes Backup目录。"];
+                [self msgBox:@"解析iTunes Backup文件失败。"];
             }
         }
     })];
