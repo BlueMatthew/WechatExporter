@@ -27,7 +27,7 @@ void errorLogCallback(void *pArg, int iErrCode, const char *zMsg)
 }
 
 
-@interface ViewController()
+@interface ViewController() <NSComboBoxDelegate>
 {
     ShellImpl* m_shell;
     LoggerImpl* m_logger;
@@ -76,6 +76,9 @@ void errorLogCallback(void *pArg, int iErrCode, const char *zMsg)
     [self.btnOutput setAction:nil];
     [self.btnExport setAction:nil];
     [self.btnCancel setAction:nil];
+    [self.chkboxDesc setAction:nil];
+    [self.chkboxNoAudio setAction:nil];
+    self.cmbboxBackup.delegate = nil;
 }
 
 - (void)viewDidLoad {
@@ -102,6 +105,7 @@ void errorLogCallback(void *pArg, int iErrCode, const char *zMsg)
     [self.btnCancel setAction:@selector(btnCancelClicked:)];
     [self.chkboxDesc setAction:@selector(btnDescClicked:)];
     [self.chkboxNoAudio setAction:@selector(btnIgnoreAudioClicked:)];
+    self.cmbboxBackup.delegate = self;
     
     BOOL descOrder = [[NSUserDefaults standardUserDefaults] boolForKey:@"Desc"];
     self.chkboxDesc.state = descOrder ? NSOnState : NSOffState;
@@ -145,7 +149,8 @@ void errorLogCallback(void *pArg, int iErrCode, const char *zMsg)
         std::vector<BackupManifest> manifests;
         if (parser.parse(manifests))
         {
-            [self updateBackups:manifests];
+            NSString *previoudBackupDir = [[NSUserDefaults standardUserDefaults] objectForKey:@"BackupDir"];
+            [self updateBackups:manifests withPreviousPath:previoudBackupDir];
         }
     }
     
@@ -161,51 +166,71 @@ void errorLogCallback(void *pArg, int iErrCode, const char *zMsg)
     self.btnExport.autoresizingMask = NSViewMinXMargin | NSViewMaxYMargin;
 };
 
-- (void)updateBackups:(const std::vector<BackupManifest>&) manifests
+- (void)updateBackups:(const std::vector<BackupManifest>&) manifests withPreviousPath:(NSString *)previousPath
 {
-    int selectedIndex = -1;
-    if (!manifests.empty())
+    if (manifests.empty())
     {
-        // Add default backup folder
-        for (std::vector<BackupManifest>::const_iterator it = manifests.cbegin(); it != manifests.cend(); ++it)
+        return;
+    }
+    
+    size_t selectedIndex = (size_t)self.cmbboxBackup.indexOfSelectedItem;
+    for (std::vector<BackupManifest>::const_iterator it = manifests.cbegin(); it != manifests.cend(); ++it)
+    {
+        std::vector<BackupManifest>::const_iterator it2 = std::find(m_manifests.cbegin(), m_manifests.cend(), *it);
+        if (it2 == m_manifests.cend())
         {
-            std::vector<BackupManifest>::const_iterator it2 = std::find(m_manifests.cbegin(), m_manifests.cend(), *it);
-            if (it2 != m_manifests.cend())
-            {
-                if (selectedIndex == -1)
-                {
-                    selectedIndex = static_cast<int>(std::distance(it2, m_manifests.cbegin()));
-                }
-            }
-            else
-            {
-                m_manifests.push_back(*it);
-                if (selectedIndex == -1)
-                {
-                    selectedIndex = static_cast<int>(m_manifests.size() - 1);
-                }
-            }
+            m_manifests.push_back(*it);
         }
+    }
+    
+    // update
+    [self.cmbboxBackup removeAllItems];
+    for (std::vector<BackupManifest>::const_iterator it = m_manifests.cbegin(); it != m_manifests.cend(); ++it)
+    {
+        std::string itemTitle = it->toString();
+        NSString* item = [NSString stringWithUTF8String:itemTitle.c_str()];
+        [self.cmbboxBackup addItemWithObjectValue:item];
         
-        // update
-        [self.cmbboxBackup removeAllItems];
-        for (std::vector<BackupManifest>::const_iterator it = m_manifests.cbegin(); it != m_manifests.cend(); ++it)
+        if (selectedIndex == -1)
         {
-            std::string itemTitle = it->toString();
-            NSString* item = [NSString stringWithUTF8String:itemTitle.c_str()];
-            [self.cmbboxBackup addItemWithObjectValue:item];
+            if (nil != previousPath && ![previousPath isEqualToString:@""])
+            {
+                NSString* itemPath = [NSString stringWithUTF8String:it->getPath().c_str()];
+                if ([previousPath isEqualToString:itemPath])
+                {
+                    selectedIndex = std::distance(m_manifests.cbegin(), it);
+                }
+            }
         }
-        if (selectedIndex != -1 && selectedIndex < self.cmbboxBackup.numberOfItems)
-        {
-            [self.cmbboxBackup selectItemAtIndex:selectedIndex];
-        }
+    }
+    if (selectedIndex == -1 && self.cmbboxBackup.numberOfItems > 0)
+    {
+        selectedIndex = 0;
+    }
+    if (selectedIndex != -1 && selectedIndex < self.cmbboxBackup.numberOfItems)
+    {
+        [self.cmbboxBackup selectItemAtIndex:selectedIndex];
     }
 }
 
-- (void)setRepresentedObject:(id)representedObject {
-    [super setRepresentedObject:representedObject];
-
-    // Update the view, if already loaded.
+-(void)comboBoxSelectionDidChange:(NSNotification *)notification
+{
+#ifndef NDEBUG
+    if ([notification.name isEqualToString:NSComboBoxSelectionDidChangeNotification])
+    {
+        NSComboBox *cmb = (NSComboBox *)notification.object;
+        if (cmb == self.cmbboxBackup)
+        {
+            if (self.cmbboxBackup.indexOfSelectedItem != -1 && self.cmbboxBackup.indexOfSelectedItem < m_manifests.size())
+            {
+                const BackupManifest& manifest = m_manifests[self.cmbboxBackup.indexOfSelectedItem];
+                std::string backup = manifest.getPath();
+                NSString *backupPath = [NSString stringWithUTF8String:backup.c_str()];
+                [[NSUserDefaults standardUserDefaults] setObject:backupPath forKey:@"BackupDir"];
+            }
+        }
+    }
+#endif
 }
 
 - (void)btnBackupClicked:(id)sender
@@ -229,7 +254,7 @@ void errorLogCallback(void *pArg, int iErrCode, const char *zMsg)
             std::vector<BackupManifest> manifests;
             if (parser.parse(manifests) && !manifests.empty())
             {
-                [self updateBackups:manifests];
+                [self updateBackups:manifests withPreviousPath:nil];
             }
             else
             {
