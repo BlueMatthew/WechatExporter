@@ -546,6 +546,11 @@ void updateFileTime(const std::string& path, time_t mtime)
     utime(p.c_str(), &new_times);
 }
 
+bool deleteFile(const std::string& fileName)
+{
+    return 0 == std::remove(fileName.c_str());
+}
+
 int openSqlite3ReadOnly(const std::string& path, sqlite3 **ppDb)
 {
     std::string pathWithQuery = "file:" + path;

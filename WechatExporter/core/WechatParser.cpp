@@ -7,10 +7,11 @@
 //
 
 #include "WechatParser.h"
-#include <stdio.h>
+#include <cstdio>
 #include <iostream>
 #include <fstream>
 #include <cmath>
+#include <algorithm>
 #include <cstdio>
 #include <cstring>
 #include <sqlite3.h>
@@ -23,6 +24,8 @@
 #include "WechatObjects.h"
 #include "RawMessage.h"
 #include "XmlParser.h"
+#include "MMKVReader.h"
+
 #include "OSDef.h"
 
 #ifdef _WIN32
@@ -114,6 +117,7 @@ bool LoginInfo2Parser::parse(std::vector<Friend>& users)
 
 bool LoginInfo2Parser::parse(const std::string& loginInfo2Path, std::vector<Friend>& users)
 {
+    
     RawMessage msg;
     if (!msg.mergeFile(loginInfo2Path))
     {
@@ -130,7 +134,7 @@ bool LoginInfo2Parser::parse(const std::string& loginInfo2Path, std::vector<Frie
     int offset = 0;
     
     std::string::size_type length = value1.size();
-    while(1)
+    while (1)
     {
         int res = parseUser(value1.c_str() + offset, static_cast<int>(length - offset), users);
         if (res < 0)
@@ -139,6 +143,84 @@ bool LoginInfo2Parser::parse(const std::string& loginInfo2Path, std::vector<Frie
         }
         
         offset += res;
+    }
+    
+    parseUserFromFolder(users);
+    
+    MMSettingInMMappedKVFilter filter;
+    ITunesFileVector mmsettings = m_iTunesDb->filter(filter);
+    
+    std::map<std::string, std::string> mmsettingFiles;  // hash => usrName
+    for (ITunesFilesConstIterator it = mmsettings.cbegin(); it != mmsettings.cend(); ++it)
+    {
+        std::string fileName = filter.parse((*it));
+        fileName = fileName.substr(filter.getPrefix().size());
+        if (fileName.empty())
+        {
+            continue;
+        }
+        
+        std::string usrNameHash = md5(fileName);
+        mmsettingFiles[usrNameHash] = fileName;
+    }
+    
+    for (std::vector<Friend>::iterator it = users.begin(); it != users.end(); ++it)
+    {
+        MMSettingParser mmsettingParser(m_iTunesDb);
+        if (mmsettingParser.parse(it->getHash()))
+        {
+            it->setUsrName(mmsettingParser.getUsrName());
+            if (it->isDisplayNameEmpty())
+            {
+                it->setDisplayName(mmsettingParser.getDisplayName());
+            }
+            it->setPortrait(mmsettingParser.getPortrait());
+            it->setPortraitHD(mmsettingParser.getPortraitHD());
+        }
+        else
+        {
+            // Check mmsettings.archive in MMappedKV folde
+            if (it->getUsrName().empty())
+            {
+                std::map<std::string, std::string>::const_iterator it2 = mmsettingFiles.find(it->getHash());
+                if (it2 != mmsettingFiles.cend())
+                {
+                    it->setUsrName(it2->second);
+                }
+            }
+            if (!(it->getUsrName().empty()))
+            {
+                std::string realPath = m_iTunesDb->findRealPath("Documents/MMappedKV/mmsetting.archive." + it->getUsrName());
+                std::string realCrcPath = m_iTunesDb->findRealPath("Documents/MMappedKV/mmsetting.archive." + it->getUsrName() + ".crc");
+                if (!realPath.empty() && !realCrcPath.empty())
+                {
+                    MMKVParser parser;
+                    if (parser.parse(realPath, realCrcPath))
+                    {
+                        if (it->isDisplayNameEmpty())
+                        {
+                            it->setDisplayName(parser.getDisplayName());
+                        }
+                        it->setPortrait(parser.getPortrait());
+                        it->setPortraitHD(parser.getPortraitHD());
+                    }
+                }
+            }
+        }
+    }
+    
+    auto it = users.begin();
+    while (it != users.end())
+    {
+        if (it->getUsrName().empty())
+        {
+            // erase() invalidates the iterator, use returned iterator
+            it = users.erase(it);
+        }
+        else
+        {
+            ++it;
+        }
     }
     
     return true;
@@ -183,55 +265,142 @@ int LoginInfo2Parser::parseUser(const char* data, int length, std::vector<Friend
     return static_cast<int>(userBufferLen + (p - data));
 }
 
-MMKVParser::MMKVParser(const std::string& path)
+bool LoginInfo2Parser::parseUserFromFolder(std::vector<Friend>& users)
 {
-    if (!readFile(path, m_contents))
-    {
-        m_contents.clear();
-    }
-}
-
-std::string MMKVParser::findValue(const std::string& key)
-{
-    std::string value;
-
-    ByteArrayLocater locator;
-    int keyLength = static_cast<int>(key.length());
-    const unsigned char* data = &m_contents[0];
-    int length = static_cast<int>(m_contents.size());
+    UserFolderFilter filter;
+    ITunesFileVector folders = m_iTunesDb->filter(filter);
     
-    std::vector<int> positions = locator.locate(data, length, reinterpret_cast<const unsigned char*>(key.c_str()), keyLength);
-
-    if (!positions.empty())
+    for (ITunesFilesConstIterator it = folders.cbegin(); it != folders.cend(); ++it)
     {
-        const unsigned char* limit = data + length;
-        for (std::vector<int>::const_reverse_iterator it = positions.crbegin(); it != positions.crend(); ++it)
+        std::string fileName = filter.parse((*it));
+        if (fileName == "00000000000000000000000000000000")
         {
-            uint32_t valueLength = 0;
-            const unsigned char* p1 = data + (*it) + keyLength;
-            const unsigned char* p2 = calcVarint32Ptr(p1, limit, &valueLength);
-            if (NULL != p2 && valueLength > 0)
+            continue;
+        }
+        
+        bool existing = false;
+        std::vector<Friend>::const_iterator it2 = users.cbegin();
+        for (; it2 != users.cend(); ++it2)
+        {
+            if (it2->getHash() == fileName)
             {
-                //MBBuffer
-                p2 = calcVarint32Ptr(p2, limit, &valueLength);
-                if (NULL != p2 && valueLength > 0)
-                {
-                    // NSString
-                    if (p2 + valueLength < limit)
-                    {
-                        value.reserve(valueLength);
-                        for (uint32_t i = 0; i < valueLength; i++)
-                        {
-                            value.push_back((reinterpret_cast<const char*>(p2))[i]);
-                        }
-                        break;
-                    }
-                }
+                existing = true;
+                break;
             }
+        }
+        
+        if (!existing)
+        {
+            users.emplace(users.end(), "", fileName);
         }
     }
 
-    return value;
+    return true;
+}
+
+
+void MMSettings::clear()
+{
+    m_usrName.clear();
+    m_displayName.clear();
+    m_portrait.clear();
+    m_portraitHD.clear();
+}
+
+
+std::string MMSettings::getUsrName() const
+{
+    return m_usrName;
+}
+
+std::string MMSettings::getDisplayName() const
+{
+    return m_displayName;
+}
+std::string MMSettings::getPortrait() const
+{
+    return m_portrait;
+}
+std::string MMSettings::getPortraitHD() const
+{
+    return m_portraitHD;
+}
+
+MMKVParser::MMKVParser()
+{
+}
+
+bool MMKVParser::parse(const std::string& path, const std::string& crcPath)
+{
+    std::vector<unsigned char> contents;
+    uint32_t lastActualSize = 0;
+    // 86: usrName
+    // 87: name
+    // 88: DisplayName
+    if (readFile(crcPath, contents))
+    {
+        memcpy(&lastActualSize, &contents[32], 4);
+        contents.clear();
+    }
+    
+    if (!readFile(path, contents))
+    {
+        return false;
+    }
+    
+    uint32_t actualSize = 0;
+    memcpy(&actualSize, &contents[0], 4);
+    if (actualSize <= 0)
+    {
+        actualSize = lastActualSize;
+    }
+    
+    if (actualSize <= 0)
+    {
+        return false;
+    }
+
+    actualSize += 4;
+    
+    MMKVReader reader(&contents[0], actualSize);
+    reader.seek(8);
+    
+    while (!reader.isAtEnd())
+    {
+        // 
+        const auto k = reader.readKey();
+        if (k.empty())
+        {
+            break;
+        }
+        
+        if (k == "86")
+        {
+            m_usrName = reader.readStringValue();
+        }
+        else if (k == "87")
+        {
+            m_name = reader.readStringValue();
+        }
+        else if (k == "88")
+        {
+            m_displayName = reader.readStringValue();
+        }
+        else if (k == "headimgurl")
+        {
+            m_portrait = reader.readStringValue();
+        }
+        else if (k == "headhdimgurl")
+        {
+            m_portraitHD = reader.readStringValue();
+        }
+        else
+        {
+            reader.skipValue();
+        }
+    }
+    
+    return true;
 }
 
 MMSettingParser::MMSettingParser(ITunesDb *iTunesDb) : m_iTunesDb(iTunesDb)
@@ -240,6 +409,8 @@ MMSettingParser::MMSettingParser(ITunesDb *iTunesDb) : m_iTunesDb(iTunesDb)
 
 bool MMSettingParser::parse(const std::string& usrNameHash)
 {
+    clear();
+    
     std::string vpath = "Documents/" + usrNameHash + "/mmsetting.archive";
     std::string mmsettingPath = m_iTunesDb->findRealPath(vpath);
     if (mmsettingPath.empty())
@@ -260,60 +431,139 @@ bool MMSettingParser::parse(const std::string& usrNameHash)
         return false;
     }
     
+    std::unique_ptr<void, decltype(&plist_free)> nodePtr(node, &plist_free);
     plist_t objectsNode = plist_access_path(node, 1, "$objects");
-    if (NULL != objectsNode && PLIST_IS_ARRAY(objectsNode))
+    if (NULL == objectsNode || !PLIST_IS_ARRAY(objectsNode))
     {
-        uint32_t objectsNodeSize = plist_array_get_size(objectsNode);
-        for (uint32_t idx = 0; idx < objectsNodeSize; ++idx)
+        return false;
+    }
+
+    plist_t keyedUidNodes = plist_array_get_item(objectsNode, 1);
+    
+    const char* keys[] = {"UsrName", "NickName", "AliasName"};
+    for (int idx = 0; idx < sizeof(keys) / sizeof(const char *); ++idx)
+    {
+        plist_t keyedUidNode = plist_dict_get_item(keyedUidNodes, keys[idx]);
+        if (keyedUidNode != NULL && PLIST_IS_UID(keyedUidNode))
         {
-            plist_t item = plist_array_get_item(objectsNode, idx);
-            if (NULL == item || !PLIST_IS_STRING(item))
+            uint64_t uid = 0;
+            plist_get_uid_val(keyedUidNode, &uid);
+            plist_t keyedItemNode = plist_array_get_item(objectsNode, static_cast<uint32_t>(uid));
+            
+            uint64_t valueLength = 0;
+            const char* pValue = plist_get_string_ptr(keyedItemNode, &valueLength);
+            if (pValue == NULL || valueLength == 0)
             {
                 continue;
             }
             
-            uint64_t valueLength = 0;
-            const char* pValue = plist_get_string_ptr(item, &valueLength);
-            if (NULL != pValue && valueLength > 0)
+            if (idx == 0)
             {
-                std::string value;
-                value.assign(pValue, valueLength);
-                if (startsWith(value, "https://wx.qlogo.cn/mmhead/") || startsWith(value, "http://wx.qlogo.cn/mmhead/"))
+                m_usrName.assign(pValue, valueLength);
+            }
+            else if (idx == 1)
+            {
+                m_displayName.assign(pValue, valueLength);
+            }
+            else if (idx == 2)
+            {
+                if (m_displayName.empty())
                 {
-                    // Avatar
-                    if (endsWith(value, "/0"))
-                    {
-                        m_portraitHD = value;
-                    }
-                    else // (endsWith(value, "/132"))
-                    {
-                        m_portrait = value;
-                    }
+                    m_displayName.assign(pValue, valueLength);
                 }
             }
         }
     }
     
-    plist_free(node);
+    // "new_dicsetting"
+    plist_t keyedUidNode = plist_dict_get_item(keyedUidNodes, "new_dicsetting");
+    if (keyedUidNode != NULL && PLIST_IS_UID(keyedUidNode))
+    {
+        uint64_t uid = 0;
+        plist_get_uid_val(keyedUidNode, &uid);
+        
+        plist_t settingNode = plist_array_get_item(objectsNode, static_cast<uint32_t>(uid));
+        if (keyedUidNode != NULL && PLIST_IS_DICT(settingNode))
+        {
+            plist_t settingKeysNode = plist_dict_get_item(settingNode, "NS.keys");
+            plist_t settingValuesNode = plist_dict_get_item(settingNode, "NS.objects");
+            
+            if (settingKeysNode != NULL && PLIST_IS_ARRAY(settingKeysNode) && settingValuesNode != NULL && PLIST_IS_ARRAY(settingValuesNode))
+            {
+                uint32_t settingKeysNodeSize = plist_array_get_size(settingKeysNode);
+                uint32_t settingValuesNodeSize = plist_array_get_size(settingValuesNode);
+                uint32_t minSize = std::min(settingKeysNodeSize, settingValuesNodeSize);
+                for (uint32_t idx = 0; idx < minSize; ++idx)
+                {
+                    plist_t keyedUidNode = plist_array_get_item(settingKeysNode, idx);
+                    if (keyedUidNode == NULL || !PLIST_IS_UID(keyedUidNode))
+                    {
+                        continue;
+                    }
+                    
+                    uint64_t uid = 0;
+                    plist_get_uid_val(keyedUidNode, &uid);
+                    plist_t keyedItemNode = plist_array_get_item(objectsNode, static_cast<uint32_t>(uid));
+                    if (keyedItemNode == NULL || !PLIST_IS_STRING(keyedItemNode))
+                    {
+                        continue;
+                    }
+                    
+                    uint64_t valueLength = 0;
+                    const char* pValue = plist_get_string_ptr(keyedItemNode, &valueLength);
+                    
+                    if (pValue == NULL || valueLength == 0)
+                    {
+                        continue;
+                    }
+                    
+                    std::string settingKey(pValue, valueLength);
+                    
+                    if (settingKey != "headimgurl" && settingKey != "headhdimgurl")
+                    {
+                        continue;
+                    }
+                    
+                    keyedUidNode = plist_array_get_item(settingValuesNode, idx);
+                    if (keyedUidNode == NULL || !PLIST_IS_UID(keyedUidNode))
+                    {
+                        continue;
+                    }
+                    
+                    uid = 0;
+                    plist_get_uid_val(keyedUidNode, &uid);
+                    keyedItemNode = plist_array_get_item(objectsNode, static_cast<uint32_t>(uid));
+                    if (keyedItemNode == NULL || !PLIST_IS_STRING(keyedItemNode))
+                    {
+                        continue;
+                    }
+                    
+                    valueLength = 0;
+                    pValue = plist_get_string_ptr(keyedItemNode, &valueLength);
+                    if (pValue == NULL || valueLength == 0)
+                    {
+                        continue;
+                    }
+                    
+                    if (settingKey == "headimgurl")
+                    {
+                        m_portrait.assign(pValue, valueLength);
+                    }
+                    else if (settingKey == "headhdimgurl")
+                    {
+                        m_portraitHD.assign(pValue, valueLength);
+                    }
+                    
+                    if (!m_portrait.empty() && !m_portraitHD.empty())
+                    {
+                        break;
+                    }
+                }
+            }
+        }
+    }
+
     return true;
-}
-
-std::string MMSettingParser::getUsrName() const
-{
-    return m_usrName;
-}
-
-std::string MMSettingParser::getDisplayName() const
-{
-    return m_displayName;
-}
-std::string MMSettingParser::getPortrait() const
-{
-    return m_portrait;
-}
-std::string MMSettingParser::getPortraitHD() const
-{
-    return m_portraitHD;
 }
 
 FriendsParser::FriendsParser(bool detailedInfo/* = true*/) : m_detailedInfo(detailedInfo)
