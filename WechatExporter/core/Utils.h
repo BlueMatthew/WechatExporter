@@ -79,6 +79,7 @@ std::string utf8ToLocalAnsi(std::string utf8Str);
 #define utf8ToLocalAnsi(utf8Str) utf8Str
 #endif
 void updateFileTime(const std::string& path, time_t mtime);
+bool deleteFile(const std::string& fileName);
 
 int GetBigEndianInteger(const unsigned char* data, int startIndex = 0);
 int GetLittleEndianInteger(const unsigned char* data, int startIndex = 0);

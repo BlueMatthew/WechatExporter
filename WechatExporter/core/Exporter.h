@@ -78,7 +78,6 @@ protected:
     bool loadUserFriendsAndSessions(const Friend& user, Friends& friends, std::vector<Session>& sessions, bool detailedInfo = true) const;
 	int exportSession(const Friend& user, SessionParser& sessionParser, const Session& session, const std::string& userBase, const std::string& outputBase);
 
-    bool fillUser(Friend& user);
 	bool fillSession(Session& session, const Friends& friends) const;
     bool loadTemplates();
 	bool loadStrings();
