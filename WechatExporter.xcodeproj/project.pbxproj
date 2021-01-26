@@ -61,6 +61,7 @@
 		343F612F25234BFC00FFE085 /* libsqlite3.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libsqlite3.tbd; path = usr/lib/libsqlite3.tbd; sourceTree = SDKROOT; };
 		345C8D4D2543F5E30036368C /* ExportNotifier.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ExportNotifier.h; sourceTree = "<group>"; };
 		345C8D4E2543F5E30036368C /* semaphore.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = semaphore.h; sourceTree = "<group>"; };
+		347E600D25C00A4100B33BAB /* MMKVReader.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MMKVReader.h; sourceTree = "<group>"; };
 		349DAD2A255D3BB800BFE204 /* XmlParser.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = XmlParser.cpp; sourceTree = "<group>"; };
 		349DAD2B255D3BB800BFE204 /* XmlParser.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = XmlParser.h; sourceTree = "<group>"; };
 		349DAD31255E6A0600BFE204 /* Utils_thread.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Utils_thread.cpp; sourceTree = "<group>"; };
@@ -171,6 +172,7 @@
 				34AB9A1225B89075006D3617 /* FileSystem.h */,
 				34AB9A1325B8908D006D3617 /* FileSystemImpl_Win.h */,
 				34AB9A1425B890A0006D3617 /* FileSystemImpl_Mac.h */,
+				347E600D25C00A4100B33BAB /* MMKVReader.h */,
 			);
 			path = core;
 			sourceTree = "<group>";

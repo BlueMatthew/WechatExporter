@@ -163,7 +163,6 @@ bool Exporter::loadUsersAndSessions(std::vector<std::pair<Friend, std::vector<Se
 	m_logger->debug("Wechat Users loaded.");
     for (std::vector<Friend>::iterator it = users.begin(); it != users.end(); ++it)
     {
-        // fillUser(*it);
         Friends friends;
         usersAndSessions.push_back(std::make_pair(*it, std::vector<Session>()));
         std::pair<Friend, std::vector<Session>>& item = usersAndSessions.back();
@@ -238,8 +237,7 @@ bool Exporter::runImpl()
             m_logger->write(formatString(getLocaleString("Can't build directory name for user: %s. Skip it."), it->getUsrName().c_str()));
             continue;
         }
-        
-		fillUser(*it);
+
         std::string userOutputPath;
 		exportUser(*it, userOutputPath);
         
@@ -473,31 +471,6 @@ int Exporter::exportSession(const Friend& user, SessionParser& sessionParser, co
 	}
     
 	return count;
-}
-
-bool Exporter::fillUser(Friend& user)
-{
-    MMSettingParser mmsettingParser(m_iTunesDb);
-    if (mmsettingParser.parse(user.getHash()))
-    {
-        user.setPortrait(mmsettingParser.getPortrait());
-        user.setPortraitHD(mmsettingParser.getPortraitHD());
-    }
-    else
-    {
-        std::string vpath = "Documents/MMappedKV/mmsetting.archive." + user.getUsrName();
-        std::string realPath = m_iTunesDb->findRealPath(vpath);
-        
-        if (!realPath.empty())
-        {
-            MMKVParser parser(realPath);
-            
-            user.setPortrait(parser.findValue("headimgurl"));
-            user.setPortraitHD(parser.findValue("headhdimgurl"));
-        }
-    }
-    
-    return true;
 }
 
 bool Exporter::buildFileNameForUser(Friend& user, std::set<std::string>& existingFileNames)

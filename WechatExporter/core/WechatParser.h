@@ -102,6 +102,35 @@ public:
     }
 };
 
+class UserFolderFilter : public RegexFilterBase<UserFolderFilter>
+{
+public:
+    UserFolderFilter() : RegexFilterBase()
+    {
+        m_path = "Documents/";
+        // m_pattern = "^([a-zA-Z0-9]{32})$";
+    }
+    
+    bool operator==(const ITunesFile* s) const
+    {
+        if ((s->relativePath.size() != (m_path.size() + 32)) || !startsWith(s->relativePath, m_path))
+        {
+            return false;
+        }
+        if (s->relativePath.find('/', m_path.size()) != std::string::npos)
+        {
+            return false;
+        }
+        
+        return true;
+    }
+    
+    std::string parse(const ITunesFile* s) const
+    {
+        return s->relativePath.size() > 32 ? s->relativePath.substr(m_path.size()) : "";
+    }
+};
+
 class WechatInfoParser
 {
 private:
@@ -144,6 +173,8 @@ public:
     
 private:
     int parseUser(const char* data, int length, std::vector<Friend>& users);
+    bool parseUserFromFolder(std::vector<Friend>& users);
+    bool parseMMSettingsFromMMKV(std::map<std::string, std::pair<std::string, std::string>>& mmsettingFiles);
 };
 
 class MMSettingInMMappedKVFilter : public FilterBase<MMSettingInMMappedKVFilter>
@@ -154,53 +185,71 @@ protected:
 public:
     MMSettingInMMappedKVFilter(const std::string& uid) : FilterBase()
     {
-        m_path = "Documents/MMappedKV/";
-        m_pattern = m_path + "mmsetting.archive." + uid;
+        m_pattern = "Documents/MMappedKV/";
+        m_path = m_pattern + "mmsetting.archive." + uid;
         m_suffix = ".crc";
     }
     
-    bool operator==(const std::string& s) const
+    MMSettingInMMappedKVFilter() : FilterBase()
     {
-        return startsWith(s, m_pattern) && !endsWith(s, m_suffix);
+        m_pattern = "Documents/MMappedKV/";
+        m_path = m_pattern + "mmsetting.archive.";
+        m_suffix = ".crc";
     }
-    std::string parse(const std::string& s) const
+    
+    std::string getPrefix() const
+    {
+        return "mmsetting.archive.";
+    }
+    
+    bool operator==(const ITunesFile* s) const
+    {
+        return startsWith(s->relativePath, m_path) && !endsWith(s->relativePath, m_suffix);
+    }
+    std::string parse(const ITunesFile* s) const
     {
         if (*this == s)
         {
-            return s.substr(m_path.size());
+            return s->relativePath.substr(m_pattern.size());
         }
         return std::string("");
     }
 };
 
-class MMKVParser
+class MMSettings
 {
-private:
-    std::vector<unsigned char> m_contents;
-public:
-    MMKVParser(const std::string& path);
-    std::string findValue(const std::string& key);
-};
-
-
-class MMSettingParser
-{
-private:
-    ITunesDb *m_iTunesDb;
-    
+protected:
     std::string m_usrName;
+    std::string m_name;
     std::string m_displayName;
     std::string m_portrait;
     std::string m_portraitHD;
 public:
-    MMSettingParser(ITunesDb *iTunesDb);
-    bool parse(const std::string& usrNameHash);
     
     std::string getUsrName() const;
     std::string getDisplayName() const;
     std::string getPortrait() const;
     std::string getPortraitHD() const;
     
+protected:
+    void clear();
+};
+
+class MMKVParser : public MMSettings
+{
+public:
+    MMKVParser();
+    bool parse(const std::string& path, const std::string& crcPath);
+};
+
+class MMSettingParser : public MMSettings
+{
+private:
+    ITunesDb *m_iTunesDb;
+
+public:
+    MMSettingParser(ITunesDb *iTunesDb);
+    bool parse(const std::string& usrNameHash);
 };
 
 class FriendsParser
