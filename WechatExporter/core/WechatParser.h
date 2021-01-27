@@ -271,19 +271,22 @@ class SessionsParser
 {
 private:
     ITunesDb *m_iTunesDb;
+    ITunesDb *m_iTunesDbShare;
     Shell*      m_shell;
     std::string m_cellDataVersion;
     bool        m_detailedInfo;
 
 public:
-    SessionsParser(ITunesDb *iTunesDb, Shell* shell, const std::string& cellDataVersion, bool detailedInfo = true);
+    SessionsParser(ITunesDb *iTunesDb, ITunesDb *iTunesDbShare, Shell* shell, const std::string& cellDataVersion, bool detailedInfo = true);
     
-    bool parse(const std::string& userRoot, std::vector<Session>& sessions, const Friends& friends);
+    bool parse(const std::string& usrNameHash, std::vector<Session>& sessions, const Friends& friends);
 
 private:
     bool parseCellData(const std::string& userRoot, Session& session);
     bool parseMessageDbs(const std::string& userRoot, std::vector<Session>& sessions);
     bool parseMessageDb(const std::string& mmPath, std::vector<std::string>& sessionIds);
+    
+    bool parseSessionsInGroupApp(const std::string& userRoot, std::vector<Session>& sessions);
 };
 
 struct MsgRecord

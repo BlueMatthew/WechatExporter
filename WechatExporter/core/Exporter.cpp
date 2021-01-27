@@ -34,6 +34,7 @@ Exporter::Exporter(const std::string& workDir, const std::string& backup, const 
 {
 	m_running = false;
     m_iTunesDb = NULL;
+    m_iTunesDbShare = NULL;
     m_workDir = workDir;
     m_backup = backup;
     m_output = output;
@@ -46,11 +47,7 @@ Exporter::Exporter(const std::string& workDir, const std::string& backup, const 
 
 Exporter::~Exporter()
 {
-    if (NULL != m_iTunesDb)
-    {
-        delete m_iTunesDb;
-        m_iTunesDb = NULL;
-    }
+    releaseITunes();
     m_shell = NULL;
     m_logger = NULL;
     m_notifier = NULL;
@@ -134,18 +131,13 @@ bool Exporter::run()
 
 bool Exporter::loadUsersAndSessions(std::vector<std::pair<Friend, std::vector<Session>>>& usersAndSessions)
 {
-    if (NULL != m_iTunesDb)
+    if (!loadITunes())
     {
-        delete m_iTunesDb;
-    }
-    m_iTunesDb = new ITunesDb(m_backup, "Manifest.db");
-
-    if (!m_iTunesDb->load("AppDomain-com.tencent.xin"))
-    {
+        m_logger->write(formatString(getLocaleString("Failed to parse the backup data of iTunes in the directory: %s"), m_backup.c_str()));
+        notifyComplete();
         return false;
     }
-
-	m_logger->debug("ITunes Database loaded.");
+    m_logger->debug("ITunes Database loaded.");
     
     WechatInfoParser wechatInfoParser(m_iTunesDb);
     if (wechatInfoParser.parse(m_wechatInfo))
@@ -177,14 +169,8 @@ bool Exporter::runImpl()
     time_t startTime;
     std::time(&startTime);
     notifyStart();
-    
-	if (NULL != m_iTunesDb)
-	{
-		delete m_iTunesDb;
-	}
-	m_iTunesDb = new ITunesDb(m_backup, "Manifest.db");
 
-	if (!m_iTunesDb->load("AppDomain-com.tencent.xin"))
+	if (!loadITunes())
 	{
 		m_logger->write(formatString(getLocaleString("Failed to parse the backup data of iTunes in the directory: %s"), m_backup.c_str()));
         notifyComplete();
@@ -431,9 +417,9 @@ bool Exporter::loadUserFriendsAndSessions(const Friend& user, Friends& friends, 
 
 	m_logger->debug("Wechat Friends(" + std::to_string(friends.friends.size()) + ") for: " + user.getDisplayName() + " loaded.");
 
-    SessionsParser sessionsParser(m_iTunesDb, m_shell, m_wechatInfo.getCellDataVersion(), detailedInfo);
+    SessionsParser sessionsParser(m_iTunesDb, m_iTunesDbShare, m_shell, m_wechatInfo.getCellDataVersion(), detailedInfo);
     
-    sessionsParser.parse(userBase, sessions, friends);
+    sessionsParser.parse(uidMd5, sessions, friends);
  
     std::sort(sessions.begin(), sessions.end(), SessionLastMsgTimeCompare());
     
@@ -505,6 +491,40 @@ bool Exporter::fillSession(Session& session, const Friends& friends) const
 	}
 
 	return true;
+}
+
+void Exporter::releaseITunes()
+{
+    if (NULL != m_iTunesDb)
+    {
+        delete m_iTunesDb;
+        m_iTunesDb = NULL;
+    }
+    if (NULL != m_iTunesDbShare)
+    {
+        delete m_iTunesDbShare;
+        m_iTunesDbShare = NULL;
+    }
+}
+
+bool Exporter::loadITunes()
+{
+    releaseITunes();
+    
+    m_iTunesDb = new ITunesDb(m_backup, "Manifest.db");
+    if (!m_iTunesDb->load("AppDomain-com.tencent.xin"))
+    {
+        return false;
+    }
+    
+    m_iTunesDbShare = new ITunesDb(m_backup, "Manifest.db");
+    if (!m_iTunesDbShare->load("AppDomainGroup-group.com.tencent.xin"))
+    {
+        // Optional
+        // return false;
+    }
+    
+    return true;
 }
 
 bool Exporter::loadTemplates()

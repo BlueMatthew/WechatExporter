@@ -42,6 +42,7 @@ protected:
     Shell* m_shell;
     
     ITunesDb *m_iTunesDb;
+    ITunesDb *m_iTunesDbShare;
     
     std::map<std::string, std::string> m_templates;
 	std::map<std::string, std::string> m_localeStrings;
@@ -79,6 +80,8 @@ protected:
 	int exportSession(const Friend& user, SessionParser& sessionParser, const Session& session, const std::string& userBase, const std::string& outputBase);
 
 	bool fillSession(Session& session, const Friends& friends) const;
+    void releaseITunes();
+    bool loadITunes();
     bool loadTemplates();
 	bool loadStrings();
     std::string getTemplate(const std::string& key) const;
