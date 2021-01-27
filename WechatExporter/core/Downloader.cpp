@@ -147,21 +147,31 @@ void Downloader::addTask(const std::string &url, const std::string& output, time
     bool existed = false;
     
     m_mtx.lock();
-    std::map<std::string, std::string>::const_iterator it = m_urls.find(url);
-    existed = (it != m_urls.cend());
-    if (!existed)
+    if (startsWith(url, "file://"))
     {
-        m_urls[url] = output;
-        Task task(url, formatedPath, mtime);
-        task.setUserAgent(m_userAgent);
-        m_queue.push(task);
-        m_downloadTaskSize++;
-    }
-    else if (output != it->second)
-    {
-        Task task(it->second, formatedPath, mtime, true);
+        Task task(url.substr(7), formatedPath, mtime, true);
         m_copyQueue.push(task);
     }
+    else
+    {
+        std::map<std::string, std::string>::const_iterator it = m_urls.find(url);
+        existed = (it != m_urls.cend());
+        
+        if (!existed)
+        {
+            m_urls[url] = output;
+            Task task(url, formatedPath, mtime);
+            task.setUserAgent(m_userAgent);
+            m_queue.push(task);
+            m_downloadTaskSize++;
+        }
+        else if (output != it->second)
+        {
+            Task task(it->second, formatedPath, mtime, true);
+            m_copyQueue.push(task);
+        }
+    }
+
     m_mtx.unlock();
     
     if (existed)
