@@ -822,11 +822,12 @@ bool SessionsParser::parse(const std::string& usrNameHash, std::vector<Session>&
 
     std::string shareUserRoot = "share/" + usrNameHash;
     parseSessionsInGroupApp(shareUserRoot, sessions);
-
-    if (m_detailedInfo)
+    
+    // if (m_detailedInfo)
     {
         parseMessageDbs(userRoot, sessions);
     }
+    
     
     return true;
 }
@@ -841,15 +842,16 @@ bool SessionsParser::parseMessageDbs(const std::string& userRoot, std::vector<Se
     
     std::string dbPath = m_iTunesDb->findRealPath(combinePath(userRoot, "DB", "MM.sqlite"));
 
-	std::vector<std::string> sessionIds;
+    std::vector<std::pair<std::string, int>> sessionIds;
     parseMessageDb(dbPath, sessionIds);
 
-	for (typename std::vector<std::string>::const_iterator it = sessionIds.cbegin(); it != sessionIds.cend(); ++it)
+	for (typename std::vector<std::pair<std::string, int>>::const_iterator it = sessionIds.cbegin(); it != sessionIds.cend(); ++it)
 	{
-		std::vector<Session>::iterator itSession = std::lower_bound(sessions.begin(), sessions.end(), *it, comp);
-		if (itSession != sessions.end() && itSession->getHash() == *it)
+		std::vector<Session>::iterator itSession = std::lower_bound(sessions.begin(), sessions.end(), it->first, comp);
+		if (itSession != sessions.end() && itSession->getHash() == it->first)
 		{
 			itSession->setDbFile(dbPath);
+            itSession->setRecordCount(it->second);
 		}
 	}
 
@@ -859,12 +861,13 @@ bool SessionsParser::parseMessageDbs(const std::string& userRoot, std::vector<Se
 		sessionIds.clear();
         parseMessageDb(dbPath, sessionIds);
 
-		for (typename std::vector<std::string>::const_iterator itId = sessionIds.cbegin(); itId != sessionIds.cend(); ++itId)
+		for (typename std::vector<std::pair<std::string, int>>::const_iterator itId = sessionIds.cbegin(); itId != sessionIds.cend(); ++itId)
 		{
-			std::vector<Session>::iterator itSession = std::lower_bound(sessions.begin(), sessions.end(), *itId, comp);
-			if (itSession != sessions.end() && itSession->getHash() == *itId)
+			std::vector<Session>::iterator itSession = std::lower_bound(sessions.begin(), sessions.end(), itId->first, comp);
+			if (itSession != sessions.end() && itSession->getHash() == itId->first)
 			{
 				itSession->setDbFile(dbPath);
+                itSession->setRecordCount(itId->second);
 			}
 		}
     }
@@ -872,7 +875,7 @@ bool SessionsParser::parseMessageDbs(const std::string& userRoot, std::vector<Se
     return true;
 }
 
-bool SessionsParser::parseMessageDb(const std::string& mmPath, std::vector<std::string>& sessionIds)
+bool SessionsParser::parseMessageDb(const std::string& mmPath, std::vector<std::pair<std::string, int>>& sessionIds)
 {
     sqlite3 *db = NULL;
     int rc = openSqlite3ReadOnly(mmPath, &db);
@@ -901,11 +904,25 @@ bool SessionsParser::parseMessageDb(const std::string& mmPath, std::vector<std::
             continue;
         }
         std::string name = reinterpret_cast<const char*>(pName);
-        std::smatch sm;
-        static std::regex pattern("^Chat_([0-9a-f]{32})$");
-        if (std::regex_search(name, sm, pattern))
+        // "^Chat_([0-9a-f]{32})$"
+        if (startsWith(name, "Chat_"))
         {
-            sessionIds.push_back(sm[1]);
+            std::string chatId = name.substr(5);
+            int recordCount = 0;
+            std::string sql2 = "SELECT COUNT(*) AS rc FROM " + name;
+            sqlite3_stmt* stmt2 = NULL;
+            rc = sqlite3_prepare_v2(db, sql2.c_str(), (int)(sql2.size()), &stmt2, NULL);
+            if (rc == SQLITE_OK)
+            {
+                if (sqlite3_step(stmt2) == SQLITE_ROW)
+                {
+                    recordCount = sqlite3_column_int(stmt2, 0);
+                }
+                
+                sqlite3_finalize(stmt2);
+            }
+            
+            sessionIds.push_back(std::make_pair<>(chatId, recordCount));
         }
     }
     
@@ -929,6 +946,7 @@ bool SessionsParser::parseCellData(const std::string& userRoot, Session& session
 	{
 		return false;
 	}
+
 
 	RawMessage msg;
 	if (!msg.mergeFile(fileName))
@@ -1083,7 +1101,6 @@ bool SessionsParser::parseSessionsInGroupApp(const std::string& userRoot, std::v
                     uint32_t blockLen = 0;
                     const char * data = value.c_str();
                     const char * data1 = NULL;
-                    int i = 0;
                     while ((data1 = calcVarint32Ptr(data, value.c_str() + value.size(), &blockLen)) != NULL)
                     {
                         RawMessage msg2;
