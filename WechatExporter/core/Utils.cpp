@@ -553,9 +553,77 @@ bool deleteFile(const std::string& fileName)
 
 int openSqlite3ReadOnly(const std::string& path, sqlite3 **ppDb)
 {
-    std::string pathWithQuery = "file:" + path;
+    std::string sep(1, DIR_SEP);
+    std::string encodedPath;
+#ifdef _WIN32
+    TCHAR szDriver[_MAX_DRIVE] = { 0 };
+    TCHAR szDir[_MAX_DIR] = { 0 };
+    
+    CW2T pszT(CA2W(normalizePath(path).c_str(), CP_UTF8));
+    
+    _tsplitpath(pszT, szDriver, szDir, NULL, NULL);
+    size_t driveLen = _tcslen(szDriver);
+    if (driveLen == 0)
+    {
+        // NO driver
+        encodedPath = path;
+    }
+    else
+    {
+        CW2A pszU8(CT2W(&pszT[driveLen]), CP_UTF8);
+        encodedPath = pszU8;
+    }
+#else
+    encodedPath = normalizePath(path);
+#endif
+
+    std::vector<std::string> parts = split(encodedPath, sep);
+    std::vector<std::string> encodedParts;
+    encodedPath.reserve(parts.size() + 1);
+
+    CURL *curl = curl_easy_init();
+    if (curl)
+    {
+        for (std::vector<std::string>::const_iterator it = parts.cbegin(); it != parts.cend(); ++it)
+        {
+            char *ptr = curl_easy_escape(curl, it->c_str(), it->size());
+            if (ptr)
+            {
+                encodedParts.push_back(std::string(ptr));
+                curl_free(ptr);
+            }
+        }
+
+        curl_easy_cleanup(curl);
+
+        encodedPath = join(encodedParts, sep.c_str());
+    }
+
+#ifdef _WIN32
+    if (driveLen == 0)
+    {
+        if (_tcslen(szDir) > 0 && szDir[0] == DIR_SEP)
+        {
+            encodedPath = sep + encodedPath;
+        }
+    }
+    else
+    {
+        CW2A pszU8(CT2W(szDriver), CP_UTF8);
+        encodedPath = (LPCSTR)pszU8 + sep + encodedPath;
+    }
+#else
+    if (startsWith(path, sep))
+    {
+        encodedPath = sep + encodedPath;
+    }
+#endif
+    
+    std::string pathWithQuery = "file:" + encodedPath;
+    // std::string pathWithQuery = "file:" + path;
     pathWithQuery += "?immutable=1&mode=ro";
     
+    // return sqlite3_open_v2(path.c_str(), ppDb, SQLITE_OPEN_READONLY, NULL);
     return sqlite3_open_v2(pathWithQuery.c_str(), ppDb, SQLITE_OPEN_READONLY | SQLITE_OPEN_URI, NULL);
 }
 
