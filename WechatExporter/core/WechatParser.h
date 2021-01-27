@@ -284,7 +284,7 @@ public:
 private:
     bool parseCellData(const std::string& userRoot, Session& session);
     bool parseMessageDbs(const std::string& userRoot, std::vector<Session>& sessions);
-    bool parseMessageDb(const std::string& mmPath, std::vector<std::string>& sessionIds);
+    bool parseMessageDb(const std::string& mmPath, std::vector<std::pair<std::string, int>>& sessionIds);
     
     bool parseSessionsInGroupApp(const std::string& userRoot, std::vector<Session>& sessions);
 };
