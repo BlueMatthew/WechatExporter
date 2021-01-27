@@ -751,7 +751,7 @@ bool WechatInfoParser::parsePreferences(WechatInfo& wechatInfo)
     return true;
 }
 
-SessionsParser::SessionsParser(ITunesDb *iTunesDb, Shell* shell, const std::string& cellDataVersion, bool detailedInfo/* = true*/) : m_iTunesDb(iTunesDb), m_shell(shell), m_cellDataVersion(cellDataVersion), m_detailedInfo(detailedInfo)
+SessionsParser::SessionsParser(ITunesDb *iTunesDb, ITunesDb *iTunesDbShare, Shell* shell, const std::string& cellDataVersion, bool detailedInfo/* = true*/) : m_iTunesDb(iTunesDb), m_iTunesDbShare(iTunesDbShare), m_shell(shell), m_cellDataVersion(cellDataVersion), m_detailedInfo(detailedInfo)
 {
     if (cellDataVersion.empty())
     {
@@ -759,8 +759,9 @@ SessionsParser::SessionsParser(ITunesDb *iTunesDb, Shell* shell, const std::stri
     }
 }
 
-bool SessionsParser::parse(const std::string& userRoot, std::vector<Session>& sessions, const Friends& friends)
+bool SessionsParser::parse(const std::string& usrNameHash, std::vector<Session>& sessions, const Friends& friends)
 {
+    std::string userRoot = "Documents/" + usrNameHash;
     std::string sessionDbPath = m_iTunesDb->findRealPath(combinePath(userRoot, "session", "session.db"));
 	if (sessionDbPath.empty())
 	{
@@ -785,7 +786,7 @@ bool SessionsParser::parse(const std::string& userRoot, std::vector<Session>& se
         sqlite3_close(db);
         return false;
     }
-    
+
     while (sqlite3_step(stmt) == SQLITE_ROW)
     {
         const char *usrName = reinterpret_cast<const char*>(sqlite3_column_text(stmt, 3));
@@ -818,6 +819,9 @@ bool SessionsParser::parse(const std::string& userRoot, std::vector<Session>& se
     
     sqlite3_finalize(stmt);
     sqlite3_close(db);
+
+    std::string shareUserRoot = "share/" + usrNameHash;
+    parseSessionsInGroupApp(shareUserRoot, sessions);
 
     if (m_detailedInfo)
     {
@@ -1007,6 +1011,121 @@ bool SessionsParser::parseCellData(const std::string& userRoot, Session& session
     }
 
 	return true;
+}
+
+bool SessionsParser::parseSessionsInGroupApp(const std::string& userRoot, std::vector<Session>& sessions)
+{
+    std::map<std::string, Session*> sessionMap;
+    for (std::vector<Session>::iterator it = sessions.begin(); it != sessions.end(); ++it)
+    {
+        sessionMap.insert(sessionMap.cend(), std::make_pair<>(it->getUsrName(), &(*it)));
+        // sessionMap[it->getUsrName()] = &(*it);
+    }
+    
+    std::string sessionDataArchivePath = m_iTunesDbShare->findRealPath(combinePath(userRoot, "session", "sessionData.archive"));
+    if (!sessionDataArchivePath.empty())
+    {
+        std::vector<unsigned char> contents;
+        if (readFile(sessionDataArchivePath, contents))
+        {
+            RawMessage msg;
+            if (msg.merge(reinterpret_cast<const char *>(&contents[0]), static_cast<int>(contents.size())))
+            {
+                std::string value;
+                if (msg.parse("1", value))
+                {
+                    uint32_t blockLen = 0;
+                    const char * data = value.c_str();
+                    const char * data1 = NULL;
+                    while ((data1 = calcVarint32Ptr(data, value.c_str() + value.size(), &blockLen)) != NULL)
+                    {
+                        RawMessage msg2;
+                        if (msg2.merge(data1, static_cast<int>(blockLen)))
+                        {
+                            std::string value2;
+                            if (msg2.parse("1", value2))
+                            {
+                                std::map<std::string, Session*>::iterator it = sessionMap.find(value2);
+                                if (it != sessionMap.end())
+                                {
+                                    std::string name;
+                                    if (msg2.parse("2", value2))
+                                    {
+                                        name = value2;
+                                    }
+                                    if (msg2.parse("3", value2))
+                                    {
+                                        it->second->setDisplayName(value2.empty() ? name : value2);
+                                    }
+                                }
+                            }
+                        }
+            
+                        data = data1 + blockLen;
+                    }
+                }
+            }
+        }
+    }
+    
+    std::string extraSessionDataArchivePath = m_iTunesDbShare->findRealPath(combinePath(userRoot, "session", "extraSessionExtraSessionData.archive"));
+    if (!extraSessionDataArchivePath.empty())
+    {
+        std::vector<unsigned char> contents;
+        if (readFile(extraSessionDataArchivePath, contents))
+        {
+            RawMessage msg;
+            if (msg.merge(reinterpret_cast<const char *>(&contents[0]), static_cast<int>(contents.size())))
+            {
+                std::string value;
+                if (msg.parse("1", value))
+                {
+                    uint32_t blockLen = 0;
+                    const char * data = value.c_str();
+                    const char * data1 = NULL;
+                    int i = 0;
+                    while ((data1 = calcVarint32Ptr(data, value.c_str() + value.size(), &blockLen)) != NULL)
+                    {
+                        RawMessage msg2;
+                        if (msg2.merge(data1, static_cast<int>(blockLen)))
+                        {
+                            std::string value2;
+                            if (msg2.parse("1", value2))
+                            {
+                                std::map<std::string, Session*>::iterator it = sessionMap.find(value2);
+                                if (it != sessionMap.end())
+                                {
+                                    std::string name;
+                                    if (msg2.parse("2", value2))
+                                    {
+                                        name = value;
+                                    }
+                                    if (msg2.parse("3", value2))
+                                    {
+                                        // it->second->setDisplayName(value2.empty() ? name : value2);
+                                    }
+                                }
+                            }
+                        }
+            
+                        data = data1 + blockLen;
+                    }
+                }
+            }
+        }
+    }
+    
+    // copy avatar
+    for (std::vector<Session>::iterator it = sessions.begin(); it != sessions.end(); ++it)
+    {
+        std::string avatarPath = m_iTunesDbShare->findRealPath(combinePath(userRoot, "session", "headImg", it->getHash() + ".pic"));
+        if (!avatarPath.empty())
+        {
+            it->setPortrait("file://" + avatarPath);
+        }
+    }
+
+    return true;
 }
 
 SessionParser::SessionParser(Friend& myself, Friends& friends, const ITunesDb& iTunesDb, const Shell& shell, const std::map<std::string, std::string>& templates, const std::map<std::string, std::string>& localeStrings, int options, Downloader& downloader, std::atomic<bool>& cancelled) : m_templates(templates), m_localeStrings(localeStrings), m_options(options), m_myself(myself), m_friends(friends), m_iTunesDb(iTunesDb), m_shell(shell), m_downloader(downloader), m_cancelled(cancelled)
