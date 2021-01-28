@@ -7,6 +7,9 @@
 //
 
 #include "RawMessage.h"
+#ifdef _WIN32
+#include <atlstr.h>
+#endif
 
 bool convertUnknownField(const UnknownField &uf, std::string& value)
 {
@@ -132,7 +135,12 @@ bool RawMessage::mergeFile(const std::string& path)
 {
     release();
     
+#ifdef _WIN32
+    CA2W pszW(path.c_str(), CP_UTF8);
+    std::ifstream file(pszW, std::ios::in|std::ios::binary|std::ios::ate);
+#else
     std::ifstream file(path.c_str(), std::ios::in|std::ios::binary|std::ios::ate);
+#endif
     if (file.is_open())
     {
         std::streampos size = file.tellg();
