@@ -117,7 +117,6 @@ bool LoginInfo2Parser::parse(std::vector<Friend>& users)
 
 bool LoginInfo2Parser::parse(const std::string& loginInfo2Path, std::vector<Friend>& users)
 {
-    
     RawMessage msg;
     if (!msg.mergeFile(loginInfo2Path))
     {

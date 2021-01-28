@@ -228,7 +228,7 @@ public:
 		CFolderDialog folder(NULL, text, BIF_RETURNONLYFSDIRS | BIF_USENEWUI | BIF_NONEWFOLDERBUTTON);
 		if (IDOK == folder.DoModal())
 		{
-			CT2A backupDir(folder.m_szFolderPath, CP_UTF8);
+			CW2A backupDir(CT2W(folder.m_szFolderPath), CP_UTF8);
 
 			ManifestParser parser((LPCSTR)backupDir, &m_shell);
 			std::vector<BackupManifest> manifests;
@@ -623,7 +623,7 @@ public:
 			{
 				std::string itemTitle = it->toString();
 				// String* item = [NSString stringWithUTF8String : itemTitle.c_str()];
-				CA2T item(it->toString().c_str(), CP_UTF8);
+				CW2T item(CA2W(it->toString().c_str(), CP_UTF8));
 				cmb.AddString((LPCTSTR)item);
 			}
 			if (selectedIndex != -1 && selectedIndex < cmb.GetCount())
