@@ -143,6 +143,9 @@
     <ClInclude Include="ITunesDetector.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="VersionDetector.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="WechatExporter.rc">
