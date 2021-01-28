@@ -284,8 +284,8 @@ std::string readFile(const std::string& path)
 bool readFile(const std::string& path, std::vector<unsigned char>& data)
 {
 #ifdef _WIN32
-	CW2A pszA(CA2W(path.c_str(), CP_UTF8));
-	std::ifstream file((LPCSTR)pszA, std::ios::in | std::ios::binary | std::ios::ate);
+	CA2W pszW(path.c_str(), CP_UTF8);
+	std::ifstream file(pszW, std::ios::in | std::ios::binary | std::ios::ate);
 #else
 	std::ifstream file(path, std::ios::in | std::ios::binary | std::ios::ate);
 #endif
