@@ -338,6 +338,9 @@ void errorLogCallback(void *pArg, int iErrCode, const char *zMsg)
         return;
     }
     
+    m_logger->write("iTunes Backup:" + manifest.getPath());
+    m_logger->write("iTunes Version:" + manifest.getITunesVersion());
+    
     BOOL descOrder = (self.chkboxDesc.state == NSOnState);
     BOOL ignoreAudio = (self.chkboxNoAudio.state == NSOnState);
     BOOL saveFilesInSessionFolder = (self.chkboxSaveFilesInSessionFolder.state == NSOnState);

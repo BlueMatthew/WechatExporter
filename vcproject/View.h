@@ -528,6 +528,9 @@ public:
 			}
 		}
 
+		m_logger->write("iTunes Backup:" + manifest.getPath());
+		m_logger->write("iTunes Version:" + manifest.getITunesVersion());
+
 		m_exporter = new Exporter((LPCSTR)resDir, backup, (LPCSTR)output, &m_shell, m_logger);
 		m_exporter->setNotifier(m_notifier);
 		m_exporter->setOrder(!descOrder);
