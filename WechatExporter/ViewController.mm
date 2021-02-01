@@ -78,7 +78,7 @@ void errorLogCallback(void *pArg, int iErrCode, const char *zMsg)
     [self.btnCancel setAction:nil];
     [self.chkboxDesc setAction:nil];
     [self.chkboxNoAudio setAction:nil];
-    self.cmbboxBackup.delegate = nil;
+    // self.popupBackup.delegate = nil;
 }
 
 - (void)viewDidLoad {
@@ -105,7 +105,7 @@ void errorLogCallback(void *pArg, int iErrCode, const char *zMsg)
     [self.btnCancel setAction:@selector(btnCancelClicked:)];
     [self.chkboxDesc setAction:@selector(btnDescClicked:)];
     [self.chkboxNoAudio setAction:@selector(btnIgnoreAudioClicked:)];
-    self.cmbboxBackup.delegate = self;
+    // self.popupBackup.delegate = self;
     
     BOOL descOrder = [[NSUserDefaults standardUserDefaults] boolForKey:@"Desc"];
     self.chkboxDesc.state = descOrder ? NSOnState : NSOffState;
@@ -154,7 +154,7 @@ void errorLogCallback(void *pArg, int iErrCode, const char *zMsg)
         }
     }
     
-    self.cmbboxBackup.autoresizingMask = NSViewMinYMargin | NSViewWidthSizable;
+    self.popupBackup.autoresizingMask = NSViewMinYMargin | NSViewWidthSizable;
     self.btnBackup.autoresizingMask = NSViewMinXMargin | NSViewMinYMargin;
     
     self.txtboxOutput.autoresizingMask = NSViewMinYMargin | NSViewWidthSizable;
@@ -173,7 +173,7 @@ void errorLogCallback(void *pArg, int iErrCode, const char *zMsg)
         return;
     }
     
-    size_t selectedIndex = (size_t)self.cmbboxBackup.indexOfSelectedItem;
+    size_t selectedIndex = (size_t)self.popupBackup.indexOfSelectedItem;
     for (std::vector<BackupManifest>::const_iterator it = manifests.cbegin(); it != manifests.cend(); ++it)
     {
         std::vector<BackupManifest>::const_iterator it2 = std::find(m_manifests.cbegin(), m_manifests.cend(), *it);
@@ -184,12 +184,12 @@ void errorLogCallback(void *pArg, int iErrCode, const char *zMsg)
     }
     
     // update
-    [self.cmbboxBackup removeAllItems];
+    [self.popupBackup removeAllItems];
     for (std::vector<BackupManifest>::const_iterator it = m_manifests.cbegin(); it != m_manifests.cend(); ++it)
     {
         std::string itemTitle = it->toString();
         NSString* item = [NSString stringWithUTF8String:itemTitle.c_str()];
-        [self.cmbboxBackup addItemWithObjectValue:item];
+        [self.popupBackup addItemWithTitle:item];
         
         if (selectedIndex == -1)
         {
@@ -203,13 +203,13 @@ void errorLogCallback(void *pArg, int iErrCode, const char *zMsg)
             }
         }
     }
-    if (selectedIndex == -1 && self.cmbboxBackup.numberOfItems > 0)
+    if (selectedIndex == -1 && self.popupBackup.numberOfItems > 0)
     {
         selectedIndex = 0;
     }
-    if (selectedIndex != -1 && selectedIndex < self.cmbboxBackup.numberOfItems)
+    if (selectedIndex != -1 && selectedIndex < self.popupBackup.numberOfItems)
     {
-        [self.cmbboxBackup selectItemAtIndex:selectedIndex];
+        [self.popupBackup selectItemAtIndex:selectedIndex];
     }
 }
 
@@ -219,11 +219,11 @@ void errorLogCallback(void *pArg, int iErrCode, const char *zMsg)
     if ([notification.name isEqualToString:NSComboBoxSelectionDidChangeNotification])
     {
         NSComboBox *cmb = (NSComboBox *)notification.object;
-        if (cmb == self.cmbboxBackup)
+        if (cmb == self.popupBackup)
         {
-            if (self.cmbboxBackup.indexOfSelectedItem != -1 && self.cmbboxBackup.indexOfSelectedItem < m_manifests.size())
+            if (self.popupBackup.indexOfSelectedItem != -1 && self.popupBackup.indexOfSelectedItem < m_manifests.size())
             {
-                const BackupManifest& manifest = m_manifests[self.cmbboxBackup.indexOfSelectedItem];
+                const BackupManifest& manifest = m_manifests[self.popupBackup.indexOfSelectedItem];
                 std::string backup = manifest.getPath();
                 NSString *backupPath = [NSString stringWithUTF8String:backup.c_str()];
                 [[NSUserDefaults standardUserDefaults] setObject:backupPath forKey:@"BackupDir"];
@@ -302,13 +302,13 @@ void errorLogCallback(void *pArg, int iErrCode, const char *zMsg)
         return;
     }
     
-    if (self.cmbboxBackup.indexOfSelectedItem == -1 || self.cmbboxBackup.indexOfSelectedItem >= m_manifests.size())
+    if (self.popupBackup.indexOfSelectedItem == -1 || self.popupBackup.indexOfSelectedItem >= m_manifests.size())
     {
         [self msgBox:@"请选择iTunes备份目录。"];
         return;
     }
     
-    const BackupManifest& manifest = m_manifests[self.cmbboxBackup.indexOfSelectedItem];
+    const BackupManifest& manifest = m_manifests[self.popupBackup.indexOfSelectedItem];
     if (manifest.isEncrypted())
     {
         [self msgBox:@"不支持加密的iTunes Backup。请使用不加密形式备份iPhone/iPad设备。"];
@@ -425,7 +425,7 @@ void errorLogCallback(void *pArg, int iErrCode, const char *zMsg)
 - (void)onStart
 {
     self.view.window.styleMask &= ~NSClosableWindowMask;
-    [self.cmbboxBackup setEnabled:NO];
+    [self.popupBackup setEnabled:NO];
     [self.btnOutput setEnabled:NO];
     [self.btnBackup setEnabled:NO];
     [self.btnExport setEnabled:NO];
@@ -441,7 +441,7 @@ void errorLogCallback(void *pArg, int iErrCode, const char *zMsg)
     self.view.window.styleMask |= NSClosableWindowMask;
     [self.btnExport setEnabled:YES];
     [self.btnCancel setEnabled:NO];
-    [self.cmbboxBackup setEnabled:YES];
+    [self.popupBackup setEnabled:YES];
     [self.btnOutput setEnabled:YES];
     [self.btnBackup setEnabled:YES];
     [self.chkboxDesc setEnabled:YES];
