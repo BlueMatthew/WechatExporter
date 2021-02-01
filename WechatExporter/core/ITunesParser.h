@@ -49,6 +49,8 @@ protected:
     std::string m_deviceName;
     std::string m_displayName;
     std::string m_backupTime;
+    std::string m_iTunesVersion;
+    std::string m_macOSVersion;
 	bool m_encrypted;
     
 public:
@@ -89,6 +91,20 @@ public:
 	{
 		m_backupTime = backupTime;
 	}
+    
+    void setITunesVersion(const std::string& iTunesVersion)
+    {
+        m_iTunesVersion = iTunesVersion;
+    }
+    void setMacOSVersion(const std::string& macOSVersion)
+    {
+        m_macOSVersion = macOSVersion;
+    }
+    
+    bool isITunesVersionEmpty() const
+    {
+        return m_iTunesVersion.empty();
+    }
 
 	void setEncrypted(bool encrypted)
 	{
@@ -105,9 +121,14 @@ public:
         return !m_displayName.empty() && !m_backupTime.empty() && !m_deviceName.empty();
     }
     
+    std::string getITunesVersion() const
+    {
+        return m_iTunesVersion.empty() ? (m_macOSVersion.empty() ? "" : ("Embedded iTunes on MacOS " + m_macOSVersion)) : m_iTunesVersion;
+    }
+
     std::string toString() const
     {
-        return m_displayName + " [" + m_backupTime + "] (" + m_path + ")";
+        return m_displayName + " [" + m_backupTime + "] (" + m_path + ")" + (m_iTunesVersion.empty() ? (" Embeded iTunes on MacOS:" + m_macOSVersion) : (" iTunes Version:" + m_iTunesVersion));
     }
     
     std::string getPath() const

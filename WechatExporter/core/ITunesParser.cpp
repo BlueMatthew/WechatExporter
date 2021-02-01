@@ -428,6 +428,8 @@ bool ManifestParser::parse(const std::string& backupPath, const std::string& bac
     const std::string ValueLastBackupDate = "Last Backup Date";
     const std::string ValueDisplayName = "Display Name";
     const std::string ValueDeviceName = "Device Name";
+    const std::string ValueITunesVersion = "iTunes Version";
+    const std::string ValueMacOSVersion = "macOS Version";
     
     std::vector<std::string> tags;
     std::vector<std::string> keys;
@@ -438,6 +440,8 @@ bool ManifestParser::parse(const std::string& backupPath, const std::string& bac
     keys.push_back(ValueLastBackupDate);
     keys.push_back(ValueDisplayName);
     keys.push_back(ValueDeviceName);
+    keys.push_back(ValueITunesVersion);
+    keys.push_back(ValueMacOSVersion);
     
     PlistDictionary plistDict(tags, keys);
     int res = xmlSAXUserParseFile(&saxHander, &plistDict, fileName.c_str());
@@ -451,6 +455,8 @@ bool ManifestParser::parse(const std::string& backupPath, const std::string& bac
     manifest.setPath(path);
     manifest.setDeviceName(plistDict[ValueDeviceName]);
     manifest.setDisplayName(plistDict[ValueDisplayName]);
+    manifest.setITunesVersion(plistDict[ValueITunesVersion]);
+    manifest.setMacOSVersion(plistDict[ValueMacOSVersion]);    // Embeded iTunes
     std::string localDate = utcToLocal(plistDict[ValueLastBackupDate]);
     manifest.setBackupTime(localDate);
     
@@ -564,6 +570,7 @@ void PlistDictionary::endElementNs(const std::string& localName, const std::stri
                 if (it != m_values.cend())
                 {
                     it->second = m_valueBuffer;
+                    it->second.erase(it->second.find_last_not_of(" \n\r\t") + 1);
                 }
             }
         }
