@@ -289,7 +289,7 @@ public:
 		m_logger->write("Start loading users and sessions.");
 #endif
 
-		std::string backup = m_manifests[cbmBox.GetCurSel()].getPath();
+		std::string backup = manifest.getPath();
 		Exporter exp("", backup, "", &m_shell, m_logger);
 		exp.loadUsersAndSessions(m_usersAndSessions);
 
