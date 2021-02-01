@@ -14,7 +14,7 @@
 @property (weak) IBOutlet NSButton *btnExport;
 @property (weak) IBOutlet NSButton *btnCancel;
 @property (weak) IBOutlet NSTextField *txtboxOutput;
-@property (weak) IBOutlet NSComboBox *cmbboxBackup;
+@property (weak) IBOutlet NSPopUpButton *popupBackup;
 
 @property (weak) IBOutlet NSButton *btnBackup;
 @property (weak) IBOutlet NSButton *btnOutput;

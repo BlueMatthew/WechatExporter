@@ -86,9 +86,9 @@
                 <windowController id="B8D-0N-5wS" sceneMemberID="viewController">
                     <window key="window" title="Wechat Exporter" allowsToolTipsWhenApplicationIsInactive="NO" autorecalculatesKeyViewLoop="NO" releasedWhenClosed="NO" visibleAtLaunch="NO" animationBehavior="default" id="IQv-IB-iLA">
                         <windowStyleMask key="styleMask" titled="YES" closable="YES" miniaturizable="YES" resizable="YES"/>
-                        <windowPositionMask key="initialPositionMask" leftStrut="YES" rightStrut="YES" topStrut="YES" bottomStrut="YES"/>
-                        <rect key="contentRect" x="196" y="240" width="480" height="270"/>
+                        <rect key="contentRect" x="196" y="240" width="1024" height="640"/>
                         <rect key="screenRect" x="0.0" y="0.0" width="1680" height="1027"/>
+                        <value key="minSize" type="size" width="1024" height="640"/>
                         <connections>
                             <outlet property="delegate" destination="B8D-0N-5wS" id="98r-iN-zZc"/>
                         </connections>
@@ -109,15 +109,6 @@
                         <rect key="frame" x="0.0" y="0.0" width="642" height="400"/>
                         <autoresizingMask key="autoresizingMask"/>
                         <subviews>
-                            <comboBox horizontalHuggingPriority="249" verticalHuggingPriority="750" fixedFrame="YES" allowsExpansionToolTips="YES" translatesAutoresizingMaskIntoConstraints="NO" id="MCy-Pf-KGR">
-                                <rect key="frame" x="12" y="342" width="597" height="25"/>
-                                <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-                                <comboBoxCell key="cell" scrollable="YES" lineBreakMode="clipping" selectable="YES" sendsActionOnEndEditing="YES" borderStyle="bezel" drawsBackground="YES" completes="NO" numberOfVisibleItems="5" id="3GG-gE-HUp">
-                                    <font key="font" metaFont="titleBar"/>
-                                    <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
-                                    <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
-                                </comboBoxCell>
-                            </comboBox>
                             <textField horizontalHuggingPriority="249" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="az7-4y-9PZ">
                                 <rect key="frame" x="12" y="292" width="594" height="21"/>
                                 <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
@@ -244,6 +235,21 @@ Gw
                                     <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
                                 </textFieldCell>
                             </textField>
+                            <popUpButton verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="FYs-pu-LFe">
+                                <rect key="frame" x="10" y="343" width="599" height="25"/>
+                                <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                                <popUpButtonCell key="cell" type="push" title="Item 1" bezelStyle="rounded" alignment="left" lineBreakMode="truncatingTail" state="on" borderStyle="borderAndBezel" imageScaling="proportionallyDown" inset="2" selectedItem="IpQ-Jr-4aj" id="gUM-SE-fVj">
+                                    <behavior key="behavior" lightByBackground="YES" lightByGray="YES"/>
+                                    <font key="font" metaFont="menu"/>
+                                    <menu key="menu" id="8a7-Ad-bIv">
+                                        <items>
+                                            <menuItem title="Item 1" state="on" id="IpQ-Jr-4aj"/>
+                                            <menuItem title="Item 2" id="GUo-CN-uSu"/>
+                                            <menuItem title="Item 3" id="Nf7-nr-wRt"/>
+                                        </items>
+                                    </menu>
+                                </popUpButtonCell>
+                            </popUpButton>
                         </subviews>
                     </view>
                     <connections>
@@ -254,8 +260,8 @@ Gw
                         <outlet property="chkboxDesc" destination="pbK-5X-QkO" id="Pvr-1h-tch"/>
                         <outlet property="chkboxNoAudio" destination="RXT-cv-bA8" id="14v-WF-9Bu"/>
                         <outlet property="chkboxSaveFilesInSessionFolder" destination="MHp-Fl-sSj" id="gqr-AA-VFP"/>
-                        <outlet property="cmbboxBackup" destination="MCy-Pf-KGR" id="RR8-hc-S2u"/>
                         <outlet property="lblITunes" destination="Kpd-TD-eLh" id="uWI-3i-BEz"/>
+                        <outlet property="popupBackup" destination="FYs-pu-LFe" id="Z34-x5-0Me"/>
                         <outlet property="progressBar" destination="VMi-pK-9Z0" id="O1p-nX-RQW"/>
                         <outlet property="sclViewLogs" destination="Mkn-sk-kD7" id="42K-bF-yhL"/>
                         <outlet property="txtViewLogs" destination="09Z-23-gCi" id="8iS-At-7Jk"/>
