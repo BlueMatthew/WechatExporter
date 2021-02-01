@@ -556,6 +556,7 @@ public:
 	{
 		EnableInteractiveCtrls(FALSE);
 		CProgressBarCtrl progressCtrl = GetDlgItem(IDC_PROGRESS);
+		progressCtrl.ModifyStyle(0, PBS_MARQUEE);
 		progressCtrl.SetMarquee(TRUE, 0);
 		return 0;
 	}
@@ -569,7 +570,9 @@ public:
 			m_exporter = NULL;
 		}
 		CProgressBarCtrl progressCtrl = GetDlgItem(IDC_PROGRESS);
+		progressCtrl.ModifyStyle(PBS_MARQUEE, 0);
 		progressCtrl.SetMarquee(FALSE, 0);
+		progressCtrl.SetPos(0);
 		EnableInteractiveCtrls(TRUE);
 		return 0;
 	}
