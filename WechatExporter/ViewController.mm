@@ -27,7 +27,7 @@ void errorLogCallback(void *pArg, int iErrCode, const char *zMsg)
 }
 
 
-@interface ViewController() <NSComboBoxDelegate>
+@interface ViewController() <NSComboBoxDelegate, NSTableViewDataSource, NSTableViewDelegate>
 {
     ShellImpl* m_shell;
     LoggerImpl* m_logger;
@@ -159,6 +159,9 @@ void errorLogCallback(void *pArg, int iErrCode, const char *zMsg)
     
     self.txtboxOutput.autoresizingMask = NSViewMinYMargin | NSViewWidthSizable;
     self.btnOutput.autoresizingMask = NSViewMinXMargin | NSViewMinYMargin;
+    
+    self.popupUsers.autoresizingMask = NSViewMinYMargin;
+    self.sclSessions.autoresizingMask = NSViewMinYMargin | NSViewHeightSizable;
     
     self.sclViewLogs.autoresizingMask = NSViewWidthSizable | NSViewHeightSizable;
     self.progressBar.autoresizingMask = NSViewMaxYMargin;
@@ -337,17 +340,17 @@ void errorLogCallback(void *pArg, int iErrCode, const char *zMsg)
         // self.txtboxOutput focus
         return;
     }
-    
-    m_logger->write("iTunes Backup:" + manifest.getPath());
-    m_logger->write("iTunes Version:" + manifest.getITunesVersion());
-    
+
     BOOL descOrder = (self.chkboxDesc.state == NSOnState);
     BOOL ignoreAudio = (self.chkboxNoAudio.state == NSOnState);
     BOOL saveFilesInSessionFolder = (self.chkboxSaveFilesInSessionFolder.state == NSOnState);
     
+    m_logger->write("iTunes Backup:" + manifest.getPath());
+    m_logger->write("iTunes Version:" + manifest.getITunesVersion());
+    
     self.txtViewLogs.string = @"";
     [self onStart];
-    NSDictionary *dict = @{@"backup": backupPath, @"output": outputPath, @"descOrder": @(descOrder), @"ignoreAudio": @(ignoreAudio), @"saveFilesInSessionFolder": @(saveFilesInSessionFolder) };
+    NSDictionary *dict = @{@"backup": backupPath, @"output": outputPath, @"descOrder": @(descOrder), @"ignoreAudio": @(ignoreAudio), @"saveFilesInSessionFolder": @(saveFilesInSessionFolder)};
     [NSThread detachNewThreadSelector:@selector(run:) toTarget:self withObject:dict];
 }
 
@@ -379,13 +382,14 @@ void errorLogCallback(void *pArg, int iErrCode, const char *zMsg)
 {
     NSString *backup = [dict objectForKey:@"backup"];
     NSString *output = [dict objectForKey:@"output"];
-    
+
     if (backup == nil || output == nil)
     {
         [self msgBox:@"参数错误。"];
         return;
     }
     
+    NSString *iTunesVersion = [dict objectForKey:@"iTunesVersion"];
     NSNumber *ignoreAudio = [dict objectForKey:@"ignoreAudio"];
     NSNumber *descOrder = [dict objectForKey:@"descOrder"];
     NSNumber *saveFilesInSessionFolder = [dict objectForKey:@"saveFilesInSessionFolder"];
@@ -487,6 +491,12 @@ void errorLogCallback(void *pArg, int iErrCode, const char *zMsg)
     }
 
     [[self.sclViewLogs documentView] scrollPoint:newScrollOrigin];
+}
+
+
+- (NSInteger)numberOfRowsInTableView:(NSTableView *)tableView
+{
+    return 0;
 }
 
 @end
