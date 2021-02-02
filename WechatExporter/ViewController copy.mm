@@ -7,7 +7,6 @@
 //
 
 #import "ViewController.h"
-#import "SessionDataSource.h"
 #include "ITunesParser.h"
 
 #include "LoggerImpl.h"
@@ -16,7 +15,6 @@
 #include "RawMessage.h"
 #include "Utils.h"
 #include "Exporter.h"
-
 
 #include <sqlite3.h>
 #include <fstream>
@@ -29,54 +27,20 @@ void errorLogCallback(void *pArg, int iErrCode, const char *zMsg)
 }
 
 
-@interface ViewController() <NSTableViewDelegate>
+@interface ViewController() <NSComboBoxDelegate, NSTableViewDataSource, NSTableViewDelegate>
 {
-    NSButton    *m_btnToggleAll;
-    
     ShellImpl* m_shell;
     LoggerImpl* m_logger;
     ExportNotifierImpl *m_notifier;
     Exporter* m_exporter;
     
     std::vector<BackupManifest> m_manifests;
-    std::vector<std::pair<Friend, std::vector<Session>>> m_usersAndSessions;
-    
-    SessionDataSource   *m_dataSource;
+    NSInteger m_selectedIndex;
     
 }
 @end
 
 @implementation ViewController
-
-- (instancetype)init
-{
-    if (self = [super init])
-    {
-        m_dataSource = [[SessionDataSource alloc] init];
-    }
-    
-    return self;
-}
-
-- (instancetype)initWithCoder:(NSCoder *)coder
-{
-    if (self = [super initWithCoder:coder])
-    {
-        m_dataSource = [[SessionDataSource alloc] init];
-    }
-    
-    return self;
-}
-
-- (instancetype)initWithNibName:(NSNibName)nibNameOrNil bundle:(NSBundle *)nibBundleOrNil
-{
-    if (self = [super initWithNibName:nibNameOrNil bundle:nibBundleOrNil])
-    {
-        m_dataSource = [[SessionDataSource alloc] init];
-    }
-    
-    return self;
-}
 
 -(void)dealloc
 {
@@ -109,21 +73,12 @@ void errorLogCallback(void *pArg, int iErrCode, const char *zMsg)
     }
     
     [self.btnBackup setAction:nil];
-    [self.btnBackup setTarget:nil];
     [self.btnOutput setAction:nil];
-    [self.btnOutput setTarget:nil];
     [self.btnExport setAction:nil];
-    [self.btnExport setTarget:nil];
     [self.btnCancel setAction:nil];
-    [self.btnCancel setTarget:nil];
     [self.chkboxDesc setAction:nil];
-    [self.chkboxDesc setTarget:nil];
     [self.chkboxNoAudio setAction:nil];
-    [self.chkboxNoAudio setTarget:nil];
-    [self.popupBackup setAction:nil];
-    [self.popupBackup setTarget:nil];
-    [self.popupUsers setAction:nil];
-    [self.popupUsers setTarget:nil];
+    // self.popupBackup.delegate = nil;
 }
 
 - (void)viewDidLoad {
@@ -136,48 +91,21 @@ void errorLogCallback(void *pArg, int iErrCode, const char *zMsg)
 
     [self.view.window center];
     
+    // self.txtboxLogs.
+    
+    m_selectedIndex = 0;
     m_shell = new ShellImpl();
     m_logger = new LoggerImpl(self);
     m_notifier = new ExportNotifierImpl(self);
     m_exporter = NULL;
     
-    [self.btnBackup setTarget:self];
     [self.btnBackup setAction:@selector(btnBackupClicked:)];
-    [self.btnOutput setTarget:self];
     [self.btnOutput setAction:@selector(btnOutputClicked:)];
-    [self.btnExport setTarget:self];
     [self.btnExport setAction:@selector(btnExportClicked:)];
-    [self.btnCancel setTarget:self];
     [self.btnCancel setAction:@selector(btnCancelClicked:)];
-    [self.chkboxDesc setTarget:self];
     [self.chkboxDesc setAction:@selector(btnDescClicked:)];
-    [self.chkboxNoAudio setTarget:self];
     [self.chkboxNoAudio setAction:@selector(btnIgnoreAudioClicked:)];
-    [self.popupBackup setTarget:self];
-    [self.popupBackup setAction:@selector(handlePopupButton:)];
-    [self.popupUsers setTarget:self];
-    [self.popupUsers setAction:@selector(handlePopupButton:)];
-    
-    
-    m_btnToggleAll = [NSButton checkboxWithTitle:@"" target:self action:@selector(toggleAllSessions:)];
-    m_btnToggleAll.allowsMixedState = YES;
-    m_btnToggleAll.state = NSControlStateValueOn;
-    NSRect frame = [self.tblSessions.headerView headerRectOfColumn:0];
-    NSRect btnFrame = m_btnToggleAll.frame;
-    btnFrame.origin.x = (frame.size.width - m_btnToggleAll.frame.size.width) / 2;
-    btnFrame.origin.y = (frame.size.height - m_btnToggleAll.frame.size.height) / 2;
-    
-    m_btnToggleAll.frame = btnFrame;
-    
-    [self.tblSessions.headerView addSubview:m_btnToggleAll];
-    for (NSTableColumn *tableColumn in self.tblSessions.tableColumns)
-    {
-        NSSortDescriptor *sortDescriptor = [NSSortDescriptor sortDescriptorWithKey:tableColumn.identifier ascending:YES selector:@selector(compare:)];
-        [tableColumn setSortDescriptorPrototype:sortDescriptor];
-    }
-    
-    self.tblSessions.dataSource = m_dataSource;
-    self.tblSessions.delegate = self;
+    // self.popupBackup.delegate = self;
     
     BOOL descOrder = [[NSUserDefaults standardUserDefaults] boolForKey:@"Desc"];
     self.chkboxDesc.state = descOrder ? NSOnState : NSOffState;
@@ -282,94 +210,30 @@ void errorLogCallback(void *pArg, int iErrCode, const char *zMsg)
     {
         selectedIndex = 0;
     }
-    if (selectedIndex != -1 && selectedIndex < [self.popupBackup numberOfItems])
+    if (selectedIndex != -1 && selectedIndex < self.popupBackup.numberOfItems)
     {
-        [self setPopupButton:self.popupBackup selectedItemAt:selectedIndex];
+        [self.popupBackup selectItemAtIndex:selectedIndex];
     }
 }
 
-- (IBAction)handlePopupButton:(NSPopUpButton *)popupButton
+-(void)comboBoxSelectionDidChange:(NSNotification *)notification
 {
-    if (popupButton == self.popupBackup)
-    {
-        m_usersAndSessions.clear();
-        [self.popupUsers removeAllItems];
-        
-        if (self.popupBackup.indexOfSelectedItem == -1 || self.popupBackup.indexOfSelectedItem >= m_manifests.size())
-        {
-            // Clear Users and Sessions
-            [m_dataSource loadData:&m_usersAndSessions withAllUsers:YES indexOfSelectedUser:-1];
-            [self.tblSessions reloadData];
-            return;
-        }
-        
-        const BackupManifest& manifest = m_manifests[self.popupBackup.indexOfSelectedItem];
-        std::string backup = manifest.getPath();
 #ifndef NDEBUG
-        NSString *backupPath = [NSString stringWithUTF8String:backup.c_str()];
-        [[NSUserDefaults standardUserDefaults] setObject:backupPath forKey:@"BackupDir"];
-#endif
-            
-        if (manifest.isEncrypted())
+    if ([notification.name isEqualToString:NSComboBoxSelectionDidChangeNotification])
+    {
+        NSComboBox *cmb = (NSComboBox *)notification.object;
+        if (cmb == self.popupBackup)
         {
-            [m_dataSource loadData:&m_usersAndSessions withAllUsers:YES indexOfSelectedUser:-1];
-            [self.tblSessions reloadData];
-
-            [self msgBox:@"不支持加密的iTunes备份。"];
-            return;
+            if (self.popupBackup.indexOfSelectedItem != -1 && self.popupBackup.indexOfSelectedItem < m_manifests.size())
+            {
+                const BackupManifest& manifest = m_manifests[self.popupBackup.indexOfSelectedItem];
+                std::string backup = manifest.getPath();
+                NSString *backupPath = [NSString stringWithUTF8String:backup.c_str()];
+                [[NSUserDefaults standardUserDefaults] setObject:backupPath forKey:@"BackupDir"];
+            }
         }
-
-        // CWaitCursor waitCursor;
-#ifndef NDEBUG
-        m_logger->write("Start loading users and sessions.");
+    }
 #endif
-
-        Exporter exp("", backup, "", m_shell, m_logger);
-        exp.loadUsersAndSessions(m_usersAndSessions);
-        
-#ifndef NDEBUG
-        m_logger->write("Data Loaded.");
-#endif
-
-        [self loadUsers];
-
-    }
-    else if (popupButton == self.popupUsers)
-    {
-        NSInteger indexOfSelectedItem = self.popupUsers.indexOfSelectedItem;
-        BOOL allUsers = (indexOfSelectedItem == 0);
-        if (indexOfSelectedItem != -1)
-        {
-            indexOfSelectedItem--;
-        }
-        [m_dataSource loadData:&m_usersAndSessions withAllUsers:allUsers indexOfSelectedUser:indexOfSelectedItem];
-        [self.tblSessions reloadData];
-    }
-}
-
-- (void)toggleAllSessions:(id)sender
-{
-    NSButton *btn = (NSButton *)sender;
-    
-    if (btn.state == NSControlStateValueOn)
-    {
-        [m_dataSource checkAllSessions:YES];
-        // [m_btnToggleAll.all:NSControlStateValueOff];
-    }
-    else if (btn.state == NSControlStateValueOff)
-    {
-        [m_dataSource checkAllSessions:NO];
-        // [m_btnToggleAll setNextState:NSControlStateValueOn];
-    }
-    
-    [self.tblSessions reloadData];
-}
-
-- (void)checkButtonTapped:(id)sender
-{
-    NSButton *btn = (NSButton *)sender;
-    NSControlStateValue state = [m_dataSource updateCheckStateAtRow:btn.tag];
-    m_btnToggleAll.state = state;
 }
 
 - (void)btnBackupClicked:(id)sender
@@ -534,9 +398,6 @@ void errorLogCallback(void *pArg, int iErrCode, const char *zMsg)
     
     workDir = [[NSBundle mainBundle] resourcePath];
     
-    std::map<std::string, std::set<std::string>> usersAndSessions;
-    [m_dataSource getSelectedUserAndSessions:usersAndSessions];
-    
     m_exporter = new Exporter([workDir UTF8String], [backup UTF8String], [output UTF8String], m_shell, m_logger);
     if (nil != ignoreAudio && [ignoreAudio boolValue])
     {
@@ -553,35 +414,7 @@ void errorLogCallback(void *pArg, int iErrCode, const char *zMsg)
 
     m_exporter->setNotifier(m_notifier);
     
-    m_exporter->filterUsersAndSessions(usersAndSessions);
-    
     m_exporter->run();
-}
-
-- (void)loadUsers
-{
-    [self.popupUsers removeAllItems];
-    if (m_usersAndSessions.empty())
-    {
-        return;
-    }
-    
-    [self.popupUsers addItemWithTitle:@"所有微信账户的聊天记录"];
-    // CComboBox cbmBox = GetDlgItem(IDC_USERS);
-    for (std::vector<std::pair<Friend, std::vector<Session>>>::const_iterator it = m_usersAndSessions.cbegin(); it != m_usersAndSessions.cend(); ++it)
-    {
-        NSString *displayName = [NSString stringWithUTF8String:it->first.getDisplayName().c_str()];
-        [self.popupUsers addItemWithTitle:displayName];
-    }
-    if ([self.popupUsers numberOfItems] > 0)
-    {
-        [self setPopupButton:self.popupUsers selectedItemAt:0];
-    }
-}
-
-- (void)setPopupButton:(NSPopUpButton *)popupButton selectedItemAt:(NSInteger)index
-{
-    [popupButton.menu performActionForItemAtIndex:index];
 }
 
 - (void)msgBox:(NSString *)msg
@@ -660,42 +493,10 @@ void errorLogCallback(void *pArg, int iErrCode, const char *zMsg)
     [[self.sclViewLogs documentView] scrollPoint:newScrollOrigin];
 }
 
-- (NSView *)tableView:(NSTableView *)tableView viewForTableColumn:(NSTableColumn *)tableColumn row:(NSInteger)row
-{
-    NSTableCellView *cellView = [tableView makeViewWithIdentifier:[tableColumn identifier] owner:self];
-    if ([[tableColumn identifier] isEqualToString:@"columnCheck"])
-    {
-        NSButton *btn = (NSButton *)cellView.subviews.firstObject;
-        if (btn)
-        {
-            [btn setTarget:self];
-            [btn setAction:@selector(checkButtonTapped:)];
-            btn.tag = row;
-        }
-    }
-    
-    [m_dataSource bindCellView:cellView atRow:row andColumnId:[tableColumn identifier]];
-    return cellView;
-}
 
-- (void)tableViewColumnDidResize:(NSNotification *)notification
+- (NSInteger)numberOfRowsInTableView:(NSTableView *)tableView
 {
-    if ([notification.name isEqualToString:NSTableViewColumnDidResizeNotification])
-    {
-        NSTableView *tableView = (NSTableView *)notification.object;
-        NSTableColumn *column = [notification.userInfo objectForKey:@"NSTableColumn"];
-        
-        /*
-         NSButton *btn = [NSButton checkboxWithTitle:@"" target:self action:@selector(toggleAllSessions:)];
-         NSRect frame = [self.tblSessions.headerView headerRectOfColumn:0];
-         NSRect btnFrame = btn.frame;
-         btnFrame.origin.x = (frame.size.width - btn.frame.size.width) / 2;
-         btnFrame.origin.y = (frame.size.height - btn.frame.size.height) / 2;
-         
-         btn.frame = btnFrame;
-         */
-    }
+    return 0;
 }
-
 
 @end
