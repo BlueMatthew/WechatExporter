@@ -1412,7 +1412,20 @@ bool SessionParser::parseRow(MsgRecord& record, const std::string& userBase, con
             if (appMsgType == "2001") templateValues["%%MESSAGE%%"] = getLocaleString("[Red Packet]");
             else if (appMsgType == "2000") templateValues["%%MESSAGE%%"] = getLocaleString("[Transfer]");
             else if (appMsgType == "17") templateValues["%%MESSAGE%%"] = getLocaleString("[Real-time Location]");
-            else if (appMsgType == "6") templateValues["%%MESSAGE%%"] = getLocaleString("[File]");
+            else if (appMsgType == "6")
+            {
+                // templateValues["%%MESSAGE%%"] = getLocaleString("[File]");
+                std::string attachFileExtName;
+                xmlParser.parseNodeValue("/msg/appmsg/appattach/fileext", attachFileExtName);
+                std::string attachFileName = userBase + "/OpenData/" + session.getHash() + "/" + msgIdStr;
+                if (!attachFileExtName.empty())
+                {
+                    attachFileName += "." + attachFileExtName;
+                }
+                
+                std::string attachOutputFileName = msgIdStr + "_" + nodes["title"];
+                parseFile(outputPath, attachFileName, session.getOutputFileName() + "_files/" + attachOutputFileName, nodes["title"], templateValues);
+            }
             else if (appMsgType == "19")    // Forwarded Msgs
             {
 #ifndef NDEBUG
