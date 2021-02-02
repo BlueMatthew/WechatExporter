@@ -224,13 +224,20 @@ protected:
     }
     
 };
+
 inline bool Friend::isSubscription(const std::string& usrName)
 {
-    return startsWith(usrName, "gh_") || (usrName.compare("brandsessionholder") == 0);
+    return startsWith(usrName, "gh_")
+        || (usrName.compare("brandsessionholder") == 0)
+        || (usrName.compare("newsapp") == 0)
+        || (usrName.compare("weixin") == 0)
+        || (usrName.compare("notification_messages") == 0);
 }
+
 inline bool Friend::isChatroom(const std::string& usrName)
 {
-    return endsWith(usrName, "@chatroom") || endsWith(usrName, "@im.chatroom");
+    return endsWith(usrName, "@chatroom")
+        || endsWith(usrName, "@im.chatroom");
 }
 
 class Friends
