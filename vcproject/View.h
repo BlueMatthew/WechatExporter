@@ -310,7 +310,8 @@ public:
 		CListViewCtrl listViewCtrl = GetDlgItem(IDC_SESSIONS);
 
 		CComboBox cbmBox = GetDlgItem(IDC_USERS);
-		if (cbmBox.GetCurSel() == -1)
+		int curSel = cbmBox.GetCurSel();
+		if (curSel == -1)
 		{
 			listViewCtrl.DeleteAllItems();
 			return 0;
@@ -320,10 +321,17 @@ public:
 		m_logger->debug("Display Sessions Start");
 #endif
 
-		std::vector<std::pair<Friend, std::vector<Session>>>::const_iterator it = m_usersAndSessions.cbegin() + cbmBox.GetCurSel();
+		BOOL allUsers = (curSel == 0);
+		std::string usrName;
+		if (curSel > 0)
+		{
+			std::vector<std::pair<Friend, std::vector<Session>>>::const_iterator it = m_usersAndSessions.cbegin() + curSel - 1;
+			usrName = it->first.getUsrName();
+		}
+		
 		listViewCtrl.SetRedraw(FALSE);
 		listViewCtrl.DeleteAllItems();
-		LoadSessions(it->first.getUsrName());
+		LoadSessions(allUsers, usrName);
 		listViewCtrl.SetRedraw(TRUE);
 #ifndef NDEBUG
 		m_logger->debug("Display Sessions End");
@@ -505,26 +513,26 @@ public:
 	
 		// Run((LPCSTR)resDir, backup, (LPCSTR)output, descOrder, saveFilesInSessionFolder);
 
-		// void filterUsersAndSessions(const std::map<std::string, std::set<std::string>>& usersAndSessions);
+		CListViewCtrl listViewCtrl = GetDlgItem(IDC_SESSIONS);
 		std::map<std::string, std::set<std::string>> usersAndSessions;
-		cbmBox = GetDlgItem(IDC_USERS);
-		int nCurSel = cbmBox.GetCurSel();
-		if (nCurSel != -1 && nCurSel < m_usersAndSessions.size())
+		for (int nItem = 0; nItem < listViewCtrl.GetItemCount(); nItem++)
 		{
-			std::pair<Friend, std::vector<Session>>& user = m_usersAndSessions[nCurSel];
-			std::string usrName = user.first.getUsrName();
-			usersAndSessions[usrName] = std::set<std::string>();
-			std::map<std::string, std::set<std::string>>::iterator it = usersAndSessions.find(usrName);
-			ATLASSERT(it != usersAndSessions.end());
-
-			CListViewCtrl listViewCtrl = GetDlgItem(IDC_SESSIONS);
-			for (int nItem = 0; nItem < listViewCtrl.GetItemCount(); nItem++)
+			if (!listViewCtrl.GetCheckState(nItem))
 			{
-				if (listViewCtrl.GetCheckState(nItem) && nItem < user.second.size())
+				continue;
+			}
+
+			const Session* session = reinterpret_cast<const Session*>(listViewCtrl.GetItemData(nItem));
+			if (NULL != session)
+			{
+				std::string usrName = session->getOwner()->getUsrName();
+				std::map<std::string, std::set<std::string>>::iterator it = usersAndSessions.find(usrName);
+				if (it == usersAndSessions.end())
 				{
-					int idx = static_cast<int>(listViewCtrl.GetItemData(nItem));
-					it->second.insert(user.second[idx].getUsrName());
+					it = usersAndSessions.insert(usersAndSessions.end(), std::pair<std::string, std::set<std::string>>(usrName, std::set<std::string>()));
 				}
+
+				it->second.insert(session->getUsrName());
 			}
 		}
 
@@ -700,6 +708,12 @@ public:
 	void LoadUsers()
 	{
 		CComboBox cbmBox = GetDlgItem(IDC_USERS);
+		if (!m_usersAndSessions.empty())
+		{
+			CString text;
+			text.LoadString(IDS_ALL_USERS);
+			cbmBox.AddString(text);
+		}
 		for (std::vector<std::pair<Friend, std::vector<Session>>>::const_iterator it = m_usersAndSessions.cbegin(); it != m_usersAndSessions.cend(); ++it)
 		{
 			std::string displayName = it->first.getDisplayName();
@@ -712,18 +726,19 @@ public:
 		}
 	}
 
-	void LoadSessions(const std::string& usrName)
+	void LoadSessions(BOOL allUsers, const std::string& usrName)
 	{
 		CListViewCtrl listViewCtrl = GetDlgItem(IDC_SESSIONS);
 
-		int index = 0;
 		TCHAR recordCount[16] = { 0 };
 		for (std::vector<std::pair<Friend, std::vector<Session>>>::const_iterator it = m_usersAndSessions.cbegin(); it != m_usersAndSessions.cend(); ++it)
 		{
-			if (!usrName.empty() && it->first.getUsrName() != usrName)
+			if (!allUsers)
 			{
-				index += it->second.size();
-				continue;
+				if (it->first.getUsrName() != usrName)
+				{
+					continue;
+				}
 			}
 
 			std::string userDisplayName = it->first.getDisplayName();
@@ -746,7 +761,8 @@ public:
 				// lvItem.state = INDEXTOSTATEIMAGEMASK(2);
 				// lvItem.stateMask = LVIS_STATEIMAGEMASK;
 				int idx = std::distance(it->second.cbegin(), it2);
-				lvItem.lParam = static_cast<LPARAM>(idx);
+				LPARAM lParam = reinterpret_cast<LPARAM>(&(*it2));
+				lvItem.lParam = lParam;
 				int nItem = listViewCtrl.InsertItem(&lvItem);
 
 				_itot(it2->getRecordCount(), recordCount, 10);
@@ -755,10 +771,6 @@ public:
 				listViewCtrl.AddItem(nItem, 3, pszUserDisplayName);
 				// BOOL bRet = listViewCtrl.SetItem(&lvSubItem);
 				listViewCtrl.SetCheckState(nItem, TRUE);
-				
-				// listViewCtrl.SetItemData(nItem, static_cast<DWORD_PTR>(index));
-
-				++index;
 			}
 		}
 

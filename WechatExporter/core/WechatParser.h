@@ -279,7 +279,7 @@ private:
 public:
     SessionsParser(ITunesDb *iTunesDb, ITunesDb *iTunesDbShare, Shell* shell, const std::string& cellDataVersion, bool detailedInfo = true);
     
-    bool parse(const std::string& usrNameHash, std::vector<Session>& sessions, const Friends& friends);
+    bool parse(const Friend& user, std::vector<Session>& sessions, const Friends& friends);
 
 private:
     bool parseCellData(const std::string& userRoot, Session& session);
