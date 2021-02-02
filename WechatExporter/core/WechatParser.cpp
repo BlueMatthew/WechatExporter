@@ -758,8 +758,9 @@ SessionsParser::SessionsParser(ITunesDb *iTunesDb, ITunesDb *iTunesDbShare, Shel
     }
 }
 
-bool SessionsParser::parse(const std::string& usrNameHash, std::vector<Session>& sessions, const Friends& friends)
+bool SessionsParser::parse(const Friend& user, std::vector<Session>& sessions, const Friends& friends)
 {
+    std::string usrNameHash = user.getHash();
     std::string userRoot = "Documents/" + usrNameHash;
     std::string sessionDbPath = m_iTunesDb->findRealPath(combinePath(userRoot, "session", "session.db"));
 	if (sessionDbPath.empty())
@@ -793,8 +794,9 @@ bool SessionsParser::parse(const std::string& usrNameHash, std::vector<Session>&
         {
             continue;
         }
-        sessions.push_back(Session());
-        Session& session = sessions.back();
+        
+        std::vector<Session>::iterator it = sessions.emplace(sessions.cend(), &user);
+        Session& session = (*it);
         
         session.setUsrName(usrName);
         session.setCreateTime(static_cast<unsigned int>(sqlite3_column_int(stmt, 1)));
