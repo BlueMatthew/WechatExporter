@@ -238,31 +238,19 @@ Gw
                             <popUpButton verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="FYs-pu-LFe">
                                 <rect key="frame" x="10" y="343" width="599" height="25"/>
                                 <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-                                <popUpButtonCell key="cell" type="push" title="Item 1" bezelStyle="rounded" alignment="left" lineBreakMode="truncatingTail" state="on" borderStyle="borderAndBezel" imageScaling="proportionallyDown" inset="2" selectedItem="IpQ-Jr-4aj" id="gUM-SE-fVj">
+                                <popUpButtonCell key="cell" type="push" bezelStyle="rounded" alignment="left" lineBreakMode="truncatingTail" borderStyle="borderAndBezel" imageScaling="proportionallyDown" inset="2" id="gUM-SE-fVj">
                                     <behavior key="behavior" lightByBackground="YES" lightByGray="YES"/>
                                     <font key="font" metaFont="menu"/>
-                                    <menu key="menu" id="8a7-Ad-bIv">
-                                        <items>
-                                            <menuItem title="Item 1" state="on" id="IpQ-Jr-4aj"/>
-                                            <menuItem title="Item 2" id="GUo-CN-uSu"/>
-                                            <menuItem title="Item 3" id="Nf7-nr-wRt"/>
-                                        </items>
-                                    </menu>
+                                    <menu key="menu" id="8a7-Ad-bIv"/>
                                 </popUpButtonCell>
                             </popUpButton>
                             <popUpButton verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="mwI-Gk-UmA">
                                 <rect key="frame" x="10" y="234" width="418" height="25"/>
                                 <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-                                <popUpButtonCell key="cell" type="push" title="Item 1" bezelStyle="rounded" alignment="left" lineBreakMode="truncatingTail" state="on" borderStyle="borderAndBezel" imageScaling="proportionallyDown" inset="2" selectedItem="qdX-ev-uhe" id="uSN-2a-KEP">
+                                <popUpButtonCell key="cell" type="push" bezelStyle="rounded" alignment="left" lineBreakMode="truncatingTail" borderStyle="borderAndBezel" imageScaling="proportionallyDown" inset="2" id="uSN-2a-KEP">
                                     <behavior key="behavior" lightByBackground="YES" lightByGray="YES"/>
                                     <font key="font" metaFont="menu"/>
-                                    <menu key="menu" id="YIH-W8-iNB">
-                                        <items>
-                                            <menuItem title="Item 1" state="on" id="qdX-ev-uhe"/>
-                                            <menuItem title="Item 2" id="HNK-QJ-wBQ"/>
-                                            <menuItem title="Item 3" id="QtB-E4-Zg8"/>
-                                        </items>
-                                    </menu>
+                                    <menu key="menu" id="YIH-W8-iNB"/>
                                 </popUpButtonCell>
                             </popUpButton>
                             <scrollView fixedFrame="YES" autohidesScrollers="YES" horizontalLineScroll="19" horizontalPageScroll="10" verticalLineScroll="19" verticalPageScroll="10" usesPredominantAxisScrolling="NO" translatesAutoresizingMaskIntoConstraints="NO" id="pql-rp-pLF">
@@ -280,7 +268,7 @@ Gw
                                             <tableViewGridLines key="gridStyleMask" vertical="YES" horizontal="YES"/>
                                             <color key="gridColor" name="gridColor" catalog="System" colorSpace="catalog"/>
                                             <tableColumns>
-                                                <tableColumn editable="NO" width="20" minWidth="20" maxWidth="20" id="wOB-II-58U">
+                                                <tableColumn identifier="columnCheck" editable="NO" width="20" minWidth="20" maxWidth="20" id="wOB-II-58U">
                                                     <tableHeaderCell key="headerCell" lineBreakMode="truncatingTail" borderStyle="border">
                                                         <color key="textColor" name="headerTextColor" catalog="System" colorSpace="catalog"/>
                                                         <color key="backgroundColor" name="headerColor" catalog="System" colorSpace="catalog"/>
@@ -302,13 +290,12 @@ Gw
                                                                         <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
                                                                         <font key="font" metaFont="system"/>
                                                                     </buttonCell>
-                                                                    <accessibility identifier="tableCheck"/>
                                                                 </button>
                                                             </subviews>
                                                         </tableCellView>
                                                     </prototypeCellViews>
                                                 </tableColumn>
-                                                <tableColumn editable="NO" width="192" minWidth="40" maxWidth="1000" id="8FB-hv-fkB">
+                                                <tableColumn identifier="columnName" editable="NO" width="192" minWidth="40" maxWidth="1000" id="8FB-hv-fkB">
                                                     <tableHeaderCell key="headerCell" lineBreakMode="truncatingTail" borderStyle="border" title="名称">
                                                         <color key="textColor" name="headerTextColor" catalog="System" colorSpace="catalog"/>
                                                         <color key="backgroundColor" name="headerColor" catalog="System" colorSpace="catalog"/>
@@ -340,7 +327,7 @@ Gw
                                                         </tableCellView>
                                                     </prototypeCellViews>
                                                 </tableColumn>
-                                                <tableColumn width="64" minWidth="10" maxWidth="3.4028234663852886e+38" id="bsY-Rr-JHi">
+                                                <tableColumn identifier="columnRecordCount" width="64" minWidth="10" maxWidth="3.4028234663852886e+38" id="bsY-Rr-JHi">
                                                     <tableHeaderCell key="headerCell" lineBreakMode="truncatingTail" borderStyle="border" alignment="left" title="聊天记录数">
                                                         <color key="textColor" name="headerTextColor" catalog="System" colorSpace="catalog"/>
                                                         <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
@@ -372,7 +359,7 @@ Gw
                                                         </tableCellView>
                                                     </prototypeCellViews>
                                                 </tableColumn>
-                                                <tableColumn width="123" minWidth="10" maxWidth="3.4028234663852886e+38" id="mqg-xB-lDI">
+                                                <tableColumn identifier="columnUser" width="123" minWidth="10" maxWidth="3.4028234663852886e+38" id="mqg-xB-lDI">
                                                     <tableHeaderCell key="headerCell" lineBreakMode="truncatingTail" borderStyle="border" alignment="left" title="微信账号">
                                                         <color key="textColor" name="headerTextColor" catalog="System" colorSpace="catalog"/>
                                                         <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
