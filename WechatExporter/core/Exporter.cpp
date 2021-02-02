@@ -153,12 +153,14 @@ bool Exporter::loadUsersAndSessions(std::vector<std::pair<Friend, std::vector<Se
     }
 
 	m_logger->debug("Wechat Users loaded.");
-    for (std::vector<Friend>::iterator it = users.begin(); it != users.end(); ++it)
+    for (std::vector<Friend>::const_iterator it = users.cbegin(); it != users.cend(); ++it)
+    {
+        usersAndSessions.emplace(usersAndSessions.cend(), std::pair<Friend, std::vector<Session>>(*it, std::vector<Session>()));
+    }
+    for (std::vector<std::pair<Friend, std::vector<Session>>>::iterator it = usersAndSessions.begin(); it != usersAndSessions.end(); ++it)
     {
         Friends friends;
-        usersAndSessions.push_back(std::make_pair(*it, std::vector<Session>()));
-        std::pair<Friend, std::vector<Session>>& item = usersAndSessions.back();
-        loadUserFriendsAndSessions(*it, friends, item.second, false);
+        loadUserFriendsAndSessions(it->first, friends, it->second, false);
     }
 
     return true;
@@ -419,7 +421,7 @@ bool Exporter::loadUserFriendsAndSessions(const Friend& user, Friends& friends, 
 
     SessionsParser sessionsParser(m_iTunesDb, m_iTunesDbShare, m_shell, m_wechatInfo.getCellDataVersion(), detailedInfo);
     
-    sessionsParser.parse(uidMd5, sessions, friends);
+    sessionsParser.parse(user, sessions, friends);
  
     std::sort(sessions.begin(), sessions.end(), SessionLastMsgTimeCompare());
     

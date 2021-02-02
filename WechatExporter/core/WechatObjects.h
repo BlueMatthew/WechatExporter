@@ -336,8 +336,10 @@ protected:
     std::string m_extFileName;
     std::string m_dbFile;
     
+    const Friend* m_owner;
+    
 public:
-    Session() : Friend(), m_unreadCount(0), m_recordCount(0), m_createTime(0), m_lastMessageTime(0)
+    Session(const Friend* owner) : Friend(), m_unreadCount(0), m_recordCount(0), m_createTime(0), m_lastMessageTime(0), m_owner(owner)
     {
     }
     
@@ -415,6 +417,12 @@ public:
     {
         return Friend::update(f);
     }
+    
+    const Friend* getOwner() const
+    {
+        return m_owner;
+    }
+    
     
 };
 
