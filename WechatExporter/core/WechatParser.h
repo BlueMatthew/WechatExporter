@@ -380,8 +380,7 @@ public:
 class SessionParser
 {
 private:
-    const std::map<std::string, std::string>& m_templates;
-	const std::map<std::string, std::string>& m_localeStrings;
+    std::function<std::string(const std::string&)> m_localFunction;
 
     int m_options;
     Friends& m_friends;
@@ -389,13 +388,11 @@ private:
     const Shell&  m_shell;
     Downloader& m_downloader;
     Friend m_myself;
-    std::atomic<bool>& m_cancelled;
     
     mutable std::vector<unsigned char> m_pcmData;  // buffer
     
 public:
-    
-    SessionParser(Friend& myself, Friends& friends, const ITunesDb& iTunesDb, const Shell& shell, const std::map<std::string, std::string>& templates, const std::map<std::string, std::string>& localeStrings, int options, Downloader& downloader, std::atomic<bool>& cancelled);
+    SessionParser(Friend& myself, Friends& friends, const ITunesDb& iTunesDb, const Shell& shell, int options, Downloader& downloader, std::function<std::string(const std::string&)> localeFunc);
     void ignoreAudio(bool ignoreAudio = true)
     {
         if (ignoreAudio)
@@ -410,12 +407,15 @@ public:
         else
             m_options |= SPO_DESC;
     }
-    
-    int parse(const std::string& userBase, const std::string& outputPath, const Session& session, std::string& contents);
+
+    int parse(const std::string& userBase, const std::string& outputBase, const Session& session, std::function<bool(const std::vector<TemplateValues>&)> handler);
 
 private:
-    std::string getTemplate(const std::string& key) const;
-	std::string getLocaleString(const std::string& key) const;
+	std::string getLocaleString(const std::string& key) const
+    {
+        return m_localFunction(key);
+    }
+    
     std::string getDisplayTime(int ms) const;
     bool requireFile(const std::string& vpath, const std::string& dest) const;
     bool parseRow(MsgRecord& record, const std::string& userBase, const std::string& path, const Session& session, std::vector<TemplateValues>& tvs);
