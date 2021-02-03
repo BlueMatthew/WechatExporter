@@ -25,6 +25,7 @@
 #define Exporter_h
 
 class SessionParser;
+class TemplateValues;
 
 class Exporter
 {
@@ -78,6 +79,8 @@ protected:
     // bool loadUserSessions(Friend& user, std::vector<Session>& sessions) const;
     bool loadUserFriendsAndSessions(const Friend& user, Friends& friends, std::vector<Session>& sessions, bool detailedInfo = true) const;
 	int exportSession(const Friend& user, SessionParser& sessionParser, const Session& session, const std::string& userBase, const std::string& outputBase);
+    
+    bool exportMessage(const Session& session, const std::vector<TemplateValues>& tvs, std::string& contents);
 
 	bool fillSession(Session& session, const Friends& friends) const;
     void releaseITunes();
@@ -85,12 +88,13 @@ protected:
     bool loadTemplates();
 	bool loadStrings();
     std::string getTemplate(const std::string& key) const;
-	std::string getLocaleString(std::string key) const;
+	std::string getLocaleString(const std::string& key) const;
     
     void notifyStart();
     void notifyComplete(bool cancelled = false);
     void notifyProgress(double progress);
     bool buildFileNameForUser(Friend& user, std::set<std::string>& existingFileNames);
+    std::string buildContentFromTemplateValues(const TemplateValues& values) const;
 };
 
 #endif /* Exporter_h */

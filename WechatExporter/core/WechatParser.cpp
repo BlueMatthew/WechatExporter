@@ -1146,14 +1146,14 @@ bool SessionsParser::parseSessionsInGroupApp(const std::string& userRoot, std::v
     return true;
 }
 
-SessionParser::SessionParser(Friend& myself, Friends& friends, const ITunesDb& iTunesDb, const Shell& shell, const std::map<std::string, std::string>& templates, const std::map<std::string, std::string>& localeStrings, int options, Downloader& downloader, std::atomic<bool>& cancelled) : m_templates(templates), m_localeStrings(localeStrings), m_options(options), m_myself(myself), m_friends(friends), m_iTunesDb(iTunesDb), m_shell(shell), m_downloader(downloader), m_cancelled(cancelled)
+SessionParser::SessionParser(Friend& myself, Friends& friends, const ITunesDb& iTunesDb, const Shell& shell, int options, Downloader& downloader, std::function<std::string(const std::string&)> localeFunc) : m_options(options), m_myself(myself), m_friends(friends), m_iTunesDb(iTunesDb), m_shell(shell), m_downloader(downloader)
 {
+    m_localFunction = std::move(localeFunc);
 }
 
-int SessionParser::parse(const std::string& userBase, const std::string& outputBase, const Session& session, std::string& contents)
+int SessionParser::parse(const std::string& userBase, const std::string& outputBase, const Session& session, std::function<bool(const std::vector<TemplateValues>&)> handler)
 {
     int count = 0;
-    contents.clear();
     sqlite3 *db = NULL;
     int rc = openSqlite3ReadOnly(session.getDbFile(), &db);
     if (rc != SQLITE_OK)
@@ -1181,11 +1181,6 @@ int SessionParser::parse(const std::string& userBase, const std::string& outputB
 
     while (sqlite3_step(stmt) == SQLITE_ROW)
     {
-        if (m_cancelled)
-        {
-            break;
-        }
-        
         tvs.clear();
         
         record.createTime = sqlite3_column_int(stmt, 0);
@@ -1198,9 +1193,10 @@ int SessionParser::parse(const std::string& userBase, const std::string& outputB
         if (parseRow(record, userBase, outputBase, session, tvs))
         {
             count++;
-            for (std::vector<TemplateValues>::const_iterator it = tvs.cbegin(); it != tvs.cend(); ++it)
+            if (handler(tvs))
             {
-                contents.append(buildContentFromTemplateValues(*it));
+                // cancelled
+                break;
             }
         }
     }
@@ -1209,12 +1205,6 @@ int SessionParser::parse(const std::string& userBase, const std::string& outputB
     sqlite3_close(db);
     
     return count;
-}
-
-std::string SessionParser::getTemplate(const std::string& key) const
-{
-    std::map<std::string, std::string>::const_iterator it = m_templates.find(key);
-    return (it == m_templates.cend()) ? "" : it->second;
 }
 
 bool SessionParser::parseRow(MsgRecord& record, const std::string& userBase, const std::string& outputPath, const Session& session, std::vector<TemplateValues>& tvs)
@@ -1927,13 +1917,6 @@ bool SessionParser::parseForwardedMsgs(const std::string& userBase, const std::s
     return true;
 }
 
-std::string SessionParser::getLocaleString(const std::string& key) const
-{
-	// std::string value = key;
-	std::map<std::string, std::string>::const_iterator it = m_localeStrings.find(key);
-	return it == m_localeStrings.cend() ? key : it->second;
-}
-
 bool SessionParser::requireFile(const std::string& vpath, const std::string& dest) const
 {
 #ifndef NDEBUG
@@ -1968,30 +1951,4 @@ std::string SessionParser::getDisplayTime(int ms) const
 {
     if (ms < 1000) return "1\"";
     return std::to_string(std::round((double)ms)) + "\"";
-}
-
-std::string SessionParser::buildContentFromTemplateValues(const TemplateValues& values) const
-{
-    std::string content = getTemplate(values.getName());
-    for (TemplateValues::const_iterator it = values.cbegin(); it != values.cend(); ++it)
-    {
-        if (startsWith(it->first, "%"))
-        {
-            content = replaceAll(content, it->first, it->second);
-        }
-    }
-    
-    std::string::size_type pos = 0;
-    while ((pos = content.find("%%", pos)) != std::string::npos)
-    {
-        std::string::size_type posEnd = content.find("%%", pos + 2);
-        if (posEnd == std::string::npos)
-        {
-            break;
-        }
-        
-        content.erase(pos, posEnd + 2 - pos);
-    }
-    
-    return content;
 }

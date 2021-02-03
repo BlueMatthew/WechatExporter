@@ -323,10 +323,12 @@ bool Exporter::exportUser(Friend& user, std::string& userOutputPath)
     {
         itUser = m_usersAndSessions.find(user.getUsrName());
     }
+    
+    std::function<std::string(const std::string&)> localeFunction = std::bind(&Exporter::getLocaleString, this, std::placeholders::_1);
 
     Downloader downloader(m_logger);
     downloader.setUserAgent(m_wechatInfo.buildUserAgent());
-	SessionParser sessionParser(*myself, friends, *m_iTunesDb, *m_shell, m_templates, m_localeStrings, m_options, downloader, m_cancelled);
+	SessionParser sessionParser(*myself, friends, *m_iTunesDb, *m_shell, m_options, downloader, localeFunction);
 
     downloader.addTask(user.getPortrait(), combinePath(outputBase, "Portrait", user.getLocalPortrait()), 0);
     std::set<std::string> sessionFileNames;
@@ -443,7 +445,9 @@ int Exporter::exportSession(const Friend& user, SessionParser& sessionParser, co
     m_shell->copyFile(combinePath(m_workDir, "res", "DefaultProfileHead@2x.png"), defaultPortrait, true);
     
     std::string contents;
-	int count = sessionParser.parse(userBase, outputBase, session, contents);
+    std::function<bool(const std::vector<TemplateValues>&)> handler = std::bind(&Exporter::exportMessage, this, std::cref(session), std::placeholders::_1, std::ref(contents));
+    
+	int count = sessionParser.parse(userBase, outputBase, session, handler);
 	if (count > 0)
 	{
         std::string fileName = combinePath(outputBase, session.getOutputFileName() + ".html");
@@ -457,6 +461,16 @@ int Exporter::exportSession(const Friend& user, SessionParser& sessionParser, co
 	}
     
 	return count;
+}
+
+bool Exporter::exportMessage(const Session& session, const std::vector<TemplateValues>& tvs, std::string& contents)
+{
+    for (std::vector<TemplateValues>::const_iterator it = tvs.cbegin(); it != tvs.cend(); ++it)
+    {
+        contents.append(buildContentFromTemplateValues(*it));
+    }
+    
+    return m_cancelled;
 }
 
 bool Exporter::buildFileNameForUser(Friend& user, std::set<std::string>& existingFileNames)
@@ -571,12 +585,39 @@ std::string Exporter::getTemplate(const std::string& key) const
     return (it == m_templates.cend()) ? "" : it->second;
 }
 
-std::string Exporter::getLocaleString(std::string key) const
+std::string Exporter::getLocaleString(const std::string& key) const
 {
 	// std::string value = key;
 	std::map<std::string, std::string>::const_iterator it = m_localeStrings.find(key);
 	return it == m_localeStrings.cend() ? key : it->second;
 }
+
+std::string Exporter::buildContentFromTemplateValues(const TemplateValues& values) const
+{
+    std::string content = getTemplate(values.getName());
+    for (TemplateValues::const_iterator it = values.cbegin(); it != values.cend(); ++it)
+    {
+        if (startsWith(it->first, "%"))
+        {
+            content = replaceAll(content, it->first, it->second);
+        }
+    }
+    
+    std::string::size_type pos = 0;
+    while ((pos = content.find("%%", pos)) != std::string::npos)
+    {
+        std::string::size_type posEnd = content.find("%%", pos + 2);
+        if (posEnd == std::string::npos)
+        {
+            break;
+        }
+        
+        content.erase(pos, posEnd + 2 - pos);
+    }
+    
+    return content;
+}
+
 
 void Exporter::notifyStart()
 {
