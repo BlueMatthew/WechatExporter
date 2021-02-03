@@ -56,13 +56,29 @@
                                     </items>
                                 </menu>
                             </menuItem>
-                            <menuItem title="帮助" id="wpr-3q-Mcd">
+                            <menuItem title="格式" id="v5F-yk-5ct" userLabel="Format">
                                 <modifierMask key="keyEquivalentModifierMask"/>
-                                <menu key="submenu" title="帮助" systemMenu="help" id="F2S-fz-NVQ">
+                                <menu key="submenu" title="格式" id="or1-Xl-Us0">
                                     <items>
-                                        <menuItem title="WechatExporter Help" keyEquivalent="?" id="FKE-Sm-Kum">
+                                        <menuItem title="HTML" id="cWo-5k-XRR" userLabel="HTML">
+                                            <modifierMask key="keyEquivalentModifierMask"/>
+                                        </menuItem>
+                                        <menuItem title="HTML+JSON" id="A2x-Ep-W1f" userLabel="JSON">
+                                            <modifierMask key="keyEquivalentModifierMask"/>
+                                        </menuItem>
+                                        <menuItem title="Text" id="GeM-zb-UkW" userLabel="TEXT">
+                                            <modifierMask key="keyEquivalentModifierMask"/>
+                                        </menuItem>
+                                    </items>
+                                </menu>
+                            </menuItem>
+                            <menuItem title="帮助" id="k5c-yf-BQl">
+                                <modifierMask key="keyEquivalentModifierMask"/>
+                                <menu key="submenu" title="帮助" systemMenu="help" id="pOf-8G-Ji8">
+                                    <items>
+                                        <menuItem title="WechatExporter Help" keyEquivalent="?" id="vp6-q8-ljb">
                                             <connections>
-                                                <action selector="showHelp:" target="Ady-hI-5gd" id="y7X-2Q-9no"/>
+                                                <action selector="showHelp:" target="Ady-hI-5gd" id="pmH-Nb-8ng"/>
                                             </connections>
                                         </menuItem>
                                     </items>
