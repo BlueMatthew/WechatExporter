@@ -549,7 +549,7 @@ public:
 		m_exporter->filterUsersAndSessions(usersAndSessions);
 		if (m_exporter->run())
 		{
-			EnableInteractiveCtrls(FALSE);
+			EnableInteractiveCtrls(FALSE, TRUE);
 		}
 
 		return 0;
@@ -565,7 +565,8 @@ public:
 
 	LRESULT OnStart(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 	{
-		EnableInteractiveCtrls(FALSE);
+		BOOL cancellable = static_cast<BOOL>(lParam);
+		EnableInteractiveCtrls(FALSE, cancellable);
 		CProgressBarCtrl progressCtrl = GetDlgItem(IDC_PROGRESS);
 		progressCtrl.ModifyStyle(0, PBS_MARQUEE);
 		progressCtrl.SetMarquee(TRUE, 0);
@@ -588,7 +589,7 @@ public:
 		return 0;
 	}
 
-	void EnableInteractiveCtrls(BOOL enabled)
+	void EnableInteractiveCtrls(BOOL enabled, BOOL cancellable = TRUE)
 	{
 		::EnableWindow(GetDlgItem(IDC_BACKUP), enabled);
 		::EnableWindow(GetDlgItem(IDC_CHOOSE_BKP), enabled);
@@ -598,7 +599,8 @@ public:
 		::EnableWindow(GetDlgItem(IDC_EXPORT), enabled);
 		::EnableWindow(GetDlgItem(IDC_USERS), enabled);
 		// ::EnableWindow(GetDlgItem(IDC_SESSIONS), enabled);
-		::EnableWindow(GetDlgItem(IDC_CANCEL), !enabled);
+		// if (!enabled && cancellable)
+		::EnableWindow(GetDlgItem(IDC_CANCEL), !enabled && cancellable);
 		::ShowWindow(GetDlgItem(IDC_CANCEL), enabled ? SW_HIDE : SW_SHOW);
 		::ShowWindow(GetDlgItem(IDC_CLOSE), enabled ? SW_SHOW : SW_HIDE);
 	}
