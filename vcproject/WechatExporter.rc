@@ -33,6 +33,12 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "退出(&X)",                      ID_APP_EXIT
     END
+    POPUP "格式 (&O)"
+    BEGIN
+        MENUITEM "HTML",                        ID_FORMAT_HTML
+        MENUITEM "HTML+JSON",                   ID_FORMAT_JSON
+        MENUITEM "文本",                          ID_FORMAT_TEXT
+    END
     POPUP "帮助(&H)"
     BEGIN
         MENUITEM "&About WechatExporter",       ID_APP_ABOUT
