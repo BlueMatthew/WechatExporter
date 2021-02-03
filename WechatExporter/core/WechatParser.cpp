@@ -1482,11 +1482,8 @@ bool SessionParser::parseRow(MsgRecord& record, const std::string& userBase, con
     {
         if (record.des == 0)
         {
-            std::string txtsender = m_myself.getDisplayName();
-            
             templateValues["%%ALIGNMENT%%"] = "right";
-            // templateValues.Add("%%NAME%%", txtsender);
-            templateValues["%%NAME%%"] = "";    // Don't show name for self
+            templateValues["%%NAME%%"] = m_myself.getDisplayName();    // Don't show name for self
             localPortrait = portraitPath + m_myself.getLocalPortrait();
             templateValues["%%AVATAR%%"] = localPortrait;
             remotePortrait = m_myself.getPortrait();
@@ -1519,7 +1516,7 @@ bool SessionParser::parseRow(MsgRecord& record, const std::string& userBase, con
         if (record.des == 0 || session.getUsrName() == m_myself.getUsrName())
         {
             templateValues["%%ALIGNMENT%%"] = "right";
-            templateValues["%%NAME%%"] = "";
+            templateValues["%%NAME%%"] = m_myself.getDisplayName();
             localPortrait = portraitPath + m_myself.getLocalPortrait();
             remotePortrait = m_myself.getPortrait();
             templateValues["%%AVATAR%%"] = localPortrait;
