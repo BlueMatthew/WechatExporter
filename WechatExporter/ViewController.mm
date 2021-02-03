@@ -31,8 +31,6 @@ void errorLogCallback(void *pArg, int iErrCode, const char *zMsg)
 
 @interface ViewController() <NSTableViewDelegate>
 {
-    NSButton    *m_btnToggleAll;
-    
     ShellImpl* m_shell;
     LoggerImpl* m_logger;
     ExportNotifierImpl *m_notifier;
@@ -124,6 +122,8 @@ void errorLogCallback(void *pArg, int iErrCode, const char *zMsg)
     [self.popupBackup setTarget:nil];
     [self.popupUsers setAction:nil];
     [self.popupUsers setTarget:nil];
+    [self.btnToggleAll setAction:nil];
+    [self.btnToggleAll setTarget:nil];
 }
 
 - (void)viewDidLoad {
@@ -157,19 +157,18 @@ void errorLogCallback(void *pArg, int iErrCode, const char *zMsg)
     [self.popupBackup setAction:@selector(handlePopupButton:)];
     [self.popupUsers setTarget:self];
     [self.popupUsers setAction:@selector(handlePopupButton:)];
+    [self.btnToggleAll setTarget:self];
+    [self.btnToggleAll setAction:@selector(toggleAllSessions:)];
     
-    
-    m_btnToggleAll = [NSButton checkboxWithTitle:@"" target:self action:@selector(toggleAllSessions:)];
-    m_btnToggleAll.allowsMixedState = YES;
-    m_btnToggleAll.state = NSControlStateValueOn;
     NSRect frame = [self.tblSessions.headerView headerRectOfColumn:0];
-    NSRect btnFrame = m_btnToggleAll.frame;
-    btnFrame.origin.x = (frame.size.width - m_btnToggleAll.frame.size.width) / 2;
-    btnFrame.origin.y = (frame.size.height - m_btnToggleAll.frame.size.height) / 2;
+    NSRect btnFrame = self.btnToggleAll.frame;
+    btnFrame.size.width = btnFrame.size.height;
+    btnFrame.origin.x = (frame.size.width - btnFrame.size.width) / 2;
+    btnFrame.origin.y = (frame.size.height - btnFrame.size.height) / 2;
     
-    m_btnToggleAll.frame = btnFrame;
+    self.btnToggleAll.frame = btnFrame;
     
-    [self.tblSessions.headerView addSubview:m_btnToggleAll];
+    [self.tblSessions.headerView addSubview:self.btnToggleAll];
     for (NSTableColumn *tableColumn in self.tblSessions.tableColumns)
     {
         NSSortDescriptor *sortDescriptor = [NSSortDescriptor sortDescriptorWithKey:tableColumn.identifier ascending:YES selector:@selector(compare:)];
@@ -233,9 +232,11 @@ void errorLogCallback(void *pArg, int iErrCode, const char *zMsg)
     self.btnOutput.autoresizingMask = NSViewMinXMargin | NSViewMinYMargin;
     
     self.popupUsers.autoresizingMask = NSViewMinYMargin;
-    self.sclSessions.autoresizingMask = NSViewMinYMargin | NSViewHeightSizable;
+    self.tblSessions.autoresizingMask = NSViewWidthSizable | NSViewHeightSizable;
+    self.sclSessions.autoresizingMask = NSViewHeightSizable;
     
     self.sclViewLogs.autoresizingMask = NSViewWidthSizable | NSViewHeightSizable;
+    
     self.progressBar.autoresizingMask = NSViewMaxYMargin;
     self.btnCancel.autoresizingMask = NSViewMinXMargin | NSViewMaxYMargin;
     self.btnExport.autoresizingMask = NSViewMinXMargin | NSViewMaxYMargin;
@@ -350,16 +351,18 @@ void errorLogCallback(void *pArg, int iErrCode, const char *zMsg)
 - (void)toggleAllSessions:(id)sender
 {
     NSButton *btn = (NSButton *)sender;
-    
+    if (btn.state == NSControlStateValueMixed)
+    {
+        [self.btnToggleAll setNextState];
+    }
+        
     if (btn.state == NSControlStateValueOn)
     {
         [m_dataSource checkAllSessions:YES];
-        // [m_btnToggleAll.all:NSControlStateValueOff];
     }
     else if (btn.state == NSControlStateValueOff)
     {
         [m_dataSource checkAllSessions:NO];
-        // [m_btnToggleAll setNextState:NSControlStateValueOn];
     }
     
     [self.tblSessions reloadData];
@@ -369,7 +372,7 @@ void errorLogCallback(void *pArg, int iErrCode, const char *zMsg)
 {
     NSButton *btn = (NSButton *)sender;
     NSControlStateValue state = [m_dataSource updateCheckStateAtRow:btn.tag];
-    m_btnToggleAll.state = state;
+    self.btnToggleAll.state = state;
 }
 
 - (void)btnBackupClicked:(id)sender
@@ -525,7 +528,7 @@ void errorLogCallback(void *pArg, int iErrCode, const char *zMsg)
         return;
     }
     
-    NSString *iTunesVersion = [dict objectForKey:@"iTunesVersion"];
+    // NSString *iTunesVersion = [dict objectForKey:@"iTunesVersion"];
     NSNumber *ignoreAudio = [dict objectForKey:@"ignoreAudio"];
     NSNumber *descOrder = [dict objectForKey:@"descOrder"];
     NSNumber *saveFilesInSessionFolder = [dict objectForKey:@"saveFilesInSessionFolder"];
@@ -685,15 +688,16 @@ void errorLogCallback(void *pArg, int iErrCode, const char *zMsg)
         NSTableView *tableView = (NSTableView *)notification.object;
         NSTableColumn *column = [notification.userInfo objectForKey:@"NSTableColumn"];
         
-        /*
-         NSButton *btn = [NSButton checkboxWithTitle:@"" target:self action:@selector(toggleAllSessions:)];
-         NSRect frame = [self.tblSessions.headerView headerRectOfColumn:0];
-         NSRect btnFrame = btn.frame;
-         btnFrame.origin.x = (frame.size.width - btn.frame.size.width) / 2;
-         btnFrame.origin.y = (frame.size.height - btn.frame.size.height) / 2;
-         
-         btn.frame = btnFrame;
-         */
+        if (tableView == self.tblSessions && [column.identifier isEqualToString:@"columnCheck"])
+        {
+            NSRect frame = [self.tblSessions.headerView headerRectOfColumn:0];
+            NSRect btnFrame = self.btnToggleAll.frame;
+            btnFrame.origin.x = (frame.size.width - btnFrame.size.width) / 2;
+            btnFrame.origin.y = (frame.size.height - btnFrame.size.height) / 2;
+            
+            self.btnToggleAll.frame = btnFrame;
+        }
+        
     }
 }
 
