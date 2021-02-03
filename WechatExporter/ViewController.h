@@ -16,9 +16,9 @@
 @property (weak) IBOutlet NSTextField *txtboxOutput;
 @property (weak) IBOutlet NSPopUpButton *popupBackup;
 @property (weak) IBOutlet NSPopUpButton *popupUsers;
+@property (weak) IBOutlet NSButton *btnToggleAll;
 @property (weak) IBOutlet NSScrollView *sclSessions;
 @property (weak) IBOutlet NSTableView *tblSessions;
-
 
 
 @property (weak) IBOutlet NSButton *btnBackup;
