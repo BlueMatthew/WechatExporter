@@ -153,14 +153,12 @@ bool Exporter::loadUsersAndSessions(std::vector<std::pair<Friend, std::vector<Se
     }
 
 	m_logger->debug("Wechat Users loaded.");
+    usersAndSessions.reserve(users.size()); // Avoid re-allocation and causing the pointer changed
     for (std::vector<Friend>::const_iterator it = users.cbegin(); it != users.cend(); ++it)
     {
-        usersAndSessions.emplace(usersAndSessions.cend(), std::pair<Friend, std::vector<Session>>(*it, std::vector<Session>()));
-    }
-    for (std::vector<std::pair<Friend, std::vector<Session>>>::iterator it = usersAndSessions.begin(); it != usersAndSessions.end(); ++it)
-    {
+        std::vector<std::pair<Friend, std::vector<Session>>>::iterator it2 = usersAndSessions.emplace(usersAndSessions.cend(), std::pair<Friend, std::vector<Session>>(*it, std::vector<Session>()));
         Friends friends;
-        loadUserFriendsAndSessions(it->first, friends, it->second, false);
+        loadUserFriendsAndSessions(it2->first, friends, it2->second, false);
     }
 
     return true;
