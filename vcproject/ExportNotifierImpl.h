@@ -25,7 +25,7 @@ public:
 
 	void onStart() const
 	{
-		::PostMessage(m_hWnd, WM_START, (WPARAM)0, (LPARAM)0);
+		::PostMessage(m_hWnd, WM_START, (WPARAM)0, (LPARAM)1/*cancellable*/);
 	}
 
 	void onProgress(double progress) const
