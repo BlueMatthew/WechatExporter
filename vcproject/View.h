@@ -16,8 +16,6 @@
 class CView : public CDialogImpl<CView>, public CDialogResize<CView>
 {
 private:
-
-	CColoredStaticCtrl		m_iTunesLabel;
 	// CColoredComboBoxCtrl	m_cbmBoxBackups;
 	// CColoredComboBoxCtrl	m_cbmBoxUsers;
 	CLogListBox				m_logListBox;
@@ -43,7 +41,6 @@ public:
 
 	LRESULT OnInitDialog(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 	{
-		m_iTunesLabel.SubclassWindow(GetDlgItem(IDC_ITUNES));
 		m_logListBox.SubclassWindow(GetDlgItem(IDC_LOGS));
 
 		// m_cbmBoxBackups.SubclassWindow(GetDlgItem(IDC_BACKUP));
