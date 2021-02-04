@@ -28,7 +28,7 @@ public:
 		::PostMessage(m_hWnd, WM_START, (WPARAM)0, (LPARAM)1/*cancellable*/);
 	}
 
-	void onProgress(double progress) const
+	void onProgress(uint32_t numberOfMessages, uint32_t numberOfTotalMessages) const
 	{
 		// ::PostMessage(m_hWnd, WM_PROGRESS, (WPARAM)0, (LPARAM)&progress);
 	}
