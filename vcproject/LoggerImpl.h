@@ -30,8 +30,12 @@ public:
 	{
 		CW2T pszT(CA2W(log.c_str(), CP_UTF8));
 		
-		std::string time = getCurrentTimestamp() + ": ";
-		CA2T szTime(time.c_str());
+#if !defined(NDEBUG) || defined(DBG_PERF)
+		std::string timeString = getCurrentTimestamp(false, true) + ": ";
+#else
+		std::string timeString = getCurrentTimestamp() + ": ";
+#endif
+		CA2T szTime(timeString.c_str());
 
 		std::vector<TCHAR> szLog;
 		szLog.resize(_tcslen(pszT) + _tcslen(szTime) + 1, 0);

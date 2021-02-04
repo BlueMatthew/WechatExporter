@@ -31,7 +31,11 @@ public:
     
     void write(const std::string& log)
     {
+#if !defined(NDEBUG) || defined(DBG_PERF)
+        std::string timeString = getCurrentTimestamp(false, true) + ": ";
+#else
         std::string timeString = getCurrentTimestamp() + ": ";
+#endif
 
         __block NSString *logString = [NSString stringWithUTF8String:(timeString + log).c_str()];
         __block __weak ViewController* viewController = m_viewController;
