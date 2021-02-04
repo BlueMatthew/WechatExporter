@@ -17,9 +17,11 @@ class CView : public CDialogImpl<CView>, public CDialogResize<CView>
 {
 private:
 
-	CColoredStaticCtrl	m_iTunesLabel;
-	CLogListBox			m_logListBox;
-	CSortListViewCtrl	m_sessionsListCtrl;
+	CColoredStaticCtrl		m_iTunesLabel;
+	// CColoredComboBoxCtrl	m_cbmBoxBackups;
+	// CColoredComboBoxCtrl	m_cbmBoxUsers;
+	CLogListBox				m_logListBox;
+	CSortListViewCtrl		m_sessionsListCtrl;
 
 	ShellImpl			m_shell;
 	LoggerImpl*			m_logger;
@@ -42,6 +44,14 @@ public:
 	{
 		m_iTunesLabel.SubclassWindow(GetDlgItem(IDC_ITUNES));
 		m_logListBox.SubclassWindow(GetDlgItem(IDC_LOGS));
+
+		// m_cbmBoxBackups.SubclassWindow(GetDlgItem(IDC_BACKUP));
+		// m_cbmBoxUsers.SubclassWindow(GetDlgItem(IDC_USERS));
+
+		// m_cbmBoxBackups.SetEditColors(CLR_INVALID, ::GetSysColor(COLOR_WINDOWTEXT));
+		// m_cbmBoxUsers.SetEditColors(CLR_INVALID, ::GetSysColor(COLOR_WINDOWTEXT));
+
+		// m_cbmBoxBackups.
 
 		m_logger = NULL;
 		m_notifier = NULL;
@@ -291,9 +301,16 @@ public:
 #ifndef NDEBUG
 		m_logger->write("Start loading users and sessions.");
 #endif
+		TCHAR buffer[MAX_PATH] = { 0 };
+		DWORD dwRet = GetCurrentDirectory(MAX_PATH, buffer);
+		if (dwRet == 0)
+		{
+			return 0;
+		}
+		CW2A resDir(CT2W(buffer), CP_UTF8);
 
 		std::string backup = manifest.getPath();
-		Exporter exp("", backup, "", &m_shell, m_logger);
+		Exporter exp((LPCSTR)resDir, backup, "", &m_shell, m_logger);
 		exp.loadUsersAndSessions(m_usersAndSessions);
 
 #ifndef NDEBUG
@@ -538,9 +555,6 @@ public:
 				it->second.insert(session->getUsrName());
 			}
 		}
-
-		m_logger->write("iTunes Backup:" + manifest.getPath());
-		m_logger->write("iTunes Version:" + manifest.getITunesVersion());
 
 		m_exporter = new Exporter((LPCSTR)resDir, backup, (LPCSTR)output, &m_shell, m_logger);
 		m_exporter->setNotifier(m_notifier);
