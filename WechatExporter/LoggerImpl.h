@@ -47,7 +47,7 @@ public:
     
     void debug(const std::string& log)
     {
-#ifndef NDEBUG
+#if !defined(NDEBUG) || defined(DBG_PERF)
         write(log);
         NSString *logString = [NSString stringWithUTF8String:log.c_str()];
         NSLog(@"%@", logString);
