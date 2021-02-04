@@ -160,6 +160,13 @@ bool ITunesDb::load(const std::string& domain)
 
 bool ITunesDb::load(const std::string& domain, bool onlyFile)
 {
+    m_version.clear();
+    BackupManifest manifest;
+    if (ManifestParser::parseInfoPlist(m_rootPath, manifest))
+    {
+        m_version = manifest.getITunesVersion();
+    }
+        
     std::string dbPath = combinePath(m_rootPath, m_manifestFileName);
     
     sqlite3 *db = NULL;
@@ -432,6 +439,44 @@ bool ManifestParser::isValidBackupId(const std::string& backupPath, const std::s
 bool ManifestParser::parse(const std::string& backupPath, const std::string& backupId, BackupManifest& manifest) const
 {
     //Info.plist is a xml file
+    std::string path = combinePath(backupPath, backupId);
+    if (!parseInfoPlist(path, manifest))
+    {
+		m_lastError += "Failed to parse xml: Info.plist\r\n";
+        return false;
+    }
+    
+    std::string fileName = combinePath(path, "Manifest.plist");
+    std::vector<unsigned char> data;
+    if (readFile(fileName, data))
+    {
+        plist_t node = NULL;
+        plist_from_memory(reinterpret_cast<const char *>(&data[0]), static_cast<uint32_t>(data.size()), &node);
+        if (NULL != node)
+        {
+            plist_t isEncryptedNode = plist_access_path(node, 1, "IsEncrypted");
+            if (NULL != isEncryptedNode)
+            {
+                uint8_t val = 0;
+                plist_get_bool_val(isEncryptedNode, &val);
+                manifest.setEncrypted(val != 0);
+            }
+            
+            plist_free(node);
+        }
+    }
+	else
+	{
+		m_lastError = "Failed to read Manifest.plist\r\n";
+		return false;
+	}
+
+    return true;
+}
+
+bool ManifestParser::parseInfoPlist(const std::string& backupIdPath, BackupManifest& manifest)
+{
+    //Info.plist is a xml file
     xmlSAXHandler saxHander;
     memset(&saxHander, 0, sizeof(xmlSAXHandler));
 
@@ -441,8 +486,7 @@ bool ManifestParser::parse(const std::string& backupPath, const std::string& bac
     saxHander.endElementNs = PlistDictionary::endElementNs;
     saxHander.characters = PlistDictionary::characters;
 
-    std::string path = combinePath(backupPath, backupId);
-    std::string fileName = combinePath(path, "Info.plist");
+    std::string fileName = combinePath(backupIdPath, "Info.plist");
 
     const std::string NodePlist = "plist";
     const std::string NodeDict = "dict";
@@ -472,11 +516,11 @@ bool ManifestParser::parse(const std::string& backupPath, const std::string& bac
     xmlCleanupParser();
     if (res != 0)
     {
-		m_lastError += "Failed to parse xml: Info.plist\r\n";
+        // m_lastError += "Failed to parse xml: Info.plist\r\n";
         return false;
     }
     
-    manifest.setPath(path);
+    manifest.setPath(backupIdPath);
     manifest.setDeviceName(plistDict[ValueDeviceName]);
     manifest.setDisplayName(plistDict[ValueDisplayName]);
     manifest.setITunesVersion(plistDict[ValueITunesVersion]);
@@ -484,31 +528,6 @@ bool ManifestParser::parse(const std::string& backupPath, const std::string& bac
     std::string localDate = utcToLocal(plistDict[ValueLastBackupDate]);
     manifest.setBackupTime(localDate);
     
-    fileName = combinePath(path, "Manifest.plist");
-    std::vector<unsigned char> data;
-    if (readFile(fileName, data))
-    {
-        plist_t node = NULL;
-        plist_from_memory(reinterpret_cast<const char *>(&data[0]), static_cast<uint32_t>(data.size()), &node);
-        if (NULL != node)
-        {
-            plist_t isEncryptedNode = plist_access_path(node, 1, "IsEncrypted");
-            if (NULL != isEncryptedNode)
-            {
-                uint8_t val = 0;
-                plist_get_bool_val(isEncryptedNode, &val);
-                manifest.setEncrypted(val != 0);
-            }
-            
-            plist_free(node);
-        }
-    }
-	else
-	{
-		m_lastError = "Failed to read Manifest.plist\r\n";
-		return false;
-	}
-
     return true;
 }
 
