@@ -179,7 +179,7 @@ bool ITunesDb::load(const std::string& domain, bool onlyFile)
     }
 
 #if !defined(NDEBUG) || defined(DBG_PERF)
-    printf("PERF: start.....%s\r\n", getCurrentTimestamp().c_str());
+    printf("PERF: start.....%s\r\n", getCurrentTimestamp(false, true).c_str());
 #endif
 
     sqlite3_exec(db, "PRAGMA mmap_size=2097152;", NULL, NULL, NULL); // 8M:8388608  2M 2097152
@@ -212,7 +212,7 @@ bool ITunesDb::load(const std::string& domain, bool onlyFile)
     }
     
 #if !defined(NDEBUG) || defined(DBG_PERF)
-    printf("PERF: %s sql=%s, domain=%s\r\n", getCurrentTimestamp().c_str(), sql.c_str(), domain.c_str());
+    printf("PERF: %s sql=%s, domain=%s\r\n", getCurrentTimestamp(false, true).c_str(), sql.c_str(), domain.c_str());
 #endif
     
     bool hasFilter = (bool)m_loadingFilter;
@@ -265,13 +265,13 @@ bool ITunesDb::load(const std::string& domain, bool onlyFile)
     sqlite3_close(db);
 
 #if !defined(NDEBUG) || defined(DBG_PERF)
-    printf("PERF: end.....%s, size=%lu\r\n", getCurrentTimestamp().c_str(), m_files.size());
+    printf("PERF: end.....%s, size=%lu\r\n", getCurrentTimestamp(false, true).c_str(), m_files.size());
 #endif
     
     std::sort(m_files.begin(), m_files.end(), __string_less());
     
 #if !defined(NDEBUG) || defined(DBG_PERF)
-    printf("PERF: after sort.....%s\r\n", getCurrentTimestamp().c_str());
+    printf("PERF: after sort.....%s\r\n", getCurrentTimestamp(false, true).c_str());
 #endif
     return true;
 }

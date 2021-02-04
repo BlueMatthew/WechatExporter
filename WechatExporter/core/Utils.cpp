@@ -701,21 +701,22 @@ std::string utcToLocal(const std::string& utcTime)
     return std::string(buf);
 }
 
-std::string getCurrentTimestamp(bool includingYMD/* = false*/)
+std::string getCurrentTimestamp(bool includingYMD/* = false*/, bool includingMs/* = false*/)
 {
     using std::chrono::system_clock;
     auto currentTime = std::chrono::system_clock::now();
     char buffer[80];
 
-    auto transformed = currentTime.time_since_epoch().count() / 1000000;
-
-    auto millis = transformed % 1000;
-
     std::time_t tt;
     tt = system_clock::to_time_t ( currentTime );
     auto timeinfo = localtime (&tt);
     strftime (buffer, 80, includingYMD ? "%F %H:%M:%S" : "%H:%M:%S", timeinfo);
-    sprintf(buffer, "%s.%03d", buffer, (int)millis);
+    if (includingMs)
+    {
+        auto transformed = currentTime.time_since_epoch().count() / 1000000;
+        auto millis = transformed % 1000;
+        sprintf(buffer, "%s.%03d", buffer, (int)millis);
+    }
 
     return std::string(buffer);
 }
