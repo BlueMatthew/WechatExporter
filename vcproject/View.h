@@ -257,9 +257,12 @@ public:
 
 	LRESULT OnBackupSelChange(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/)
 	{
+		CListBox lstboxLogs = GetDlgItem(IDC_LOGS);
+		lstboxLogs.ResetContent();
+
 		CComboBox cbmBox = GetDlgItem(IDC_USERS);
 		cbmBox.ResetContent();
-		
+
 		m_usersAndSessions.clear();
 		cbmBox = GetDlgItem(IDC_BACKUP);
 		if (cbmBox.GetCurSel() == -1)
