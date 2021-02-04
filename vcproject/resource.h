@@ -34,9 +34,8 @@
 #define IDC_USERS                       1012
 #define IDC_CLOSE                       1013
 #define IDC_SESSIONS                    1014
-#define IDC_ITUNES                      1015
-#define IDC_GRP_LOGS                    1016
-#define IDC_GRP_USR_CHAT                1017
+#define IDC_GRP_LOGS                    1015
+#define IDC_GRP_USR_CHAT                1016
 #define ID_FILE_32775                   32775
 #define ID_FILE_32776                   32776
 #define ID_FILE_DESC_ORDER              32777
@@ -51,7 +50,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        204
 #define _APS_NEXT_COMMAND_VALUE         32785
-#define _APS_NEXT_CONTROL_VALUE         1018
+#define _APS_NEXT_CONTROL_VALUE         1017
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif
