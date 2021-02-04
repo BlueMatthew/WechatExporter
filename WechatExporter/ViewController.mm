@@ -298,6 +298,7 @@ void errorLogCallback(void *pArg, int iErrCode, const char *zMsg)
     {
         m_usersAndSessions.clear();
         [self.popupUsers removeAllItems];
+        self.txtViewLogs.string = @"";
         
         if (self.popupBackup.indexOfSelectedItem == -1 || self.popupBackup.indexOfSelectedItem >= m_manifests.size())
         {
