@@ -39,6 +39,7 @@ public:
 	static const DWORD WM_START = ExportNotifierImpl::WM_START;
 	static const DWORD WM_COMPLETE = ExportNotifierImpl::WM_COMPLETE;
 	static const DWORD WM_PROGRESS = ExportNotifierImpl::WM_PROGRESS;
+	static const DWORD WM_LOADDATA = WM_PROGRESS + 1;
 
 	LRESULT OnInitDialog(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 	{
@@ -50,8 +51,6 @@ public:
 
 		// m_cbmBoxBackups.SetEditColors(CLR_INVALID, ::GetSysColor(COLOR_WINDOWTEXT));
 		// m_cbmBoxUsers.SetEditColors(CLR_INVALID, ::GetSysColor(COLOR_WINDOWTEXT));
-
-		// m_cbmBoxBackups.
 
 		m_logger = NULL;
 		m_notifier = NULL;
@@ -67,6 +66,83 @@ public:
 		m_notifier = new ExportNotifierImpl(m_hWnd);
 		m_logger = new LoggerImpl(GetDlgItem(IDC_LOGS));
 
+		PostMessage(WM_LOADDATA, 0, 0);
+		
+		return TRUE;
+	}
+
+	void OnFinalMessage(HWND hWnd)
+	{
+		if (NULL != m_exporter)
+		{
+			m_exporter->cancel();
+			m_exporter->waitForComplition();
+			delete m_exporter;
+			m_exporter = NULL;
+		}
+		if (NULL != m_notifier)
+		{
+			delete m_notifier;
+			m_notifier = NULL;
+		}
+		if (NULL != m_logger)
+		{
+			delete m_logger;
+			m_logger = NULL;
+		}
+		// override to do something, if needed
+	}
+
+	BOOL PreTranslateMessage(MSG* pMsg)
+	{
+		return CWindow::IsDialogMessage(pMsg);
+	}
+
+	BEGIN_MSG_MAP(CView)
+		MESSAGE_HANDLER(WM_INITDIALOG, OnInitDialog)
+		CHAIN_MSG_MAP(CDialogResize<CView>)
+		COMMAND_HANDLER(IDC_BACKUP, CBN_SELCHANGE, OnBackupSelChange)
+		COMMAND_HANDLER(IDC_CHOOSE_BKP, BN_CLICKED, OnBnClickedChooseBkp)
+		COMMAND_HANDLER(IDC_CHOOSE_OUTPUT, BN_CLICKED, OnBnClickedChooseOutput)
+		COMMAND_HANDLER(IDC_USERS, CBN_SELCHANGE, OnUserSelChange)
+		COMMAND_HANDLER(IDC_EXPORT, BN_CLICKED, OnBnClickedExport)
+		COMMAND_HANDLER(IDC_CANCEL, BN_CLICKED, OnBnClickedCancel)
+		COMMAND_HANDLER(IDC_CLOSE, BN_CLICKED, OnBnClickedClose)
+		MESSAGE_HANDLER(WM_START, OnStart)
+		MESSAGE_HANDLER(WM_COMPLETE, OnComplete)
+		MESSAGE_HANDLER(WM_PROGRESS, OnProgress)
+		MESSAGE_HANDLER(WM_LOADDATA, OnLoadData)
+		NOTIFY_HANDLER(IDC_SESSIONS, LVN_ITEMCHANGING, OnListItemChanging)
+		NOTIFY_HANDLER(IDC_SESSIONS, LVN_ITEMCHANGED, OnListItemChanged)
+		NOTIFY_CODE_HANDLER(HDN_ITEMSTATEICONCLICK, OnHeaderItemStateIconClick)
+		NOTIFY_HANDLER(IDC_SESSIONS, NM_CLICK, OnListClick)
+		REFLECT_NOTIFICATIONS()
+	END_MSG_MAP()
+
+	BEGIN_DLGRESIZE_MAP(CView)
+		DLGRESIZE_CONTROL(IDC_ITUNES, DLSZ_MOVE_X)
+		DLGRESIZE_CONTROL(IDC_CHOOSE_BKP, DLSZ_MOVE_X)
+		DLGRESIZE_CONTROL(IDC_BACKUP, DLSZ_SIZE_X)
+		DLGRESIZE_CONTROL(IDC_CHOOSE_OUTPUT, DLSZ_MOVE_X)
+		DLGRESIZE_CONTROL(IDC_OUTPUT, DLSZ_SIZE_X)
+		DLGRESIZE_CONTROL(IDC_GRP_USR_CHAT, DLSZ_SIZE_Y)
+		DLGRESIZE_CONTROL(IDC_SESSIONS, DLSZ_SIZE_Y)
+		DLGRESIZE_CONTROL(IDC_GRP_LOGS, DLSZ_SIZE_X | DLSZ_SIZE_Y)
+		DLGRESIZE_CONTROL(IDC_LOGS, DLSZ_SIZE_X | DLSZ_SIZE_Y)
+		DLGRESIZE_CONTROL(IDC_PROGRESS, DLSZ_MOVE_Y)
+		DLGRESIZE_CONTROL(IDC_CANCEL, DLSZ_MOVE_X | DLSZ_MOVE_Y)
+		DLGRESIZE_CONTROL(IDC_CLOSE, DLSZ_MOVE_X | DLSZ_MOVE_Y)
+		DLGRESIZE_CONTROL(IDC_EXPORT, DLSZ_MOVE_X | DLSZ_MOVE_Y)
+	END_DLGRESIZE_MAP()
+
+
+// Handler prototypes (uncomment arguments if needed):
+//	LRESULT MessageHandler(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/)
+//	LRESULT CommandHandler(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/)
+//	LRESULT NotifyHandler(int /*idCtrl*/, LPNMHDR /*pnmh*/, BOOL& /*bHandled*/)
+
+	LRESULT OnLoadData(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+	{
 		BOOL descOrder = FALSE;
 		BOOL savingInSession = TRUE;
 		TCHAR szOutput[MAX_PATH] = { 0 };
@@ -92,20 +168,13 @@ public:
 			rk.Close();
 		}
 
-		ITunesDetector iTunesDetector;
-
-		CString iTunesStatus;
-		iTunesDetector.isInstalled() ? iTunesStatus.Format(IDS_ITUNES_VERSION, (LPCTSTR)iTunesDetector.getVersion()) : iTunesStatus.LoadString(IDS_ITUNES_NOT_INSTALLED);
-		m_iTunesLabel.SetWindowText(iTunesStatus);
-		iTunesDetector.isInstalled() ? m_iTunesLabel.SetNormalColors(RGB(0x32, 0xCD, 0x32), CLR_INVALID) : m_iTunesLabel.SetNormalColors(RGB(0xFF, 0, 0), CLR_INVALID);
-		// m_iTunesLabel.
-
 		HRESULT result = S_OK;
 		if (!outputDirFound)
 		{
 			result = SHGetFolderPath(NULL, CSIDL_MYDOCUMENTS, NULL, SHGFP_TYPE_CURRENT, szOutput);
 		}
 		SetDlgItemText(IDC_OUTPUT, szOutput);
+		UpdateWindow();
 
 		TCHAR szPath[MAX_PATH] = { 0 };
 		TCHAR szPath2[MAX_PATH] = { 0 };
@@ -149,7 +218,7 @@ public:
 		else if (_tcslen(szPrevBackup) != 0)
 		{
 			CW2A backupDir(CT2W(szPrevBackup), CP_UTF8);
-			
+
 			ManifestParser parser((LPCSTR)backupDir, &m_shell);
 			std::vector<BackupManifest> manifests;
 			if (parser.parse(manifests))
@@ -158,78 +227,10 @@ public:
 			}
 		}
 #endif
-		
-		return TRUE;
+
+		return 0;
 	}
 
-	void OnFinalMessage(HWND hWnd)
-	{
-		if (NULL != m_exporter)
-		{
-			m_exporter->cancel();
-			m_exporter->waitForComplition();
-			delete m_exporter;
-			m_exporter = NULL;
-		}
-		if (NULL != m_notifier)
-		{
-			delete m_notifier;
-			m_notifier = NULL;
-		}
-		if (NULL != m_logger)
-		{
-			delete m_logger;
-			m_logger = NULL;
-		}
-		// override to do something, if needed
-	}
-
-	BOOL PreTranslateMessage(MSG* pMsg)
-	{
-		return CWindow::IsDialogMessage(pMsg);
-	}
-
-	BEGIN_MSG_MAP(CView)
-		MESSAGE_HANDLER(WM_INITDIALOG, OnInitDialog)
-		CHAIN_MSG_MAP(CDialogResize<CView>)
-		COMMAND_HANDLER(IDC_BACKUP, CBN_SELCHANGE, OnBackupSelChange)
-		COMMAND_HANDLER(IDC_CHOOSE_BKP, BN_CLICKED, OnBnClickedChooseBkp)
-		COMMAND_HANDLER(IDC_CHOOSE_OUTPUT, BN_CLICKED, OnBnClickedChooseOutput)
-		COMMAND_HANDLER(IDC_USERS, CBN_SELCHANGE, OnUserSelChange)
-		COMMAND_HANDLER(IDC_EXPORT, BN_CLICKED, OnBnClickedExport)
-		COMMAND_HANDLER(IDC_CANCEL, BN_CLICKED, OnBnClickedCancel)
-		COMMAND_HANDLER(IDC_CLOSE, BN_CLICKED, OnBnClickedClose)
-		MESSAGE_HANDLER(WM_KEYUP, OnKeyUp)
-		MESSAGE_HANDLER(WM_START, OnStart)
-		MESSAGE_HANDLER(WM_COMPLETE, OnComplete)
-		NOTIFY_HANDLER(IDC_SESSIONS, LVN_ITEMCHANGING, OnListItemChanging)
-		NOTIFY_HANDLER(IDC_SESSIONS, LVN_ITEMCHANGED, OnListItemChanged)
-		NOTIFY_CODE_HANDLER(HDN_ITEMSTATEICONCLICK, OnHeaderItemStateIconClick)
-		NOTIFY_HANDLER(IDC_SESSIONS, NM_CLICK, OnListClick)
-		REFLECT_NOTIFICATIONS()
-	END_MSG_MAP()
-
-	BEGIN_DLGRESIZE_MAP(CView)
-		DLGRESIZE_CONTROL(IDC_ITUNES, DLSZ_MOVE_X)
-		DLGRESIZE_CONTROL(IDC_CHOOSE_BKP, DLSZ_MOVE_X)
-		DLGRESIZE_CONTROL(IDC_BACKUP, DLSZ_SIZE_X)
-		DLGRESIZE_CONTROL(IDC_CHOOSE_OUTPUT, DLSZ_MOVE_X)
-		DLGRESIZE_CONTROL(IDC_OUTPUT, DLSZ_SIZE_X)
-		DLGRESIZE_CONTROL(IDC_GRP_USR_CHAT, DLSZ_SIZE_Y)
-		DLGRESIZE_CONTROL(IDC_SESSIONS, DLSZ_SIZE_Y)
-		DLGRESIZE_CONTROL(IDC_GRP_LOGS, DLSZ_SIZE_X | DLSZ_SIZE_Y)
-		DLGRESIZE_CONTROL(IDC_LOGS, DLSZ_SIZE_X | DLSZ_SIZE_Y)
-		DLGRESIZE_CONTROL(IDC_PROGRESS, DLSZ_MOVE_Y)
-		DLGRESIZE_CONTROL(IDC_CANCEL, DLSZ_MOVE_X | DLSZ_MOVE_Y)
-		DLGRESIZE_CONTROL(IDC_CLOSE, DLSZ_MOVE_X | DLSZ_MOVE_Y)
-		DLGRESIZE_CONTROL(IDC_EXPORT, DLSZ_MOVE_X | DLSZ_MOVE_Y)
-	END_DLGRESIZE_MAP()
-
-
-// Handler prototypes (uncomment arguments if needed):
-//	LRESULT MessageHandler(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/)
-//	LRESULT CommandHandler(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/)
-//	LRESULT NotifyHandler(int /*idCtrl*/, LPNMHDR /*pnmh*/, BOOL& /*bHandled*/)
 	LRESULT OnBnClickedChooseBkp(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/)
 	{
 		CString text;
@@ -530,8 +531,6 @@ public:
 		lstboxLogs.ResetContent();
 
 		CW2A resDir(CT2W(buffer), CP_UTF8);
-	
-		// Run((LPCSTR)resDir, backup, (LPCSTR)output, descOrder, saveFilesInSessionFolder);
 
 		CListViewCtrl listViewCtrl = GetDlgItem(IDC_SESSIONS);
 		std::map<std::string, std::set<std::string>> usersAndSessions;
@@ -572,14 +571,6 @@ public:
 		return 0;
 	}
 	
-	LRESULT OnKeyUp(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
-	{
-		EnableInteractiveCtrls(FALSE);
-		CProgressBarCtrl progressCtrl = GetDlgItem(IDC_PROGRESS);
-		progressCtrl.SetMarquee(TRUE, 0);
-		return 0;
-	}
-
 	LRESULT OnStart(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 	{
 		BOOL cancellable = static_cast<BOOL>(lParam);
@@ -603,6 +594,11 @@ public:
 		progressCtrl.SetMarquee(FALSE, 0);
 		progressCtrl.SetPos(0);
 		EnableInteractiveCtrls(TRUE);
+		return 0;
+	}
+
+	LRESULT OnProgress(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+	{
 		return 0;
 	}
 
@@ -655,15 +651,14 @@ public:
 			for (std::vector<BackupManifest>::const_iterator it = m_manifests.cbegin(); it != m_manifests.cend(); ++it)
 			{
 				std::string itemTitle = it->toString();
-				// String* item = [NSString stringWithUTF8String : itemTitle.c_str()];
 				CW2T item(CA2W(it->toString().c_str(), CP_UTF8));
 				cmb.AddString((LPCTSTR)item);
 			}
+			cmb.SetRedraw(TRUE);
 			if (selectedIndex != -1 && selectedIndex < cmb.GetCount())
 			{
 				SetComboBoxCurSel(cmb, selectedIndex);
 			}
-			cmb.SetRedraw(TRUE);
 		}
 	}
 
@@ -692,7 +687,7 @@ public:
 		ListView_InsertColumn(m_sessionsListCtrl, 1, &lvc);
 		lvc.iSubItem++;
 		lvc.pszText = (LPTSTR)(LPCTSTR)strColumn2;
-		lvc.cx = 96;
+		lvc.cx = 76;
 		ListView_InsertColumn(m_sessionsListCtrl, 2, &lvc);
 		lvc.iSubItem++;
 		lvc.pszText = (LPTSTR)(LPCTSTR)strColumn3;
@@ -701,6 +696,7 @@ public:
 
 		// Set column widths
 		ListView_SetColumnWidth(m_sessionsListCtrl, 0, LVSCW_AUTOSIZE_USEHEADER);
+		ListView_SetColumnWidth(m_sessionsListCtrl, 2, LVSCW_AUTOSIZE_USEHEADER);
 		// ListView_SetColumnWidth(listViewCtrl, 1, LVSCW_AUTOSIZE_USEHEADER);
 		// ListView_SetColumnWidth(listViewCtrl, 2, LVSCW_AUTOSIZE_USEHEADER);
 		// ListView_SetColumnWidth(listViewCtrl, 3, LVSCW_AUTOSIZE_USEHEADER);
@@ -713,10 +709,6 @@ public:
 		dwHeaderStyle |= HDS_CHECKBOXES;
 		::SetWindowLong(header, GWL_STYLE, dwHeaderStyle);
 
-		// Store the ID of the header control so we can handle its notification by ID
-		// m_HeaderId = ::GetDlgCtrlID(header);
-		
-	
 		HDITEM hdi = { 0 };
 		hdi.mask = HDI_FORMAT;
 		Header_GetItem(header, 0, &hdi);
