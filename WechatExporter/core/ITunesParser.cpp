@@ -170,21 +170,20 @@ bool ITunesDb::load(const std::string& domain, bool onlyFile)
         sqlite3_close(db);
         return false;
     }
+
+#if !defined(NDEBUG) || defined(DBG_PERF)
+    printf("PERF: start.....%s\r\n", getCurrentTimestamp().c_str());
+#endif
+
+    sqlite3_exec(db, "PRAGMA mmap_size=2097152;", NULL, NULL, NULL); // 8M:8388608  2M 2097152
+    sqlite3_exec(db, "PRAGMA synchronous=OFF;", NULL, NULL, NULL);
     
     std::string sql = "SELECT fileID,relativePath,flags,file FROM Files";
-    if (domain.size() > 0 && onlyFile)
-    {
-        sql += " WHERE domain=? AND flags=1";
-    }
-    else if (domain.size() > 0)
+    if (domain.size() > 0)
     {
         sql += " WHERE domain=?";
     }
-    else if (onlyFile)
-    {
-        sql += " WHERE flags=1";
-    }
-
+    
     sqlite3_stmt* stmt = NULL;
     rc = sqlite3_prepare_v2(db, sql.c_str(), (int)(sql.size()), &stmt, NULL);
     if (rc != SQLITE_OK)
@@ -205,22 +204,40 @@ bool ITunesDb::load(const std::string& domain, bool onlyFile)
         }
     }
     
+#if !defined(NDEBUG) || defined(DBG_PERF)
+    printf("PERF: %s sql=%s, domain=%s\r\n", getCurrentTimestamp().c_str(), sql.c_str(), domain.c_str());
+#endif
+    
+    bool hasFilter = (bool)m_loadingFilter;
+    
     m_files.reserve(2048);
     while (sqlite3_step(stmt) == SQLITE_ROW)
     {
-        ITunesFile *file = new ITunesFile();
+        int flags = sqlite3_column_int(stmt, 2);
+        if (onlyFile && flags == 2)
+        {
+            // Putting flags=1 into sql causes sqlite3 to use index of flags instead of domain and don't know why...
+            // So filter the directory with the code
+            continue;
+        }
         
+        const char *relativePath = reinterpret_cast<const char*>(sqlite3_column_text(stmt, 1));
+        if (hasFilter && !m_loadingFilter(relativePath, flags))
+        {
+            continue;
+        }
+        
+        ITunesFile *file = new ITunesFile();
         const char *fileId = reinterpret_cast<const char*>(sqlite3_column_text(stmt, 0));
         if (NULL != fileId)
         {
             file->fileId = fileId;
         }
-        const char *relativePath = reinterpret_cast<const char*>(sqlite3_column_text(stmt, 1));
+        
         if (NULL != relativePath)
         {
             file->relativePath = relativePath;
         }
-        int flags = sqlite3_column_int(stmt, 2);
         file->flags = static_cast<unsigned int>(flags);
         if (flags == 1)
         {
@@ -240,8 +257,15 @@ bool ITunesDb::load(const std::string& domain, bool onlyFile)
     sqlite3_finalize(stmt);
     sqlite3_close(db);
 
+#if !defined(NDEBUG) || defined(DBG_PERF)
+    printf("PERF: end.....%s, size=%lu\r\n", getCurrentTimestamp().c_str(), m_files.size());
+#endif
+    
     std::sort(m_files.begin(), m_files.end(), __string_less());
     
+#if !defined(NDEBUG) || defined(DBG_PERF)
+    printf("PERF: after sort.....%s\r\n", getCurrentTimestamp().c_str());
+#endif
     return true;
 }
 

@@ -32,7 +32,7 @@ struct FriendDownloadHandler
 
 Exporter::Exporter(const std::string& workDir, const std::string& backup, const std::string& output, Shell* shell, Logger* logger)
 {
-	m_running = false;
+    m_running = false;
     m_iTunesDb = NULL;
     m_iTunesDbShare = NULL;
     m_workDir = workDir;
@@ -55,11 +55,11 @@ Exporter::~Exporter()
 
 void Exporter::setNotifier(ExportNotifier *notifier)
 {
-	m_notifier = notifier;
+    m_notifier = notifier;
 }
 bool Exporter::isRunning() const
 {
-	return m_running;
+    return m_running;
 }
 
 void Exporter::cancel()
@@ -69,12 +69,12 @@ void Exporter::cancel()
 
 void Exporter::waitForComplition()
 {
-	if (!isRunning())
-	{
-		return;
-	}
+    if (!isRunning())
+    {
+        return;
+    }
 
-	m_thread.join();
+    m_thread.join();
 }
 
 void Exporter::ignoreAudio(bool ignoreAudio/* = true*/)
@@ -108,30 +108,30 @@ void Exporter::filterUsersAndSessions(const std::map<std::string, std::set<std::
 
 bool Exporter::run()
 {
-	if (isRunning() || m_thread.joinable())
-	{
-		m_logger->write(getLocaleString("Previous task has not completed."));
+    if (isRunning() || m_thread.joinable())
+    {
+        m_logger->write(getLocaleString("Previous task has not completed."));
         
-		return false;
-	}
+        return false;
+    }
 
     if (!m_shell->existsDirectory(m_output))
     {
-		m_logger->write(formatString(getLocaleString("Can't access output directory: %s"), m_output.c_str()));
+        m_logger->write(formatString(getLocaleString("Can't access output directory: %s"), m_output.c_str()));
         return false;
     }
     
-	m_running = true;
+    m_running = true;
 
     std::thread th(&Exporter::runImpl, this);
-	m_thread.swap(th);
+    m_thread.swap(th);
 
-	return true;
+    return true;
 }
 
 bool Exporter::loadUsersAndSessions(std::vector<std::pair<Friend, std::vector<Session>>>& usersAndSessions)
 {
-    if (!loadITunes())
+    if (!loadITunes(false))
     {
         m_logger->write(formatString(getLocaleString("Failed to parse the backup data of iTunes in the directory: %s"), m_backup.c_str()));
         notifyComplete();
@@ -152,7 +152,7 @@ bool Exporter::loadUsersAndSessions(std::vector<std::pair<Friend, std::vector<Se
         return false;
     }
 
-	m_logger->debug("Wechat Users loaded.");
+    m_logger->debug("Wechat Users loaded.");
     usersAndSessions.reserve(users.size()); // Avoid re-allocation and causing the pointer changed
     for (std::vector<Friend>::const_iterator it = users.cbegin(); it != users.cend(); ++it)
     {
@@ -170,16 +170,16 @@ bool Exporter::runImpl()
     std::time(&startTime);
     notifyStart();
 
-	if (!loadITunes())
-	{
-		m_logger->write(formatString(getLocaleString("Failed to parse the backup data of iTunes in the directory: %s"), m_backup.c_str()));
+    if (!loadITunes())
+    {
+        m_logger->write(formatString(getLocaleString("Failed to parse the backup data of iTunes in the directory: %s"), m_backup.c_str()));
         notifyComplete();
-		return false;
-	}
-	m_logger->debug("ITunes Database loaded.");
+        return false;
+    }
+    m_logger->debug("ITunes Database loaded.");
 
-	loadStrings();
-	loadTemplates();
+    loadStrings();
+    loadTemplates();
     
     WechatInfoParser wechatInfoParser(m_iTunesDb);
     if (wechatInfoParser.parse(m_wechatInfo))
@@ -187,24 +187,24 @@ bool Exporter::runImpl()
         m_logger->write(formatString(getLocaleString("Wechat Version: %s"), m_wechatInfo.getShortVersion().c_str()));
     }
 
-	m_logger->write(getLocaleString("Finding Wechat accounts..."));
+    m_logger->write(getLocaleString("Finding Wechat accounts..."));
 
-	std::vector<Friend> users;
-	LoginInfo2Parser loginInfo2Parser(m_iTunesDb);
-	if (!loginInfo2Parser.parse(users))
-	{
-		m_logger->write(getLocaleString("Failed to find Wechat account."));
+    std::vector<Friend> users;
+    LoginInfo2Parser loginInfo2Parser(m_iTunesDb);
+    if (!loginInfo2Parser.parse(users))
+    {
+        m_logger->write(getLocaleString("Failed to find Wechat account."));
         notifyComplete();
-		return false;
-	}
+        return false;
+    }
 
-	m_logger->write(formatString(getLocaleString("%d Wechat account(s) found."), (int)(users.size())));
+    m_logger->write(formatString(getLocaleString("%d Wechat account(s) found."), (int)(users.size())));
 
     std::string htmlBody;
 
     std::set<std::string> userFileNames;
-	for (std::vector<Friend>::iterator it = users.begin(); it != users.end(); ++it)
-	{
+    for (std::vector<Friend>::iterator it = users.begin(); it != users.end(); ++it)
+    {
         if (m_cancelled)
         {
             break;
@@ -225,7 +225,7 @@ bool Exporter::runImpl()
         }
 
         std::string userOutputPath;
-		exportUser(*it, userOutputPath);
+        exportUser(*it, userOutputPath);
         
         std::string userItem = getTemplate("listitem");
         userItem = replaceAll(userItem, "%%ITEMPICPATH%%", userOutputPath + "/Portrait/" + it->getLocalPortrait());
@@ -233,7 +233,7 @@ bool Exporter::runImpl()
         userItem = replaceAll(userItem, "%%ITEMTEXT%%", safeHTML(it->getDisplayName()));
         
         htmlBody += userItem;
-	}
+    }
     
     std::string fileName = combinePath(m_output, "index.html");
 
@@ -247,18 +247,18 @@ bool Exporter::runImpl()
     std::time(&endTime);
     int seconds = static_cast<int>(difftime(endTime, startTime));
     std::ostringstream stream;
-	
-	int minutes = seconds / 60;
-	int hours = minutes / 60;
-	stream << std::setfill('0') << std::setw(2) << hours << ':'
-		<< std::setfill('0') << std::setw(2) << (minutes % 60) << ':'
-		<< std::setfill('0') << std::setw(2) << (seconds % 60);
-	
+    
+    int minutes = seconds / 60;
+    int hours = minutes / 60;
+    stream << std::setfill('0') << std::setw(2) << hours << ':'
+        << std::setfill('0') << std::setw(2) << (minutes % 60) << ':'
+        << std::setfill('0') << std::setw(2) << (seconds % 60);
+    
     m_logger->write(formatString(getLocaleString((m_cancelled ? "Cancelled in %s." : "Completed in %s.")), stream.str().c_str()));
     
     notifyComplete(m_cancelled);
     
-	return true;
+    return true;
 }
 
 bool Exporter::exportUser(Friend& user, std::string& userOutputPath)
@@ -266,24 +266,24 @@ bool Exporter::exportUser(Friend& user, std::string& userOutputPath)
     std::string uidMd5 = user.getHash();
     
     std::string userBase = combinePath("Documents", uidMd5);
-	// Use display name first, it it can't be created, use uid hash
+    // Use display name first, it it can't be created, use uid hash
     userOutputPath = user.getOutputFileName();
-	std::string outputBase = combinePath(m_output, userOutputPath);
-	if (!m_shell->existsDirectory(outputBase))
-	{
-		if (!m_shell->makeDirectory(outputBase))
-		{
+    std::string outputBase = combinePath(m_output, userOutputPath);
+    if (!m_shell->existsDirectory(outputBase))
+    {
+        if (!m_shell->makeDirectory(outputBase))
+        {
             userOutputPath = user.getHash();
-			outputBase = combinePath(m_output, userOutputPath);
-			if (!m_shell->existsDirectory(outputBase))
-			{
-				if (!m_shell->makeDirectory(outputBase))
-				{
-					return false;
-				}
-			}
-		}
-	}
+            outputBase = combinePath(m_output, userOutputPath);
+            if (!m_shell->existsDirectory(outputBase))
+            {
+                if (!m_shell->makeDirectory(outputBase))
+                {
+                    return false;
+                }
+            }
+        }
+    }
     
     std::string portraitPath = combinePath(outputBase, "Portrait");
     m_shell->makeDirectory(portraitPath);
@@ -295,22 +295,22 @@ bool Exporter::exportUser(Friend& user, std::string& userOutputPath)
         m_shell->makeDirectory(emojiPath);
     }
     
-	m_logger->write(formatString(getLocaleString("Handling account: %s, Wechat Id: %s"), user.getDisplayName().c_str(), user.getUsrName().c_str()));
+    m_logger->write(formatString(getLocaleString("Handling account: %s, Wechat Id: %s"), user.getDisplayName().c_str(), user.getUsrName().c_str()));
     
-	m_logger->write(getLocaleString("Reading account info."));
-	m_logger->write(getLocaleString("Reading chat info"));
+    m_logger->write(getLocaleString("Reading account info."));
+    m_logger->write(getLocaleString("Reading chat info"));
     
     Friends friends;
     std::vector<Session> sessions;
     loadUserFriendsAndSessions(user, friends, sessions);
     
-	m_logger->write(formatString(getLocaleString("%d chats found."), (int)(sessions.size())));
+    m_logger->write(formatString(getLocaleString("%d chats found."), (int)(sessions.size())));
     
     Friend* myself = friends.getFriend(user.getHash());
     if (NULL == myself)
     {
-		Friend& newUser = friends.addFriend(user.getHash());
-		newUser = user;
+        Friend& newUser = friends.addFriend(user.getHash());
+        newUser = user;
         myself = &user;
     }
     
@@ -328,7 +328,7 @@ bool Exporter::exportUser(Friend& user, std::string& userOutputPath)
 
     Downloader downloader(m_logger);
     downloader.setUserAgent(m_wechatInfo.buildUserAgent());
-	SessionParser sessionParser(*myself, friends, *m_iTunesDb, *m_shell, m_options, downloader, localeFunction);
+    SessionParser sessionParser(*myself, friends, *m_iTunesDb, *m_shell, m_options, downloader, localeFunction);
 
     downloader.addTask(user.getPortrait(), combinePath(outputBase, "Portrait", user.getLocalPortrait()), 0);
     std::set<std::string> sessionFileNames;
@@ -368,7 +368,7 @@ bool Exporter::exportUser(Friend& user, std::string& userOutputPath)
         {
             downloader.addTask(it->getPortrait(), combinePath(outputBase, "Portrait", it->getLocalPortrait()), 0);
         }
-		int count = exportSession(*myself, sessionParser, *it, userBase, outputBase);
+        int count = exportSession(*myself, sessionParser, *it, userBase, outputBase);
         
         m_logger->write(formatString(getLocaleString("Succeeded handling %d messages."), count));
         
@@ -412,12 +412,15 @@ bool Exporter::loadUserFriendsAndSessions(const Friend& user, Friends& friends, 
     std::string uidMd5 = user.getHash();
     std::string userBase = combinePath("Documents", uidMd5);
     
-    std::string wcdbPath = m_iTunesDb->findRealPath(combinePath(userBase, "DB", "WCDB_Contact.sqlite"));
+    if (detailedInfo)
+    {
+        std::string wcdbPath = m_iTunesDb->findRealPath(combinePath(userBase, "DB", "WCDB_Contact.sqlite"));
 
-    FriendsParser friendsParser(detailedInfo);
-    friendsParser.parseWcdb(wcdbPath, friends);
+        FriendsParser friendsParser(detailedInfo);
+        friendsParser.parseWcdb(wcdbPath, friends);
 
-	m_logger->debug("Wechat Friends(" + std::to_string(friends.friends.size()) + ") for: " + user.getDisplayName() + " loaded.");
+        m_logger->debug("Wechat Friends(" + std::to_string(friends.friends.size()) + ") for: " + user.getDisplayName() + " loaded.");
+    }
 
     SessionsParser sessionsParser(m_iTunesDb, m_iTunesDbShare, m_shell, m_wechatInfo.getCellDataVersion(), detailedInfo);
     
@@ -425,16 +428,16 @@ bool Exporter::loadUserFriendsAndSessions(const Friend& user, Friends& friends, 
  
     std::sort(sessions.begin(), sessions.end(), SessionLastMsgTimeCompare());
     
-	m_logger->debug("Wechat Sessions for: " + user.getDisplayName() + " loaded.");
+    m_logger->debug("Wechat Sessions for: " + user.getDisplayName() + " loaded.");
     return true;
 }
 
 int Exporter::exportSession(const Friend& user, SessionParser& sessionParser, const Session& session, const std::string& userBase, const std::string& outputBase)
 {
-	if (session.isDbFileEmpty())
-	{
-		return false;
-	}
+    if (session.isDbFileEmpty())
+    {
+        return false;
+    }
     
     std::string sessionBasePath = combinePath(outputBase, session.getOutputFileName() + "_files");
     std::string portraitPath = combinePath(sessionBasePath, "Portrait");
@@ -447,9 +450,9 @@ int Exporter::exportSession(const Friend& user, SessionParser& sessionParser, co
     std::string contents;
     std::function<bool(const std::vector<TemplateValues>&)> handler = std::bind(&Exporter::exportMessage, this, std::cref(session), std::placeholders::_1, std::ref(contents));
     
-	int count = sessionParser.parse(userBase, outputBase, session, handler);
-	if (count > 0)
-	{
+    int count = sessionParser.parse(userBase, outputBase, session, handler);
+    if (count > 0)
+    {
         std::string fileName = combinePath(outputBase, session.getOutputFileName() + ".html");
 
         std::string html = getTemplate("frame");
@@ -458,9 +461,9 @@ int Exporter::exportSession(const Friend& user, SessionParser& sessionParser, co
         
         writeFile(fileName, html);
         
-	}
+    }
     
-	return count;
+    return count;
 }
 
 bool Exporter::exportMessage(const Session& session, const std::vector<TemplateValues>& tvs, std::string& contents)
@@ -495,16 +498,16 @@ bool Exporter::buildFileNameForUser(Friend& user, std::set<std::string>& existin
 
 bool Exporter::fillSession(Session& session, const Friends& friends) const
 {
-	if (session.isDisplayNameEmpty())
-	{
-		const Friend* f = friends.getFriend(session.getHash());
-		if (NULL != f)
-		{
-			session.setDisplayName(f->getDisplayName());
-		}
-	}
+    if (session.isDisplayNameEmpty())
+    {
+        const Friend* f = friends.getFriend(session.getHash());
+        if (NULL != f)
+        {
+            session.setDisplayName(f->getDisplayName());
+        }
+    }
 
-	return true;
+    return true;
 }
 
 void Exporter::releaseITunes()
@@ -521,17 +524,22 @@ void Exporter::releaseITunes()
     }
 }
 
-bool Exporter::loadITunes()
+bool Exporter::loadITunes(bool detailedInfo/* = true*/)
 {
     releaseITunes();
     
     m_iTunesDb = new ITunesDb(m_backup, "Manifest.db");
+    if (!detailedInfo)
+    {
+        std::function<bool(const char*, int)> fn = std::bind(&Exporter::filterITunesFile, this, std::placeholders::_1, std::placeholders::_2);
+        m_iTunesDb->setLoadingFilter(fn);
+    }
     if (!m_iTunesDb->load("AppDomain-com.tencent.xin"))
     {
         return false;
     }
-    
     m_iTunesDbShare = new ITunesDb(m_backup, "Manifest.db");
+    
     if (!m_iTunesDbShare->load("AppDomainGroup-group.com.tencent.xin"))
     {
         // Optional
@@ -555,28 +563,28 @@ bool Exporter::loadTemplates()
 
 bool Exporter::loadStrings()
 {
-	m_localeStrings.clear();
+    m_localeStrings.clear();
 
-	std::string path = combinePath(m_workDir, "res", "locale.txt");
+    std::string path = combinePath(m_workDir, "res", "locale.txt");
 
-	Json::Reader reader;
-	Json::Value value;
-	if (reader.parse(readFile(path), value))
-	{
-		int sz = value.size();
-		for (int idx = 0; idx < sz; ++idx)
-		{
-			std::string k = value[idx]["key"].asString();
-			std::string v = value[idx]["value"].asString();
-			if (m_localeStrings.find(k) != m_localeStrings.cend())
-			{
-				// return false;
-			}
-			m_localeStrings[k] = v;
-		}
-	}
+    Json::Reader reader;
+    Json::Value value;
+    if (reader.parse(readFile(path), value))
+    {
+        int sz = value.size();
+        for (int idx = 0; idx < sz; ++idx)
+        {
+            std::string k = value[idx]["key"].asString();
+            std::string v = value[idx]["value"].asString();
+            if (m_localeStrings.find(k) != m_localeStrings.cend())
+            {
+                // return false;
+            }
+            m_localeStrings[k] = v;
+        }
+    }
 
-	return true;
+    return true;
 }
 
 std::string Exporter::getTemplate(const std::string& key) const
@@ -587,9 +595,9 @@ std::string Exporter::getTemplate(const std::string& key) const
 
 std::string Exporter::getLocaleString(const std::string& key) const
 {
-	// std::string value = key;
-	std::map<std::string, std::string>::const_iterator it = m_localeStrings.find(key);
-	return it == m_localeStrings.cend() ? key : it->second;
+    // std::string value = key;
+    std::map<std::string, std::string>::const_iterator it = m_localeStrings.find(key);
+    return it == m_localeStrings.cend() ? key : it->second;
 }
 
 std::string Exporter::buildContentFromTemplateValues(const TemplateValues& values) const
@@ -641,4 +649,25 @@ void Exporter::notifyProgress(uint32_t numberOfMessages, uint32_t numberOfTotalM
     {
         m_notifier->onProgress(numberOfMessages, numberOfTotalMessages);
     }
+}
+
+bool Exporter::filterITunesFile(const char *file, int flags) const
+{
+    const char *str = std::strchr(file, '/');
+    if (str != NULL)
+    {
+        str = std::strchr(str + 1, '/');
+        if (str != NULL)
+        {
+        if (std::strncmp(str, "/Audio/", 7) == 0 ||
+            std::strncmp(str, "/Img/", 5) == 0 ||
+            std::strncmp(str, "/OpenData/", 10) == 0 ||
+            std::strncmp(str, "/Video/", 7) == 0)
+        {
+            return false;
+        }
+        }
+    }
+    
+    return true;
 }
