@@ -143,6 +143,11 @@ public:
     ITunesDb(const std::string& rootPath, const std::string& manifestFileName);
     ~ITunesDb();
     
+    void setLoadingFilter(std::function<bool(const char *, int flags)> loadingFilter)
+    {
+        m_loadingFilter = std::move(loadingFilter);
+    }
+    
     bool load();
     bool load(const std::string& domain);
     bool load(const std::string& domain, bool onlyFile);
@@ -165,6 +170,7 @@ protected:
     mutable std::vector<ITunesFile *> m_files;
     std::string m_rootPath;
     std::string m_manifestFileName;
+    std::function<bool(const char *, int flags)> m_loadingFilter;
 };
 
 template<class TFilter>
