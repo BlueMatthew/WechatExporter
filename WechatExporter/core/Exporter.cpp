@@ -635,10 +635,10 @@ void Exporter::notifyComplete(bool cancelled/* = false*/)
     }
 }
 
-void Exporter::notifyProgress(double progress)
+void Exporter::notifyProgress(uint32_t numberOfMessages, uint32_t numberOfTotalMessages)
 {
     if (m_notifier)
     {
-        m_notifier->onProgress(progress);
+        m_notifier->onProgress(numberOfMessages, numberOfTotalMessages);
     }
 }

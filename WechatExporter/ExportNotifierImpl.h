@@ -33,7 +33,7 @@ public:
         });
     }
     
-	void onProgress(double progress) const
+	void onProgress(uint32_t numberOfMessages, uint32_t numberOfTotalMessages) const
 	{
 	}
 	
