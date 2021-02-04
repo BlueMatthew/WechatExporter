@@ -505,7 +505,7 @@ bool Exporter::fillSession(Session& session, const Friends& friends) const
     if (session.isDisplayNameEmpty())
     {
         const Friend* f = friends.getFriend(session.getHash());
-        if (NULL != f)
+        if (NULL != f && !f->isDisplayNameEmpty())
         {
             session.setDisplayName(f->getDisplayName());
         }
@@ -538,7 +538,7 @@ bool Exporter::loadITunes(bool detailedInfo/* = true*/)
         std::function<bool(const char*, int)> fn = std::bind(&Exporter::filterITunesFile, this, std::placeholders::_1, std::placeholders::_2);
         m_iTunesDb->setLoadingFilter(fn);
     }
-    if (!m_iTunesDb->load("AppDomain-com.tencent.xin"))
+    if (!m_iTunesDb->load("AppDomain-com.tencent.xin", !detailedInfo))
     {
         return false;
     }

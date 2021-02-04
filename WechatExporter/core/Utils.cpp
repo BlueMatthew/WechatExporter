@@ -82,8 +82,12 @@ std::vector<std::string> split(const std::string& str, const std::string& delimi
 
 std::string join(const std::vector<std::string>& elements, const char *const delimiter)
 {
+    return join(std::cbegin(elements), std::cend(elements), delimiter);
+}
+
+std::string join(std::vector<std::string>::const_iterator b, std::vector<std::string>::const_iterator e, const char *const delimiter)
+{
     std::ostringstream os;
-    auto b = begin(elements), e = end(elements);
     if (b != e)
     {
         auto pe = prev(e);
