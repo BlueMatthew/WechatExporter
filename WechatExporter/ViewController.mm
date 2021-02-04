@@ -114,6 +114,8 @@ void errorLogCallback(void *pArg, int iErrCode, const char *zMsg)
     [self.btnExport setTarget:nil];
     [self.btnCancel setAction:nil];
     [self.btnCancel setTarget:nil];
+    [self.btnQuit setAction:nil];
+    [self.btnQuit setTarget:nil];
     [self.chkboxDesc setAction:nil];
     [self.chkboxDesc setTarget:nil];
     [self.chkboxNoAudio setAction:nil];
@@ -149,6 +151,8 @@ void errorLogCallback(void *pArg, int iErrCode, const char *zMsg)
     [self.btnExport setAction:@selector(btnExportClicked:)];
     [self.btnCancel setTarget:self];
     [self.btnCancel setAction:@selector(btnCancelClicked:)];
+    [self.btnQuit setTarget:self];
+    [self.btnQuit setAction:@selector(btnQuitClicked:)];
     [self.chkboxDesc setTarget:self];
     [self.chkboxDesc setAction:@selector(btnDescClicked:)];
     [self.chkboxNoAudio setTarget:self];
@@ -239,6 +243,7 @@ void errorLogCallback(void *pArg, int iErrCode, const char *zMsg)
     
     self.progressBar.autoresizingMask = NSViewMaxYMargin;
     self.btnCancel.autoresizingMask = NSViewMinXMargin | NSViewMaxYMargin;
+    self.btnQuit.autoresizingMask = NSViewMinXMargin | NSViewMaxYMargin;
     self.btnExport.autoresizingMask = NSViewMinXMargin | NSViewMaxYMargin;
 };
 
@@ -503,6 +508,11 @@ void errorLogCallback(void *pArg, int iErrCode, const char *zMsg)
     [self.btnCancel setEnabled:NO];
 }
 
+- (void)btnQuitClicked:(id)sender
+{
+    [self.view.window.windowController close];
+}
+
 - (void)btnDescClicked:(id)sender
 {
     BOOL descOrder = (self.chkboxDesc.state == NSOnState);
@@ -605,6 +615,8 @@ void errorLogCallback(void *pArg, int iErrCode, const char *zMsg)
     [self.btnBackup setEnabled:NO];
     [self.btnExport setEnabled:NO];
     [self.btnCancel setEnabled:YES];
+    [self.btnCancel setHidden:NO];
+    [self.btnQuit setHidden:YES];
     [self.chkboxDesc setEnabled:NO];
     [self.chkboxNoAudio setEnabled:NO];
     [self.chkboxSaveFilesInSessionFolder setEnabled:NO];
@@ -615,7 +627,9 @@ void errorLogCallback(void *pArg, int iErrCode, const char *zMsg)
 {
     self.view.window.styleMask |= NSClosableWindowMask;
     [self.btnExport setEnabled:YES];
+    [self.btnQuit setHidden:NO];
     [self.btnCancel setEnabled:NO];
+    [self.btnCancel setHidden:YES];
     [self.popupBackup setEnabled:YES];
     [self.btnOutput setEnabled:YES];
     [self.btnBackup setEnabled:YES];
