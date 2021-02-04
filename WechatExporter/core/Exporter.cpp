@@ -131,6 +131,8 @@ bool Exporter::run()
 
 bool Exporter::loadUsersAndSessions(std::vector<std::pair<Friend, std::vector<Session>>>& usersAndSessions)
 {
+    loadStrings();
+    
     if (!loadITunes(false))
     {
         m_logger->write(formatString(getLocaleString("Failed to parse the backup data of iTunes in the directory: %s"), m_backup.c_str()));
@@ -142,7 +144,7 @@ bool Exporter::loadUsersAndSessions(std::vector<std::pair<Friend, std::vector<Se
     WechatInfoParser wechatInfoParser(m_iTunesDb);
     if (wechatInfoParser.parse(m_wechatInfo))
     {
-        m_logger->write(formatString(getLocaleString("Wechat Version: %s"), m_wechatInfo.getShortVersion().c_str()));
+        m_logger->write(formatString(getLocaleString("iTunes Version: %s, Wechat Version: %s"), m_iTunesDb->getVersion().c_str(), m_wechatInfo.getShortVersion().c_str()));
     }
     
     std::vector<Friend> users;
@@ -169,6 +171,11 @@ bool Exporter::runImpl()
     time_t startTime;
     std::time(&startTime);
     notifyStart();
+    
+    loadStrings();
+    loadTemplates();
+    
+    m_logger->write(formatString(getLocaleString("iTunes Backup: %s"), m_backup.c_str()));
 
     if (!loadITunes())
     {
@@ -177,14 +184,11 @@ bool Exporter::runImpl()
         return false;
     }
     m_logger->debug("ITunes Database loaded.");
-
-    loadStrings();
-    loadTemplates();
     
     WechatInfoParser wechatInfoParser(m_iTunesDb);
     if (wechatInfoParser.parse(m_wechatInfo))
     {
-        m_logger->write(formatString(getLocaleString("Wechat Version: %s"), m_wechatInfo.getShortVersion().c_str()));
+        m_logger->write(formatString(getLocaleString("iTunes Version: %s, Wechat Version: %s"), m_iTunesDb->getVersion().c_str(), m_wechatInfo.getShortVersion().c_str()));
     }
 
     m_logger->write(getLocaleString("Finding Wechat accounts..."));
@@ -659,13 +663,13 @@ bool Exporter::filterITunesFile(const char *file, int flags) const
         str = std::strchr(str + 1, '/');
         if (str != NULL)
         {
-        if (std::strncmp(str, "/Audio/", 7) == 0 ||
-            std::strncmp(str, "/Img/", 5) == 0 ||
-            std::strncmp(str, "/OpenData/", 10) == 0 ||
-            std::strncmp(str, "/Video/", 7) == 0)
-        {
-            return false;
-        }
+            if (std::strncmp(str, "/Audio/", 7) == 0 ||
+                std::strncmp(str, "/Img/", 5) == 0 ||
+                std::strncmp(str, "/OpenData/", 10) == 0 ||
+                std::strncmp(str, "/Video/", 7) == 0)
+            {
+                return false;
+            }
         }
     }
     

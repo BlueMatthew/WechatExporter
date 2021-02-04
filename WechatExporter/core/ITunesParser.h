@@ -143,6 +143,11 @@ public:
     ITunesDb(const std::string& rootPath, const std::string& manifestFileName);
     ~ITunesDb();
     
+    std::string getVersion() const
+    {
+        return m_version;
+    }
+    
     void setLoadingFilter(std::function<bool(const char *, int flags)> loadingFilter)
     {
         m_loadingFilter = std::move(loadingFilter);
@@ -170,6 +175,7 @@ protected:
     mutable std::vector<ITunesFile *> m_files;
     std::string m_rootPath;
     std::string m_manifestFileName;
+    std::string m_version;
     std::function<bool(const char *, int flags)> m_loadingFilter;
 };
 
@@ -216,10 +222,14 @@ public:
     bool parse(std::vector<BackupManifest>& manifets) const;
 	std::string getLastError() const;
 
+    friend ITunesDb;
+    
 protected:
     bool parseDirectory(const std::string& path, std::vector<BackupManifest>& manifests) const;
     bool parse(const std::string& backupPath, const std::string& backupId, BackupManifest& manifest) const;
 	bool isValidBackupId(const std::string& backupPath, const std::string& backupId) const;
+    
+    static bool parseInfoPlist(const std::string& backupIdPath, BackupManifest& manifest);
 };
 
 #endif /* ITunesParser_h */

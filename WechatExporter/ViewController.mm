@@ -320,12 +320,13 @@ void errorLogCallback(void *pArg, int iErrCode, const char *zMsg)
             return;
         }
 
-        // CWaitCursor waitCursor;
 #ifndef NDEBUG
         m_logger->write("Start loading users and sessions.");
 #endif
 
-        Exporter exp("", backup, "", m_shell, m_logger);
+        NSString *workDir = [[NSBundle mainBundle] resourcePath];
+
+        Exporter exp([workDir UTF8String], backup, "", m_shell, m_logger);
         exp.loadUsersAndSessions(m_usersAndSessions);
         
 #ifndef NDEBUG
@@ -483,9 +484,6 @@ void errorLogCallback(void *pArg, int iErrCode, const char *zMsg)
     BOOL descOrder = (self.chkboxDesc.state == NSOnState);
     BOOL ignoreAudio = (self.chkboxNoAudio.state == NSOnState);
     BOOL saveFilesInSessionFolder = (self.chkboxSaveFilesInSessionFolder.state == NSOnState);
-    
-    m_logger->write("iTunes Backup:" + manifest.getPath());
-    m_logger->write("iTunes Version:" + manifest.getITunesVersion());
     
     self.txtViewLogs.string = @"";
     [self onStart];

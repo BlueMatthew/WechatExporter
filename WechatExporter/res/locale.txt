@@ -63,7 +63,10 @@
 		"key": "[Contact Card] %s",
 		"value": "[名片] %s"
 	},
-	
+	{
+		"key": "iTunes: %s",
+		"value": "iTunes： %s"
+	},
 	
 	{
 		"key": "Failed to parse the backup data of iTunes in the directory: %s",
@@ -131,8 +134,12 @@
 		"value": "等待%d张图片下载。"
 	},
 	{
-		"key": "Wechat Version: %s",
-		"value": "微信版本：%s"
+		"key": "iTunes Version: %s, Wechat Version: %s",
+		"value": "iTunes版本: %s, 微信版本：%s"
+	},
+	{
+		"key": "iTunes Backup: %s",
+		"value": "iTunes备份目录: %s"
 	},
 	{
 		"key": "<< %s",
