@@ -277,6 +277,7 @@ void Downloader::cancel()
     std::queue<Task> empty;
 	std::queue<Task> empty2;
     m_mtx.lock();
+    m_downloadTaskSize -= m_queue.size();
     m_queue.swap(empty);
 	m_copyQueue.swap(empty2);
     m_mtx.unlock();
