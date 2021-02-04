@@ -13,6 +13,8 @@
 @property (weak) IBOutlet NSTextField *lblITunes;
 @property (weak) IBOutlet NSButton *btnExport;
 @property (weak) IBOutlet NSButton *btnCancel;
+@property (weak) IBOutlet NSButton *btnQuit;
+
 @property (weak) IBOutlet NSTextField *txtboxOutput;
 @property (weak) IBOutlet NSPopUpButton *popupBackup;
 @property (weak) IBOutlet NSPopUpButton *popupUsers;
