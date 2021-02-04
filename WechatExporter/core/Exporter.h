@@ -92,7 +92,7 @@ protected:
     
     void notifyStart();
     void notifyComplete(bool cancelled = false);
-    void notifyProgress(double progress);
+    void notifyProgress(uint32_t numberOfMessages, uint32_t numberOfTotalMessages);
     bool buildFileNameForUser(Friend& user, std::set<std::string>& existingFileNames);
     std::string buildContentFromTemplateValues(const TemplateValues& values) const;
 };
