@@ -138,6 +138,23 @@ void errorLogCallback(void *pArg, int iErrCode, const char *zMsg)
 
     [self.view.window center];
     
+    self.popupBackup.autoresizingMask = NSViewMinYMargin | NSViewWidthSizable;
+    self.btnBackup.autoresizingMask = NSViewMinXMargin | NSViewMinYMargin;
+    
+    self.txtboxOutput.autoresizingMask = NSViewMinYMargin | NSViewWidthSizable;
+    self.btnOutput.autoresizingMask = NSViewMinXMargin | NSViewMinYMargin;
+    
+    self.popupUsers.autoresizingMask = NSViewMinYMargin;
+    self.tblSessions.autoresizingMask = NSViewWidthSizable | NSViewHeightSizable;
+    self.sclSessions.autoresizingMask = NSViewHeightSizable;
+    
+    self.sclViewLogs.autoresizingMask = NSViewWidthSizable | NSViewHeightSizable;
+    
+    self.progressBar.autoresizingMask = NSViewMaxYMargin;
+    self.btnCancel.autoresizingMask = NSViewMinXMargin | NSViewMaxYMargin;
+    self.btnQuit.autoresizingMask = NSViewMinXMargin | NSViewMaxYMargin;
+    self.btnExport.autoresizingMask = NSViewMinXMargin | NSViewMaxYMargin;
+    
     m_shell = new ShellImpl();
     m_logger = new LoggerImpl(self);
     m_notifier = new ExportNotifierImpl(self);
@@ -188,8 +205,6 @@ void errorLogCallback(void *pArg, int iErrCode, const char *zMsg)
     BOOL ignoreAudio = [[NSUserDefaults standardUserDefaults] boolForKey:@"IgnoreAudio"];
     self.chkboxNoAudio.state = ignoreAudio ? NSOnState : NSOffState;
 
-    NSFileManager *fileManager = [NSFileManager defaultManager];
-    
     NSString *outputDir = [[NSUserDefaults standardUserDefaults] objectForKey:@"OutputDir"];
     if (nil == outputDir || [outputDir isEqualToString:@""])
     {
@@ -208,9 +223,9 @@ void errorLogCallback(void *pArg, int iErrCode, const char *zMsg)
         
         outputDir = [NSString pathWithComponents:components];
     }
-    
     self.txtboxOutput.stringValue = outputDir;
     
+    NSFileManager *fileManager = [NSFileManager defaultManager];
     NSURL *appSupport = [fileManager URLForDirectory:NSApplicationSupportDirectory inDomain:NSUserDomainMask appropriateForURL:nil create:NO error:nil];
     
     NSArray *components = @[[appSupport path], @"MobileSync", @"Backup"];
@@ -228,24 +243,7 @@ void errorLogCallback(void *pArg, int iErrCode, const char *zMsg)
             [self updateBackups:manifests withPreviousPath:previoudBackupDir];
         }
     }
-    
-    self.popupBackup.autoresizingMask = NSViewMinYMargin | NSViewWidthSizable;
-    self.btnBackup.autoresizingMask = NSViewMinXMargin | NSViewMinYMargin;
-    
-    self.txtboxOutput.autoresizingMask = NSViewMinYMargin | NSViewWidthSizable;
-    self.btnOutput.autoresizingMask = NSViewMinXMargin | NSViewMinYMargin;
-    
-    self.popupUsers.autoresizingMask = NSViewMinYMargin;
-    self.tblSessions.autoresizingMask = NSViewWidthSizable | NSViewHeightSizable;
-    self.sclSessions.autoresizingMask = NSViewHeightSizable;
-    
-    self.sclViewLogs.autoresizingMask = NSViewWidthSizable | NSViewHeightSizable;
-    
-    self.progressBar.autoresizingMask = NSViewMaxYMargin;
-    self.btnCancel.autoresizingMask = NSViewMinXMargin | NSViewMaxYMargin;
-    self.btnQuit.autoresizingMask = NSViewMinXMargin | NSViewMaxYMargin;
-    self.btnExport.autoresizingMask = NSViewMinXMargin | NSViewMaxYMargin;
-};
+}
 
 - (void)updateBackups:(const std::vector<BackupManifest>&) manifests withPreviousPath:(NSString *)previousPath
 {
@@ -310,11 +308,6 @@ void errorLogCallback(void *pArg, int iErrCode, const char *zMsg)
         }
         
         const BackupManifest& manifest = m_manifests[self.popupBackup.indexOfSelectedItem];
-        std::string backup = manifest.getPath();
-#ifndef NDEBUG
-        NSString *backupPath = [NSString stringWithUTF8String:backup.c_str()];
-        [[NSUserDefaults standardUserDefaults] setObject:backupPath forKey:@"BackupDir"];
-#endif
             
         if (manifest.isEncrypted())
         {
@@ -324,22 +317,12 @@ void errorLogCallback(void *pArg, int iErrCode, const char *zMsg)
             [self msgBox:@"不支持加密的iTunes备份。"];
             return;
         }
-
-#ifndef NDEBUG
-        m_logger->write("Start loading users and sessions.");
-#endif
-
-        NSString *workDir = [[NSBundle mainBundle] resourcePath];
-
-        Exporter exp([workDir UTF8String], backup, "", m_shell, m_logger);
-        exp.loadUsersAndSessions(m_usersAndSessions);
         
+        NSString *backupPath = [NSString stringWithUTF8String:manifest.getPath().c_str()];
 #ifndef NDEBUG
-        m_logger->write("Data Loaded.");
+        [[NSUserDefaults standardUserDefaults] setObject:backupPath forKey:@"BackupDir"];
 #endif
-
-        [self loadUsers];
-
+        [self performSelector:@selector(loadDataForBackup:) withObject:backupPath afterDelay:0.016];
     }
     else if (popupButton == self.popupUsers)
     {
@@ -352,6 +335,24 @@ void errorLogCallback(void *pArg, int iErrCode, const char *zMsg)
         [m_dataSource loadData:&m_usersAndSessions withAllUsers:allUsers indexOfSelectedUser:indexOfSelectedItem];
         [self.tblSessions reloadData];
     }
+}
+
+- (void)loadDataForBackup:(NSString *)backupPath
+{
+#ifndef NDEBUG
+    m_logger->write("Start loading users and sessions.");
+#endif
+
+    NSString *workDir = [[NSBundle mainBundle] resourcePath];
+
+    Exporter exp([workDir UTF8String], [backupPath UTF8String], "", m_shell, m_logger);
+    exp.loadUsersAndSessions(m_usersAndSessions);
+    
+#ifndef NDEBUG
+    m_logger->write("Data Loaded.");
+#endif
+
+    [self loadUsers];
 }
 
 - (void)toggleAllSessions:(id)sender
