@@ -687,6 +687,7 @@ WechatInfoParser::WechatInfoParser(ITunesDb *iTunesDb) : m_iTunesDb(iTunesDb)
 
 bool WechatInfoParser::parse(WechatInfo& wechatInfo)
 {
+    wechatInfo.setOSVersion(m_iTunesDb->getIOSVersion());
     return parsePreferences(wechatInfo);
 }
 
