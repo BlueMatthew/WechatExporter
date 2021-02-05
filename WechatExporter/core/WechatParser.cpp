@@ -1616,7 +1616,7 @@ void SessionParser::parseImage(const std::string& sessionPath, const std::string
     if (hasImage)
     {
         templateValues.setName("image");
-        templateValues["%%IMGPATH%%"] = dest;
+        templateValues["%%IMGPATH%%"] = sessionAssertsPath + "/" + dest;
         templateValues["%%IMGTHUMBPATH%%"] = hasThumb ? (sessionAssertsPath + "/" + destThumb) : (sessionAssertsPath + "/" + dest);
     }
     else if (hasThumb)
