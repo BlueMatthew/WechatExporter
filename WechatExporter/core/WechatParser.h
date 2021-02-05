@@ -430,11 +430,12 @@ private:
     bool parseRow(MsgRecord& record, const std::string& userBase, const std::string& path, const Session& session, std::vector<TemplateValues>& tvs);
     bool parseForwardedMsgs(const std::string& userBase, const std::string& outputPath, const Session& session, const MsgRecord& record, const std::string& title, const std::string& message, std::vector<TemplateValues>& tvs);
     std::string buildContentFromTemplateValues(const TemplateValues& values) const;
-    void parseImage(const std::string& sessionPath, const std::string& src, const std::string& srcPre, const std::string& dest, const std::string& srcThumb, const std::string& destThumb, TemplateValues& templateValues);
-    void parseVideo(const std::string& sessionPath, const std::string& src, const std::string& dest, const std::string& srcThumb, const std::string& destThumb, TemplateValues& templateValues);
-    void parseFile(const std::string& sessionPath, const std::string& src, const std::string& dest, const std::string& fileName, TemplateValues& templateValues);
-    
+    void parseImage(const std::string& sessionPath, const std::string& sessionAssertsPath, const std::string& src, const std::string& srcPre, const std::string& dest, const std::string& srcThumb, const std::string& destThumb, TemplateValues& templateValues);
+    void parseVideo(const std::string& sessionPath, const std::string& sessionAssertsPath, const std::string& src, const std::string& dest, const std::string& srcThumb, const std::string& destThumb, TemplateValues& templateValues);
+    void parseFile(const std::string& sessionPath, const std::string& sessionAssertsPath, const std::string& src, const std::string& dest, const std::string& fileName, TemplateValues& templateValues);
     void parseCard(const std::string& sessionPath, const std::string& portraitDir, const std::string& cardMessage, TemplateValues& templateValues);
+    
+    void ensureDirectoryExisted(const std::string& path);
     
 };
 

@@ -1213,7 +1213,6 @@ bool SessionParser::parseRow(MsgRecord& record, const std::string& userBase, con
     
 	std::string msgIdStr = std::to_string(record.msgId);
     std::string assetsDir = combinePath(outputPath, session.getOutputFileName() + "_files");
-	m_shell.makeDirectory(assetsDir);
     
     templateValues["%%MSGID%%"] = std::to_string(record.msgId);
 	templateValues["%%NAME%%"] = "";
@@ -1277,8 +1276,10 @@ bool SessionParser::parseRow(MsgRecord& record, const std::string& userBase, con
         {
             m_pcmData.clear();
             std::string mp3Path = combinePath(assetsDir, msgIdStr + ".mp3");
-            
+
             silkToPcm(audioSrc, m_pcmData);
+            
+            ensureDirectoryExisted(assetsDir);
             pcmToMp3(m_pcmData, mp3Path);
             if (audioSrcFile != NULL)
             {
@@ -1331,6 +1332,7 @@ bool SessionParser::parseRow(MsgRecord& record, const std::string& userBase, con
             
             std::string emojiPath = ((m_options & SPO_ICON_IN_SESSION) == SPO_ICON_IN_SESSION) ? session.getOutputFileName() + "_files/Emoji/" : "Emoji/";
             localfile = emojiPath + localfile + ".gif";
+            ensureDirectoryExisted(outputPath);
             m_downloader.addTask(url, combinePath(outputPath, localfile), record.createTime);
             templateValues.setName("emoji");
             templateValues["%%EMOJIPATH%%"] = localfile;
@@ -1352,7 +1354,7 @@ bool SessionParser::parseRow(MsgRecord& record, const std::string& userBase, con
         }
         
         std::string vfile = combinePath(userBase, "Video", session.getHash(), msgIdStr);
-        parseVideo(outputPath, vfile + ".mp4", session.getOutputFileName() + "_files/" + msgIdStr + ".mp4", vfile + ".video_thum", session.getOutputFileName() + "_files/" + msgIdStr + "_thum.jpg", templateValues);
+        parseVideo(outputPath, session.getOutputFileName() + "_files", vfile + ".mp4", msgIdStr + ".mp4", vfile + ".video_thum", msgIdStr + "_thum.jpg", templateValues);
     }
     else if (record.type == 50)
     {
@@ -1373,7 +1375,7 @@ bool SessionParser::parseRow(MsgRecord& record, const std::string& userBase, con
     else if (record.type == 3)
     {
 		std::string vfile = combinePath(userBase, "Img", session.getHash(), msgIdStr);
-        parseImage(outputPath, vfile + ".pic", "", session.getOutputFileName() + "_files/" + msgIdStr + ".jpg", vfile + ".pic_thum", session.getOutputFileName() + "_files/" + msgIdStr + "_thumb.jpg", templateValues);
+        parseImage(outputPath, session.getOutputFileName() + "_files", vfile + ".pic", "", msgIdStr + ".jpg", vfile + ".pic_thum", msgIdStr + "_thumb.jpg", templateValues);
     }
     else if (record.type == 48)
     {
@@ -1412,7 +1414,7 @@ bool SessionParser::parseRow(MsgRecord& record, const std::string& userBase, con
                 }
                 
                 std::string attachOutputFileName = msgIdStr + "_" + nodes["title"];
-                parseFile(outputPath, attachFileName, session.getOutputFileName() + "_files/" + attachOutputFileName, nodes["title"], templateValues);
+                parseFile(outputPath, session.getOutputFileName() + "_files", attachFileName, attachOutputFileName, nodes["title"], templateValues);
             }
             else if (appMsgType == "19")    // Forwarded Msgs
             {
@@ -1542,6 +1544,7 @@ bool SessionParser::parseRow(MsgRecord& record, const std::string& userBase, con
     {
         if (!remotePortrait.empty() && !localPortrait.empty())
         {
+            
             m_downloader.addTask(remotePortrait, combinePath(outputPath, localPortrait), record.createTime);
         }
     }
@@ -1560,27 +1563,29 @@ bool SessionParser::parseRow(MsgRecord& record, const std::string& userBase, con
     return true;
 }
 
-void SessionParser::parseVideo(const std::string& sessionPath, const std::string& srcVideo, const std::string& destVideo, const std::string& srcThumb, const std::string& destThumb, TemplateValues& templateValues)
+void SessionParser::parseVideo(const std::string& sessionPath, const std::string& sessionAssertsPath, const std::string& srcVideo, const std::string& destVideo, const std::string& srcThumb, const std::string& destThumb, TemplateValues& templateValues)
 {
     bool hasThumb = false;
     bool hasVideo = false;
     
     if ((m_options & SPO_IGNORE_VIDEO) == 0)
     {
-        hasThumb = requireFile(srcThumb, combinePath(sessionPath, destThumb));
-        hasVideo = requireFile(srcVideo, combinePath(sessionPath, destVideo));
+        std::string fullAssertsPath = combinePath(sessionPath, sessionAssertsPath);
+        ensureDirectoryExisted(fullAssertsPath);
+        hasThumb = requireFile(srcThumb, combinePath(fullAssertsPath, destThumb));
+        hasVideo = requireFile(srcVideo, combinePath(fullAssertsPath, destVideo));
     }
 
     if (hasVideo)
     {
         templateValues.setName("video");
-        templateValues["%%THUMBPATH%%"] = hasThumb ? destThumb : "";
+        templateValues["%%THUMBPATH%%"] = hasThumb ? (sessionAssertsPath + "/" + destThumb) : "";
         templateValues["%%VIDEOPATH%%"] = destVideo;
     }
     else if (hasThumb)
     {
         templateValues.setName("thumb");
-        templateValues["%%IMGTHUMBPATH%%"] = destThumb;
+        templateValues["%%IMGTHUMBPATH%%"] = sessionAssertsPath + "/" + destThumb;
         templateValues["%%MESSAGE%%"] = getLocaleString("(Video Missed)");
     }
     else
@@ -1590,20 +1595,20 @@ void SessionParser::parseVideo(const std::string& sessionPath, const std::string
     }
 }
 
-void SessionParser::parseImage(const std::string& sessionPath, const std::string& src, const std::string& srcPre, const std::string& dest, const std::string& srcThumb, const std::string& destThumb, TemplateValues& templateValues)
+void SessionParser::parseImage(const std::string& sessionPath, const std::string& sessionAssertsPath, const std::string& src, const std::string& srcPre, const std::string& dest, const std::string& srcThumb, const std::string& destThumb, TemplateValues& templateValues)
 {
     bool hasThumb = false;
     bool hasImage = false;
     if ((m_options & SPO_IGNORE_VIDEO) == 0)
     {
-        hasThumb = requireFile(srcThumb, combinePath(sessionPath, destThumb));
+        hasThumb = requireFile(srcThumb, combinePath(sessionPath, sessionAssertsPath, destThumb));
         if (!srcPre.empty())
         {
-            hasImage = requireFile(srcPre, combinePath(sessionPath, dest));
+            hasImage = requireFile(srcPre, combinePath(sessionPath, sessionAssertsPath, dest));
         }
         if (!hasImage)
         {
-            hasImage = requireFile(src, combinePath(sessionPath, dest));
+            hasImage = requireFile(src, combinePath(sessionPath, sessionAssertsPath, dest));
         }
     }
 
@@ -1611,12 +1616,12 @@ void SessionParser::parseImage(const std::string& sessionPath, const std::string
     {
         templateValues.setName("image");
         templateValues["%%IMGPATH%%"] = dest;
-        templateValues["%%IMGTHUMBPATH%%"] = hasThumb ? destThumb : dest;
+        templateValues["%%IMGTHUMBPATH%%"] = hasThumb ? (sessionAssertsPath + "/" + destThumb) : (sessionAssertsPath + "/" + dest);
     }
     else if (hasThumb)
     {
         templateValues.setName("thumb");
-        templateValues["%%IMGTHUMBPATH%%"] = destThumb;
+        templateValues["%%IMGTHUMBPATH%%"] = sessionAssertsPath + "/" + destThumb;
         templateValues["%%MESSAGE%%"] = "";
     }
     else
@@ -1626,18 +1631,19 @@ void SessionParser::parseImage(const std::string& sessionPath, const std::string
     }
 }
 
-void SessionParser::parseFile(const std::string& sessionPath, const std::string& src, const std::string& dest, const std::string& fileName, TemplateValues& templateValues)
+void SessionParser::parseFile(const std::string& sessionPath, const std::string& sessionAssertsPath, const std::string& src, const std::string& dest, const std::string& fileName, TemplateValues& templateValues)
 {
     bool hasFile = false;
     if ((m_options & SPO_IGNORE_FILE) == 0)
     {
-        hasFile = requireFile(src, combinePath(sessionPath, dest));
+        
+        hasFile = requireFile(src, combinePath(sessionPath, sessionAssertsPath, dest));
     }
 
     if (hasFile)
     {
         templateValues.setName("plainshare");
-        templateValues["%%SHARINGURL%%"] = dest;
+        templateValues["%%SHARINGURL%%"] = sessionAssertsPath + "/" + dest;
         templateValues["%%SHARINGTITLE%%"] = fileName;
         templateValues["%%MESSAGE%%"] = "";
     }
@@ -1673,6 +1679,7 @@ void SessionParser::parseCard(const std::string& sessionPath, const std::string&
         {
             templateValues["%%CARDIMGPATH%%"] = portraitDir + "/" + attrs["username"] + ".jpg";
             std::string localfile = combinePath(portraitDir, attrs["username"] + ".jpg");
+            ensureDirectoryExisted(portraitDir);
             m_downloader.addTask(portraitUrl, combinePath(sessionPath, localfile), 0);
         }
         else
@@ -1794,10 +1801,7 @@ bool SessionParser::parseForwardedMsgs(const std::string& userBase, const std::s
     TemplateValues& beginTv = tvs.back();
     beginTv["%%MESSAGE%%"] = formatString(getLocaleString("<< %s"), title.c_str());
     beginTv["%%EXTRA_CLS%%"] = "fmsgtag";   // tag for forwarded msg
-    
-    std::string destDir = combinePath(outputPath, session.getOutputFileName() + "_files/", msgIdStr);
-    bool assertDirExisted = m_shell.existsDirectory(destDir);
-    
+
     if (xmlParser.parseWithHandler("/recordinfo/datalist/dataitem", handler))
     {
         for (std::vector<ForwardMsg>::const_iterator it = forwardedMsgs.begin(); it != forwardedMsgs.end(); ++it)
@@ -1821,13 +1825,9 @@ bool SessionParser::parseForwardedMsgs(const std::string& userBase, const std::s
             }
             else if (it->dataType == "2")
             {
-                if (!assertDirExisted)
-                {
-                    assertDirExisted = m_shell.makeDirectory(destDir);
-                }
                 std::string fileExtName = it->dataFormat.empty() ? "" : ("." + it->dataFormat);
                 std::string vfile = userBase + "/OpenData/" + session.getHash() + "/" + msgIdStr + "/" + it->dataId;
-                parseImage(outputPath, vfile + fileExtName, vfile + fileExtName + "_pre3", session.getOutputFileName() + "_files/" + msgIdStr + "/" + it->dataId + ".jpg", vfile + ".record_thumb", session.getOutputFileName() + "_files/" + msgIdStr + "/" + it->dataId + "_thumb.jpg", tv);
+                parseImage(outputPath, session.getOutputFileName() + "_files/" + msgIdStr, vfile + fileExtName, vfile + fileExtName + "_pre3", it->dataId + ".jpg", vfile + ".record_thumb", it->dataId + "_thumb.jpg", tv);
             }
             else if (it->dataType == "3")
             {
@@ -1835,21 +1835,13 @@ bool SessionParser::parseForwardedMsgs(const std::string& userBase, const std::s
             }
             else if (it->dataType == "4")
             {
-                if (!assertDirExisted)
-                {
-                    assertDirExisted = m_shell.makeDirectory(destDir);
-                }
                 std::string fileExtName = it->dataFormat.empty() ? "" : ("." + it->dataFormat);
                 std::string vfile = userBase + "/OpenData/" + session.getHash() + "/" + msgIdStr + "/" + it->dataId;
-                parseVideo(outputPath, vfile + fileExtName, session.getOutputFileName() + "_files/" + msgIdStr + "/" + it->dataId + fileExtName, vfile + ".record_thumb", session.getOutputFileName() + "_files/" + msgIdStr + "/" + it->dataId + "_thumb.jpg", tv);
+                parseVideo(outputPath, session.getOutputFileName() + "_files/" + msgIdStr, vfile + fileExtName, it->dataId + fileExtName, vfile + ".record_thumb", it->dataId + "_thumb.jpg", tv);
                 
             }
             else if (it->dataType == "5")
             {
-                if (!assertDirExisted)
-                {
-                    assertDirExisted = m_shell.makeDirectory(destDir);
-                }
                 std::string vfile = userBase + "/OpenData/" + session.getHash() + "/" + msgIdStr + "/" + it->dataId + ".record_thumb";
                 std::string dest = session.getOutputFileName() + "_files/" + msgIdStr + "/" + it->dataId + "_thumb.jpg";
                 bool hasThumb = false;
@@ -1890,13 +1882,9 @@ bool SessionParser::parseForwardedMsgs(const std::string& userBase, const std::s
             }
             else if (it->dataType == "8")
             {
-                if (!assertDirExisted)
-                {
-                    assertDirExisted = m_shell.makeDirectory(destDir);
-                }
                 std::string fileExtName = it->dataFormat.empty() ? "" : ("." + it->dataFormat);
                 std::string vfile = userBase + "/OpenData/" + session.getHash() + "/" + msgIdStr + "/" + it->dataId;
-                parseFile(outputPath, vfile + fileExtName, session.getOutputFileName() + "_files/" + msgIdStr + "/" + it->dataId + fileExtName, it->message, tv);
+                parseFile(outputPath, session.getOutputFileName() + "_files/" + msgIdStr, vfile + fileExtName, it->dataId + fileExtName, it->message, tv);
             }
             else if (it->dataType == "16")
             {
@@ -1993,4 +1981,12 @@ std::string SessionParser::getDisplayTime(int ms) const
 {
     if (ms < 1000) return "1\"";
     return std::to_string(std::round((double)ms)) + "\"";
+}
+
+void SessionParser::ensureDirectoryExisted(const std::string& path)
+{
+    if (m_shell.existsDirectory(path))
+    {
+        m_shell.makeDirectory(path);
+    }
 }
