@@ -297,7 +297,6 @@ bool LoginInfo2Parser::parseUserFromFolder(std::vector<Friend>& users)
     return true;
 }
 
-
 void MMSettings::clear()
 {
     m_usrName.clear();
@@ -305,7 +304,6 @@ void MMSettings::clear()
     m_portrait.clear();
     m_portraitHD.clear();
 }
-
 
 std::string MMSettings::getUsrName() const
 {
@@ -316,10 +314,12 @@ std::string MMSettings::getDisplayName() const
 {
     return m_displayName;
 }
+
 std::string MMSettings::getPortrait() const
 {
     return m_portrait;
 }
+
 std::string MMSettings::getPortraitHD() const
 {
     return m_portraitHD;
@@ -1249,25 +1249,24 @@ bool SessionParser::parseRow(MsgRecord& record, const std::string& userBase, con
     }
     else if (record.type == 34)
     {
-        int voicelen = -1;
-        std::string vlenstr;
-        XmlParser xmlParser(record.message);
-        if (xmlParser.parseAttributeValue("/msg/voicemsg", "voicelength", vlenstr) && !vlenstr.empty())
-        {
-            voicelen = std::stoi(vlenstr);
-        }
-
-        // static std::regex voiceLengthPattern("voicelength=\"(\\d+?)\"");
-        // std::smatch sm;
-        // if (std::regex_search(record.message, sm, voiceLengthPattern))
-        // {
-        //     voicelen = std::stoi(sm[1]);
-        // }
-        const ITunesFile* audioSrcFile = m_iTunesDb.findITunesFile(combinePath(userBase, "Audio", session.getHash(), msgIdStr + ".aud"));
         std::string audioSrc;
-        if (NULL != audioSrcFile)
+        int voicelen = -1;
+        const ITunesFile* audioSrcFile = NULL;
+        if ((m_options & SPO_IGNORE_AUDIO) == 0)
         {
-            audioSrc = m_iTunesDb.getRealPath(*audioSrcFile);
+            std::string vlenstr;
+            XmlParser xmlParser(record.message);
+            if (xmlParser.parseAttributeValue("/msg/voicemsg", "voicelength", vlenstr) && !vlenstr.empty())
+            {
+                voicelen = std::stoi(vlenstr);
+            }
+
+            // static std::regex voiceLengthPattern("voicelength=\"(\\d+?)\"");
+            audioSrcFile = m_iTunesDb.findITunesFile(combinePath(userBase, "Audio", session.getHash(), msgIdStr + ".aud"));
+            if (NULL != audioSrcFile)
+            {
+                audioSrc = m_iTunesDb.getRealPath(*audioSrcFile);
+            }
         }
         if (audioSrc.empty())
         {
@@ -1278,10 +1277,11 @@ bool SessionParser::parseRow(MsgRecord& record, const std::string& userBase, con
         {
             m_pcmData.clear();
             std::string mp3Path = combinePath(assetsDir, msgIdStr + ".mp3");
-            if ((m_options & SPO_IGNORE_AUDIO) == 0)
+            
+            silkToPcm(audioSrc, m_pcmData);
+            pcmToMp3(m_pcmData, mp3Path);
+            if (audioSrcFile != NULL)
             {
-                silkToPcm(audioSrc, m_pcmData);
-                pcmToMp3(m_pcmData, mp3Path);
                 updateFileTime(mp3Path, ITunesDb::parseModifiedTime(audioSrcFile->blob));
             }
 
@@ -1294,28 +1294,26 @@ bool SessionParser::parseRow(MsgRecord& record, const std::string& userBase, con
 		std::string url;
 
         // static std::regex pattern47_1("cdnurl ?= ?\"(.*?)\"");
-        // std::smatch sm;
-        // if (std::regex_search(record.message, sm, pattern47_1))
-        // {
-        //     url = sm[1].str();
-        // }
         // xml is quicker than regex
-        XmlParser xmlParser(record.message);
-        if (!xmlParser.parseAttributeValue("/msg/emoji", "cdnurl", url))
+        if ((m_options & SPO_IGNORE_EMOJI) == 0)
         {
-            url.clear();
-        }
-        else
-        {
-            if (!startsWith(url, "http") && startsWith(url, "https"))
+            XmlParser xmlParser(record.message);
+            if (!xmlParser.parseAttributeValue("/msg/emoji", "cdnurl", url))
             {
-                if (!xmlParser.parseAttributeValue("/msg/emoji", "thumburl", url))
+                url.clear();
+            }
+            else
+            {
+                if (!startsWith(url, "http") && startsWith(url, "https"))
                 {
-                    url.clear();
+                    if (!xmlParser.parseAttributeValue("/msg/emoji", "thumburl", url))
+                    {
+                        url.clear();
+                    }
                 }
             }
         }
-        
+
 		if (startsWith(url, "http") || startsWith(url, "https"))
         {
             std::string localfile = url;
@@ -1460,7 +1458,14 @@ bool SessionParser::parseRow(MsgRecord& record, const std::string& userBase, con
     }
     else
     {
-        templateValues["%%MESSAGE%%"] = safeHTML(record.message);
+        if ((m_options & SPO_IGNORE_HTML_ENC) == 0)
+        {
+            templateValues["%%MESSAGE%%"] = safeHTML(record.message);
+        }
+        else
+        {
+            templateValues["%%MESSAGE%%"] = record.message;
+        }
     }
     
     std::string portraitPath = ((m_options & SPO_ICON_IN_SESSION) == SPO_ICON_IN_SESSION) ? session.getOutputFileName() + "_files/Portrait/" : "Portrait/";
@@ -1533,9 +1538,18 @@ bool SessionParser::parseRow(MsgRecord& record, const std::string& userBase, con
         }
     }
 
-    if (!remotePortrait.empty() && !localPortrait.empty())
+    if ((m_options & SPO_IGNORE_AVATAR) == 0)
     {
-        m_downloader.addTask(remotePortrait, combinePath(outputPath, localPortrait), record.createTime);
+        if (!remotePortrait.empty() && !localPortrait.empty())
+        {
+            m_downloader.addTask(remotePortrait, combinePath(outputPath, localPortrait), record.createTime);
+        }
+    }
+    
+    if ((m_options & SPO_IGNORE_HTML_ENC) == 0)
+    {
+        templateValues["%%NAME%%"] = safeHTML(templateValues["%%NAME%%"]);
+        templateValues["%%MESSAGE%%"] = safeHTML(templateValues["%%MESSAGE%%"]);
     }
 
     if (!forwardedMsg.empty())
@@ -1548,8 +1562,14 @@ bool SessionParser::parseRow(MsgRecord& record, const std::string& userBase, con
 
 void SessionParser::parseVideo(const std::string& sessionPath, const std::string& srcVideo, const std::string& destVideo, const std::string& srcThumb, const std::string& destThumb, TemplateValues& templateValues)
 {
-    bool hasThumb = requireFile(srcThumb, combinePath(sessionPath, destThumb));
-    bool hasVideo = requireFile(srcVideo, combinePath(sessionPath, destVideo));
+    bool hasThumb = false;
+    bool hasVideo = false;
+    
+    if ((m_options & SPO_IGNORE_VIDEO) == 0)
+    {
+        hasThumb = requireFile(srcThumb, combinePath(sessionPath, destThumb));
+        hasVideo = requireFile(srcVideo, combinePath(sessionPath, destVideo));
+    }
 
     if (hasVideo)
     {
@@ -1572,15 +1592,19 @@ void SessionParser::parseVideo(const std::string& sessionPath, const std::string
 
 void SessionParser::parseImage(const std::string& sessionPath, const std::string& src, const std::string& srcPre, const std::string& dest, const std::string& srcThumb, const std::string& destThumb, TemplateValues& templateValues)
 {
-    bool hasThumb = requireFile(srcThumb, combinePath(sessionPath, destThumb));
+    bool hasThumb = false;
     bool hasImage = false;
-    if (!srcPre.empty())
+    if ((m_options & SPO_IGNORE_VIDEO) == 0)
     {
-        hasImage = requireFile(srcPre, combinePath(sessionPath, dest));
-    }
-    if (!hasImage)
-    {
-        hasImage = requireFile(src, combinePath(sessionPath, dest));
+        hasThumb = requireFile(srcThumb, combinePath(sessionPath, destThumb));
+        if (!srcPre.empty())
+        {
+            hasImage = requireFile(srcPre, combinePath(sessionPath, dest));
+        }
+        if (!hasImage)
+        {
+            hasImage = requireFile(src, combinePath(sessionPath, dest));
+        }
     }
 
     if (hasImage)
@@ -1604,7 +1628,11 @@ void SessionParser::parseImage(const std::string& sessionPath, const std::string
 
 void SessionParser::parseFile(const std::string& sessionPath, const std::string& src, const std::string& dest, const std::string& fileName, TemplateValues& templateValues)
 {
-    bool hasFile = requireFile(src, combinePath(sessionPath, dest));
+    bool hasFile = false;
+    if ((m_options & SPO_IGNORE_FILE) == 0)
+    {
+        hasFile = requireFile(src, combinePath(sessionPath, dest));
+    }
 
     if (hasFile)
     {
@@ -1624,9 +1652,16 @@ void SessionParser::parseCard(const std::string& sessionPath, const std::string&
 {
     // static std::regex pattern42_1("nickname ?= ?\"(.+?)\"");
     // static std::regex pattern42_2("smallheadimgurl ?= ?\"(.+?)\"");
-    
-    std::map<std::string, std::string> attrs = { {"nickname", ""}, {"smallheadimgurl", ""}, {"bigheadimgurl", ""}, {"username", ""} };
-    
+    std::map<std::string, std::string> attrs;
+    if ((m_options & SPO_IGNORE_SHARING) == 0)
+    {
+        attrs = { {"nickname", ""}, {"smallheadimgurl", ""}, {"bigheadimgurl", ""}, {"username", ""} };
+    }
+    else
+    {
+        attrs = { {"nickname", ""}, {"username", ""} };
+    }
+
     XmlParser xmlParser(cardMessage, true);
     if (xmlParser.parseAttributesValue("/msg", attrs) && !attrs["nickname"].empty())
     {
@@ -1817,9 +1852,13 @@ bool SessionParser::parseForwardedMsgs(const std::string& userBase, const std::s
                 }
                 std::string vfile = userBase + "/OpenData/" + session.getHash() + "/" + msgIdStr + "/" + it->dataId + ".record_thumb";
                 std::string dest = session.getOutputFileName() + "_files/" + msgIdStr + "/" + it->dataId + "_thumb.jpg";
-                bool hasThumb = requireFile(vfile, combinePath(outputPath, dest));
+                bool hasThumb = false;
+                if ((m_options & SPO_IGNORE_SHARING) == 0)
+                {
+                    hasThumb = requireFile(vfile, combinePath(outputPath, dest));
+                }
                 
-                if (!it->link.empty())
+                if (!(it->link.empty()))
                 {
                     tv.setName(hasThumb ? "share" : "plainshare");
 
@@ -1895,9 +1934,12 @@ bool SessionParser::parseForwardedMsgs(const std::string& userBase, const std::s
                 
                 tv["%%AVATAR%%"] = localPortrait;
                 
-                if (!remotePortrait.empty() && !localPortrait.empty())
+                if ((m_options & SPO_IGNORE_AVATAR) == 0)
                 {
-                    m_downloader.addTask(remotePortrait, combinePath(outputPath, localPortrait), record.createTime);
+                    if (!remotePortrait.empty() && !localPortrait.empty())
+                    {
+                        m_downloader.addTask(remotePortrait, combinePath(outputPath, localPortrait), record.createTime);
+                    }
                 }
             }
             

@@ -21,6 +21,7 @@ private:
 	CLogListBox				m_logListBox;
 	CSortListViewCtrl		m_sessionsListCtrl;
 
+	int					m_outputFormat;
 	ShellImpl			m_shell;
 	LoggerImpl*			m_logger;
 	ExportNotifierImpl* m_notifier;
@@ -33,6 +34,8 @@ private:
 
 public:
 	enum { IDD = IDD_WECHATEXPORTER_FORM };
+
+	enum { OUTPUT_FORMAT_HTML = 0, OUTPUT_FORMAT_TEXT, OUTPUT_FORMAT_LAST };
 
 	static const DWORD WM_START = ExportNotifierImpl::WM_START;
 	static const DWORD WM_COMPLETE = ExportNotifierImpl::WM_COMPLETE;
@@ -522,6 +525,7 @@ public:
 		// CButton btn = GetDlgItem(IDC_DESC_ORDER);
 		bool descOrder = GetDescOrder();
 		bool saveFilesInSessionFolder = GetSavingInSession();
+		UINT outputFormat = GetOutputFormat();
 
 		CListBox lstboxLogs = GetDlgItem(IDC_LOGS);
 		lstboxLogs.ResetContent();
@@ -557,6 +561,12 @@ public:
 		if (saveFilesInSessionFolder)
 		{
 			m_exporter->saveFilesInSessionFolder();
+		}
+		if (outputFormat == OUTPUT_FORMAT_TEXT)
+		{
+			m_exporter->ignoreAllMedias();
+			m_exporter->setExtName("txt");
+			m_exporter->setTemplatesName("templates_txt");
 		}
 		m_exporter->filterUsersAndSessions(usersAndSessions);
 		if (m_exporter->run())
@@ -853,6 +863,7 @@ public:
 		if (rk.Create(HKEY_CURRENT_USER, TEXT("Software\\WechatExporter"), REG_NONE, REG_OPTION_NON_VOLATILE, KEY_READ | KEY_WRITE) == ERROR_SUCCESS)
 		{
 			rk.SetDWORDValue(TEXT("DescOrder"), descOrder);
+			rk.Close();
 		}
 	}
 
@@ -869,13 +880,48 @@ public:
 		return descOrder;
 	}
 
+	UINT GetOutputFormat() const
+	{
+		UINT outputFormat = OUTPUT_FORMAT_HTML;
+		CRegKey rk;
+		if (rk.Open(HKEY_CURRENT_USER, TEXT("Software\\WechatExporter"), KEY_READ) == ERROR_SUCCESS)
+		{
+			DWORD dwValue = 0;
+			if (rk.QueryDWORDValue(TEXT("OutputFormat"), dwValue) == ERROR_SUCCESS)
+			{
+				if (dwValue >= OUTPUT_FORMAT_HTML && dwValue < OUTPUT_FORMAT_LAST)
+				{
+					outputFormat = dwValue;
+				}
+			}
+
+			rk.Close();
+		}
+
+		return outputFormat;
+	}
+
+	void SetOutputFormat(UINT outputFormat) const
+	{
+		if (outputFormat < OUTPUT_FORMAT_HTML || outputFormat >= OUTPUT_FORMAT_LAST)
+		{
+			outputFormat = OUTPUT_FORMAT_HTML;
+		}
+		CRegKey rk;
+		if (rk.Create(HKEY_CURRENT_USER, TEXT("Software\\WechatExporter"), REG_NONE, REG_OPTION_NON_VOLATILE, KEY_READ | KEY_WRITE) == ERROR_SUCCESS)
+		{
+			rk.SetDWORDValue(TEXT("OutputFormat"), outputFormat);
+			rk.Close();
+		}
+	}
+
 	void SetSavingInSession(BOOL savingInSession)
 	{
 		CRegKey rk;
 		if (rk.Create(HKEY_CURRENT_USER, TEXT("Software\\WechatExporter"), REG_NONE, REG_OPTION_NON_VOLATILE, KEY_READ | KEY_WRITE) == ERROR_SUCCESS)
 		{
-
 			rk.SetDWORDValue(TEXT("SaveFilesInSF"), savingInSession);
+			rk.Close();
 		}
 	}
 
