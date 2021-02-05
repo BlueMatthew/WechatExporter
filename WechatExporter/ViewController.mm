@@ -334,6 +334,7 @@ void errorLogCallback(void *pArg, int iErrCode, const char *zMsg)
             indexOfSelectedItem--;
         }
         [m_dataSource loadData:&m_usersAndSessions withAllUsers:allUsers indexOfSelectedUser:indexOfSelectedItem];
+        self.btnToggleAll.state = NSControlStateValueOn;
         [self.tblSessions reloadData];
     }
 }
