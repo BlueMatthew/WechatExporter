@@ -318,9 +318,18 @@ struct ForwardMsg
 
 enum SessionParsingOption
 {
-    SPO_IGNORE_AUDIO = 1,
-    SPO_DESC = 2,
-    SPO_ICON_IN_SESSION = 4     // Put Head Icon and Emoji files in the folder of session
+    SPO_IGNORE_AVATAR = 1 << 0,
+    SPO_IGNORE_AUDIO = 1 << 1,
+    SPO_IGNORE_IMAGE = 1 << 2,
+    SPO_IGNORE_VIDEO = 1 << 3,
+    SPO_IGNORE_EMOJI = 1 << 4,
+    SPO_IGNORE_FILE = 1 << 5,
+    SPO_IGNORE_CARD = 1 << 6,
+    SPO_IGNORE_SHARING = 1 << 7,
+    SPO_IGNORE_HTML_ENC = 1 << 8,
+    SPO_IGNORE_MEDIAS = 0xFFFF,
+    SPO_DESC = 1 << 16,
+    SPO_ICON_IN_SESSION = 1 << 17     // Put Head Icon and Emoji files in the folder of session
 };
 
 class TemplateValues
