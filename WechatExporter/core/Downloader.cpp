@@ -116,11 +116,6 @@ Downloader::Downloader(Logger* logger) : m_logger(logger)
     m_downloadTaskSize = 0;
     
     curl_global_init(CURL_GLOBAL_ALL);
-    
-    for (int idx = 0; idx < 4; idx++)
-    {
-        m_threads.push_back(std::thread(&Downloader::run, this, idx));
-    }
 }
 
 Downloader::~Downloader()
@@ -141,6 +136,16 @@ void Downloader::addTask(const std::string &url, const std::string& output, time
         int aa = 0;
     }
 #endif
+    m_mtx.lock();
+    if (m_threads.empty())
+    {
+        for (int idx = 0; idx < 4; idx++)
+        {
+            m_threads.push_back(std::thread(&Downloader::run, this, idx));
+        }
+    }
+    m_mtx.unlock();
+    
     std::string formatedPath = output;
     std::replace(formatedPath.begin(), formatedPath.end(), DIR_SEP_R, DIR_SEP);
     std::string uid = url + output;
