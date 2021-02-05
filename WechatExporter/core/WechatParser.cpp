@@ -1553,7 +1553,6 @@ bool SessionParser::parseRow(MsgRecord& record, const std::string& userBase, con
     if ((m_options & SPO_IGNORE_HTML_ENC) == 0)
     {
         templateValues["%%NAME%%"] = safeHTML(templateValues["%%NAME%%"]);
-        templateValues["%%MESSAGE%%"] = safeHTML(templateValues["%%MESSAGE%%"]);
     }
 
     if (!forwardedMsg.empty())
@@ -1581,7 +1580,7 @@ void SessionParser::parseVideo(const std::string& sessionPath, const std::string
     {
         templateValues.setName("video");
         templateValues["%%THUMBPATH%%"] = hasThumb ? (sessionAssertsPath + "/" + destThumb) : "";
-        templateValues["%%VIDEOPATH%%"] = destVideo;
+        templateValues["%%VIDEOPATH%%"] = sessionAssertsPath + "/" + destVideo;
     }
     else if (hasThumb)
     {
