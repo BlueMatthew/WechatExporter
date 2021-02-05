@@ -10,17 +10,68 @@
 #include <vector>
 #include <regex>
 #include <map>
+#include <algorithm>
+#include <cmath>
 #include "Utils.h"
 
 #ifndef WechatObjects_h
 #define WechatObjects_h
 
+// https://www.theiphonewiki.com/wiki/Kernel#iOS
+// Major * 10000 + Minor * 100 + Patch
+/*
+6.0     13.0.0
+7.0     14.0.0
+9.0     15.0.0
+9.3     15.4.0
+9.3.2   15.5.0
+9.3.3   15.6.0
+10.0    16.0.0
+10.1    16.1.0
+10.2    16.3.0
+10.3    16.5.0
+10.3.2  16.6.0
+10.3.3  16.7.0
+11.0    17.0.0
+11.1    17.2.0
+11.2    17.3.0
+11.2.5  17.4.0
+11.3    17.5.0
+11.4    17.6.0
+11.4.1  17.7.0
+12.0    18.0.0
+12.1    18.2.0
+12.2    18.5.0
+12.3    18.6.0
+12.4    18.7.0
+13.0    19.0.0
+13.3    19.2.0
+13.3.1  19.3.0
+13.4    19.4.0
+13.4.5  19.5.0
+13.5.5  19.6.0
+14.0    20.0.0
+14.2    20.1.0
+14.3    20.2.0
+14.4    20.3.0
+14.5    20.4.0
+*/
+
+// CFNetwork - Darwin
+// https://user-agents.net/applications/cfnetwork
+
 class WechatInfo
 {
 private:
     std::string m_version;
+    std::string m_osVersion;
     std::string m_shortVersion;
     std::string m_cellDataVersion;
+    
+    struct __less
+    {
+        bool operator()(const std::pair<int, std::string>& x, int y) const {return x.first < y;}
+    };
     
 public:
     void setVersion(std::string version)
@@ -33,6 +84,19 @@ public:
         {
             parts.erase(parts.begin() + 3, parts.end());
             m_shortVersion = join(parts, ".");
+        }
+    }
+    
+    void setOSVersion(const std::string& osVersion)
+    {
+        size_t pos = osVersion.find_first_not_of("0123456789.");
+        if (pos == std::string::npos)
+        {
+            m_osVersion = osVersion;
+        }
+        else
+        {
+            m_osVersion = osVersion.substr(0, pos);
         }
     }
     
@@ -57,8 +121,81 @@ public:
     
     std::string buildUserAgent() const
     {
-        if (m_version.empty()) return "WeChat/7.0.15.33 CFNetwork/978.0.7 Darwin/18.6.0"; // default
-        return "WeChat/" + m_version + " CFNetwork/978.0.7 Darwin/18.6.0";
+        std::vector<std::pair<int, std::string>> versionMapping = {
+            {0, "11.0.0 485.12.7"},
+            {60000, "13.0.0 609.1.4"},
+            {70000, "14.0.0 711.3.18"},
+            {90000, "15.0.0 758.2.8"},
+            {90300, "15.4.0 758.3.15"},
+            {90302, "15.5.0 758.4.3"},
+            {90303, "15.6.0 758.5.3"},
+            {100000, "16.0.0 808.0.2"},
+            {100100, "16.1.0 808.1.4"},
+            {100200, "16.3.0 808.3"},
+            {100300, "16.5.0 811.4.18"},
+            {100302, "16.6.0 811.5.4"},
+            {100303, "16.7.0 811.5.4"},
+            {110000, "17.0.0 887"},
+            {110100, "17.2.0 889.9"},
+            {110200, "17.3.0 893.14.2"},
+            {110205, "17.4.0 894"},
+            {110300, "17.5.0 897.15"},
+            {110400, "17.6.0 901.1"},
+            {110401, "17.7.0 902.2"},
+            {120000, "18.0.0 974.2.1"},
+            {120100, "18.2.0 975.0.3"},
+            {120200, "18.5.0 978.0.7"},
+            {120300, "18.6.0 978.0.7"},
+            {120400, "18.7.0 978.0.7"},
+            {130000, "19.0.0 1120"},
+            {130300, "19.2.0 1121.2.2"},
+            {130301, "19.3.0 1121.2.2"},
+            {130400, "19.4.0 978.0.7"},
+            {130405, "19.5.0 1126"},
+            {130505, "19.6.0 1128.0.1"},
+            {140000, "20.0.0 1197"},
+            {140200, "20.1.0 1206"},
+            {140300, "20.2.0 1209"},
+            {140400, "20.3.0 1220.1"},
+            {140500, "20.4.0 1220"},
+        };
+        
+        int osVersion = getOSVersionNumber();
+        std::vector<std::pair<int, std::string>>::iterator it = std::lower_bound(versionMapping.begin(), versionMapping.end(), osVersion, __less());
+        if (it == versionMapping.cend() || it->first != osVersion)
+        {
+            --it;
+        }
+        size_t pos = it->second.find(' ');
+        if (pos != std::string::npos)
+        {
+            std::string darwinVersion = it->second.substr(0, pos);
+            std::string cfVersion = it->second.substr(pos + 1);
+            return "WeChat/" + (m_version.empty() ? "7.0.15.33" : m_version) +
+                " CFNetwork/" + (cfVersion.empty() ? "978.0.7" : cfVersion) +
+                " Darwin/" + (darwinVersion.empty() ? "18.6.0" : darwinVersion);
+        }
+        
+        return "WeChat/7.0.15.33 CFNetwork/978.0.7 Darwin/18.6.0"; // default
+    }
+    
+protected:
+    int getOSVersionNumber() const
+    {
+        int versionNumber = 0;
+        
+        if (!m_osVersion.empty())
+        {
+            std::vector<std::string> parts = split(m_osVersion, ".");
+            for (int idx = 0; idx < std::min(3, static_cast<int>(parts.size())); ++idx)
+            {
+                if (!parts[idx].empty())
+                {
+                    versionNumber += std::pow(100, (2 - idx)) * std::stoi(parts[idx]);
+                }
+            }
+        }
+        return versionNumber;
     }
 };
 
