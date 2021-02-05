@@ -30,8 +30,8 @@
 @property (weak) IBOutlet NSScrollView *sclViewLogs;
 @property (unsafe_unretained) IBOutlet NSTextView *txtViewLogs;
 @property (weak) IBOutlet NSButton *chkboxDesc;
-@property (weak) IBOutlet NSButton *chkboxNoAudio;
 @property (weak) IBOutlet NSButton *chkboxSaveFilesInSessionFolder;
+@property (weak) IBOutlet NSButton *chkboxTextMode;
 
 
 - (void)writeLog:(NSString *)log;
