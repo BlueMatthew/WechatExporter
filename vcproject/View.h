@@ -45,7 +45,7 @@ public:
 	LRESULT OnInitDialog(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 	{
 		m_logListBox.SubclassWindow(GetDlgItem(IDC_LOGS));
-
+		// m_logListBox.SetTo
 		// m_cbmBoxBackups.SubclassWindow(GetDlgItem(IDC_BACKUP));
 		// m_cbmBoxUsers.SubclassWindow(GetDlgItem(IDC_USERS));
 
@@ -730,6 +730,12 @@ public:
 			CString text;
 			text.LoadString(IDS_ALL_USERS);
 			cbmBox.AddString(text);
+#ifndef NDEBUG
+
+			CString str;
+			str.Format(TEXT("%d users"), (int)m_usersAndSessions.size());
+			MsgBox(str);
+#endif
 		}
 		for (std::vector<std::pair<Friend, std::vector<Session>>>::const_iterator it = m_usersAndSessions.cbegin(); it != m_usersAndSessions.cend(); ++it)
 		{
