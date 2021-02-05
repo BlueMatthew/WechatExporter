@@ -362,9 +362,15 @@ bool Exporter::exportUser(Friend& user, std::string& userOutputPath)
     std::function<std::string(const std::string&)> localeFunction = std::bind(&Exporter::getLocaleString, this, std::placeholders::_1);
 
     Downloader downloader(m_logger);
+#ifndef NDEBUG
+    m_logger->debug("UA: " + m_wechatInfo.buildUserAgent());
+#endif
     downloader.setUserAgent(m_wechatInfo.buildUserAgent());
     if ((m_options & SPO_IGNORE_AVATAR) == 0)
     {
+#ifndef NDEBUG
+		m_logger->debug("Download avatar: *" + user.getPortrait() + "* => " + combinePath(outputBase, "Portrait", user.getLocalPortrait()));
+#endif
         downloader.addTask(user.getPortrait(), combinePath(outputBase, "Portrait", user.getLocalPortrait()), 0);
     }
     
