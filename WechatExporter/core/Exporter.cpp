@@ -43,6 +43,8 @@ Exporter::Exporter(const std::string& workDir, const std::string& backup, const 
     m_notifier = NULL;
     m_cancelled = false;
     m_options = 0;
+    m_extName = "html";
+    m_templatesName = "templates";
 }
 
 Exporter::~Exporter()
@@ -85,6 +87,14 @@ void Exporter::ignoreAudio(bool ignoreAudio/* = true*/)
         m_options &= ~SPO_IGNORE_AUDIO;
 }
 
+void Exporter::ignoreAllMedias(bool ignoreMedias/* = true*/)
+{
+    if (ignoreMedias)
+        m_options |= SPO_IGNORE_MEDIAS;
+    else
+        m_options &= ~SPO_IGNORE_MEDIAS;
+}
+
 void Exporter::setOrder(bool asc/* = true*/)
 {
     if (asc)
@@ -99,6 +109,16 @@ void Exporter::saveFilesInSessionFolder(bool flag/* = true*/)
         m_options |= SPO_ICON_IN_SESSION;
     else
         m_options &= ~SPO_ICON_IN_SESSION;
+}
+
+void Exporter::setExtName(const std::string& extName)
+{
+    m_extName = extName;
+}
+
+void Exporter::setTemplatesName(const std::string& templatesName)
+{
+    m_templatesName = templatesName;
 }
 
 void Exporter::filterUsersAndSessions(const std::map<std::string, std::set<std::string>>& usersAndSessions)
@@ -233,13 +253,21 @@ bool Exporter::runImpl()
         
         std::string userItem = getTemplate("listitem");
         userItem = replaceAll(userItem, "%%ITEMPICPATH%%", userOutputPath + "/Portrait/" + it->getLocalPortrait());
-        userItem = replaceAll(userItem, "%%ITEMLINK%%", encodeUrl(it->getOutputFileName()) + "/index.html");
-        userItem = replaceAll(userItem, "%%ITEMTEXT%%", safeHTML(it->getDisplayName()));
+        if ((m_options & SPO_IGNORE_HTML_ENC) == 0)
+        {
+            userItem = replaceAll(userItem, "%%ITEMLINK%%", encodeUrl(it->getOutputFileName()) + "/index." + m_extName);
+            userItem = replaceAll(userItem, "%%ITEMTEXT%%", safeHTML(it->getDisplayName()));
+        }
+        else
+        {
+            userItem = replaceAll(userItem, "%%ITEMLINK%%", it->getOutputFileName() + "/index." + m_extName);
+            userItem = replaceAll(userItem, "%%ITEMTEXT%%", it->getDisplayName());
+        }
         
         htmlBody += userItem;
     }
     
-    std::string fileName = combinePath(m_output, "index.html");
+    std::string fileName = combinePath(m_output, "index." + m_extName);
 
     std::string html = getTemplate("listframe");
     html = replaceAll(html, "%%USERNAME%%", "");
@@ -289,11 +317,14 @@ bool Exporter::exportUser(Friend& user, std::string& userOutputPath)
         }
     }
     
-    std::string portraitPath = combinePath(outputBase, "Portrait");
-    m_shell->makeDirectory(portraitPath);
-    std::string defaultPortrait = combinePath(portraitPath, "DefaultProfileHead@2x.png");
-    m_shell->copyFile(combinePath(m_workDir, "res", "DefaultProfileHead@2x.png"), defaultPortrait, true);
-    if ((m_options & SPO_ICON_IN_SESSION) == 0)
+    if ((m_options & SPO_IGNORE_AVATAR) == 0)
+    {
+        std::string portraitPath = combinePath(outputBase, "Portrait");
+        m_shell->makeDirectory(portraitPath);
+        std::string defaultPortrait = combinePath(portraitPath, "DefaultProfileHead@2x.png");
+        m_shell->copyFile(combinePath(m_workDir, "res", "DefaultProfileHead@2x.png"), defaultPortrait, true);
+    }
+    if ((m_options & SPO_ICON_IN_SESSION) == 0 && (m_options & SPO_IGNORE_EMOJI) == 0)
     {
         std::string emojiPath = combinePath(outputBase, "Emoji");
         m_shell->makeDirectory(emojiPath);
@@ -332,9 +363,12 @@ bool Exporter::exportUser(Friend& user, std::string& userOutputPath)
 
     Downloader downloader(m_logger);
     downloader.setUserAgent(m_wechatInfo.buildUserAgent());
+    if ((m_options & SPO_IGNORE_AVATAR) == 0)
+    {
+        downloader.addTask(user.getPortrait(), combinePath(outputBase, "Portrait", user.getLocalPortrait()), 0);
+    }
+    
     SessionParser sessionParser(*myself, friends, *m_iTunesDb, *m_shell, m_options, downloader, localeFunction);
-
-    downloader.addTask(user.getPortrait(), combinePath(outputBase, "Portrait", user.getLocalPortrait()), 0);
     std::set<std::string> sessionFileNames;
     for (std::vector<Session>::iterator it = sessions.begin(); it != sessions.end(); ++it)
     {
@@ -368,9 +402,12 @@ bool Exporter::exportUser(Friend& user, std::string& userOutputPath)
             m_logger->write(formatString(getLocaleString("Skip subscription: %s"), sessionDisplayName.c_str()));
             continue;
         }
-        if (!(it->isPortraitEmpty()))
+        if ((m_options & SPO_IGNORE_AVATAR) == 0)
         {
-            downloader.addTask(it->getPortrait(), combinePath(outputBase, "Portrait", it->getLocalPortrait()), 0);
+            if (!(it->isPortraitEmpty()))
+            {
+                downloader.addTask(it->getPortrait(), combinePath(outputBase, "Portrait", it->getLocalPortrait()), 0);
+            }
         }
         int count = exportSession(*myself, sessionParser, *it, userBase, outputBase);
         
@@ -380,8 +417,16 @@ bool Exporter::exportUser(Friend& user, std::string& userOutputPath)
         {
             std::string userItem = getTemplate("listitem");
             userItem = replaceAll(userItem, "%%ITEMPICPATH%%", "Portrait/" + it->getLocalPortrait());
-            userItem = replaceAll(userItem, "%%ITEMLINK%%", encodeUrl(it->getOutputFileName()) + ".html");
-            userItem = replaceAll(userItem, "%%ITEMTEXT%%", safeHTML(sessionDisplayName));
+            if ((m_options & SPO_IGNORE_HTML_ENC) == 0)
+            {
+                userItem = replaceAll(userItem, "%%ITEMLINK%%", encodeUrl(it->getOutputFileName()) + "." + m_extName);
+                userItem = replaceAll(userItem, "%%ITEMTEXT%%", safeHTML(sessionDisplayName));
+            }
+            else
+            {
+                userItem = replaceAll(userItem, "%%ITEMLINK%%", it->getOutputFileName() + "." + m_extName);
+                userItem = replaceAll(userItem, "%%ITEMTEXT%%", sessionDisplayName);
+            }
             
             userBody += userItem;
         }
@@ -391,7 +436,7 @@ bool Exporter::exportUser(Friend& user, std::string& userOutputPath)
     html = replaceAll(html, "%%USERNAME%%", " - " + user.getDisplayName());
     html = replaceAll(html, "%%TBODY%%", userBody);
     
-    std::string fileName = combinePath(outputBase, "index.html");
+    std::string fileName = combinePath(outputBase, "index." + m_extName);
     writeFile(fileName, html);
     
     if (m_cancelled)
@@ -444,27 +489,31 @@ int Exporter::exportSession(const Friend& user, SessionParser& sessionParser, co
     }
     
     std::string sessionBasePath = combinePath(outputBase, session.getOutputFileName() + "_files");
-    std::string portraitPath = combinePath(sessionBasePath, "Portrait");
-    m_shell->makeDirectory(portraitPath);
-    m_shell->makeDirectory(combinePath(sessionBasePath, "Emoji"));
+    if ((m_options & SPO_IGNORE_AVATAR) == 0)
+    {
+        std::string portraitPath = combinePath(sessionBasePath, "Portrait");
+        m_shell->makeDirectory(portraitPath);
+        std::string defaultPortrait = combinePath(portraitPath, "DefaultProfileHead@2x.png");
+        m_shell->copyFile(combinePath(m_workDir, "res", "DefaultProfileHead@2x.png"), defaultPortrait, true);
+    }
+    if ((m_options & SPO_IGNORE_EMOJI) == 0)
+    {
+        m_shell->makeDirectory(combinePath(sessionBasePath, "Emoji"));
+    }
 
-    std::string defaultPortrait = combinePath(portraitPath, "DefaultProfileHead@2x.png");
-    m_shell->copyFile(combinePath(m_workDir, "res", "DefaultProfileHead@2x.png"), defaultPortrait, true);
-    
     std::string contents;
     std::function<bool(const std::vector<TemplateValues>&)> handler = std::bind(&Exporter::exportMessage, this, std::cref(session), std::placeholders::_1, std::ref(contents));
     
     int count = sessionParser.parse(userBase, outputBase, session, handler);
     if (count > 0)
     {
-        std::string fileName = combinePath(outputBase, session.getOutputFileName() + ".html");
+        std::string fileName = combinePath(outputBase, session.getOutputFileName() + "." + m_extName);
 
         std::string html = getTemplate("frame");
         html = replaceAll(html, "%%DISPLAYNAME%%", session.getDisplayName());
         html = replaceAll(html, "%%BODY%%", contents);
         
         writeFile(fileName, html);
-        
     }
     
     return count;
@@ -559,7 +608,7 @@ bool Exporter::loadTemplates()
     for (int idx = 0; idx < sizeof(names) / sizeof(const char*); idx++)
     {
         std::string name = names[idx];
-        std::string path = combinePath(m_workDir, "res", "templates", name + ".html");
+        std::string path = combinePath(m_workDir, "res", m_templatesName, name + ".html");
         m_templates[name] = readFile(path);
     }
     return true;

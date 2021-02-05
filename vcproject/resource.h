@@ -36,20 +36,17 @@
 #define IDC_SESSIONS                    1014
 #define IDC_GRP_LOGS                    1015
 #define IDC_GRP_USR_CHAT                1016
-#define ID_FILE_32775                   32775
-#define ID_FILE_32776                   32776
-#define ID_FILE_DESC_ORDER              32777
-#define ID_FILE_SAVING_IN_SESSION       32778
-#define ID_FORMAT_HTML                  32782
-#define ID_FORMAT_JSON                  32783
-#define ID_FORMAT_TEXT                  32784
+#define ID_FILE_DESC_ORDER              32775
+#define ID_FILE_SAVING_IN_SESSION       32776
+#define ID_FORMAT_HTML                  32777
+#define ID_FORMAT_TEXT                  32778
 
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        204
-#define _APS_NEXT_COMMAND_VALUE         32785
+#define _APS_NEXT_COMMAND_VALUE         32779
 #define _APS_NEXT_CONTROL_VALUE         1017
 #define _APS_NEXT_SYMED_VALUE           101
 #endif

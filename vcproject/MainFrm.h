@@ -38,6 +38,7 @@ public:
 		COMMAND_ID_HANDLER(ID_APP_ABOUT, OnAppAbout)
 		COMMAND_ID_HANDLER(ID_FILE_SAVING_IN_SESSION, OnSavingInSession)
 		COMMAND_ID_HANDLER(ID_FILE_DESC_ORDER, OnDescOrder)
+		COMMAND_RANGE_HANDLER(ID_FORMAT_HTML, ID_FORMAT_TEXT, OnOutputFormat)
 		CHAIN_MSG_MAP(CUpdateUI<CMainFrame>)
 		CHAIN_MSG_MAP(CFrameWindowImpl<CMainFrame>)
 	END_MSG_MAP()
@@ -60,9 +61,13 @@ public:
 		pLoop->AddIdleHandler(this);
 
 		CMenuHandle menu = GetMenu();
-		CMenuHandle subMenu = menu.GetSubMenu(0);
-		subMenu.CheckMenuItem(ID_FILE_DESC_ORDER, m_view.GetDescOrder() ? MF_CHECKED : MF_UNCHECKED);
-		subMenu.CheckMenuItem(ID_FILE_SAVING_IN_SESSION, m_view.GetSavingInSession() ? MF_CHECKED : MF_UNCHECKED);
+		CMenuHandle subMenuFile = menu.GetSubMenu(0);
+		subMenuFile.CheckMenuItem(ID_FILE_DESC_ORDER, m_view.GetDescOrder() ? MF_CHECKED : MF_UNCHECKED);
+		subMenuFile.CheckMenuItem(ID_FILE_SAVING_IN_SESSION, m_view.GetSavingInSession() ? MF_CHECKED : MF_UNCHECKED);
+
+		CMenuHandle subMenuFormat = menu.GetSubMenu(1);
+		UINT outputFormat = m_view.GetOutputFormat();
+		subMenuFormat.CheckMenuRadioItem(ID_FORMAT_HTML, ID_FORMAT_TEXT, ID_FORMAT_HTML + outputFormat, MF_BYCOMMAND | MFT_RADIOCHECK);
 
 		return 0;
 	}
@@ -84,10 +89,14 @@ public:
 		BOOL enabled = m_view.IsUIEnabled();
 		
 		CMenuHandle menu = GetMenu();
-		CMenuHandle subMenu = menu.GetSubMenu(0);
-		subMenu.EnableMenuItem(ID_FILE_DESC_ORDER, enabled ? MF_ENABLED : MF_DISABLED);
-		subMenu.EnableMenuItem(ID_FILE_SAVING_IN_SESSION, enabled ? MF_ENABLED : MF_DISABLED);
+		CMenuHandle subMenuFile = menu.GetSubMenu(0);
+		subMenuFile.EnableMenuItem(ID_FILE_DESC_ORDER, enabled ? MF_ENABLED : MF_DISABLED);
+		subMenuFile.EnableMenuItem(ID_FILE_SAVING_IN_SESSION, enabled ? MF_ENABLED : MF_DISABLED);
 		
+		CMenuHandle subMenuFormat = menu.GetSubMenu(1);
+		subMenuFormat.EnableMenuItem(ID_FORMAT_HTML, enabled ? MF_ENABLED : MF_DISABLED);
+		subMenuFormat.EnableMenuItem(ID_FORMAT_TEXT, enabled ? MF_ENABLED : MF_DISABLED);
+
 		return 1;
 	}
 	
@@ -119,6 +128,16 @@ public:
 		subMenu.CheckMenuItem(ID_FILE_DESC_ORDER, MF_BYCOMMAND | (curDescOrder ? MF_UNCHECKED : MF_CHECKED));
 		m_view.SetDescOrder(!curDescOrder);
 		
+		return 0;
+	}
+
+	LRESULT OnOutputFormat(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& /*bHandled*/)
+	{
+		CMenuHandle menu = GetMenu();
+		CMenuHandle subMenuFormat = menu.GetSubMenu(1);
+		subMenuFormat.CheckMenuRadioItem(ID_FORMAT_HTML, ID_FORMAT_TEXT, wID, MF_BYCOMMAND | MF_BYCOMMAND);
+		m_view.SetOutputFormat(wID - ID_FORMAT_HTML);
+
 		return 0;
 	}
 

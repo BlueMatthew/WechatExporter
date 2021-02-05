@@ -52,6 +52,8 @@ protected:
     
     std::atomic<bool> m_cancelled;
     int m_options;
+    std::string m_extName;
+    std::string m_templatesName;
     
     std::map<std::string, std::set<std::string>> m_usersAndSessions;
     
@@ -70,8 +72,11 @@ public:
     
     void filterUsersAndSessions(const std::map<std::string, std::set<std::string>>& usersAndSessions);
     void ignoreAudio(bool ignoreAudio = true);
+    void ignoreAllMedias(bool ignoreMedias = true);
     void setOrder(bool asc = true);
     void saveFilesInSessionFolder(bool flags = true);
+    void setExtName(const std::string& extName);
+    void setTemplatesName(const std::string& templatesName);
 
 protected:
     bool runImpl();

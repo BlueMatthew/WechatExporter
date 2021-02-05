@@ -36,7 +36,6 @@ BEGIN
     POPUP "格式 (&O)"
     BEGIN
         MENUITEM "HTML",                        ID_FORMAT_HTML
-        MENUITEM "HTML+JSON",                   ID_FORMAT_JSON
         MENUITEM "文本",                          ID_FORMAT_TEXT
     END
     POPUP "帮助(&H)"
