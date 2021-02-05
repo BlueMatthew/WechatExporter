@@ -165,6 +165,7 @@ bool ITunesDb::load(const std::string& domain, bool onlyFile)
     if (ManifestParser::parseInfoPlist(m_rootPath, manifest))
     {
         m_version = manifest.getITunesVersion();
+        m_iOSVersion = manifest.getIOSVersion();
     }
         
     std::string dbPath = combinePath(m_rootPath, m_manifestFileName);
@@ -462,6 +463,21 @@ bool ManifestParser::parse(const std::string& backupPath, const std::string& bac
                 manifest.setEncrypted(val != 0);
             }
             
+            if (manifest.getIOSVersion().empty())
+            {
+                plist_t iOSVersionNode = plist_access_path(node, 2, "Lockdown", "ProductVersion");
+                if (NULL != iOSVersionNode)
+                {
+                    uint8_t val = 0;
+                    uint64_t length = 0;
+                    const char* ptr = plist_get_string_ptr(iOSVersionNode, &length);
+                    if (ptr != NULL && length > 0)
+                    {
+                        manifest.setIOSVersion(std::string(ptr));
+                    }
+                }
+            }
+            
             plist_free(node);
         }
     }
@@ -498,18 +514,10 @@ bool ManifestParser::parseInfoPlist(const std::string& backupIdPath, BackupManif
     const std::string ValueDeviceName = "Device Name";
     const std::string ValueITunesVersion = "iTunes Version";
     const std::string ValueMacOSVersion = "macOS Version";
+    const std::string ValueProductVersion = "Product Version";
     
-    std::vector<std::string> tags;
-    std::vector<std::string> keys;
-    
-    tags.push_back(NodePlist);
-    tags.push_back(NodeDict);
-    
-    keys.push_back(ValueLastBackupDate);
-    keys.push_back(ValueDisplayName);
-    keys.push_back(ValueDeviceName);
-    keys.push_back(ValueITunesVersion);
-    keys.push_back(ValueMacOSVersion);
+    std::vector<std::string> tags = {NodePlist, NodeDict};
+    std::vector<std::string> keys = {ValueLastBackupDate, ValueDisplayName, ValueDeviceName, ValueITunesVersion, ValueMacOSVersion, ValueProductVersion};
     
     PlistDictionary plistDict(tags, keys);
     int res = xmlSAXUserParseFile(&saxHander, &plistDict, fileName.c_str());
@@ -525,6 +533,7 @@ bool ManifestParser::parseInfoPlist(const std::string& backupIdPath, BackupManif
     manifest.setDisplayName(plistDict[ValueDisplayName]);
     manifest.setITunesVersion(plistDict[ValueITunesVersion]);
     manifest.setMacOSVersion(plistDict[ValueMacOSVersion]);    // Embeded iTunes
+    manifest.setIOSVersion(plistDict[ValueProductVersion]);    // Embeded iTunes
     std::string localDate = utcToLocal(plistDict[ValueLastBackupDate]);
     manifest.setBackupTime(localDate);
     

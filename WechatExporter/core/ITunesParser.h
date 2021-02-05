@@ -51,6 +51,7 @@ protected:
     std::string m_backupTime;
     std::string m_iTunesVersion;
     std::string m_macOSVersion;
+    std::string m_iOSVersion;
 	bool m_encrypted;
     
 public:
@@ -101,6 +102,16 @@ public:
         m_macOSVersion = macOSVersion;
     }
     
+    void setIOSVersion(const std::string& iOSVersion)
+    {
+        m_iOSVersion = iOSVersion;
+    }
+    
+    std::string getIOSVersion() const
+    {
+        return m_iOSVersion;
+    }
+    
     bool isITunesVersionEmpty() const
     {
         return m_iTunesVersion.empty();
@@ -148,6 +159,11 @@ public:
         return m_version;
     }
     
+    std::string getIOSVersion() const
+    {
+        return m_iOSVersion;
+    }
+    
     void setLoadingFilter(std::function<bool(const char *, int flags)> loadingFilter)
     {
         m_loadingFilter = std::move(loadingFilter);
@@ -176,6 +192,7 @@ protected:
     std::string m_rootPath;
     std::string m_manifestFileName;
     std::string m_version;
+    std::string m_iOSVersion;
     std::function<bool(const char *, int flags)> m_loadingFilter;
 };
 
