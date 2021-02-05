@@ -63,9 +63,6 @@
                                         <menuItem title="HTML" id="cWo-5k-XRR" userLabel="HTML">
                                             <modifierMask key="keyEquivalentModifierMask"/>
                                         </menuItem>
-                                        <menuItem title="HTML+JSON" hidden="YES" id="A2x-Ep-W1f" userLabel="JSON">
-                                            <modifierMask key="keyEquivalentModifierMask"/>
-                                        </menuItem>
                                         <menuItem title="Text" id="GeM-zb-UkW" userLabel="TEXT">
                                             <modifierMask key="keyEquivalentModifierMask"/>
                                         </menuItem>
@@ -202,14 +199,6 @@
                                     <font key="font" metaFont="system"/>
                                 </buttonCell>
                             </button>
-                            <button hidden="YES" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="RXT-cv-bA8">
-                                <rect key="frame" x="470" y="266" width="89" height="18"/>
-                                <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-                                <buttonCell key="cell" type="check" title="不导出语音" bezelStyle="regularSquare" imagePosition="left" inset="2" id="Sei-7H-cuW">
-                                    <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
-                                    <font key="font" metaFont="system"/>
-                                </buttonCell>
-                            </button>
                             <popUpButton verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="mwI-Gk-UmA">
                                 <rect key="frame" x="10" y="234" width="418" height="25"/>
                                 <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
@@ -222,7 +211,7 @@
                             <scrollView fixedFrame="YES" autohidesScrollers="YES" horizontalLineScroll="19" horizontalPageScroll="10" verticalLineScroll="19" verticalPageScroll="10" usesPredominantAxisScrolling="NO" translatesAutoresizingMaskIntoConstraints="NO" id="pql-rp-pLF">
                                 <rect key="frame" x="12" y="48" width="413" height="181"/>
                                 <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-                                <clipView key="contentView" copiesOnScroll="NO" id="zyz-bc-zu0">
+                                <clipView key="contentView" drawsBackground="NO" copiesOnScroll="NO" id="zyz-bc-zu0">
                                     <rect key="frame" x="1" y="0.0" width="411" height="180"/>
                                     <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                     <subviews>
@@ -441,6 +430,14 @@ Gw
                                     <font key="font" metaFont="system"/>
                                 </buttonCell>
                             </button>
+                            <button verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="Rsr-PR-Nqr" userLabel="Chkbox TextMode">
+                                <rect key="frame" x="484" y="266" width="89" height="18"/>
+                                <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                                <buttonCell key="cell" type="check" title="仅导出文本" bezelStyle="regularSquare" imagePosition="left" inset="2" id="Xrw-Jp-zhh">
+                                    <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
+                                    <font key="font" metaFont="system"/>
+                                </buttonCell>
+                            </button>
                         </subviews>
                     </view>
                     <connections>
@@ -451,8 +448,8 @@ Gw
                         <outlet property="btnQuit" destination="ZAV-Dz-fdD" id="Kfh-6w-xj4"/>
                         <outlet property="btnToggleAll" destination="yOo-KU-sM8" id="RX5-S3-gcr"/>
                         <outlet property="chkboxDesc" destination="pbK-5X-QkO" id="Pvr-1h-tch"/>
-                        <outlet property="chkboxNoAudio" destination="RXT-cv-bA8" id="14v-WF-9Bu"/>
                         <outlet property="chkboxSaveFilesInSessionFolder" destination="MHp-Fl-sSj" id="gqr-AA-VFP"/>
+                        <outlet property="chkboxTextMode" destination="Rsr-PR-Nqr" id="apS-ge-Ieg"/>
                         <outlet property="lblITunes" destination="Kpd-TD-eLh" id="uWI-3i-BEz"/>
                         <outlet property="popupBackup" destination="FYs-pu-LFe" id="Z34-x5-0Me"/>
                         <outlet property="popupSessions" destination="mwI-Gk-UmA" id="jSI-RQ-ib8"/>

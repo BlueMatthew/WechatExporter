@@ -118,8 +118,8 @@ void errorLogCallback(void *pArg, int iErrCode, const char *zMsg)
     [self.btnQuit setTarget:nil];
     [self.chkboxDesc setAction:nil];
     [self.chkboxDesc setTarget:nil];
-    [self.chkboxNoAudio setAction:nil];
-    [self.chkboxNoAudio setTarget:nil];
+    [self.chkboxTextMode setAction:nil];
+    [self.chkboxTextMode setTarget:nil];
     [self.popupBackup setAction:nil];
     [self.popupBackup setTarget:nil];
     [self.popupUsers setAction:nil];
@@ -131,13 +131,8 @@ void errorLogCallback(void *pArg, int iErrCode, const char *zMsg)
 - (void)viewDidLoad {
     [super viewDidLoad];
     
-#ifndef NDEBUG
-    self.chkboxNoAudio.hidden = NO;
-#endif
     sqlite3_config(SQLITE_CONFIG_LOG, errorLogCallback, NULL);
 
-    [self.view.window center];
-    
     self.popupBackup.autoresizingMask = NSViewMinYMargin | NSViewWidthSizable;
     self.btnBackup.autoresizingMask = NSViewMinXMargin | NSViewMinYMargin;
     
@@ -172,8 +167,8 @@ void errorLogCallback(void *pArg, int iErrCode, const char *zMsg)
     [self.btnQuit setAction:@selector(btnQuitClicked:)];
     [self.chkboxDesc setTarget:self];
     [self.chkboxDesc setAction:@selector(btnDescClicked:)];
-    [self.chkboxNoAudio setTarget:self];
-    [self.chkboxNoAudio setAction:@selector(btnIgnoreAudioClicked:)];
+    [self.chkboxTextMode setTarget:self];
+    [self.chkboxTextMode setAction:@selector(btnIgnoreAudioClicked:)];
     [self.popupBackup setTarget:self];
     [self.popupBackup setAction:@selector(handlePopupButton:)];
     [self.popupUsers setTarget:self];
@@ -202,8 +197,8 @@ void errorLogCallback(void *pArg, int iErrCode, const char *zMsg)
     BOOL descOrder = [[NSUserDefaults standardUserDefaults] boolForKey:@"Desc"];
     self.chkboxDesc.state = descOrder ? NSOnState : NSOffState;
     
-    BOOL ignoreAudio = [[NSUserDefaults standardUserDefaults] boolForKey:@"IgnoreAudio"];
-    self.chkboxNoAudio.state = ignoreAudio ? NSOnState : NSOffState;
+    BOOL textMode = [[NSUserDefaults standardUserDefaults] boolForKey:@"TextMode"];
+    self.chkboxTextMode.state = textMode ? NSOnState : NSOffState;
 
     NSString *outputDir = [[NSUserDefaults standardUserDefaults] objectForKey:@"OutputDir"];
     if (nil == outputDir || [outputDir isEqualToString:@""])
@@ -490,12 +485,12 @@ void errorLogCallback(void *pArg, int iErrCode, const char *zMsg)
     }
 
     BOOL descOrder = (self.chkboxDesc.state == NSOnState);
-    BOOL ignoreAudio = (self.chkboxNoAudio.state == NSOnState);
+    BOOL textMode = (self.chkboxTextMode.state == NSOnState);
     BOOL saveFilesInSessionFolder = (self.chkboxSaveFilesInSessionFolder.state == NSOnState);
     
     self.txtViewLogs.string = @"";
     [self onStart];
-    NSDictionary *dict = @{@"backup": backupPath, @"output": outputPath, @"descOrder": @(descOrder), @"ignoreAudio": @(ignoreAudio), @"saveFilesInSessionFolder": @(saveFilesInSessionFolder)};
+    NSDictionary *dict = @{@"backup": backupPath, @"output": outputPath, @"descOrder": @(descOrder), @"textMode": @(textMode), @"saveFilesInSessionFolder": @(saveFilesInSessionFolder)};
     [NSThread detachNewThreadSelector:@selector(run:) toTarget:self withObject:dict];
 }
 
@@ -524,8 +519,8 @@ void errorLogCallback(void *pArg, int iErrCode, const char *zMsg)
 
 - (void)btnIgnoreAudioClicked:(id)sender
 {
-    BOOL ignoreAudio = (self.chkboxNoAudio.state == NSOnState);
-    [[NSUserDefaults standardUserDefaults] setBool:ignoreAudio forKey:@"IgnoreAudio"];
+    BOOL textMode = (self.chkboxTextMode.state == NSOnState);
+    [[NSUserDefaults standardUserDefaults] setBool:textMode forKey:@"TextMode"];
 }
 
 - (void)run:(NSDictionary *)dict
@@ -540,7 +535,7 @@ void errorLogCallback(void *pArg, int iErrCode, const char *zMsg)
     }
     
     // NSString *iTunesVersion = [dict objectForKey:@"iTunesVersion"];
-    NSNumber *ignoreAudio = [dict objectForKey:@"ignoreAudio"];
+    NSNumber *textMode = [dict objectForKey:@"textMode"];
     NSNumber *descOrder = [dict objectForKey:@"descOrder"];
     NSNumber *saveFilesInSessionFolder = [dict objectForKey:@"saveFilesInSessionFolder"];
     
@@ -552,10 +547,6 @@ void errorLogCallback(void *pArg, int iErrCode, const char *zMsg)
     [m_dataSource getSelectedUserAndSessions:usersAndSessions];
     
     m_exporter = new Exporter([workDir UTF8String], [backup UTF8String], [output UTF8String], m_shell, m_logger);
-    if (nil != ignoreAudio && [ignoreAudio boolValue])
-    {
-        m_exporter->ignoreAudio();
-    }
     if (nil != descOrder && [descOrder boolValue])
     {
         m_exporter->setOrder(false);
@@ -565,6 +556,13 @@ void errorLogCallback(void *pArg, int iErrCode, const char *zMsg)
         m_exporter->saveFilesInSessionFolder();
     }
 
+    if (nil != textMode && textMode.boolValue)
+    {
+        m_exporter->ignoreAllMedias();
+        m_exporter->setExtName("txt");
+        m_exporter->setTemplatesName("templates_txt");
+    }
+    
     m_exporter->setNotifier(m_notifier);
     
     m_exporter->filterUsersAndSessions(usersAndSessions);
@@ -621,7 +619,7 @@ void errorLogCallback(void *pArg, int iErrCode, const char *zMsg)
     [self.btnCancel setHidden:NO];
     [self.btnQuit setHidden:YES];
     [self.chkboxDesc setEnabled:NO];
-    [self.chkboxNoAudio setEnabled:NO];
+    [self.chkboxTextMode setEnabled:NO];
     [self.chkboxSaveFilesInSessionFolder setEnabled:NO];
     [self.progressBar startAnimation:nil];
 }
@@ -637,7 +635,7 @@ void errorLogCallback(void *pArg, int iErrCode, const char *zMsg)
     [self.btnOutput setEnabled:YES];
     [self.btnBackup setEnabled:YES];
     [self.chkboxDesc setEnabled:YES];
-    [self.chkboxNoAudio setEnabled:YES];
+    [self.chkboxTextMode setEnabled:YES];
     [self.chkboxSaveFilesInSessionFolder setEnabled:YES];
     [self.progressBar stopAnimation:nil];
     
