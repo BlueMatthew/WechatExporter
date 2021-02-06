@@ -71,8 +71,7 @@ public:
     void waitForComplition();
     
     void filterUsersAndSessions(const std::map<std::string, std::set<std::string>>& usersAndSessions);
-    void ignoreAudio(bool ignoreAudio = true);
-    void ignoreAllMedias(bool ignoreMedias = true);
+    void setTextMode(bool textMode = true);
     void setOrder(bool asc = true);
     void saveFilesInSessionFolder(bool flags = true);
     void setExtName(const std::string& extName);
@@ -85,7 +84,7 @@ protected:
     bool loadUserFriendsAndSessions(const Friend& user, Friends& friends, std::vector<Session>& sessions, bool detailedInfo = true) const;
     int exportSession(const Friend& user, SessionParser& sessionParser, const Session& session, const std::string& userBase, const std::string& outputBase);
     
-    bool exportMessage(const Session& session, const std::vector<TemplateValues>& tvs, std::string& contents);
+    bool exportMessage(const Session& session, const std::vector<TemplateValues>& tvs, std::vector<std::string>& messages);
 
     bool fillSession(Session& session, const Friends& friends) const;
     void releaseITunes();

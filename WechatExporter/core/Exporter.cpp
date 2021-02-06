@@ -79,20 +79,12 @@ void Exporter::waitForComplition()
     m_thread.join();
 }
 
-void Exporter::ignoreAudio(bool ignoreAudio/* = true*/)
+void Exporter::setTextMode(bool textMode/* = true*/)
 {
-    if (ignoreAudio)
-        m_options |= SPO_IGNORE_AUDIO;
+    if (textMode)
+        m_options |=     SPO_TEXT_MODE;
     else
-        m_options &= ~SPO_IGNORE_AUDIO;
-}
-
-void Exporter::ignoreAllMedias(bool ignoreMedias/* = true*/)
-{
-    if (ignoreMedias)
-        m_options |= SPO_IGNORE_MEDIAS;
-    else
-        m_options &= ~SPO_IGNORE_MEDIAS;
+        m_options &= ~    SPO_TEXT_MODE;
 }
 
 void Exporter::setOrder(bool asc/* = true*/)
@@ -507,31 +499,59 @@ int Exporter::exportSession(const Friend& user, SessionParser& sessionParser, co
         m_shell->makeDirectory(combinePath(sessionBasePath, "Emoji"));
     }
 
-    std::string contents;
-    std::function<bool(const std::vector<TemplateValues>&)> handler = std::bind(&Exporter::exportMessage, this, std::cref(session), std::placeholders::_1, std::ref(contents));
+    std::vector<std::string> messages;
+        if (session.getRecordCount() > 0)
+        {
+            messages.reserve(session.getRecordCount());
+        }
+    std::function<bool(const std::vector<TemplateValues>&)> handler = std::bind(&Exporter::exportMessage, this, std::cref(session), std::placeholders::_1, std::ref(messages));
     
     int count = sessionParser.parse(userBase, outputBase, session, handler);
-    if (count > 0)
+    if (count > 0 && !messages.empty())
     {
+        const size_t pageSize = 1000;
+        
+        auto b = messages.cbegin();
+        // No page for text mode
+        auto e = (((m_options & SPO_TEXT_MODE) == SPO_TEXT_MODE) || messages.size() <= pageSize) ? messages.cend() : (b + pageSize);
+        std::string moreMsgs = ((m_options & SPO_TEXT_MODE) == SPO_TEXT_MODE) ? "" : "[]"; // [] = empty json array
+        if (e != messages.cend())
+        {
+            Json::Value jsonMsgs(Json::arrayValue);
+            for (auto it = e; it != messages.cend(); ++it)
+            {
+                jsonMsgs.append(*it);
+            }
+            
+            Json::FastWriter writer;
+            moreMsgs = writer.write(jsonMsgs);
+        }
+        
         std::string fileName = combinePath(outputBase, session.getOutputFileName() + "." + m_extName);
 
         std::string html = getTemplate("frame");
         html = replaceAll(html, "%%DISPLAYNAME%%", session.getDisplayName());
-        html = replaceAll(html, "%%BODY%%", contents);
+        // html = replaceAll(html, "%%PAGES%%", std::to_string(pages));
+        html = replaceAll(html, "%%BODY%%", join(b, e, ""));
+        html = replaceAll(html, "%%JSONDATA%%", moreMsgs);
         
         writeFile(fileName, html);
+        
+        
     }
     
     return count;
 }
 
-bool Exporter::exportMessage(const Session& session, const std::vector<TemplateValues>& tvs, std::string& contents)
+bool Exporter::exportMessage(const Session& session, const std::vector<TemplateValues>& tvs, std::vector<std::string>& messages)
 {
+    std::string content;
     for (std::vector<TemplateValues>::const_iterator it = tvs.cbegin(); it != tvs.cend(); ++it)
     {
-        contents.append(buildContentFromTemplateValues(*it));
+        content.append(buildContentFromTemplateValues(*it));
     }
     
+    messages.push_back(content);
     return m_cancelled;
 }
 

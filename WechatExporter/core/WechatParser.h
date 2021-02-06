@@ -327,7 +327,7 @@ enum SessionParsingOption
     SPO_IGNORE_CARD = 1 << 6,
     SPO_IGNORE_SHARING = 1 << 7,
     SPO_IGNORE_HTML_ENC = 1 << 8,
-    SPO_IGNORE_MEDIAS = 0xFFFF,
+    SPO_TEXT_MODE = 0xFFFF,
     SPO_DESC = 1 << 16,
     SPO_ICON_IN_SESSION = 1 << 17     // Put Head Icon and Emoji files in the folder of session
 };
