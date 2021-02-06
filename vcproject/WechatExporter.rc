@@ -140,8 +140,8 @@ END
 //
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION 1,7,10,1
- PRODUCTVERSION 1,7,10,1
+ FILEVERSION 1,7,11,1
+ PRODUCTVERSION 1,7,11,1
  FILEFLAGSMASK 0x3fL
 #ifdef _DEBUG
  FILEFLAGS 0x1L
@@ -157,12 +157,12 @@ BEGIN
         BLOCK "080404b0"
         BEGIN
             VALUE "FileDescription", "WechatExporter Module"
-            VALUE "FileVersion", "1.7.10.1"
+            VALUE "FileVersion", "1.7.11.1"
             VALUE "InternalName", "WechatExporter"
             VALUE "LegalCopyright", "Copyright 2020"
             VALUE "OriginalFilename", "WechatExporter.exe"
             VALUE "ProductName", "WechatExporter Module"
-            VALUE "ProductVersion", "1.7.10.1"
+            VALUE "ProductVersion", "1.7.11.1"
         END
     END
     BLOCK "VarFileInfo"
