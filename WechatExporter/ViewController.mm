@@ -558,7 +558,7 @@ void errorLogCallback(void *pArg, int iErrCode, const char *zMsg)
 
     if (nil != textMode && textMode.boolValue)
     {
-        m_exporter->ignoreAllMedias();
+        m_exporter->setTextMode();
         m_exporter->setExtName("txt");
         m_exporter->setTemplatesName("templates_txt");
     }
