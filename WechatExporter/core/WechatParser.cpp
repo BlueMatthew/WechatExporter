@@ -1636,7 +1636,6 @@ void SessionParser::parseFile(const std::string& sessionPath, const std::string&
     bool hasFile = false;
     if ((m_options & SPO_IGNORE_FILE) == 0)
     {
-        
         hasFile = requireFile(src, combinePath(sessionPath, sessionAssertsPath, dest));
     }
 

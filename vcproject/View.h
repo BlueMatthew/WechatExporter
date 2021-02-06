@@ -564,7 +564,7 @@ public:
 		}
 		if (outputFormat == OUTPUT_FORMAT_TEXT)
 		{
-			m_exporter->ignoreAllMedias();
+			m_exporter->setTextMode();
 			m_exporter->setExtName("txt");
 			m_exporter->setTemplatesName("templates_txt");
 		}
