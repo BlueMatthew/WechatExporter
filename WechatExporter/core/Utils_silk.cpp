@@ -11,6 +11,10 @@
 #include <silk/SKP_Silk_SDK_API.h>
 #include <silk/SKP_Silk_SigProc_FIX.h>
 
+#ifdef _WIN32
+#include <atlstr.h>
+#endif
+
 /* Define codec specific settings should be moved to h file */
 #define MAX_BYTES_PER_FRAME     1024
 #define MAX_INPUT_FRAMES        5
@@ -99,7 +103,13 @@ bool silkToPcm(const std::string& silkPath, std::vector<unsigned char>& pcmData)
     loss_prob = 0.0f;
 
     /* Open files */
+#ifdef _WIN32
+    CA2W pszW(silkPath.c_str(), CP_UTF8);
+    bitInFile = _wfopen((LPCWSTR)pszW, L"rb" );
+#else
     bitInFile = fopen(silkPath.c_str(), "rb" );
+#endif
+    
     std::unique_ptr<FILE, decltype(std::fclose) *> file(bitInFile, std::fclose);
     
     if( bitInFile == NULL ) {
