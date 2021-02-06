@@ -14,6 +14,9 @@
 #include <sys/stat.h>
 #include "OSDef.h"
 #include "Utils.h"
+#ifdef _WIN32
+#include <atlstr.h>
+#endif
 
 size_t writeData(void *buffer, size_t size, size_t nmemb, void *user_p)
 {
@@ -60,7 +63,13 @@ bool Task::downloadFile()
 	curl_easy_setopt(curl, CURLOPT_SSL_VERIFYHOST, 0);
 #ifndef NDEBUG
     std::string logPath = m_output + ".log";
+    
+#ifdef _WIN32
+    CA2W pszW(logPath.c_str(), CP_UTF8);
+    FILE* logFile = _wfopen((LPCWSTR)pszW, L"wb");
+#else
     FILE* logFile = fopen(logPath.c_str(), "wb");
+#endif
     curl_easy_setopt(curl, CURLOPT_VERBOSE, 1L);
     curl_easy_setopt(curl, CURLOPT_STDERR, logFile);
 #endif

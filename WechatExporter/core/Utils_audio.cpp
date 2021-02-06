@@ -12,6 +12,9 @@ extern "C"
 #include <lame/lame.h>
 }
 #include "Utils.h"
+#ifdef _WIN32
+#include <atlstr.h>
+#endif
 
 bool pcmToMp3(const std::string& pcmPath, const std::string& mp3Path)
 {
@@ -71,7 +74,15 @@ bool pcmToMp3(const std::vector<unsigned char>& pcmData, const std::string& mp3P
     unsigned char mp3_buffer[MP3_SIZE];
     int count = static_cast<int>((pcmData.size() + bytesOfPcmBuffer - 1) / bytesOfPcmBuffer);
     
+#ifdef _WIN32
+	CA2W pszW(mp3Path.c_str(), CP_UTF8);
+    // CW2A pszA(pszW);
+    FILE *mp3 = _wfopen((LPCWSTR)pszW, L"wb" );
+	// FILE *mp3 = fopen(mp3Path.c_str(), "wb,ccs=UTF-8");
+#else
     FILE *mp3 = fopen(mp3Path.c_str(), "wb");
+#endif
+    
     if(mp3 == NULL)
     {
         lame_close(gfp);
