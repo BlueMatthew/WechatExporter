@@ -232,6 +232,7 @@ xcopy "$(ProjectDir)..\WechatExporter\res"  "$(OutDir)res"  /Y /S /E</Command>
     <ClCompile Include="..\WechatExporter\core\Utils_xml.cpp" />
     <ClCompile Include="..\WechatExporter\core\WechatParser.cpp" />
     <ClCompile Include="..\WechatExporter\core\XmlParser.cpp" />
+    <ClCompile Include="AppConfiguration.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
@@ -258,6 +259,7 @@ xcopy "$(ProjectDir)..\WechatExporter\res"  "$(OutDir)res"  /Y /S /E</Command>
     <ClInclude Include="AboutDlg.h" />
     <ClInclude Include="ColoredControls.h" />
     <ClInclude Include="Core.h" />
+    <ClInclude Include="AppConfiguration.h" />
     <ClInclude Include="ExportNotifierImpl.h" />
     <ClInclude Include="ITunesDetector.h" />
     <ClInclude Include="LoggerImpl.h" />

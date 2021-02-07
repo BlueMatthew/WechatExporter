@@ -41,13 +41,14 @@
 #define ID_FILE_SAVING_IN_SESSION       32776
 #define ID_FORMAT_HTML                  32777
 #define ID_FORMAT_TEXT                  32778
+#define ID_ASYNC_LOADING                32779
 
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        204
-#define _APS_NEXT_COMMAND_VALUE         32779
+#define _APS_NEXT_COMMAND_VALUE         32780
 #define _APS_NEXT_CONTROL_VALUE         1017
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
