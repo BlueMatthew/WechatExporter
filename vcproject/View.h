@@ -454,6 +454,7 @@ public:
 		// CButton btn = GetDlgItem(IDC_DESC_ORDER);
 		bool descOrder = AppConfiguration::GetDescOrder();
 		bool saveFilesInSessionFolder = AppConfiguration::GetSavingInSession();
+		bool asyncLoading = AppConfiguration::GetAsyncLoading();
 		UINT outputFormat = AppConfiguration::GetOutputFormat();
 
 		CListBox lstboxLogs = GetDlgItem(IDC_LOGS);
@@ -487,6 +488,7 @@ public:
 		m_exporter = new Exporter((LPCSTR)resDir, backup, (LPCSTR)output, &m_shell, m_logger);
 		m_exporter->setNotifier(m_notifier);
 		m_exporter->setOrder(!descOrder);
+		m_exporter->setSyncLoading(!asyncLoading);
 		if (saveFilesInSessionFolder)
 		{
 			m_exporter->saveFilesInSessionFolder();

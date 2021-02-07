@@ -335,7 +335,8 @@ enum SessionParsingOption
     SPO_IGNORE_HTML_ENC = 1 << 8,
     SPO_TEXT_MODE = 0xFFFF,
     SPO_DESC = 1 << 16,
-    SPO_ICON_IN_SESSION = 1 << 17     // Put Head Icon and Emoji files in the folder of session
+    SPO_ICON_IN_SESSION = 1 << 17,     // Put Head Icon and Emoji files in the folder of session
+    SPO_SYNC_LOADING = 1 << 18
 };
 
 class TemplateValues
