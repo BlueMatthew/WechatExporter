@@ -134,8 +134,8 @@
 		"value": "等待%d张图片下载。"
 	},
 	{
-		"key": "iTunes Version: %s, Wechat Version: %s",
-		"value": "iTunes版本: %s, 微信版本：%s"
+		"key": "iTunes Version: %s, iOS Version: %s, Wechat Version: %s",
+		"value": "iTunes版本：%s, iOS版本：%s, 微信版本：%s"
 	},
 	{
 		"key": "iTunes Backup: %s",

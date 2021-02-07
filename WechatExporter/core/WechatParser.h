@@ -163,13 +163,19 @@ class LoginInfo2Parser
 {
 private:
     ITunesDb *m_iTunesDb;
+#ifndef NDEBUG
+    std::string m_error;
+#endif
     
 public:
     LoginInfo2Parser(ITunesDb *iTunesDb);
     
     bool parse(std::vector<Friend>& users);
-    
     bool parse(const std::string& loginInfo2Path, std::vector<Friend>& users);
+    
+#ifndef NDEBUG
+    std::string getError() const;
+#endif
     
 private:
     int parseUser(const char* data, int length, std::vector<Friend>& users);
