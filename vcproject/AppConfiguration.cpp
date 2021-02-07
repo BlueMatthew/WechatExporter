@@ -21,6 +21,18 @@ BOOL AppConfiguration::GetDescOrder()
 	return descOrder;
 }
 
+void AppConfiguration::SetAsyncLoading(BOOL asyncLoading)
+{
+	SetDwordProperty(TEXT("AsyncLoading"), asyncLoading);
+}
+
+BOOL AppConfiguration::GetAsyncLoading()
+{
+	DWORD value = 0;
+	GetDwordProperty(TEXT("AsyncLoading"), value);
+	return (value != 0) ? TRUE : FALSE;
+}
+
 UINT AppConfiguration::GetOutputFormat()
 {
 	UINT outputFormat = OUTPUT_FORMAT_HTML;
@@ -96,7 +108,7 @@ CString AppConfiguration::GetLastBackupDir()
 	return backupDir;
 }
 
-CString AppConfiguration::GetDefaultBackupDir()
+CString AppConfiguration::GetDefaultBackupDir(BOOL bCheckExistence/* = TRUE*/)
 {
 	CString backupDir;
 	TCHAR szPath[2][MAX_PATH] = { { 0 }, { 0 } };
@@ -119,6 +131,11 @@ CString AppConfiguration::GetDefaultBackupDir()
 		}
 	}
 
+	if (!bCheckExistence && backupDir.IsEmpty())
+	{
+		backupDir = szPath[0];
+	}
+
 	return backupDir;
 }
 
@@ -131,7 +148,7 @@ BOOL AppConfiguration::GetStringProperty(LPCTSTR name, CString& value)
 		HRESULT hr = rk.QueryStringValue(name, NULL, &chars);
 		if (SUCCEEDED(hr))
 		{
-			hr = rk.QueryStringValue(TEXT("BackupDir"), value.GetBufferSetLength(chars), &chars);
+			hr = rk.QueryStringValue(name, value.GetBufferSetLength(chars), &chars);
 			value.ReleaseBuffer();
 			return SUCCEEDED(hr);
 		}
