@@ -1,0 +1,32 @@
+  <script language="javascript">
+
+    function loadMoreMsgs()
+    {
+      if (window.moreWechatMsgs.length == 0)
+        {
+          return;
+        }
+      window.requestAnimationFrame(function() {
+        var fragment = document.createDocumentFragment();
+        var div = document.createElement('div');
+        fragment.appendChild(div);
+        var innerHtml = "";
+        for (var idx = 0; idx < Math.min(100, window.moreWechatMsgs.length); idx++)
+        {
+          innerHtml += window.moreWechatMsgs.shift();
+        }
+        div.innerHTML = innerHtml;
+        document.body.appendChild(fragment);
+
+        loadMoreMsgs();
+      });
+    }
+
+    addEventListener('load', function (e)
+    {
+      window.moreWechatMsgs = %%JSONDATA%%;
+      window.currentIndex = 0;
+      window.setTimeout(loadMoreMsgs, 1000);
+      // loadMoreMsgs();
+    }, false);
+  </script>
