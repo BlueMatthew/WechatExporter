@@ -563,8 +563,20 @@ bool Exporter::buildFileNameForUser(Friend& user, std::set<std::string>& existin
     for (int idx = 0; idx < 3; ++idx)
     {
         std::string outputFileName = m_shell->removeInvalidCharsForFileName(names[idx]);
-        if (isValidFileName(outputFileName) && existingFileNames.find(outputFileName) == existingFileNames.cend())
+        if (isValidFileName(outputFileName))
         {
+            if ( existingFileNames.find(outputFileName) != existingFileNames.cend())
+            {
+                int idx = 1;
+                while (idx++)
+                {
+                    if (existingFileNames.find(outputFileName + "_" + std::to_string(idx)) == existingFileNames.cend())
+                    {
+                        outputFileName += "_" + std::to_string(idx);
+                        break;
+                    }
+                }
+            }
             user.setOutputFileName(outputFileName);
             existingFileNames.insert(outputFileName);
             succeeded = true;
