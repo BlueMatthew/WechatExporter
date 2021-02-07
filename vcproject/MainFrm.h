@@ -94,15 +94,20 @@ public:
 		
 		CMenuHandle menu = GetMenu();
 		CMenuHandle subMenuFile = menu.GetSubMenu(0);
-		subMenuFile.EnableMenuItem(ID_FILE_DESC_ORDER, enabled ? MF_ENABLED : MF_DISABLED);
-		subMenuFile.EnableMenuItem(ID_FILE_SAVING_IN_SESSION, enabled ? MF_ENABLED : MF_DISABLED);
+		subMenuFile.EnableMenuItem(ID_FILE_DESC_ORDER, MF_BYCOMMAND | (enabled ? MF_ENABLED : MF_DISABLED));
+		subMenuFile.EnableMenuItem(ID_FILE_SAVING_IN_SESSION, MF_BYCOMMAND | (enabled ? MF_ENABLED : MF_DISABLED));
 		
 		CMenuHandle subMenuFormat = menu.GetSubMenu(1);
-		subMenuFormat.EnableMenuItem(ID_FORMAT_HTML, enabled ? MF_ENABLED : MF_DISABLED);
-		subMenuFormat.EnableMenuItem(ID_FORMAT_TEXT, enabled ? MF_ENABLED : MF_DISABLED);
+		subMenuFormat.EnableMenuItem(ID_FORMAT_HTML, MF_BYCOMMAND | (enabled ? MF_ENABLED : MF_DISABLED));
+		subMenuFormat.EnableMenuItem(ID_FORMAT_TEXT, MF_BYCOMMAND | (enabled ? MF_ENABLED : MF_DISABLED));
 
 		UINT outputFormat = AppConfiguration::GetOutputFormat();
-		subMenuFormat.EnableMenuItem(ID_FORMAT_ASYNC_LOADING, MF_BYCOMMAND | (((outputFormat != AppConfiguration::OUTPUT_FORMAT_HTML) && enabled) ? MF_DISABLED : MF_ENABLED));
+		BOOL asyncLoadingEnabled = (outputFormat == AppConfiguration::OUTPUT_FORMAT_HTML);
+		if (asyncLoadingEnabled)
+		{
+			asyncLoadingEnabled = enabled;
+		}
+		subMenuFormat.EnableMenuItem(ID_FORMAT_ASYNC_LOADING, MF_BYCOMMAND | (asyncLoadingEnabled ? MF_ENABLED : MF_DISABLED));
 
 		return 1;
 	}
@@ -147,10 +152,10 @@ public:
 	LRESULT OnAsyncFormat(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/)
 	{
 		CMenuHandle menu = GetMenu();
-		CMenuHandle subMenu = menu.GetSubMenu(0);
+		CMenuHandle subMenu = menu.GetSubMenu(1);
 		UINT menuState = subMenu.GetMenuState(ID_FORMAT_ASYNC_LOADING, MF_BYCOMMAND);
 		BOOL asyncLoading = (menuState != 0xFFFFFFFF) && ((menuState & MF_CHECKED) == MF_CHECKED) ? TRUE : FALSE;
-		subMenu.CheckMenuItem(ID_FORMAT_ASYNC_LOADING, (asyncLoading ? MF_UNCHECKED : MF_CHECKED));
+		subMenu.CheckMenuItem(ID_FORMAT_ASYNC_LOADING, MF_BYCOMMAND | (asyncLoading ? MF_UNCHECKED : MF_CHECKED));
 		AppConfiguration::SetAsyncLoading(!asyncLoading);
 
 		return 0;
