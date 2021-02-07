@@ -102,6 +102,13 @@ LoginInfo2Parser::LoginInfo2Parser(ITunesDb *iTunesDb) : m_iTunesDb(iTunesDb)
 {
 }
 
+#ifndef NDEBUG
+std::string LoginInfo2Parser::getError() const
+{
+    return m_error;
+}
+#endif
+
 bool LoginInfo2Parser::parse(std::vector<Friend>& users)
 {
     std::string loginInfo2 = "Documents/LoginInfo2.dat";
@@ -213,8 +220,12 @@ bool LoginInfo2Parser::parse(const std::string& loginInfo2Path, std::vector<Frie
     {
         if (it->getUsrName().empty())
         {
+#ifndef NDEBUG
+            m_error += "Erase: md5=" + it->getHash() + "* dn=" + it->getDisplayName() + "* ";
+#endif
             // erase() invalidates the iterator, use returned iterator
             it = users.erase(it);
+
         }
         else
         {
@@ -261,6 +272,10 @@ int LoginInfo2Parser::parseUser(const char* data, int length, std::vector<Friend
 #endif
     users.push_back(user);
     
+#ifndef NDEBUG
+    m_error += "LoginInfo2.dat: *" + user.getDisplayName() + "* ";
+#endif
+    
     return static_cast<int>(userBufferLen + (p - data));
 }
 
@@ -291,6 +306,9 @@ bool LoginInfo2Parser::parseUserFromFolder(std::vector<Friend>& users)
         if (!existing)
         {
             users.emplace(users.end(), "", fileName);
+#ifndef NDEBUG
+    m_error += "New User From Folder: *" + fileName + "* ";
+#endif
         }
     }
 

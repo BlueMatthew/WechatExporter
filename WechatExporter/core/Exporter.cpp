@@ -156,7 +156,7 @@ bool Exporter::loadUsersAndSessions(std::vector<std::pair<Friend, std::vector<Se
     WechatInfoParser wechatInfoParser(m_iTunesDb);
     if (wechatInfoParser.parse(m_wechatInfo))
     {
-        m_logger->write(formatString(getLocaleString("iTunes Version: %s, Wechat Version: %s"), m_iTunesDb->getVersion().c_str(), m_wechatInfo.getShortVersion().c_str()));
+        m_logger->write(formatString(getLocaleString("iTunes Version: %s, iOS Version: %s, Wechat Version: %s"), m_iTunesDb->getVersion().c_str(), m_iTunesDb->getIOSVersion().c_str(), m_wechatInfo.getShortVersion().c_str()));
     }
     
     std::vector<Friend> users;
@@ -166,6 +166,9 @@ bool Exporter::loadUsersAndSessions(std::vector<std::pair<Friend, std::vector<Se
         return false;
     }
 
+#ifndef NDEBUG
+    m_logger->debug(loginInfo2Parser.getError());
+#endif
     m_logger->debug("Wechat Users loaded.");
     usersAndSessions.reserve(users.size()); // Avoid re-allocation and causing the pointer changed
     for (std::vector<Friend>::const_iterator it = users.cbegin(); it != users.cend(); ++it)
