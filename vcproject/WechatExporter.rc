@@ -38,7 +38,7 @@ BEGIN
         MENUITEM "HTML",                        ID_FORMAT_HTML
         MENUITEM "文本",                          ID_FORMAT_TEXT
         MENUITEM SEPARATOR
-        MENUITEM "聊天记录数据异步加载(HTML)",            ID_ASYNC_LOADING, CHECKED
+        MENUITEM "聊天记录数据异步加载(HTML)",            ID_FORMAT_ASYNC_LOADING, CHECKED
     END
     POPUP "帮助(&H)"
     BEGIN

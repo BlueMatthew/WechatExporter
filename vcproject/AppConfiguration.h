@@ -12,6 +12,9 @@ public:
 	static void SetOutputFormat(UINT outputFormat);
 	static void SetSavingInSession(BOOL savingInSession);
 	static BOOL GetSavingInSession();
+
+	static void SetAsyncLoading(BOOL asyncLoading);
+	static BOOL GetAsyncLoading();
 	
 	static void SetLastOutputDir(LPCTSTR szOutputDir);
 	static CString GetLastOrDefaultOutputDir();
@@ -19,7 +22,7 @@ public:
 
 	static void SetLastBackupDir(LPCTSTR szBackupDir);
 	static CString GetLastBackupDir();
-	static CString GetDefaultBackupDir();
+	static CString GetDefaultBackupDir(BOOL bCheckExistence = TRUE);
 
 protected:
 	static BOOL GetStringProperty(LPCTSTR name, CString& value);
