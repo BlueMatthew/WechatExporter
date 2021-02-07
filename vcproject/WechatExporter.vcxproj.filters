@@ -63,6 +63,9 @@
     <ClCompile Include="..\WechatExporter\core\Utils_thread.cpp">
       <Filter>core</Filter>
     </ClCompile>
+    <ClCompile Include="AppConfiguration.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="stdafx.h">
@@ -144,6 +147,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="VersionDetector.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="AppConfiguration.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

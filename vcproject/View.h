@@ -12,6 +12,7 @@
 #include "ColoredControls.h"
 #include "LogListBox.h"
 #include "ITunesDetector.h"
+#include "AppConfiguration.h"
 
 class CView : public CDialogImpl<CView>, public CDialogResize<CView>
 {
@@ -21,7 +22,6 @@ private:
 	CLogListBox				m_logListBox;
 	CSortListViewCtrl		m_sessionsListCtrl;
 
-	int					m_outputFormat;
 	ShellImpl			m_shell;
 	LoggerImpl*			m_logger;
 	ExportNotifierImpl* m_notifier;
@@ -35,8 +35,6 @@ private:
 public:
 	enum { IDD = IDD_WECHATEXPORTER_FORM };
 
-	enum { OUTPUT_FORMAT_HTML = 0, OUTPUT_FORMAT_TEXT, OUTPUT_FORMAT_LAST };
-
 	static const DWORD WM_START = ExportNotifierImpl::WM_START;
 	static const DWORD WM_COMPLETE = ExportNotifierImpl::WM_COMPLETE;
 	static const DWORD WM_PROGRESS = ExportNotifierImpl::WM_PROGRESS;
@@ -45,7 +43,6 @@ public:
 	LRESULT OnInitDialog(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 	{
 		m_logListBox.SubclassWindow(GetDlgItem(IDC_LOGS));
-		// m_logListBox.SetTo
 		// m_cbmBoxBackups.SubclassWindow(GetDlgItem(IDC_BACKUP));
 		// m_cbmBoxUsers.SubclassWindow(GetDlgItem(IDC_USERS));
 
@@ -142,58 +139,18 @@ public:
 
 	LRESULT OnLoadData(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 	{
-		BOOL descOrder = FALSE;
-		BOOL savingInSession = TRUE;
-		TCHAR szOutput[MAX_PATH] = { 0 };
-		BOOL outputDirFound = FALSE;
-#ifndef NDEBUG
-		TCHAR szPrevBackup[MAX_PATH] = { 0 };
-#endif
-
-		CRegKey rk;
-		if (rk.Open(HKEY_CURRENT_USER, TEXT("Software\\WechatExporter"), KEY_READ) == ERROR_SUCCESS)
-		{
-			descOrder = GetDescOrder(rk);
-			savingInSession = GetSavingInSession(rk);
-			ULONG chars = MAX_PATH;
-			if (rk.QueryStringValue(TEXT("OutputDir"), szOutput, &chars) == ERROR_SUCCESS)
-			{
-				outputDirFound = TRUE;
-			}
-#ifndef NDEBUG
-			chars = MAX_PATH;
-			rk.QueryStringValue(TEXT("BackupDir"), szPrevBackup, &chars);
-#endif
-			rk.Close();
-		}
-
-		HRESULT result = S_OK;
-		if (!outputDirFound)
-		{
-			result = SHGetFolderPath(NULL, CSIDL_MYDOCUMENTS, NULL, SHGFP_TYPE_CURRENT, szOutput);
-		}
-		SetDlgItemText(IDC_OUTPUT, szOutput);
+		SetDlgItemText(IDC_OUTPUT, AppConfiguration::GetLastOrDefaultOutputDir());
 		UpdateWindow();
 
-		TCHAR szPath[MAX_PATH] = { 0 };
-		TCHAR szPath2[MAX_PATH] = { 0 };
-		// Check iTunes Folder
-		result = SHGetFolderPath(NULL, CSIDL_APPDATA, NULL, SHGFP_TYPE_CURRENT, szPath);
-		_tcscat(szPath, TEXT("\\Apple Computer\\MobileSync\\Backup"));
-
-		result = SHGetFolderPath(NULL, CSIDL_PROFILE, NULL, SHGFP_TYPE_CURRENT, szPath2);
-		_tcscat(szPath2, TEXT("\\Apple\\MobileSync\\Backup"));
-
+		CString backupDir = AppConfiguration::GetDefaultBackupDir();
 		CStatic label = GetDlgItem(IDC_STATIC_BACKUP);
 		CString text;
-		text.Format(IDS_STATIC_BACKUP, szPath);
+		text.Format(IDS_STATIC_BACKUP, (LPCTSTR)backupDir);
 		label.SetWindowText(text);
 
-		DWORD dwAttrib = ::GetFileAttributes(szPath);
-		DWORD dwAttrib2 = ::GetFileAttributes(szPath2);
-		if (dwAttrib != INVALID_FILE_ATTRIBUTES && (dwAttrib & FILE_ATTRIBUTE_DIRECTORY))
+		if (!backupDir.IsEmpty())
 		{
-			CW2A backupDir(CT2W(szPath), CP_UTF8);
+			CW2A backupDir(CT2W(backupDir), CP_UTF8);
 
 			ManifestParser parser((LPCSTR)backupDir, &m_shell);
 			std::vector<BackupManifest> manifests;
@@ -202,21 +159,12 @@ public:
 				UpdateBackups(manifests);
 			}
 		}
-		else if (dwAttrib2 != INVALID_FILE_ATTRIBUTES && (dwAttrib2 & FILE_ATTRIBUTE_DIRECTORY))
-		{
-			CW2A backupDir(CT2W(szPath2), CP_UTF8);
-
-			ManifestParser parser((LPCSTR)backupDir, &m_shell);
-			std::vector<BackupManifest> manifests;
-			if (parser.parse(manifests))
-			{
-				UpdateBackups(manifests);
-			}
-		}
+		
 #ifndef NDEBUG
-		else if (_tcslen(szPrevBackup) != 0)
+		CString lastBackupDir = AppConfiguration::GetLastBackupDir();
+		if (!lastBackupDir.IsEmpty() && lastBackupDir != defaultBackupDir)
 		{
-			CW2A backupDir(CT2W(szPrevBackup), CP_UTF8);
+			CW2A backupDir(CT2W(lastBackupDir), CP_UTF8);
 
 			ManifestParser parser((LPCSTR)backupDir, &m_shell);
 			std::vector<BackupManifest> manifests;
@@ -246,11 +194,7 @@ public:
 			{
 				UpdateBackups(manifests);
 #ifndef NDEBUG
-				CRegKey rk;
-				if (rk.Create(HKEY_CURRENT_USER, TEXT("Software\\WechatExporter"), REG_NONE, REG_OPTION_NON_VOLATILE, KEY_READ | KEY_WRITE) == ERROR_SUCCESS)
-				{
-					rk.SetStringValue(TEXT("BackupDir"), folder.m_szFolderPath);
-				}
+				AppConfiguration::SetLastBackupDir(folder.m_szFolderPath);
 #endif
 			}
 			else
@@ -378,12 +322,7 @@ public:
 		
 		if (IDOK == folder.DoModal())
 		{
-			CRegKey rk;
-			if (rk.Create(HKEY_CURRENT_USER, TEXT("Software\\WechatExporter"), REG_NONE, REG_OPTION_NON_VOLATILE, KEY_READ | KEY_WRITE) == ERROR_SUCCESS)
-			{
-				rk.SetStringValue(TEXT("OutputDir"), folder.m_szFolderPath);
-			}
-
+			AppConfiguration::SetLastOutputDir(folder.m_szFolderPath);
 			SetDlgItemText(IDC_OUTPUT, folder.m_szFolderPath);
 		}
 
@@ -422,7 +361,6 @@ public:
 		if (idCtrl == ::GetDlgCtrlID(header))
 		{
 			LPNMHEADER pnmHeader = (LPNMHEADER)pnmh;
-
 			if (pnmHeader->pitem->mask & HDI_FORMAT && pnmHeader->pitem->fmt & HDF_CHECKBOX)
 			{
 				CheckAllItems(!(pnmHeader->pitem->fmt & HDF_CHECKED));
@@ -523,9 +461,9 @@ public:
 		}
 
 		// CButton btn = GetDlgItem(IDC_DESC_ORDER);
-		bool descOrder = GetDescOrder();
-		bool saveFilesInSessionFolder = GetSavingInSession();
-		UINT outputFormat = GetOutputFormat();
+		bool descOrder = AppConfiguration::GetDescOrder();
+		bool saveFilesInSessionFolder = AppConfiguration::GetSavingInSession();
+		UINT outputFormat = AppConfiguration::GetOutputFormat();
 
 		CListBox lstboxLogs = GetDlgItem(IDC_LOGS);
 		lstboxLogs.ResetContent();
@@ -562,7 +500,7 @@ public:
 		{
 			m_exporter->saveFilesInSessionFolder();
 		}
-		if (outputFormat == OUTPUT_FORMAT_TEXT)
+		if (outputFormat == AppConfiguration::OUTPUT_FORMAT_TEXT)
 		{
 			m_exporter->setTextMode();
 			m_exporter->setExtName("txt");
@@ -863,116 +801,12 @@ public:
 		return (hdi.fmt & HDF_CHECKED) == HDF_CHECKED ? TRUE : FALSE;
 	}
 
-	void SetDescOrder(BOOL descOrder)
-	{
-		CRegKey rk;
-		if (rk.Create(HKEY_CURRENT_USER, TEXT("Software\\WechatExporter"), REG_NONE, REG_OPTION_NON_VOLATILE, KEY_READ | KEY_WRITE) == ERROR_SUCCESS)
-		{
-			rk.SetDWORDValue(TEXT("DescOrder"), descOrder);
-			rk.Close();
-		}
-	}
-
-	BOOL GetDescOrder() const
-	{
-		BOOL descOrder = FALSE;
-		CRegKey rk;
-		if (rk.Open(HKEY_CURRENT_USER, TEXT("Software\\WechatExporter"), KEY_READ) == ERROR_SUCCESS)
-		{
-			descOrder = GetDescOrder(rk);
-			rk.Close();
-		}
-
-		return descOrder;
-	}
-
-	UINT GetOutputFormat() const
-	{
-		UINT outputFormat = OUTPUT_FORMAT_HTML;
-		CRegKey rk;
-		if (rk.Open(HKEY_CURRENT_USER, TEXT("Software\\WechatExporter"), KEY_READ) == ERROR_SUCCESS)
-		{
-			DWORD dwValue = 0;
-			if (rk.QueryDWORDValue(TEXT("OutputFormat"), dwValue) == ERROR_SUCCESS)
-			{
-				if (dwValue >= OUTPUT_FORMAT_HTML && dwValue < OUTPUT_FORMAT_LAST)
-				{
-					outputFormat = dwValue;
-				}
-			}
-
-			rk.Close();
-		}
-
-		return outputFormat;
-	}
-
-	void SetOutputFormat(UINT outputFormat) const
-	{
-		if (outputFormat < OUTPUT_FORMAT_HTML || outputFormat >= OUTPUT_FORMAT_LAST)
-		{
-			outputFormat = OUTPUT_FORMAT_HTML;
-		}
-		CRegKey rk;
-		if (rk.Create(HKEY_CURRENT_USER, TEXT("Software\\WechatExporter"), REG_NONE, REG_OPTION_NON_VOLATILE, KEY_READ | KEY_WRITE) == ERROR_SUCCESS)
-		{
-			rk.SetDWORDValue(TEXT("OutputFormat"), outputFormat);
-			rk.Close();
-		}
-	}
-
-	void SetSavingInSession(BOOL savingInSession)
-	{
-		CRegKey rk;
-		if (rk.Create(HKEY_CURRENT_USER, TEXT("Software\\WechatExporter"), REG_NONE, REG_OPTION_NON_VOLATILE, KEY_READ | KEY_WRITE) == ERROR_SUCCESS)
-		{
-			rk.SetDWORDValue(TEXT("SaveFilesInSF"), savingInSession);
-			rk.Close();
-		}
-	}
-
-	BOOL GetSavingInSession() const
-	{
-		CRegKey rk;
-		if (rk.Open(HKEY_CURRENT_USER, TEXT("Software\\WechatExporter"), KEY_READ) == ERROR_SUCCESS)
-		{
-			BOOL savingInSession = GetSavingInSession(rk);
-			rk.Close();
-
-			return savingInSession;
-		}
-
-		return TRUE;
-	}
-
 	BOOL IsUIEnabled() const
 	{
 		return ::IsWindowEnabled(GetDlgItem(IDC_EXPORT));
 	}
 
 private:
-	BOOL GetDescOrder(CRegKey& rk) const
-	{
-		BOOL descOrder = FALSE;
-		DWORD dwValue = 0;
-		if (rk.QueryDWORDValue(TEXT("DescOrder"), dwValue) == ERROR_SUCCESS)
-		{
-			descOrder = dwValue != 0 ? TRUE : FALSE;
-		}
-
-		return descOrder;
-	}
-
-	BOOL GetSavingInSession(CRegKey& rk) const
-	{
-		DWORD dwValue = 1;
-		if (rk.QueryDWORDValue(TEXT("SaveFilesInSF"), dwValue) == ERROR_SUCCESS)
-		{
-			return (dwValue != 0) ? TRUE : FALSE;
-		}
-
-		return TRUE;
-	}
 
 	int MsgBox(UINT uStdId, UINT uType = MB_OK)
 	{

@@ -1,0 +1,30 @@
+#pragma once
+
+class AppConfiguration
+{
+public:
+
+	enum { OUTPUT_FORMAT_HTML = 0, OUTPUT_FORMAT_TEXT, OUTPUT_FORMAT_LAST };
+
+	static void SetDescOrder(BOOL descOrder);
+	static BOOL GetDescOrder();
+	static UINT GetOutputFormat();
+	static void SetOutputFormat(UINT outputFormat);
+	static void SetSavingInSession(BOOL savingInSession);
+	static BOOL GetSavingInSession();
+	
+	static void SetLastOutputDir(LPCTSTR szOutputDir);
+	static CString GetLastOrDefaultOutputDir();
+	static CString GetDefaultOutputDir();
+
+	static void SetLastBackupDir(LPCTSTR szBackupDir);
+	static CString GetLastBackupDir();
+	static CString GetDefaultBackupDir();
+
+protected:
+	static BOOL GetStringProperty(LPCTSTR name, CString& value);
+	static BOOL SetStringProperty(LPCTSTR name, LPCTSTR value);
+
+	static BOOL GetDwordProperty(LPCTSTR name, DWORD& value);
+	static BOOL SetDwordProperty(LPCTSTR name, DWORD value);
+};

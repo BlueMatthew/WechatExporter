@@ -62,11 +62,11 @@ public:
 
 		CMenuHandle menu = GetMenu();
 		CMenuHandle subMenuFile = menu.GetSubMenu(0);
-		subMenuFile.CheckMenuItem(ID_FILE_DESC_ORDER, m_view.GetDescOrder() ? MF_CHECKED : MF_UNCHECKED);
-		subMenuFile.CheckMenuItem(ID_FILE_SAVING_IN_SESSION, m_view.GetSavingInSession() ? MF_CHECKED : MF_UNCHECKED);
+		subMenuFile.CheckMenuItem(ID_FILE_DESC_ORDER, AppConfiguration::GetDescOrder() ? MF_CHECKED : MF_UNCHECKED);
+		subMenuFile.CheckMenuItem(ID_FILE_SAVING_IN_SESSION, AppConfiguration::GetSavingInSession() ? MF_CHECKED : MF_UNCHECKED);
 
 		CMenuHandle subMenuFormat = menu.GetSubMenu(1);
-		UINT outputFormat = m_view.GetOutputFormat();
+		UINT outputFormat = AppConfiguration::GetOutputFormat();
 		subMenuFormat.CheckMenuRadioItem(ID_FORMAT_HTML, ID_FORMAT_TEXT, ID_FORMAT_HTML + outputFormat, MF_BYCOMMAND | MFT_RADIOCHECK);
 
 		return 0;
@@ -114,7 +114,7 @@ public:
 		UINT menuState = subMenu.GetMenuState(ID_FILE_SAVING_IN_SESSION, MF_BYCOMMAND);
 		BOOL curSavingInSesstion = (menuState != 0xFFFFFFFF) && ((menuState & MF_CHECKED) == MF_CHECKED) ? TRUE : FALSE;
 		subMenu.CheckMenuItem(ID_FILE_SAVING_IN_SESSION, (curSavingInSesstion ? MF_UNCHECKED : MF_CHECKED));
-		m_view.SetSavingInSession(!curSavingInSesstion);
+		AppConfiguration::SetSavingInSession(!curSavingInSesstion);
 		
 		return 0;
 	}
@@ -126,7 +126,7 @@ public:
 		UINT menuState = subMenu.GetMenuState(ID_FILE_DESC_ORDER, MF_BYCOMMAND);
 		BOOL curDescOrder = (menuState != 0xFFFFFFFF) && ((menuState & MF_CHECKED) == MF_CHECKED) ? TRUE : FALSE;
 		subMenu.CheckMenuItem(ID_FILE_DESC_ORDER, MF_BYCOMMAND | (curDescOrder ? MF_UNCHECKED : MF_CHECKED));
-		m_view.SetDescOrder(!curDescOrder);
+		AppConfiguration::SetDescOrder(!curDescOrder);
 		
 		return 0;
 	}
@@ -136,7 +136,7 @@ public:
 		CMenuHandle menu = GetMenu();
 		CMenuHandle subMenuFormat = menu.GetSubMenu(1);
 		subMenuFormat.CheckMenuRadioItem(ID_FORMAT_HTML, ID_FORMAT_TEXT, wID, MF_BYCOMMAND | MF_BYCOMMAND);
-		m_view.SetOutputFormat(wID - ID_FORMAT_HTML);
+		AppConfiguration::SetOutputFormat(wID - ID_FORMAT_HTML);
 
 		return 0;
 	}
