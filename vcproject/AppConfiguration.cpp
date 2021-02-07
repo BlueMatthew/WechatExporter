@@ -28,7 +28,7 @@ void AppConfiguration::SetAsyncLoading(BOOL asyncLoading)
 
 BOOL AppConfiguration::GetAsyncLoading()
 {
-	DWORD value = 0;
+	DWORD value = 1;
 	GetDwordProperty(TEXT("AsyncLoading"), value);
 	return (value != 0) ? TRUE : FALSE;
 }
@@ -50,7 +50,6 @@ UINT AppConfiguration::GetOutputFormat()
 
 void AppConfiguration::SetOutputFormat(UINT outputFormat)
 {
-
 	if (outputFormat < OUTPUT_FORMAT_HTML || outputFormat >= OUTPUT_FORMAT_LAST)
 	{
 		outputFormat = OUTPUT_FORMAT_HTML;
@@ -175,7 +174,7 @@ BOOL AppConfiguration::SetStringProperty(LPCTSTR name, LPCTSTR value)
 BOOL AppConfiguration::GetDwordProperty(LPCTSTR name, DWORD& value)
 {
 	CRegKey rk;
-	if (rk.Create(HKEY_CURRENT_USER, APP_ROOT_PATH, REG_NONE, REG_OPTION_NON_VOLATILE, KEY_READ | KEY_WRITE) == ERROR_SUCCESS)
+	if (rk.Open(HKEY_CURRENT_USER, APP_ROOT_PATH, KEY_READ) == ERROR_SUCCESS)
 	{
 		HRESULT hr = rk.QueryDWORDValue(name, value);
 		rk.Close();
@@ -188,7 +187,7 @@ BOOL AppConfiguration::GetDwordProperty(LPCTSTR name, DWORD& value)
 BOOL AppConfiguration::SetDwordProperty(LPCTSTR name, DWORD value)
 {
 	CRegKey rk;
-	if (rk.Open(HKEY_CURRENT_USER, APP_ROOT_PATH, KEY_READ) == ERROR_SUCCESS)
+	if (rk.Create(HKEY_CURRENT_USER, APP_ROOT_PATH, REG_NONE, REG_OPTION_NON_VOLATILE, KEY_READ | KEY_WRITE) == ERROR_SUCCESS)
 	{
 		HRESULT hr = rk.SetDWORDValue(name, value);
 		rk.Close();
