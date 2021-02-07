@@ -39,6 +39,7 @@ public:
 		COMMAND_ID_HANDLER(ID_FILE_SAVING_IN_SESSION, OnSavingInSession)
 		COMMAND_ID_HANDLER(ID_FILE_DESC_ORDER, OnDescOrder)
 		COMMAND_RANGE_HANDLER(ID_FORMAT_HTML, ID_FORMAT_TEXT, OnOutputFormat)
+		COMMAND_ID_HANDLER(ID_FORMAT_ASYNC_LOADING, OnAsyncFormat)
 		CHAIN_MSG_MAP(CUpdateUI<CMainFrame>)
 		CHAIN_MSG_MAP(CFrameWindowImpl<CMainFrame>)
 	END_MSG_MAP()
@@ -68,7 +69,10 @@ public:
 		CMenuHandle subMenuFormat = menu.GetSubMenu(1);
 		UINT outputFormat = AppConfiguration::GetOutputFormat();
 		subMenuFormat.CheckMenuRadioItem(ID_FORMAT_HTML, ID_FORMAT_TEXT, ID_FORMAT_HTML + outputFormat, MF_BYCOMMAND | MFT_RADIOCHECK);
-
+		
+		subMenuFormat.CheckMenuItem (ID_FORMAT_ASYNC_LOADING, MF_BYCOMMAND | (AppConfiguration::GetAsyncLoading() ? MF_CHECKED : MF_UNCHECKED));
+		subMenuFormat.EnableMenuItem(ID_FORMAT_ASYNC_LOADING, MF_BYCOMMAND | ((outputFormat != AppConfiguration::OUTPUT_FORMAT_HTML) ? MF_DISABLED : MF_ENABLED));
+		
 		return 0;
 	}
 
@@ -97,14 +101,10 @@ public:
 		subMenuFormat.EnableMenuItem(ID_FORMAT_HTML, enabled ? MF_ENABLED : MF_DISABLED);
 		subMenuFormat.EnableMenuItem(ID_FORMAT_TEXT, enabled ? MF_ENABLED : MF_DISABLED);
 
-		return 1;
-	}
-	
+		UINT outputFormat = AppConfiguration::GetOutputFormat();
+		subMenuFormat.EnableMenuItem(ID_FORMAT_ASYNC_LOADING, MF_BYCOMMAND | (((outputFormat != AppConfiguration::OUTPUT_FORMAT_HTML) && enabled) ? MF_DISABLED : MF_ENABLED));
 
-	LRESULT OnFileExit(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/)
-	{
-		PostMessage(WM_CLOSE);
-		return 0;
+		return 1;
 	}
 
 	LRESULT OnSavingInSession(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& /*bHandled*/)
@@ -135,8 +135,23 @@ public:
 	{
 		CMenuHandle menu = GetMenu();
 		CMenuHandle subMenuFormat = menu.GetSubMenu(1);
-		subMenuFormat.CheckMenuRadioItem(ID_FORMAT_HTML, ID_FORMAT_TEXT, wID, MF_BYCOMMAND | MF_BYCOMMAND);
-		AppConfiguration::SetOutputFormat(wID - ID_FORMAT_HTML);
+		subMenuFormat.CheckMenuRadioItem(ID_FORMAT_HTML, ID_FORMAT_TEXT, wID, MF_BYCOMMAND | MFT_RADIOCHECK);
+		UINT outputFormat = wID - ID_FORMAT_HTML;
+		AppConfiguration::SetOutputFormat(outputFormat);
+
+		subMenuFormat.EnableMenuItem(ID_FORMAT_ASYNC_LOADING, MF_BYCOMMAND | ((outputFormat != AppConfiguration::OUTPUT_FORMAT_HTML) ? MF_DISABLED : MF_ENABLED));
+
+		return 0;
+	}
+
+	LRESULT OnAsyncFormat(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/)
+	{
+		CMenuHandle menu = GetMenu();
+		CMenuHandle subMenu = menu.GetSubMenu(0);
+		UINT menuState = subMenu.GetMenuState(ID_FORMAT_ASYNC_LOADING, MF_BYCOMMAND);
+		BOOL asyncLoading = (menuState != 0xFFFFFFFF) && ((menuState & MF_CHECKED) == MF_CHECKED) ? TRUE : FALSE;
+		subMenu.CheckMenuItem(ID_FORMAT_ASYNC_LOADING, (asyncLoading ? MF_UNCHECKED : MF_CHECKED));
+		AppConfiguration::SetAsyncLoading(!asyncLoading);
 
 		return 0;
 	}
@@ -145,6 +160,12 @@ public:
 	{
 		CAboutDlg dlg;
 		dlg.DoModal();
+		return 0;
+	}
+
+	LRESULT OnFileExit(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/)
+	{
+		PostMessage(WM_CLOSE);
 		return 0;
 	}
 };

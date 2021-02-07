@@ -41,7 +41,7 @@
 #define ID_FILE_SAVING_IN_SESSION       32776
 #define ID_FORMAT_HTML                  32777
 #define ID_FORMAT_TEXT                  32778
-#define ID_ASYNC_LOADING                32779
+#define ID_FORMAT_ASYNC_LOADING         32779
 
 // Next default values for new objects
 // 

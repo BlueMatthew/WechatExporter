@@ -63,6 +63,14 @@ public:
 		m_notifier = new ExportNotifierImpl(m_hWnd);
 		m_logger = new LoggerImpl(GetDlgItem(IDC_LOGS));
 
+		CString backupDir = AppConfiguration::GetDefaultBackupDir(FALSE);
+		CString text;
+		text.Format(IDS_STATIC_BACKUP, (LPCTSTR)backupDir);
+		CStatic label = GetDlgItem(IDC_STATIC_BACKUP);
+		label.SetWindowText(text);
+
+		SetDlgItemText(IDC_OUTPUT, AppConfiguration::GetLastOrDefaultOutputDir());
+
 		PostMessage(WM_LOADDATA, 0, 0);
 		
 		return TRUE;
@@ -139,41 +147,31 @@ public:
 
 	LRESULT OnLoadData(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 	{
-		SetDlgItemText(IDC_OUTPUT, AppConfiguration::GetLastOrDefaultOutputDir());
-		UpdateWindow();
-
 		CString backupDir = AppConfiguration::GetDefaultBackupDir();
-		CStatic label = GetDlgItem(IDC_STATIC_BACKUP);
-		CString text;
-		text.Format(IDS_STATIC_BACKUP, (LPCTSTR)backupDir);
-		label.SetWindowText(text);
+#ifndef NDEBUG
+		CString lastBackupDir = AppConfiguration::GetLastBackupDir();
+#endif
 
+		std::vector<BackupManifest> manifests;
+#ifndef NDEBUG
+		if (!lastBackupDir.IsEmpty() && lastBackupDir != backupDir)
+		{
+			CW2A backupDir(CT2W(lastBackupDir), CP_UTF8);
+			ManifestParser parser((LPCSTR)backupDir, &m_shell);
+			parser.parse(manifests);
+		}
+#endif
 		if (!backupDir.IsEmpty())
 		{
 			CW2A backupDir(CT2W(backupDir), CP_UTF8);
-
 			ManifestParser parser((LPCSTR)backupDir, &m_shell);
-			std::vector<BackupManifest> manifests;
-			if (parser.parse(manifests))
-			{
-				UpdateBackups(manifests);
-			}
+			parser.parse(manifests);
 		}
 		
-#ifndef NDEBUG
-		CString lastBackupDir = AppConfiguration::GetLastBackupDir();
-		if (!lastBackupDir.IsEmpty() && lastBackupDir != defaultBackupDir)
+		if (!manifests.empty())
 		{
-			CW2A backupDir(CT2W(lastBackupDir), CP_UTF8);
-
-			ManifestParser parser((LPCSTR)backupDir, &m_shell);
-			std::vector<BackupManifest> manifests;
-			if (parser.parse(manifests))
-			{
-				UpdateBackups(manifests);
-			}
+			UpdateBackups(manifests);
 		}
-#endif
 
 		return 0;
 	}
@@ -257,15 +255,8 @@ public:
 		Exporter exp((LPCSTR)resDir, backup, "", &m_shell, m_logger);
 		exp.loadUsersAndSessions(m_usersAndSessions);
 
-#ifndef NDEBUG
-		m_logger->write("Data Loaded.");
-#endif
-
 		LoadUsers();
 
-#ifndef NDEBUG
-		m_logger->write("Display Completed.");
-#endif
 		return 0;
 	}
 
@@ -546,6 +537,13 @@ public:
 		return 0;
 	}
 
+	BOOL IsUIEnabled() const
+	{
+		return ::IsWindowEnabled(GetDlgItem(IDC_EXPORT));
+	}
+
+protected:
+
 	void EnableInteractiveCtrls(BOOL enabled, BOOL cancellable = TRUE)
 	{
 		::EnableWindow(GetDlgItem(IDC_BACKUP), enabled);
@@ -564,45 +562,47 @@ public:
 
 	void UpdateBackups(const std::vector<BackupManifest>& manifests)
 	{
-		int selectedIndex = -1;
-		if (!manifests.empty())
+		if (manifests.empty())
 		{
-			// Add default backup folder
-			for (std::vector<BackupManifest>::const_iterator it = manifests.cbegin(); it != manifests.cend(); ++it)
-			{
-				std::vector<BackupManifest>::const_iterator it2 = std::find(m_manifests.cbegin(), m_manifests.cend(), *it);
-				if (it2 != m_manifests.cend())
-				{
-					if (selectedIndex == -1)
-					{
-						selectedIndex = static_cast<int>(std::distance(it2, m_manifests.cbegin()));
-					}
-				}
-				else
-				{
-					m_manifests.push_back(*it);
-					if (selectedIndex == -1)
-					{
-						selectedIndex = static_cast<int>(m_manifests.size() - 1);
-					}
-				}
-			}
+			return;
+		}
 
-			// update
-			CComboBox cmb = GetDlgItem(IDC_BACKUP);
-			cmb.SetRedraw(FALSE);
-			cmb.ResetContent();
-			for (std::vector<BackupManifest>::const_iterator it = m_manifests.cbegin(); it != m_manifests.cend(); ++it)
+		int selectedIndex = -1;
+		// Add default backup folder
+		for (std::vector<BackupManifest>::const_iterator it = manifests.cbegin(); it != manifests.cend(); ++it)
+		{
+			std::vector<BackupManifest>::const_iterator it2 = std::find(m_manifests.cbegin(), m_manifests.cend(), *it);
+			if (it2 != m_manifests.cend())
 			{
-				std::string itemTitle = it->toString();
-				CW2T item(CA2W(it->toString().c_str(), CP_UTF8));
-				cmb.AddString((LPCTSTR)item);
+				if (selectedIndex == -1)
+				{
+					selectedIndex = static_cast<int>(std::distance(it2, m_manifests.cbegin()));
+				}
 			}
-			cmb.SetRedraw(TRUE);
-			if (selectedIndex != -1 && selectedIndex < cmb.GetCount())
+			else
 			{
-				SetComboBoxCurSel(cmb, selectedIndex);
+				m_manifests.push_back(*it);
+				if (selectedIndex == -1)
+				{
+					selectedIndex = static_cast<int>(m_manifests.size() - 1);
+				}
 			}
+		}
+
+		// update
+		CComboBox cmb = GetDlgItem(IDC_BACKUP);
+		cmb.SetRedraw(FALSE);
+		cmb.ResetContent();
+		for (std::vector<BackupManifest>::const_iterator it = m_manifests.cbegin(); it != m_manifests.cend(); ++it)
+		{
+			std::string itemTitle = it->toString();
+			CW2T item(CA2W(it->toString().c_str(), CP_UTF8));
+			cmb.AddString((LPCTSTR)item);
+		}
+		cmb.SetRedraw(TRUE);
+		if (selectedIndex != -1 && selectedIndex < cmb.GetCount())
+		{
+			SetComboBoxCurSel(cmb, selectedIndex);
 		}
 	}
 
@@ -663,16 +663,15 @@ public:
 	void LoadUsers()
 	{
 		CComboBox cbmBox = GetDlgItem(IDC_USERS);
+		
 		if (!m_usersAndSessions.empty())
 		{
 			CString text;
 			text.LoadString(IDS_ALL_USERS);
 			cbmBox.AddString(text);
 #ifndef NDEBUG
-
-			CString str;
-			str.Format(TEXT("%d users"), (int)m_usersAndSessions.size());
-			MsgBox(str);
+			std::string log = std::to_string(m_usersAndSessions.size()) + " users";
+			m_logger->debug(log);
 #endif
 		}
 		for (std::vector<std::pair<Friend, std::vector<Session>>>::const_iterator it = m_usersAndSessions.cbegin(); it != m_usersAndSessions.cend(); ++it)
@@ -741,7 +740,8 @@ public:
 	void SetComboBoxCurSel(CComboBox &cbm, int nCurSel)
 	{
 		cbm.SetCurSel(nCurSel);
-		PostMessage(WM_COMMAND, MAKEWPARAM(cbm.GetDlgCtrlID(), CBN_SELCHANGE), LPARAM(cbm.m_hWnd));
+		int nID = cbm.GetDlgCtrlID();
+		PostMessage(WM_COMMAND, MAKEWPARAM(nID, CBN_SELCHANGE), LPARAM(cbm.m_hWnd));
 	}
 
 	void CheckAllItems(BOOL fChecked)
@@ -801,17 +801,10 @@ public:
 		return (hdi.fmt & HDF_CHECKED) == HDF_CHECKED ? TRUE : FALSE;
 	}
 
-	BOOL IsUIEnabled() const
-	{
-		return ::IsWindowEnabled(GetDlgItem(IDC_EXPORT));
-	}
-
-private:
-
-	int MsgBox(UINT uStdId, UINT uType = MB_OK)
+	int MsgBox(UINT uStrId, UINT uType = MB_OK)
 	{
 		CString text;
-		text.LoadString(uStdId);
+		text.LoadString(uStrId);
 		return MsgBox(text, uType);
 	}
 
