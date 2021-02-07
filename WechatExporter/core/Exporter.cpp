@@ -103,6 +103,14 @@ void Exporter::saveFilesInSessionFolder(bool flag/* = true*/)
         m_options &= ~SPO_ICON_IN_SESSION;
 }
 
+void Exporter::setSyncLoading(bool syncLoading/* = true*/)
+{
+    if (syncLoading)
+        m_options |= SPO_SYNC_LOADING;
+    else
+        m_options &= ~SPO_SYNC_LOADING;
+}
+
 void Exporter::setExtName(const std::string& extName)
 {
     m_extName = extName;
@@ -513,11 +521,10 @@ int Exporter::exportSession(const Friend& user, SessionParser& sessionParser, co
     if (count > 0 && !messages.empty())
     {
         const size_t pageSize = 1000;
-        
         auto b = messages.cbegin();
         // No page for text mode
-        auto e = (((m_options & SPO_TEXT_MODE) == SPO_TEXT_MODE) || messages.size() <= pageSize) ? messages.cend() : (b + pageSize);
-        std::string moreMsgs = ((m_options & SPO_TEXT_MODE) == SPO_TEXT_MODE) ? "" : "[]"; // [] = empty json array
+        auto e = (((m_options & (SPO_TEXT_MODE | SPO_SYNC_LOADING)) != 0) || (messages.size() <= pageSize)) ? messages.cend() : (b + pageSize);
+        std::string moreMsgs = ((m_options & (SPO_TEXT_MODE | SPO_SYNC_LOADING)) != 0) ? "" : "[]"; // [] = empty json array
         if (e != messages.cend())
         {
             Json::Value jsonMsgs(Json::arrayValue);
@@ -525,12 +532,11 @@ int Exporter::exportSession(const Friend& user, SessionParser& sessionParser, co
             {
                 jsonMsgs.append(*it);
             }
-            
             Json::FastWriter writer;
             moreMsgs = writer.write(jsonMsgs);
         }
         
-        std::string scripts = getTemplate("scripts");
+        std::string scripts = (m_options & SPO_SYNC_LOADING) || (messages.size() <= pageSize) ? "" : getTemplate("scripts");
         scripts = replaceAll(scripts, "%%JSONDATA%%", moreMsgs);
 
         std::string html = getTemplate("frame");

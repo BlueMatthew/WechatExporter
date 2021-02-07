@@ -120,6 +120,8 @@ void errorLogCallback(void *pArg, int iErrCode, const char *zMsg)
     [self.chkboxDesc setTarget:nil];
     [self.chkboxTextMode setAction:nil];
     [self.chkboxTextMode setTarget:nil];
+    [self.chkboxAsyncLoading setAction:nil];
+    [self.chkboxAsyncLoading setTarget:nil];
     [self.popupBackup setAction:nil];
     [self.popupBackup setTarget:nil];
     [self.popupUsers setAction:nil];
@@ -168,7 +170,9 @@ void errorLogCallback(void *pArg, int iErrCode, const char *zMsg)
     [self.chkboxDesc setTarget:self];
     [self.chkboxDesc setAction:@selector(btnDescClicked:)];
     [self.chkboxTextMode setTarget:self];
-    [self.chkboxTextMode setAction:@selector(btnIgnoreAudioClicked:)];
+    [self.chkboxTextMode setAction:@selector(btnTextModeClicked:)];
+    [self.chkboxAsyncLoading setTarget:self];
+    [self.chkboxAsyncLoading setAction:@selector(btnAsyncLoadingClicked:)];
     [self.popupBackup setTarget:self];
     [self.popupBackup setAction:@selector(handlePopupButton:)];
     [self.popupUsers setTarget:self];
@@ -199,6 +203,10 @@ void errorLogCallback(void *pArg, int iErrCode, const char *zMsg)
     
     BOOL textMode = [[NSUserDefaults standardUserDefaults] boolForKey:@"TextMode"];
     self.chkboxTextMode.state = textMode ? NSOnState : NSOffState;
+    
+    BOOL syncLoading = [[NSUserDefaults standardUserDefaults] boolForKey:@"SyncLoading"];
+    self.chkboxAsyncLoading.state = syncLoading ? NSOffState : NSOnState;
+    self.chkboxAsyncLoading.enabled = !textMode;
 
     NSString *outputDir = [[NSUserDefaults standardUserDefaults] objectForKey:@"OutputDir"];
     if (nil == outputDir || [outputDir isEqualToString:@""])
@@ -486,11 +494,12 @@ void errorLogCallback(void *pArg, int iErrCode, const char *zMsg)
 
     BOOL descOrder = (self.chkboxDesc.state == NSOnState);
     BOOL textMode = (self.chkboxTextMode.state == NSOnState);
+    BOOL syncLoading = (self.chkboxAsyncLoading.state != NSOnState);
     BOOL saveFilesInSessionFolder = (self.chkboxSaveFilesInSessionFolder.state == NSOnState);
     
     self.txtViewLogs.string = @"";
     [self onStart];
-    NSDictionary *dict = @{@"backup": backupPath, @"output": outputPath, @"descOrder": @(descOrder), @"textMode": @(textMode), @"saveFilesInSessionFolder": @(saveFilesInSessionFolder)};
+    NSDictionary *dict = @{@"backup": backupPath, @"output": outputPath, @"descOrder": @(descOrder), @"textMode": @(textMode), @"syncLoading": @(syncLoading), @"saveFilesInSessionFolder": @(saveFilesInSessionFolder)};
     [NSThread detachNewThreadSelector:@selector(run:) toTarget:self withObject:dict];
 }
 
@@ -517,10 +526,17 @@ void errorLogCallback(void *pArg, int iErrCode, const char *zMsg)
     [[NSUserDefaults standardUserDefaults] setBool:descOrder forKey:@"Desc"];
 }
 
-- (void)btnIgnoreAudioClicked:(id)sender
+- (void)btnTextModeClicked:(id)sender
 {
     BOOL textMode = (self.chkboxTextMode.state == NSOnState);
     [[NSUserDefaults standardUserDefaults] setBool:textMode forKey:@"TextMode"];
+    self.chkboxAsyncLoading.enabled = !textMode;
+}
+
+- (void)btnAsyncLoadingClicked:(id)sender
+{
+    BOOL syncLoading = (self.chkboxTextMode.state != NSOnState);
+    [[NSUserDefaults standardUserDefaults] setBool:syncLoading forKey:@"SyncLoading"];
 }
 
 - (void)run:(NSDictionary *)dict
@@ -537,6 +553,7 @@ void errorLogCallback(void *pArg, int iErrCode, const char *zMsg)
     // NSString *iTunesVersion = [dict objectForKey:@"iTunesVersion"];
     NSNumber *textMode = [dict objectForKey:@"textMode"];
     NSNumber *descOrder = [dict objectForKey:@"descOrder"];
+    NSNumber *syncLoading = [dict objectForKey:@"syncLoading"];
     NSNumber *saveFilesInSessionFolder = [dict objectForKey:@"saveFilesInSessionFolder"];
     
     NSString *workDir = [[NSFileManager defaultManager] currentDirectoryPath];
@@ -554,6 +571,10 @@ void errorLogCallback(void *pArg, int iErrCode, const char *zMsg)
     if (nil != saveFilesInSessionFolder && [saveFilesInSessionFolder boolValue])
     {
         m_exporter->saveFilesInSessionFolder();
+    }
+    if (nil != syncLoading && [syncLoading boolValue])
+    {
+        m_exporter->setSyncLoading();
     }
 
     if (nil != textMode && textMode.boolValue)

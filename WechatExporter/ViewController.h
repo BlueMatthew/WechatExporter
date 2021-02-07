@@ -22,7 +22,6 @@
 @property (weak) IBOutlet NSScrollView *sclSessions;
 @property (weak) IBOutlet NSTableView *tblSessions;
 
-
 @property (weak) IBOutlet NSButton *btnBackup;
 @property (weak) IBOutlet NSButton *btnOutput;
 
@@ -32,7 +31,7 @@
 @property (weak) IBOutlet NSButton *chkboxDesc;
 @property (weak) IBOutlet NSButton *chkboxSaveFilesInSessionFolder;
 @property (weak) IBOutlet NSButton *chkboxTextMode;
-
+@property (weak) IBOutlet NSButton *chkboxAsyncLoading;
 
 - (void)writeLog:(NSString *)log;
 - (void)onStart;
