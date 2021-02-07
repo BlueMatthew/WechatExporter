@@ -530,17 +530,16 @@ int Exporter::exportSession(const Friend& user, SessionParser& sessionParser, co
             moreMsgs = writer.write(jsonMsgs);
         }
         
-        std::string fileName = combinePath(outputBase, session.getOutputFileName() + "." + m_extName);
+        std::string scripts = getTemplate("scripts");
+        scripts = replaceAll(scripts, "%%JSONDATA%%", moreMsgs);
 
         std::string html = getTemplate("frame");
         html = replaceAll(html, "%%DISPLAYNAME%%", session.getDisplayName());
-        // html = replaceAll(html, "%%PAGES%%", std::to_string(pages));
         html = replaceAll(html, "%%BODY%%", join(b, e, ""));
-        html = replaceAll(html, "%%JSONDATA%%", moreMsgs);
+        html = replaceAll(html, "%%LOADING_SCRIPTS%%", scripts);
         
+        std::string fileName = combinePath(outputBase, session.getOutputFileName() + "." + m_extName);
         writeFile(fileName, html);
-        
-        
     }
     
     return count;
@@ -645,7 +644,7 @@ bool Exporter::loadITunes(bool detailedInfo/* = true*/)
 
 bool Exporter::loadTemplates()
 {
-    const char* names[] = {"frame", "msg", "video", "notice", "system", "audio", "image", "card", "emoji", "plainshare", "share", "thumb", "listframe", "listitem"};
+    const char* names[] = {"frame", "msg", "video", "notice", "system", "audio", "image", "card", "emoji", "plainshare", "share", "thumb", "listframe", "listitem", "scripts"};
     for (int idx = 0; idx < sizeof(names) / sizeof(const char*); idx++)
     {
         std::string name = names[idx];
