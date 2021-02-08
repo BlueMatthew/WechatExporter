@@ -535,7 +535,7 @@ void errorLogCallback(void *pArg, int iErrCode, const char *zMsg)
 
 - (void)btnAsyncLoadingClicked:(id)sender
 {
-    BOOL syncLoading = (self.chkboxTextMode.state != NSOnState);
+    BOOL syncLoading = (self.chkboxAsyncLoading.state != NSOnState);
     [[NSUserDefaults standardUserDefaults] setBool:syncLoading forKey:@"SyncLoading"];
 }
 
