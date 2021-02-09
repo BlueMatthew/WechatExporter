@@ -74,7 +74,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
     <ExecutablePath>$(ExecutablePath)</ExecutablePath>
-    <IncludePath>C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Tools\MSVC\14.16.27023\wtl\include;$(ProjectDir)..\WechatExporter\core;Z:\Documents\Programs\Github\WechatExporter\release\windows-static\include;$(IncludePath)</IncludePath>
+    <IncludePath>$(ProjectDir)..\WechatExporter\core;Z:\Documents\Programs\Github\WechatExporter\release\windows-static\include;$(IncludePath)</IncludePath>
     <LibraryPath>Z:\Documents\Programs\Github\WechatExporter\release\windows-static\x64\dbg\lib;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -85,7 +85,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
     <LibraryPath>Z:\Documents\Programs\Github\WechatExporter\release\windows-static\x64\lib;$(LibraryPath)</LibraryPath>
-    <IncludePath>$(ProjectDir)..\WechatExporter\core;Z:\Documents\Programs\Github\WechatExporter\release\windows-static\include;C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Tools\MSVC\14.16.27023\wtl\include;$(IncludePath)</IncludePath>
+    <IncludePath>$(ProjectDir)..\WechatExporter\core;Z:\Documents\Programs\Github\WechatExporter\release\windows-static\include;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Label="Vcpkg" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <VcpkgEnabled>false</VcpkgEnabled>
@@ -96,17 +96,18 @@
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
-      <PrecompiledHeader>Use</PrecompiledHeader>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <Optimization>Disabled</Optimization>
-      <PreprocessorDefinitions>WIN32;_WINDOWS;STRICT;_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;_WINDOWS;STRICT;_DEBUG;CURL_STATICLIB;COMPILE_SDK;NOMINMAX;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalDependencies>Shell32.lib;Ws2_32.lib;Wldap32.lib;Version.lib;Crypt32.lib;libprotobufd.lib;libcrypto.lib;libcharset.lib;libiconv.lib;lzmad.lib;zlibd.lib;libssl.lib;libcurl-d.lib;libxml2.lib;sqlite3.lib;jsoncpp.lib;SKP_Silk_FIX.lib;libmp3lame-static.lib;libmpghip-static.lib;libplist.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <ResourceCompile>
       <Culture>0x0409</Culture>
@@ -172,6 +173,7 @@ xcopy "$(ProjectDir)..\WechatExporter\res"  "$(OutDir)res"  /Y /S /E</Command>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
+      <AdditionalDependencies>Shell32.lib;Ws2_32.lib;Wldap32.lib;Version.lib;Crypt32.lib;libprotobuf.lib;libcrypto.lib;libcharset.lib;libiconv.lib;zlib.lib;lzma.lib;libssl.lib;libcurl.lib;libxml2.lib;sqlite3.lib;jsoncpp.lib;SKP_Silk_FIX.lib;libmp3lame-static.lib;libmpghip-static.lib;libplist.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <ResourceCompile>
       <Culture>0x0409</Culture>
