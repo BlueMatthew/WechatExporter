@@ -2,7 +2,7 @@
 
 #include "stdafx.h"
 #include <string>
-#include <shlobj_core.h>
+// #include <shlobj_core.h>
 #include "Core.h"
 
 class ShellImpl : public Shell
