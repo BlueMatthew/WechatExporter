@@ -511,10 +511,10 @@ int Exporter::exportSession(const Friend& user, SessionParser& sessionParser, co
     }
 
     std::vector<std::string> messages;
-        if (session.getRecordCount() > 0)
-        {
-            messages.reserve(session.getRecordCount());
-        }
+    if (session.getRecordCount() > 0)
+    {
+        messages.reserve(session.getRecordCount());
+    }
     std::function<bool(const std::vector<TemplateValues>&)> handler = std::bind(&Exporter::exportMessage, this, std::cref(session), std::placeholders::_1, std::ref(messages));
     
     int count = sessionParser.parse(userBase, outputBase, session, handler);
