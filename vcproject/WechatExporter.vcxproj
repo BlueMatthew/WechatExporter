@@ -68,7 +68,7 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
-    <LibraryPath>Z:\Documents\Programs\Github\WechatExporter\release\windows-static\x64\dbg\lib;$(LibraryPath)</LibraryPath>
+    <LibraryPath>Z:\Documents\Programs\Github\WechatExporter\release\windows-static\x86\dbg\lib;$(LibraryPath)</LibraryPath>
     <IncludePath>Z:\Documents\Programs\Github\WechatExporter\release\windows-static\include;$(ProjectDir)..\WechatExporter\core;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -164,12 +164,12 @@ xcopy "$(ProjectDir)..\WechatExporter\res"  "$(OutDir)res"  /Y /S /E</Command>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
-      <PrecompiledHeader>Use</PrecompiledHeader>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <ExceptionHandling />
       <DebugInformationFormat />
-      <PreprocessorDefinitions>WIN32;_WINDOWS;STRICT;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;_WINDOWS;STRICT;NDEBUG;CURL_STATICLIB;COMPILE_SDK;NOMINMAX;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
