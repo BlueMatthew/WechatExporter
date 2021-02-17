@@ -20,6 +20,8 @@
 
 #include <sqlite3.h>
 #include <fstream>
+#include <thread>
+#include <future>
 
 void errorLogCallback(void *pArg, int iErrCode, const char *zMsg)
 {
@@ -348,16 +350,36 @@ void errorLogCallback(void *pArg, int iErrCode, const char *zMsg)
     m_logger->write("Start loading users and sessions.");
 #endif
 
-    NSString *workDir = [[NSBundle mainBundle] resourcePath];
-
-    Exporter exp([workDir UTF8String], [backupPath UTF8String], "", m_shell, m_logger);
-    exp.loadUsersAndSessions(m_usersAndSessions);
+    __block NSString *backupDir = [NSString stringWithString:backupPath];
+    __block NSString *workDir = [[NSBundle mainBundle] resourcePath];
+    typeof(self) __weak weakSelf = self;
+    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+        
+        __strong typeof(weakSelf) strongSelf = weakSelf;  // strong by default
+        if (nil != strongSelf)
+        {
+            Exporter exp([workDir UTF8String], [backupDir UTF8String], "", strongSelf->m_shell, strongSelf->m_logger);
+            exp.loadUsersAndSessions();
+            exp.swapUsersAndSessions(strongSelf->m_usersAndSessions);
+        }
+        
+        // update UI on the main thread
+        dispatch_async(dispatch_get_main_queue(), ^{
+            __strong typeof(weakSelf) strongSelf = weakSelf;  // strong by default
+            if (strongSelf) {
+    #ifndef NDEBUG
+                strongSelf->m_logger->write("Data Loaded.");
+    #endif
+                [strongSelf loadUsers];
+            }
+        });
+    });
     
-#ifndef NDEBUG
-    m_logger->write("Data Loaded.");
-#endif
+    
+    
 
-    [self loadUsers];
+
+    
 }
 
 - (void)toggleAllSessions:(id)sender
