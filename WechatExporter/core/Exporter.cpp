@@ -123,7 +123,7 @@ void Exporter::setTemplatesName(const std::string& templatesName)
 
 void Exporter::filterUsersAndSessions(const std::map<std::string, std::set<std::string>>& usersAndSessions)
 {
-    m_usersAndSessions = usersAndSessions;
+    m_usersAndSessionsFilter = usersAndSessions;
 }
 
 bool Exporter::run()
@@ -149,8 +149,10 @@ bool Exporter::run()
     return true;
 }
 
-bool Exporter::loadUsersAndSessions(std::vector<std::pair<Friend, std::vector<Session>>>& usersAndSessions)
+bool Exporter::loadUsersAndSessions()
 {
+    m_usersAndSessions.clear();
+    
     loadStrings();
     
     if (!loadITunes(false))
@@ -178,15 +180,20 @@ bool Exporter::loadUsersAndSessions(std::vector<std::pair<Friend, std::vector<Se
     m_logger->debug(loginInfo2Parser.getError());
 #endif
     m_logger->debug("Wechat Users loaded.");
-    usersAndSessions.reserve(users.size()); // Avoid re-allocation and causing the pointer changed
+    m_usersAndSessions.reserve(users.size()); // Avoid re-allocation and causing the pointer changed
     for (std::vector<Friend>::const_iterator it = users.cbegin(); it != users.cend(); ++it)
     {
-        std::vector<std::pair<Friend, std::vector<Session>>>::iterator it2 = usersAndSessions.emplace(usersAndSessions.cend(), std::pair<Friend, std::vector<Session>>(*it, std::vector<Session>()));
+        std::vector<std::pair<Friend, std::vector<Session>>>::iterator it2 = m_usersAndSessions.emplace(m_usersAndSessions.cend(), std::pair<Friend, std::vector<Session>>(*it, std::vector<Session>()));
         Friends friends;
         loadUserFriendsAndSessions(it2->first, friends, it2->second, false);
     }
 
     return true;
+}
+
+void Exporter::swapUsersAndSessions(std::vector<std::pair<Friend, std::vector<Session>>>& usersAndSessions)
+{
+    usersAndSessions.swap(m_usersAndSessions);
 }
 
 bool Exporter::runImpl()
@@ -237,9 +244,9 @@ bool Exporter::runImpl()
             break;
         }
         
-        if (!m_usersAndSessions.empty())
+        if (!m_usersAndSessionsFilter.empty())
         {
-            if (m_usersAndSessions.find(it->getUsrName()) == m_usersAndSessions.cend())
+            if (m_usersAndSessionsFilter.find(it->getUsrName()) == m_usersAndSessionsFilter.cend())
             {
                 continue;
             }
@@ -356,10 +363,10 @@ bool Exporter::exportUser(Friend& user, std::string& userOutputPath)
     
     std::string userBody;
     
-    std::map<std::string, std::set<std::string>>::const_iterator itUser = m_usersAndSessions.cend();
-    if (!m_usersAndSessions.empty())
+    std::map<std::string, std::set<std::string>>::const_iterator itUser = m_usersAndSessionsFilter.cend();
+    if (!m_usersAndSessionsFilter.empty())
     {
-        itUser = m_usersAndSessions.find(user.getUsrName());
+        itUser = m_usersAndSessionsFilter.find(user.getUsrName());
     }
     
     std::function<std::string(const std::string&)> localeFunction = std::bind(&Exporter::getLocaleString, this, std::placeholders::_1);
@@ -386,9 +393,9 @@ bool Exporter::exportUser(Friend& user, std::string& userOutputPath)
             break;
         }
         
-        if (!m_usersAndSessions.empty())
+        if (!m_usersAndSessionsFilter.empty())
         {
-            if (itUser == m_usersAndSessions.cend() || itUser->second.find(it->getUsrName()) == itUser->second.cend())
+            if (itUser == m_usersAndSessionsFilter.cend() || itUser->second.find(it->getUsrName()) == itUser->second.cend())
             {
                 continue;
             }

@@ -5,6 +5,8 @@
 #pragma once
 
 #include <thread>
+#include <future>
+#include <chrono>
 #include "Core.h"
 #include "LoggerImpl.h"
 #include "ShellImpl.h"
@@ -251,11 +253,47 @@ public:
 		}
 		CW2A resDir(CT2W(buffer), CP_UTF8);
 
+		EnableInteractiveCtrls(FALSE, FALSE);
 		std::string backup = manifest.getPath();
 		Exporter exp((LPCSTR)resDir, backup, "", &m_shell, m_logger);
-		exp.loadUsersAndSessions(m_usersAndSessions);
+
+		std::future<bool> result = std::async(std::launch::async, &Exporter::loadUsersAndSessions, &exp);
+		std::future_status status;
+
+		MSG msg;
+		while (TRUE)
+		{
+			if (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE))
+			{
+				if (msg.message == WM_QUIT)
+					break;
+				TranslateMessage(&msg);
+				DispatchMessage(&msg);
+			}
+			else
+			{
+				// 完成某些工作的其他行程式 
+				status = result.wait_for(std::chrono::milliseconds(8));
+				if (status == std::future_status::ready)
+				{
+					break;
+				}
+			}
+		}
+	
+		if (status != std::future_status::ready)
+		{
+			// Quit?
+			EnableInteractiveCtrls(TRUE, FALSE);
+			return 0;
+		}
+
+		// exp.loadUsersAndSessions();
+		exp.swapUsersAndSessions(m_usersAndSessions);
 
 		LoadUsers();
+
+		EnableInteractiveCtrls(TRUE, FALSE);
 
 		return 0;
 	}
