@@ -55,7 +55,9 @@ protected:
     std::string m_extName;
     std::string m_templatesName;
     
-    std::map<std::string, std::set<std::string>> m_usersAndSessions;
+    std::map<std::string, std::set<std::string>> m_usersAndSessionsFilter;
+    
+    std::vector<std::pair<Friend, std::vector<Session>>> m_usersAndSessions;
     
 public:
     Exporter(const std::string& workDir, const std::string& backup, const std::string& output, Shell* shell, Logger* logger);
@@ -63,7 +65,8 @@ public:
 
     void setNotifier(ExportNotifier *notifier);
     
-    bool loadUsersAndSessions(std::vector<std::pair<Friend, std::vector<Session>>>& usersAndSessions);
+    bool loadUsersAndSessions();
+    void swapUsersAndSessions(std::vector<std::pair<Friend, std::vector<Session>>>& usersAndSessions);
 
     bool run();
     bool isRunning() const;
