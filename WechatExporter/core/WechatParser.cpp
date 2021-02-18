@@ -287,6 +287,9 @@ bool LoginInfo2Parser::parseUserFromFolder(std::vector<Friend>& users)
     for (ITunesFilesConstIterator it = folders.cbegin(); it != folders.cend(); ++it)
     {
         std::string fileName = filter.parse((*it));
+#ifndef NDEBUG
+        m_error += "User Folder: *" + fileName + "*  ";
+#endif
         if (fileName == "00000000000000000000000000000000")
         {
             continue;
@@ -307,7 +310,7 @@ bool LoginInfo2Parser::parseUserFromFolder(std::vector<Friend>& users)
         {
             users.emplace(users.end(), "", fileName);
 #ifndef NDEBUG
-    m_error += "New User From Folder: *" + fileName + "* ";
+            m_error += "New User From Folder: *" + fileName + "*  ";
 #endif
         }
     }

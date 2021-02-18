@@ -231,6 +231,9 @@ bool Exporter::runImpl()
         notifyComplete();
         return false;
     }
+#ifndef NDEBUG
+    m_logger->debug(loginInfo2Parser.getError());
+#endif
 
     m_logger->write(formatString(getLocaleString("%d Wechat account(s) found."), (int)(users.size())));
 

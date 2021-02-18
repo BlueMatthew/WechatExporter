@@ -104,22 +104,29 @@ public:
 
 class UserFolderFilter : public RegexFilterBase<UserFolderFilter>
 {
+protected:
+    std::string m_suffix;
+    size_t m_pathLen;
+    size_t m_suffixLen;
 public:
     UserFolderFilter() : RegexFilterBase()
     {
         m_path = "Documents/";
         // m_pattern = "^([a-zA-Z0-9]{32})$";
+        m_suffix = "/DB/MM.sqlite";
+        m_pathLen = m_path.length();
+        m_suffixLen = m_suffix.length();
     }
     
     bool operator==(const ITunesFile* s) const
     {
-        if ((s->relativePath.size() != (m_path.size() + 32)) || !startsWith(s->relativePath, m_path))
+        if (/*(s->relativePath.size() != (m_path.size() + 32 + 13)) || */!startsWith(s->relativePath, m_path)|| !endsWith(s->relativePath, m_suffix))
         {
             return false;
         }
-        if (s->relativePath.find('/', m_path.size()) != std::string::npos)
+        // if (s->relativePath.find('/', m_path.size(), 32) != std::string::npos)
         {
-            return false;
+            // return false;
         }
         
         return true;
@@ -127,7 +134,9 @@ public:
     
     std::string parse(const ITunesFile* s) const
     {
-        return s->relativePath.size() > 32 ? s->relativePath.substr(m_path.size()) : "";
+        return s->relativePath.substr(m_pathLen, s->relativePath.length() - m_pathLen - m_suffixLen);
+        // return s->relativePath.substr(m_path.size()) : "";
+        // return s->relativePath.size() > 32 ? s->relativePath.substr(m_path.size()) : "";
     }
 };
 
