@@ -11,9 +11,9 @@
 #include "LoggerImpl.h"
 #include "ShellImpl.h"
 #include "ExportNotifierImpl.h"
-#include "ColoredControls.h"
+// #include "ColoredControls.h"
 #include "LogListBox.h"
-#include "ITunesDetector.h"
+// #include "ITunesDetector.h"
 #include "AppConfiguration.h"
 
 class CView : public CDialogImpl<CView>, public CDialogResize<CView>
@@ -33,6 +33,43 @@ private:
 	std::vector<std::pair<Friend, std::vector<Session>>> m_usersAndSessions;
 
 	int m_itemClicked;
+
+	class CLoadingHandler : public CIdleHandler
+	{
+	protected:
+		HWND m_hWnd;
+		std::future<bool> m_task;
+		Exporter m_exp;
+		CWaitCursor m_waitCursor;
+	public:
+
+		CLoadingHandler(HWND hWnd, const std::string& resDir, const std::string& backupDir, Shell* shell, Logger* logger) : m_hWnd(hWnd), m_exp(resDir, backupDir, "", shell, logger)
+		{
+			m_task = std::async(std::launch::async, &Exporter::loadUsersAndSessions, &m_exp);
+		}
+
+		~CLoadingHandler()
+		{
+		}
+
+		virtual BOOL OnIdle()
+		{
+			std::future_status status = m_task.wait_for(std::chrono::seconds(0));
+			if (status == std::future_status::ready)
+			{
+				::PostMessage(m_hWnd, WM_LOADDATA, 0, reinterpret_cast<LPARAM>(this));
+				return TRUE;
+			}
+
+			return FALSE;
+		}
+
+		void getUsersAndSessions(std::vector<std::pair<Friend, std::vector<Session>>>& usersAndSessions)
+		{
+			m_exp.swapUsersAndSessions(usersAndSessions);
+		}
+
+	};
 
 public:
 	enum { IDD = IDD_WECHATEXPORTER_FORM };
@@ -73,8 +110,32 @@ public:
 
 		SetDlgItemText(IDC_OUTPUT, AppConfiguration::GetLastOrDefaultOutputDir());
 
-		PostMessage(WM_LOADDATA, 0, 0);
-		
+		backupDir = AppConfiguration::GetDefaultBackupDir();
+#ifndef NDEBUG
+		CString lastBackupDir = AppConfiguration::GetLastBackupDir();
+#endif
+
+		std::vector<BackupManifest> manifests;
+#ifndef NDEBUG
+		if (!lastBackupDir.IsEmpty() && lastBackupDir != backupDir)
+		{
+			CW2A backupDir(CT2W(lastBackupDir), CP_UTF8);
+			ManifestParser parser((LPCSTR)backupDir, &m_shell);
+			parser.parse(manifests);
+		}
+#endif
+		if (!backupDir.IsEmpty())
+		{
+			CW2A backupDir(CT2W(backupDir), CP_UTF8);
+			ManifestParser parser((LPCSTR)backupDir, &m_shell);
+			parser.parse(manifests);
+		}
+
+		if (!manifests.empty())
+		{
+			UpdateBackups(manifests);
+		}
+
 		return TRUE;
 	}
 
@@ -149,30 +210,20 @@ public:
 
 	LRESULT OnLoadData(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 	{
-		CString backupDir = AppConfiguration::GetDefaultBackupDir();
-#ifndef NDEBUG
-		CString lastBackupDir = AppConfiguration::GetLastBackupDir();
-#endif
+		CLoadingHandler *handler = reinterpret_cast<CLoadingHandler *>(lParam);
+		if (NULL != handler)
+		{
+			if (_Module.GetMessageLoop()->RemoveIdleHandler(handler))
+			{
+				// exp.loadUsersAndSessions();
+				handler->getUsersAndSessions(m_usersAndSessions);
 
-		std::vector<BackupManifest> manifests;
-#ifndef NDEBUG
-		if (!lastBackupDir.IsEmpty() && lastBackupDir != backupDir)
-		{
-			CW2A backupDir(CT2W(lastBackupDir), CP_UTF8);
-			ManifestParser parser((LPCSTR)backupDir, &m_shell);
-			parser.parse(manifests);
-		}
-#endif
-		if (!backupDir.IsEmpty())
-		{
-			CW2A backupDir(CT2W(backupDir), CP_UTF8);
-			ManifestParser parser((LPCSTR)backupDir, &m_shell);
-			parser.parse(manifests);
-		}
-		
-		if (!manifests.empty())
-		{
-			UpdateBackups(manifests);
+				LoadUsers();
+				EnableInteractiveCtrls(TRUE, FALSE);
+
+				delete handler;
+			}
+			// If the handler is not in array, throw it away
 		}
 
 		return 0;
@@ -217,31 +268,26 @@ public:
 		CComboBox cbmBox = GetDlgItem(IDC_USERS);
 		cbmBox.ResetContent();
 
+		CListViewCtrl listViewCtrl = GetDlgItem(IDC_SESSIONS);
+		// listViewCtrl.SetRedraw(FALSE);
+		listViewCtrl.DeleteAllItems();
+		// listViewCtrl.SetRedraw(TRUE);
+
 		m_usersAndSessions.clear();
 		cbmBox = GetDlgItem(IDC_BACKUP);
 		if (cbmBox.GetCurSel() == -1)
 		{
-			CListViewCtrl listViewCtrl = GetDlgItem(IDC_SESSIONS);
-			listViewCtrl.SetRedraw(FALSE);
-			listViewCtrl.DeleteAllItems();
-			listViewCtrl.SetRedraw(TRUE);
-
 			return 0;
 		}
 
 		const BackupManifest& manifest = m_manifests[cbmBox.GetCurSel()];
 		if (manifest.isEncrypted())
 		{
-			CListViewCtrl listViewCtrl = GetDlgItem(IDC_SESSIONS);
-			listViewCtrl.SetRedraw(FALSE);
-			listViewCtrl.DeleteAllItems();
-			listViewCtrl.SetRedraw(TRUE);
-
 			MsgBox(IDS_ENC_BKP_NOT_SUPPORTED);
 			return 0;
 		}
 
-		CWaitCursor waitCursor;
+		
 #ifndef NDEBUG
 		m_logger->write("Start loading users and sessions.");
 #endif
@@ -254,46 +300,11 @@ public:
 		CW2A resDir(CT2W(buffer), CP_UTF8);
 
 		EnableInteractiveCtrls(FALSE, FALSE);
+		
 		std::string backup = manifest.getPath();
-		Exporter exp((LPCSTR)resDir, backup, "", &m_shell, m_logger);
-
-		std::future<bool> result = std::async(std::launch::async, &Exporter::loadUsersAndSessions, &exp);
-		std::future_status status;
-
-		MSG msg;
-		while (TRUE)
-		{
-			if (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE))
-			{
-				if (msg.message == WM_QUIT)
-					break;
-				TranslateMessage(&msg);
-				DispatchMessage(&msg);
-			}
-			else
-			{
-				// 完成某些工作的其他行程式 
-				status = result.wait_for(std::chrono::milliseconds(8));
-				if (status == std::future_status::ready)
-				{
-					break;
-				}
-			}
-		}
-	
-		if (status != std::future_status::ready)
-		{
-			// Quit?
-			EnableInteractiveCtrls(TRUE, FALSE);
-			return 0;
-		}
-
-		// exp.loadUsersAndSessions();
-		exp.swapUsersAndSessions(m_usersAndSessions);
-
-		LoadUsers();
-
-		EnableInteractiveCtrls(TRUE, FALSE);
+		CLoadingHandler *handler = new CLoadingHandler(m_hWnd, (LPCSTR)resDir, backup, &m_shell, m_logger);
+		_Module.GetMessageLoop()->AddIdleHandler(handler);
+		// Exporter exp((LPCSTR)resDir, backup, "", &m_shell, m_logger);
 
 		return 0;
 	}
@@ -323,7 +334,10 @@ public:
 		}
 		
 		listViewCtrl.SetRedraw(FALSE);
-		listViewCtrl.DeleteAllItems();
+		if (listViewCtrl.GetItemCount() > 0)
+		{
+			listViewCtrl.DeleteAllItems();
+		}
 		LoadSessions(allUsers, usrName);
 		listViewCtrl.SetRedraw(TRUE);
 #ifndef NDEBUG
