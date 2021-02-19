@@ -1367,16 +1367,19 @@ bool SessionParser::parseRow(MsgRecord& record, const std::string& userBase, con
     }
     else if (record.type == 62 || record.type == 43)
     {
+        std::map<std::string, std::string> attrs = { {"fromusername", ""}, {"cdnthumbwidth", ""}, {"cdnthumbheight", ""} };
+        XmlParser xmlParser(record.message);
+        if (xmlParser.parseAttributesValue("/msg/videomsg", attrs))
+        {
+        }
+        
         if (senderId.empty())
         {
-            XmlParser xmlParser(record.message);
-            if (xmlParser.parseAttributeValue("/msg/videomsg", "fromusername", senderId))
-            {
-            }
+            senderId = attrs["fromusername"];
         }
         
         std::string vfile = combinePath(userBase, "Video", session.getHash(), msgIdStr);
-        parseVideo(outputPath, session.getOutputFileName() + "_files", vfile + ".mp4", msgIdStr + ".mp4", vfile + ".video_thum", msgIdStr + "_thum.jpg", templateValues);
+        parseVideo(outputPath, session.getOutputFileName() + "_files", vfile + ".mp4", msgIdStr + ".mp4", vfile + ".video_thum", msgIdStr + "_thum.jpg", attrs["cdnthumbwidth"], attrs["cdnthumbheight"], templateValues);
     }
     else if (record.type == 50)
     {
@@ -1584,7 +1587,7 @@ bool SessionParser::parseRow(MsgRecord& record, const std::string& userBase, con
     return true;
 }
 
-void SessionParser::parseVideo(const std::string& sessionPath, const std::string& sessionAssertsPath, const std::string& srcVideo, const std::string& destVideo, const std::string& srcThumb, const std::string& destThumb, TemplateValues& templateValues)
+void SessionParser::parseVideo(const std::string& sessionPath, const std::string& sessionAssertsPath, const std::string& srcVideo, const std::string& destVideo, const std::string& srcThumb, const std::string& destThumb, const std::string& width, const std::string& height, TemplateValues& templateValues)
 {
     bool hasThumb = false;
     bool hasVideo = false;
@@ -1602,6 +1605,7 @@ void SessionParser::parseVideo(const std::string& sessionPath, const std::string
         templateValues.setName("video");
         templateValues["%%THUMBPATH%%"] = hasThumb ? (sessionAssertsPath + "/" + destThumb) : "";
         templateValues["%%VIDEOPATH%%"] = sessionAssertsPath + "/" + destVideo;
+        
     }
     else if (hasThumb)
     {
@@ -1614,6 +1618,9 @@ void SessionParser::parseVideo(const std::string& sessionPath, const std::string
         templateValues.setName("msg");
         templateValues["%%MESSAGE%%"] = getLocaleString("[Video]");
     }
+    
+    templateValues["%%VIDEOWIDTH%%"] = width;
+    templateValues["%%VIDEOHEIGHT%%"] = height;
 }
 
 void SessionParser::parseImage(const std::string& sessionPath, const std::string& sessionAssertsPath, const std::string& src, const std::string& srcPre, const std::string& dest, const std::string& srcThumb, const std::string& destThumb, TemplateValues& templateValues)
@@ -1857,7 +1864,7 @@ bool SessionParser::parseForwardedMsgs(const std::string& userBase, const std::s
             {
                 std::string fileExtName = it->dataFormat.empty() ? "" : ("." + it->dataFormat);
                 std::string vfile = userBase + "/OpenData/" + session.getHash() + "/" + msgIdStr + "/" + it->dataId;
-                parseVideo(outputPath, session.getOutputFileName() + "_files/" + msgIdStr, vfile + fileExtName, it->dataId + fileExtName, vfile + ".record_thumb", it->dataId + "_thumb.jpg", tv);
+                parseVideo(outputPath, session.getOutputFileName() + "_files/" + msgIdStr, vfile + fileExtName, it->dataId + fileExtName, vfile + ".record_thumb", it->dataId + "_thumb.jpg", "", "", tv);
                 
             }
             else if (it->dataType == "5")
