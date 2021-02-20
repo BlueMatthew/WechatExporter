@@ -57,11 +57,19 @@
 	},
 	{
 		"key": "[Contact Card]",
-		"value": "[名片]"
+		"value": "[个人名片]"
+	},
+	{
+		"key": "[Channel Card]",
+		"value": "[视频号名片]"
 	},
 	{
 		"key": "[Contact Card] %s",
-		"value": "[名片] %s"
+		"value": "[个人名片] %s"
+	},
+	{
+		"key": "[Channel Card] %s",
+		"value": "[视频号名片] %s"
 	},
 	{
 		"key": "iTunes: %s",

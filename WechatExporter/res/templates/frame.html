@@ -18,13 +18,13 @@
         font-size: 10.5pt;
         overflow: auto;
       }
-      .chat-left div:nth-of-type(1),
-      .media-left div:nth-of-type(1)
+      .chat-left div.avatarBox,
+      .media-left div.avatarBox
       {
         float: left;
       }
-      .chat-left div:nth-of-type(2),
-      .media-left div:nth-of-type(2)
+      .chat-left div.ntBox,
+      .media-left div.ntBox
       {
         margin: 0 50px 2px 50px;
         padding: 0px;
@@ -32,7 +32,7 @@
         font-size: 80%;
         text-align: left;
       }
-      .chat-left div:nth-of-type(3)
+      .chat-left div.contentBox
       {
         background-color: white;
         /*float: left;*/
@@ -41,7 +41,7 @@
         border-radius:8px;
         text-indent: -12px;
       }
-      .media-left div:nth-of-type(3)
+      .media-left div.contentBox
       {
         /*background-color: white;*/
         /*float: left;*/
@@ -58,13 +58,13 @@
         font-size: 80%;
         overflow: auto;
       }
-      .chat-right div:nth-of-type(1),
-      .media-right div:nth-of-type(1)
+      .chat-right div.avatarBox,
+      .media-right div.avatarBox
       {
         float: right;
       }
-      .chat-right div:nth-of-type(2),
-      .media-right div:nth-of-type(2)
+      .chat-right div.ntBox,
+      .media-right div.ntBox
       {
         margin: 0px 50px 2px 50px;
         padding: 0px;
@@ -72,7 +72,7 @@
         font-size: 80%;
         text-align: right;
       }
-      .chat-right div:nth-of-type(3)
+      .chat-right div.contentBox
       {
         /*float:right;*/
         background-color: #b2e281;
@@ -80,7 +80,7 @@
         padding: 10px 10px 10px 10px;
         border-radius: 8px;
       }
-      .media-right div:nth-of-type(3)
+      .media-right div.contentBox
       {
         float: right;
         /*background-color: #b2e281;*/
@@ -173,6 +173,41 @@
           /* transform: scale(5); */
       }
 
+      img.card-avatar
+      {
+        width: 42px;
+        height: 42px;
+        vertical-align:middle;
+        /*max-width:100px;
+        max-height:60px;
+        */
+      }
+      div.card-name
+      {
+        display: flex;
+        align-items:center;
+      }
+      div.card-name span
+      {
+        margin: 12px;
+      }
+      div.card-type
+      {
+        border-top: 1px dotted #dedede;
+        margin: 2px;
+        margin-top: 10px;
+        padding: 0 7px;
+        line-height: 1.6;
+      }
+      .contact-card .card-avatar
+      {
+        border-radius: 4px;
+      }
+      .channel-card .card-avatar
+      {
+        border-radius: 21px;
+      }
+      
       .dont-break-out
       {
         overflow-wrap: break-word;
