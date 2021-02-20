@@ -1261,7 +1261,28 @@ bool SessionParser::parseRow(MsgRecord& record, const std::string& userBase, con
 #ifndef NDEBUG
     writeFile(combinePath(outputPath, "../dbg", "msg" + std::to_string(record.type) + ".txt"), record.message);
 #endif
-    if (record.type == 10000 || record.type == 10002)
+    
+    /*
+     MSGTYPE_TEXT: 1,
+     MSGTYPE_IMAGE: 3,
+     MSGTYPE_VOICE: 34,
+     MSGTYPE_VIDEO: 43,
+     MSGTYPE_MICROVIDEO: 62,
+     MSGTYPE_EMOTICON: 47,
+     MSGTYPE_APP: 49,
+     MSGTYPE_VOIPMSG: 50,
+     MSGTYPE_VOIPNOTIFY: 52,
+     MSGTYPE_VOIPINVITE: 53,
+     MSGTYPE_LOCATION: 48,
+     MSGTYPE_STATUSNOTIFY: 51,
+     MSGTYPE_SYSNOTICE: 9999,
+     MSGTYPE_POSSIBLEFRIEND_MSG: 40,
+     MSGTYPE_VERIFYMSG: 37,
+     MSGTYPE_SHARECARD: 42,
+     MSGTYPE_SYS: 10000,
+     MSGTYPE_RECALLED: 10002,
+     */
+    if (record.type == 10000 || record.type == 10002 /*recall*/)
     {
         templateValues.setName("system");
         std::string sysMsg = record.message;
@@ -1419,41 +1440,112 @@ bool SessionParser::parseRow(MsgRecord& record, const std::string& userBase, con
     }
     else if (record.type == 49)
     {
-        std::map<std::string, std::string> nodes = { {"title", ""}, {"type", ""}, {"des", ""}, {"url", ""}, {"thumburl", ""}, {"recorditem", ""} };
+        /*
+         "APPMSGTYPE_TEXT": 1,
+         "APPMSGTYPE_IMG": 2,
+         "APPMSGTYPE_AUDIO": 3,
+         "APPMSGTYPE_VIDEO": 4,
+         "APPMSGTYPE_URL": 5,
+         "APPMSGTYPE_ATTACH": 6,
+         "APPMSGTYPE_OPEN": 7,
+         "APPMSGTYPE_EMOJI": 8,
+         "APPMSGTYPE_VOICE_REMIND": 9,
+         "APPMSGTYPE_SCAN_GOOD": 10,
+         "APPMSGTYPE_GOOD": 13,
+         "APPMSGTYPE_EMOTION": 15,
+         "APPMSGTYPE_CARD_TICKET": 16,
+         "APPMSGTYPE_REALTIME_SHARE_LOCATION": 17,
+         "APPMSGTYPE_TRANSFERS": 2000,
+         "APPMSGTYPE_RED_ENVELOPES": 2001,
+         "APPMSGTYPE_READER_TYPE": 100001,
+         */
+        // std::map<std::string, std::string> nodes = { {"title", ""}, {"type", ""}, {"des", ""}, {"url", ""}, {"thumburl", ""}, {"recorditem", ""} };
+        // if (xmlParser.parseNodesValue("/msg/appmsg/*", nodes))
+        
         XmlParser xmlParser(record.message, true);
-        if (xmlParser.parseNodesValue("/msg/appmsg/*", nodes))
+        std::string appMsgType;
+        if (xmlParser.parseNodeValue("/msg/appmsg/type", appMsgType))
         {
-            std::string appMsgType = nodes["type"];
+#ifndef NDEBUG
+            writeFile(combinePath(outputPath, "../dbg", "msg" + std::to_string(record.type) + "_app_" + appMsgType + ".txt"), record.message);
+#endif
             if (appMsgType == "2001") templateValues["%%MESSAGE%%"] = getLocaleString("[Red Packet]");
             else if (appMsgType == "2000") templateValues["%%MESSAGE%%"] = getLocaleString("[Transfer]");
             else if (appMsgType == "17") templateValues["%%MESSAGE%%"] = getLocaleString("[Real-time Location]");
             else if (appMsgType == "6")
             {
-                // templateValues["%%MESSAGE%%"] = getLocaleString("[File]");
+                std::string title;
                 std::string attachFileExtName;
+                xmlParser.parseNodeValue("/msg/appmsg/title", title);
                 xmlParser.parseNodeValue("/msg/appmsg/appattach/fileext", attachFileExtName);
+                
                 std::string attachFileName = userBase + "/OpenData/" + session.getHash() + "/" + msgIdStr;
                 if (!attachFileExtName.empty())
                 {
                     attachFileName += "." + attachFileExtName;
                 }
                 
-                std::string attachOutputFileName = msgIdStr + "_" + nodes["title"];
-                parseFile(outputPath, session.getOutputFileName() + "_files", attachFileName, attachOutputFileName, nodes["title"], templateValues);
+                std::string attachOutputFileName = msgIdStr + "_" + title;
+                parseFile(outputPath, session.getOutputFileName() + "_files", attachFileName, attachOutputFileName, title, templateValues);
             }
             else if (appMsgType == "19")    // Forwarded Msgs
             {
+                std::string title;
+                xmlParser.parseNodeValue("/msg/appmsg/title", title);
+                xmlParser.parseNodeValue("/msg/appmsg/recorditem", forwardedMsg);
 #ifndef NDEBUG
-                writeFile(combinePath(outputPath, "../dbg", "msg" + std::to_string(record.type) + "_19.txt"), nodes["recorditem"]);
+                writeFile(combinePath(outputPath, "../dbg", "msg" + std::to_string(record.type) + "_app_" + appMsgType + ".txt"), forwardedMsg);
 #endif
                 templateValues.setName("msg");
-                templateValues["%%MESSAGE%%"] = nodes["title"];
+                templateValues["%%MESSAGE%%"] = title;
+
+                forwardedMsgTitle = title;
+            }
+            else if (appMsgType == "50")
+            {
+                // Channel Card
                 
-                forwardedMsg = nodes["recorditem"];
-                forwardedMsgTitle = nodes["title"];
+                std::map<std::string, std::string> nodes = { {"username", ""}, {"avatar", ""}, {"nickname", ""}};
+                xmlParser.parseNodesValue("/msg/appmsg/findernamecard/*", nodes);
+                
+                std::string portraitDir = ((m_options & SPO_ICON_IN_SESSION) == SPO_ICON_IN_SESSION) ? session.getOutputFileName() + "_files/Portrait" : "Portrait";
+                
+                parseChannelCard(outputPath, portraitDir, nodes["username"], nodes["avatar"], nodes["nickname"], templateValues);
+            }
+            else if (appMsgType == "51")
+            {
+#ifndef NDEBUG
+                writeFile(combinePath(outputPath, "../dbg", "msg" + std::to_string(record.type) + "_app_" + appMsgType + "_" + msgIdStr + ".txt"), record.message);
+#endif
+                // 视频号
+                /*
+                std::map<std::string, std::string> nodes = { {"nickname", ""}, {"avatar", ""}, {"desc", ""}, {"mediaCount", ""}};
+                xmlParser.parseNodesValue("/msg/appmsg/*", nodes);
+                
+                if (!nodes["title"].empty() && !nodes["url"].empty())
+                {
+                    templateValues.setName(nodes["thumburl"].empty() ? "plainshare" : "share");
+
+                    templateValues["%%SHARINGIMGPATH%%"] = nodes["thumburl"];
+                    templateValues["%%SHARINGURL%%"] = nodes["url"];
+                    templateValues["%%SHARINGTITLE%%"] = nodes["title"];
+                    templateValues["%%MESSAGE%%"] = nodes["des"];
+                }
+                else if (!nodes["title"].empty())
+                {
+                    templateValues["%%MESSAGE%%"] = nodes["title"];
+                }
+                else
+                {
+                    templateValues["%%MESSAGE%%"] = getLocaleString("[Link]");
+                }
+                 */
             }
             else
             {
+                std::map<std::string, std::string> nodes = { {"title", ""}, {"type", ""}, {"des", ""}, {"url", ""}, {"thumburl", ""}, {"recorditem", ""} };
+                xmlParser.parseNodesValue("/msg/appmsg/*", nodes);
+                
                 if (!nodes["title"].empty() && !nodes["url"].empty())
                 {
                     templateValues.setName(nodes["thumburl"].empty() ? "plainshare" : "share");
@@ -1695,15 +1787,15 @@ void SessionParser::parseCard(const std::string& sessionPath, const std::string&
         attrs = { {"nickname", ""}, {"username", ""} };
     }
 
+    templateValues["%%CARDTYPE%%"] = getLocaleString("[Contact Card]");
     XmlParser xmlParser(cardMessage, true);
     if (xmlParser.parseAttributesValue("/msg", attrs) && !attrs["nickname"].empty())
     {
-        templateValues.setName("card");
-        templateValues["%%CARDNAME%%"] = attrs["nickname"];
-        
         std::string portraitUrl = attrs["bigheadimgurl"].empty() ? attrs["smallheadimgurl"] : attrs["bigheadimgurl"];
         if (!attrs["username"].empty() && !portraitUrl.empty())
         {
+            templateValues.setName("card");
+            templateValues["%%CARDNAME%%"] = attrs["nickname"];
             templateValues["%%CARDIMGPATH%%"] = portraitDir + "/" + attrs["username"] + ".jpg";
             std::string localfile = combinePath(portraitDir, attrs["username"] + ".jpg");
             ensureDirectoryExisted(portraitDir);
@@ -1711,13 +1803,47 @@ void SessionParser::parseCard(const std::string& sessionPath, const std::string&
         }
         else
         {
-            templateValues["%%CARDIMGPATH%%"] = portraitUrl;
+            templateValues.setName("msg");
+            templateValues["%%MESSAGE%%"] = formatString(getLocaleString("[Contact Card] %s"), attrs["username"].c_str());
         }
     }
     else
     {
         templateValues["%%MESSAGE%%"] = getLocaleString("[Contact Card]");
     }
+    templateValues["%%EXTRA_CLS%%"] = "contact-card";
+}
+
+void SessionParser::parseChannelCard(const std::string& sessionPath, const std::string& portraitDir, const std::string& usrName, const std::string& avatar, const std::string& name, TemplateValues& templateValues)
+{
+    bool hasImg = false;
+    if ((m_options & SPO_IGNORE_SHARING) == 0)
+    {
+        hasImg = (!usrName.empty() && !avatar.empty());
+    }
+    templateValues["%%CARDTYPE%%"] = getLocaleString("[Channel Card]");
+    if (!name.empty())
+    {
+        if (hasImg)
+        {
+            templateValues.setName("card");
+            templateValues["%%CARDNAME%%"] = name;
+            templateValues["%%CARDIMGPATH%%"] = portraitDir + "/" + usrName + ".jpg";
+            std::string localfile = combinePath(portraitDir, usrName + ".jpg");
+            ensureDirectoryExisted(portraitDir);
+            m_downloader.addTask(avatar, combinePath(sessionPath, localfile), 0);
+        }
+        else
+        {
+            templateValues.setName("msg");
+            templateValues["%%MESSAGE%%"] = formatString(getLocaleString("[Channel Card] %s"), name.c_str());
+        }
+    }
+    else
+    {
+        templateValues["%%MESSAGE%%"] = getLocaleString("[Channel Card]");
+    }
+    templateValues["%%EXTRA_CLS%%"] = "channel-card";
 }
 
 class ForwardMsgsHandler
