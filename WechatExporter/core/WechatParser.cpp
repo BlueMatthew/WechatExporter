@@ -1289,6 +1289,17 @@ bool SessionParser::parseRow(MsgRecord& record, const std::string& userBase, con
         removeHtmlTags(sysMsg);
         templateValues["%%MESSAGE%%"] = sysMsg;
     }
+    else if (record.type == 1)
+    {
+        if ((m_options & SPO_IGNORE_HTML_ENC) == 0)
+        {
+            templateValues["%%MESSAGE%%"] = safeHTML(record.message);
+        }
+        else
+        {
+            templateValues["%%MESSAGE%%"] = record.message;
+        }
+    }
     else if (record.type == 34)
     {
         std::string audioSrc;
@@ -1302,8 +1313,7 @@ bool SessionParser::parseRow(MsgRecord& record, const std::string& userBase, con
             {
                 voicelen = std::stoi(vlenstr);
             }
-
-            // static std::regex voiceLengthPattern("voicelength=\"(\\d+?)\"");
+            
             audioSrcFile = m_iTunesDb.findITunesFile(combinePath(userBase, "Audio", session.getHash(), msgIdStr + ".aud"));
             if (NULL != audioSrcFile)
             {
@@ -1388,6 +1398,7 @@ bool SessionParser::parseRow(MsgRecord& record, const std::string& userBase, con
     }
     else if (record.type == 62 || record.type == 43)
     {
+        // Video
         std::map<std::string, std::string> attrs = { {"fromusername", ""}, {"cdnthumbwidth", ""}, {"cdnthumbheight", ""} };
         XmlParser xmlParser(record.message);
         if (xmlParser.parseAttributesValue("/msg/videomsg", attrs))
@@ -1501,10 +1512,54 @@ bool SessionParser::parseRow(MsgRecord& record, const std::string& userBase, con
 
                 forwardedMsgTitle = title;
             }
+            else if (appMsgType == "57")
+            {
+                // Refer Message
+                std::string title;
+                xmlParser.parseNodeValue("/msg/appmsg/title", title);
+                std::map<std::string, std::string> nodes = { {"displayname", ""}, {"content", ""}, {"type", ""}};
+                if (xmlParser.parseNodesValue("/msg/appmsg/refermsg/*", nodes))
+                {
+#ifndef NDEBUG
+                    writeFile(combinePath(outputPath, "../dbg", "msg" + std::to_string(record.type) + "_app_" + appMsgType + "_ref_" + nodes["type"] + " .txt"), nodes["content"]);
+#endif
+                    templateValues.setName("refermsg");
+                    templateValues["%%MESSAGE%%"] = title;
+                    templateValues["%%REFERNAME%%"] = nodes["displayname"];
+                    if (nodes["type"] == "43")
+                    {
+                        templateValues["%%REFERMSG%%"] = getLocaleString("[Video]");
+                    }
+                    else if (nodes["type"] == "1")
+                    {
+                        templateValues["%%REFERMSG%%"] = nodes["content"];
+                    }
+                    else if (nodes["type"] == "3")
+                    {
+                        templateValues["%%REFERMSG%%"] = getLocaleString("[Photo]");
+                    }
+                    else if (nodes["type"] == "49")
+                    {
+                        // APPMSG
+                        XmlParser subAppMsgXmlParser(nodes["content"], true);
+                        std::string subAppMsgTitle;
+                        subAppMsgXmlParser.parseNodeValue("/msg/appmsg/title", subAppMsgTitle);
+                        templateValues["%%REFERMSG%%"] = subAppMsgTitle;
+                    }
+                    else
+                    {
+                        templateValues["%%REFERMSG%%"] = nodes["content"];
+                    }
+                }
+                else
+                {
+                    templateValues.setName("msg");
+                    templateValues["%%MESSAGE%%"] = title;
+                }
+            }
             else if (appMsgType == "50")
             {
                 // Channel Card
-                
                 std::map<std::string, std::string> nodes = { {"username", ""}, {"avatar", ""}, {"nickname", ""}};
                 xmlParser.parseNodesValue("/msg/appmsg/findernamecard/*", nodes);
                 
@@ -1517,29 +1572,44 @@ bool SessionParser::parseRow(MsgRecord& record, const std::string& userBase, con
 #ifndef NDEBUG
                 writeFile(combinePath(outputPath, "../dbg", "msg" + std::to_string(record.type) + "_app_" + appMsgType + "_" + msgIdStr + ".txt"), record.message);
 #endif
-                // 视频号
-                /*
-                std::map<std::string, std::string> nodes = { {"nickname", ""}, {"avatar", ""}, {"desc", ""}, {"mediaCount", ""}};
-                xmlParser.parseNodesValue("/msg/appmsg/*", nodes);
+                // Channels SHI PIN HAO
+                std::map<std::string, std::string> nodes = { {"objectId", ""}, {"nickname", ""}, {"avatar", ""}, {"desc", ""}, {"mediaCount", ""}, {"feedType", ""}, {"desc", ""}, {"username", ""}};
+                xmlParser.parseNodesValue("/msg/appmsg/finderFeed/*", nodes);
+                std::map<std::string, std::string> videoNodes = { {"mediaType", ""}, {"url", ""}, {"thumbUrl", ""}, {"coverUrl", ""}, {"videoPlayDuration", ""}};
+                xmlParser.parseNodesValue("/msg/appmsg/finderFeed/mediaList/media/*", videoNodes);
+                std::string thumbUrl;
+                if ((m_options & SPO_IGNORE_SHARING) == 0)
+                {
+                    thumbUrl = videoNodes["thumbUrl"].empty() ? videoNodes["coverUrl"] : videoNodes["thumbUrl"];
+                }
                 
-                if (!nodes["title"].empty() && !nodes["url"].empty())
+                std::string portraitDir = ((m_options & SPO_ICON_IN_SESSION) == SPO_ICON_IN_SESSION) ? session.getOutputFileName() + "_files/Portrait" : "Portrait";
+                
+                templateValues["%%CARDNAME%%"] = nodes["nickname"];
+                templateValues["%%CHANNELS%%"] = getLocaleString("Channels");
+                templateValues["%%MESSAGE%%"] = nodes["desc"];
+                templateValues["%%EXTRA_CLS%%"] = "channels";
+                
+                if (!thumbUrl.empty())
                 {
-                    templateValues.setName(nodes["thumburl"].empty() ? "plainshare" : "share");
+                    templateValues.setName("channels");
+                    
+                    std::string thumbFile = session.getOutputFileName() + "_files/" + msgIdStr + ".jpg";
+                    templateValues["%%CHANNELTHUMBPATH%%"] = thumbFile;
+                    ensureDirectoryExisted(combinePath(outputPath, session.getOutputFileName() + "_files"));
+                    m_downloader.addTask(thumbUrl, combinePath(outputPath, thumbFile), 0);
+                    
+                    if (!nodes["avatar"].empty())
+                    {
+                        templateValues["%%CARDIMGPATH%%"] = portraitDir + "/" + nodes["username"] + ".jpg";
+                        std::string localfile = combinePath(portraitDir, nodes["username"] + ".jpg");
+                        ensureDirectoryExisted(portraitDir);
+                        m_downloader.addTask(nodes["avatar"], combinePath(outputPath, localfile), 0);
+                    }
 
-                    templateValues["%%SHARINGIMGPATH%%"] = nodes["thumburl"];
-                    templateValues["%%SHARINGURL%%"] = nodes["url"];
-                    templateValues["%%SHARINGTITLE%%"] = nodes["title"];
-                    templateValues["%%MESSAGE%%"] = nodes["des"];
+                    templateValues["%%CHANNELURL%%"] = videoNodes["url"];
+                    
                 }
-                else if (!nodes["title"].empty())
-                {
-                    templateValues["%%MESSAGE%%"] = nodes["title"];
-                }
-                else
-                {
-                    templateValues["%%MESSAGE%%"] = getLocaleString("[Link]");
-                }
-                 */
             }
             else
             {
@@ -1747,7 +1817,7 @@ void SessionParser::parseImage(const std::string& sessionPath, const std::string
     else
     {
         templateValues.setName("msg");
-        templateValues["%%MESSAGE%%"] = getLocaleString("[Picture]");
+        templateValues["%%MESSAGE%%"] = getLocaleString("[Photo]");
     }
 }
 
