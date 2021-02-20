@@ -656,7 +656,7 @@ bool Exporter::loadITunes(bool detailedInfo/* = true*/)
 
 bool Exporter::loadTemplates()
 {
-    const char* names[] = {"frame", "msg", "video", "notice", "system", "audio", "image", "card", "emoji", "plainshare", "share", "thumb", "listframe", "listitem", "scripts", "refer"};
+    const char* names[] = {"frame", "msg", "video", "notice", "system", "audio", "image", "card", "emoji", "plainshare", "share", "thumb", "listframe", "listitem", "scripts", "refermsg", "channels"};
     for (int idx = 0; idx < sizeof(names) / sizeof(const char*); idx++)
     {
         std::string name = names[idx];

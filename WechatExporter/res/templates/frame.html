@@ -9,22 +9,21 @@
 			body
       {
         background-color: #ebebeb;
-        font-family: -apple-system;
         font-family: "-apple-system", "Helvetica Neue", "Roboto", "Segoe UI", sans-serif;
+        font-size: 10.5pt;
       }
-      .chat-left, .media_left
+      .chat-left, .media-left
       {
         clear:both;
-        font-size: 10.5pt;
         overflow: auto;
       }
-      .chat-left div.avatarBox,
-      .media-left div.avatarBox
+      .chat-left div.avatar-box,
+      .media-left div.avatar-box
       {
         float: left;
       }
-      .chat-left div.ntBox,
-      .media-left div.ntBox
+      .chat-left div.nt-box,
+      .media-left div.nt-box
       {
         margin: 0 50px 2px 50px;
         padding: 0px;
@@ -32,39 +31,41 @@
         font-size: 80%;
         text-align: left;
       }
-      .chat-left div.contentBox
+      .chat-left div.content-box
       {
         background-color: white;
         /*float: left;*/
         margin: 0 50px 10px 50px;
         padding: 10px 10px 10px 10px;
         border-radius:8px;
-        text-indent: -12px;
       }
-      .media-left div.contentBox
+      .media-left div.content-box
       {
-        /*background-color: white;*/
         /*float: left;*/
         margin: 0 50px 10px 50px;
         padding: 10px 10px 10px 10px;
-        /*border-radius:7px;*/
-        /*text-indent: -12px;*/
+      }
+      .chat-left.channels .content-box, .chat-right.channels .content-box
+      {
+        width:360px;
+      }
+      .refermsg
+      {
+        font-size: 90%;
       }
 
-      .chat-right,
-      .media-right
+      .chat-right, .media-right
       {
         clear:both;
-        font-size: 80%;
         overflow: auto;
       }
-      .chat-right div.avatarBox,
-      .media-right div.avatarBox
+      .chat-right div.avatar-box,
+      .media-right div.avatar-box
       {
         float: right;
       }
-      .chat-right div.ntBox,
-      .media-right div.ntBox
+      .chat-right div.nt-box,
+      .media-right div.nt-box
       {
         margin: 0px 50px 2px 50px;
         padding: 0px;
@@ -72,7 +73,7 @@
         font-size: 80%;
         text-align: right;
       }
-      .chat-right div.contentBox
+      .chat-right div.content-box
       {
         /*float:right;*/
         background-color: #b2e281;
@@ -80,14 +81,11 @@
         padding: 10px 10px 10px 10px;
         border-radius: 8px;
       }
-      .media-right div.contentBox
+      .media-right div.content-box
       {
         float: right;
-        /*background-color: #b2e281;*/
-        /*margin: 0px 50px 10px 50px;*/
         margin: 0px 0px 10px 50px;
         padding: 10px 10px 10px 10px;
-        /*border-radius:7px;*/
       }
 
       .name-right
@@ -101,27 +99,25 @@
         border-radius: 4px;
       }
 
-      .chat-left .triangle
+      .triangle
       {
         height: 0px;
         width: 0px;
         border-width: 6px;
         border-style: solid;
-        border-color: transparent white transparent transparent;
         position: relative;
+      }
+      .chat-left .triangle
+      {
+        float: left;
+        border-color: transparent white transparent transparent;
         left: -22px;
-        top: 3px;
       }
       .chat-right .triangle
       {
-        height: 0px;
-        width: 0px;
-        border-width: 6px;
-        border-style: solid;
+        float: right;
         border-color: transparent transparent transparent #b2e281;
-        position: relative;
         right: -22px;
-        top: 3px;
       }
 
       .chat-notice
@@ -144,30 +140,37 @@
       {
         background-color: #008080;
       }
-      
       audio
       {
         max-width: 220px;
       }
-
       video
       {
         max-width: 350px;
       }
-
+      .chat-left .content-box.msg
+      {
+        text-indent: -12px;
+      }
       .image
       {
         width:90px;
         /*transition: all 2s;*/
         border-radius:8px;
-        max-width: 350px;
+        max-width: 360px;
         max-height: 240px;
       }
       img
       {
         image-orientation: from-image;
       }
-      .image:hover
+      img.channel-poster
+      {
+        object-fit: cover;
+        width: 360px;
+        height: 360px;
+      }
+      .image:hover, .channel-poster:hover
       {
           cursor: crosshair;
           /* transform: scale(5); */
@@ -178,9 +181,6 @@
         width: 42px;
         height: 42px;
         vertical-align:middle;
-        /*max-width:100px;
-        max-height:60px;
-        */
       }
       div.card-name
       {
@@ -189,14 +189,17 @@
       }
       div.card-name span
       {
-        margin: 12px;
+        margin-left: 8px;
+      }
+      span.channel-title
+      {
+        margin-left: 2px;
       }
       div.card-type
       {
         border-top: 1px dotted #dedede;
-        margin: 2px;
-        margin-top: 10px;
-        padding: 0 7px;
+        margin: 10px 2px 2px 2px;
+        padding: 4 12px 8px 0px;
         line-height: 1.6;
       }
       .contact-card .card-avatar
@@ -206,6 +209,18 @@
       .channel-card .card-avatar
       {
         border-radius: 21px;
+      }
+      span.channel-title
+      {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        -o-text-overflow: ellipsis;
+        white-space: nowrap;
+        -webkit-line-clamp: 1;
+        -webkit-box-orient: vertical;
+        word-break: break-all;
+        width: 360px;
+        display:block;
       }
       
       .dont-break-out
