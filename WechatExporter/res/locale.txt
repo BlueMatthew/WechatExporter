@@ -24,7 +24,7 @@
 		"value": "[视频/语音通话]"
 	},
 	{
-		"key": "[Picture]",
+		"key": "[Photo]",
 		"value": "[图片]"
 	},
 	{
@@ -70,6 +70,10 @@
 	{
 		"key": "[Channel Card] %s",
 		"value": "[视频号名片] %s"
+	},
+	{
+		"key": "Channels",
+		"value": "视频号"
 	},
 	{
 		"key": "iTunes: %s",
