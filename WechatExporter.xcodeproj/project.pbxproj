@@ -24,6 +24,7 @@
 		347E601525C7E55100B33BAB /* SessionDataSource.mm in Sources */ = {isa = PBXBuildFile; fileRef = 347E601425C7E55100B33BAB /* SessionDataSource.mm */; };
 		349DAD2C255D3BB800BFE204 /* XmlParser.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 349DAD2A255D3BB800BFE204 /* XmlParser.cpp */; };
 		349DAD32255E6A0700BFE204 /* Utils_thread.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 349DAD31255E6A0600BFE204 /* Utils_thread.cpp */; };
+		34A0336125E34B0300E06CC5 /* MessageParser.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 34A0335F25E34B0300E06CC5 /* MessageParser.cpp */; };
 		34E3E90A2531BD8E0093042D /* Utils_md5.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 34E3E9092531BD8E0093042D /* Utils_md5.cpp */; };
 		34E3E90C2531BE200093042D /* Utils_protobuf.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 34E3E90B2531BE1F0093042D /* Utils_protobuf.cpp */; };
 		34E3E9242535555F0093042D /* RawMessage.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 34E3E9232535555F0093042D /* RawMessage.cpp */; };
@@ -68,6 +69,8 @@
 		349DAD2A255D3BB800BFE204 /* XmlParser.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = XmlParser.cpp; sourceTree = "<group>"; };
 		349DAD2B255D3BB800BFE204 /* XmlParser.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = XmlParser.h; sourceTree = "<group>"; };
 		349DAD31255E6A0600BFE204 /* Utils_thread.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Utils_thread.cpp; sourceTree = "<group>"; };
+		34A0335F25E34B0300E06CC5 /* MessageParser.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = MessageParser.cpp; sourceTree = "<group>"; };
+		34A0336025E34B0300E06CC5 /* MessageParser.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MessageParser.h; sourceTree = "<group>"; };
 		34AB9A1225B89075006D3617 /* FileSystem.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = FileSystem.h; sourceTree = "<group>"; };
 		34AB9A1325B8908D006D3617 /* FileSystemImpl_Win.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = FileSystemImpl_Win.h; sourceTree = "<group>"; };
 		34AB9A1425B890A0006D3617 /* FileSystemImpl_Mac.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = FileSystemImpl_Mac.h; sourceTree = "<group>"; };
@@ -178,6 +181,8 @@
 				34AB9A1325B8908D006D3617 /* FileSystemImpl_Win.h */,
 				34AB9A1425B890A0006D3617 /* FileSystemImpl_Mac.h */,
 				347E600D25C00A4100B33BAB /* MMKVReader.h */,
+				34A0335F25E34B0300E06CC5 /* MessageParser.cpp */,
+				34A0336025E34B0300E06CC5 /* MessageParser.h */,
 			);
 			path = core;
 			sourceTree = "<group>";
@@ -272,6 +277,7 @@
 			files = (
 				34E3E9242535555F0093042D /* RawMessage.cpp in Sources */,
 				34E3E90C2531BE200093042D /* Utils_protobuf.cpp in Sources */,
+				34A0336125E34B0300E06CC5 /* MessageParser.cpp in Sources */,
 				343F611A252322D500FFE085 /* ViewController.mm in Sources */,
 				34ED31E825528A1800C42698 /* Utils_audio.cpp in Sources */,
 				342EDB0325245206006A295A /* Downloader.cpp in Sources */,
