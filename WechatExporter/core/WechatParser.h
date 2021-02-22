@@ -21,6 +21,7 @@
 #include "ByteArrayLocater.h"
 #include "WechatObjects.h"
 #include "ITunesParser.h"
+#include "MessageParser.h"
 
 template<class T>
 class FilterBase
@@ -302,33 +303,6 @@ private:
     bool parseMessageDb(const std::string& mmPath, std::vector<std::pair<std::string, int>>& sessionIds);
     
     bool parseSessionsInGroupApp(const std::string& userRoot, std::vector<Session>& sessions);
-};
-
-struct MsgRecord
-{
-    int createTime;
-    std::string message;
-    int des;
-    int type;
-    int msgId;
-};
-
-
-struct ForwardMsg
-{
-    int msgid;
-    std::string usrName;
-    std::string displayName;
-    std::string protrait;
-    std::string dataType;
-    std::string subType;
-    std::string dataId;
-    std::string dataFormat;
-    std::string msgTime;
-    std::string srcMsgTime;
-    std::string message;
-    std::string link;
-    std::string nestedMsgs;
 };
 
 enum SessionParsingOption
