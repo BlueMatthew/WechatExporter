@@ -1608,11 +1608,13 @@ bool SessionParser::parseRow(MsgRecord& record, const std::string& userBase, con
                     }
 
                     templateValues["%%CHANNELURL%%"] = videoNodes["url"];
-                    
                 }
             }
             else
             {
+#ifndef NDEBUG
+                writeFile(combinePath(outputPath, "../dbg", "msg" + std::to_string(record.type) + "_app_unknwn_" + appMsgType + ".txt"), record.message);
+#endif
                 std::map<std::string, std::string> nodes = { {"title", ""}, {"type", ""}, {"des", ""}, {"url", ""}, {"thumburl", ""}, {"recorditem", ""} };
                 xmlParser.parseNodesValue("/msg/appmsg/*", nodes);
                 
@@ -1637,6 +1639,10 @@ bool SessionParser::parseRow(MsgRecord& record, const std::string& userBase, con
         }
         else
         {
+            // Failed to parse APPMSG type
+#ifndef NDEBUG
+            writeFile(combinePath(outputPath, "../dbg", "msg" + std::to_string(record.type) + "_app_invld_" + msgIdStr + ".txt"), record.message);
+#endif
             templateValues["%%MESSAGE%%"] = getLocaleString("[Link]");
         }
     }
@@ -1647,6 +1653,9 @@ bool SessionParser::parseRow(MsgRecord& record, const std::string& userBase, con
     }
     else
     {
+#ifndef NDEBUG
+        writeFile(combinePath(outputPath, "../dbg", "msg_unknwn_type_" + std::to_string(record.type) + msgIdStr + ".txt"), record.message);
+#endif
         if ((m_options & SPO_IGNORE_HTML_ENC) == 0)
         {
             templateValues["%%MESSAGE%%"] = safeHTML(record.message);
@@ -1923,7 +1932,7 @@ private:
     int m_msgId;
     std::vector<ForwardMsg>& m_forwardedMsgs;
 public:
-    
+
     ForwardMsgsHandler(XmlParser& xmlParser, int msgId, std::vector<ForwardMsg>& forwardedMsgs) : m_xmlParser(xmlParser), m_msgId(msgId), m_forwardedMsgs(forwardedMsgs)
     {
     }
@@ -2041,6 +2050,7 @@ bool SessionParser::parseForwardedMsgs(const std::string& userBase, const std::s
             // 16: Card
             // 17: Nested Forwarded Messages
             // 19: mini program
+            // 22: Channels
              
             if (it->dataType == "1")
             {
@@ -2125,8 +2135,17 @@ bool SessionParser::parseForwardedMsgs(const std::string& userBase, const std::s
                 // Mini Program
                 tv["%%MESSAGE%%"] = it->message;
             }
+            else if (it->dataType == "22")
+            {
+                // Channels
+                
+                tv["%%MESSAGE%%"] = it->message;
+            }
             else
             {
+#ifndef NDEBUG
+                writeFile(combinePath(outputPath, "../dbg", "fwdmsg_unknwn_" + it->dataType + ".txt"), it->message);
+#endif
                 tv["%%MESSAGE%%"] = it->message;
             }
             
