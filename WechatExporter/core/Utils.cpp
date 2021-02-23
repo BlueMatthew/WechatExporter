@@ -208,6 +208,7 @@ std::string fromUnixTime(unsigned int unixtime)
     return ss.str();
 }
 
+/*
 bool existsFile(const std::string &path)
 {
 #ifdef _WIN32
@@ -219,6 +220,7 @@ bool existsFile(const std::string &path)
 	return (stat(path.c_str(), &buffer) == 0);
 #endif
 }
+*/
 
 /*
 int makePathImpl(const std::string::value_type *path, mode_t mode)
@@ -382,8 +384,8 @@ bool appendFile(const std::string& path, const unsigned char* data, unsigned int
 	return false;
 #endif
 }
-
-bool moveFile(const std::string& src, const std::string& dest, bool overwrite/* = true*/)
+/*
+bool moveFile(const std::string& src, const std::string& dest, bool overwrite)
 {
 #ifdef _WIN32
 	CW2T pszSrc(CA2W(src.c_str(), CP_UTF8));
@@ -420,112 +422,7 @@ bool copyFile(const std::string& src, const std::string& dest)
 	return true;
 #endif
 }
-
-std::string removeInvalidCharsForFileName(const std::string& fileName)
-{
-    /*
-    Windows NT:
-    Do not use any of the following characters when naming your files or folders:
-        / ? < > \ : * | ” and any character you can type with the Ctrl key
-    File and folder names may be up to 256 characters long
-    The maximum length of a full path is 260 characters
-    Placing a space at the end of the name
-    Placing a period at the end of the name
-
-     MAC:
-     The only illegal character for file and folder names in Mac OS X is the colon “:”
-     File and folder names are not permitted to begin with a dot “.”
-     File and folder names may be up to 255 characters in length
-     */
-    
-    std::string validFileName = fileName;
-    
-    static std::string invalidChars = "[\\/:*?\"<>|]";
-
-    for (unsigned int i = 0; i < invalidChars.size(); ++i)
-    {
-        validFileName.erase(remove(validFileName.begin(), validFileName.end(), invalidChars[i]), validFileName.end());
-    }
-
-    size_t pos = validFileName.find_first_not_of(".");
-    if (pos == std::string::npos)
-    {
-        return "";
-    }
-    else if (pos != 0)
-    {
-        validFileName.erase(0, pos);
-    }
-
-    pos = validFileName.find_last_not_of(" .");
-    if (pos == std::string::npos)
-    {
-        return "";
-    }
-    else
-    {
-        validFileName.erase(pos + 1);
-    }
-
-    if (validFileName.size() > 255)
-    {
-        validFileName = validFileName.substr(0, 255);
-    }
-    return validFileName;
-}
-
-bool isValidFileName(const std::string& fileName)
-{
-#if defined(_WIN32)
-	TCHAR tmpPath[MAX_PATH] = { 0 };
-	if (GetTempPath(MAX_PATH, tmpPath))
-	{
-		// CT2A t2a(charPath);
-		// tempDir = (LPCSTR)t2a;
-	}
-
-	TCHAR path[MAX_PATH] = { 0 };
-	CW2T pszT(CA2W(fileName.c_str(), CP_UTF8));
-	::PathCombine(path, tmpPath, (LPCTSTR)pszT);
-
-	bool valid = false;
-	if (::CreateDirectory(path, NULL))
-	{
-		valid = true;
-		RemoveDirectory(path);
-	}
-	else
-	{
-		valid = (::GetLastError() == ERROR_ALREADY_EXISTS);
-	}
-	return valid;
-#else
-	char const *tmpdir = getenv("TMPDIR");
-    
-	std::string tempDir;
-
-    if (tmpdir == NULL)
-    {
-		tempDir = "/tmp";
-    }
-	else
-	{
-		tempDir = tmpdir;
-	}
-    
-	std::string path = combinePath(tempDir, fileName);
-    int status = mkdir(path.c_str(), 0);
-    int lastErrorNo = errno;
-    if (status == 0)
-    {
-        remove(path.c_str());
-    }
-    
-    return status == 0 || lastErrorNo == EEXIST;
-#endif
-}
-
-
+*/
 
 #ifdef _WIN32
 std::string utf8ToLocalAnsi(std::string utf8Str)
@@ -550,10 +447,12 @@ void updateFileTime(const std::string& path, time_t mtime)
     utime(p.c_str(), &new_times);
 }
 
+/*
 bool deleteFile(const std::string& fileName)
 {
     return 0 == std::remove(fileName.c_str());
 }
+*/
 
 int openSqlite3ReadOnly(const std::string& path, sqlite3 **ppDb)
 {
