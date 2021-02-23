@@ -16,6 +16,7 @@
 #include "RawMessage.h"
 #include "Utils.h"
 #include "Exporter.h"
+#include "FileSystem.h"
 
 
 #include <sqlite3.h>

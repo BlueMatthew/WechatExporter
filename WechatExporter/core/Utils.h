@@ -70,17 +70,16 @@ bool writeFile(const std::string& path, const std::vector<unsigned char>& data);
 bool writeFile(const std::string& path, const std::string& data);
 bool writeFile(const std::string& path, const unsigned char* data, unsigned int dataLength);
 bool appendFile(const std::string& path, const unsigned char* data, unsigned int dataLength);
-bool moveFile(const std::string& src, const std::string& dest, bool overwrite = true);
-bool copyFile(const std::string& src, const std::string& dest);
-std::string removeInvalidCharsForFileName(const std::string& fileName);
-bool isValidFileName(const std::string& fileName);
+// bool moveFile(const std::string& src, const std::string& dest, bool overwrite = true);
+// bool copyFile(const std::string& src, const std::string& dest);
+
 #ifdef _WIN32
 std::string utf8ToLocalAnsi(std::string utf8Str);
 #else
 #define utf8ToLocalAnsi(utf8Str) utf8Str
 #endif
 void updateFileTime(const std::string& path, time_t mtime);
-bool deleteFile(const std::string& fileName);
+// bool deleteFile(const std::string& fileName);
 
 int GetBigEndianInteger(const unsigned char* data, int startIndex = 0);
 int GetLittleEndianInteger(const unsigned char* data, int startIndex = 0);

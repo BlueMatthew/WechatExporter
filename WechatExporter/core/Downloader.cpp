@@ -14,6 +14,7 @@
 #include <sys/stat.h>
 #include "OSDef.h"
 #include "Utils.h"
+#include "FileSystem.h"
 #ifdef _WIN32
 #include <atlstr.h>
 #endif

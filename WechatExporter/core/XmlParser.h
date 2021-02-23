@@ -21,10 +21,10 @@ class XmlParser
 public:
     XmlParser(const std::string& xml, bool noError = false);
     ~XmlParser();
-    bool parseNodeValue(const std::string& xpath, std::string& value);
-    bool parseNodesValue(const std::string& xpath, std::map<std::string, std::string>& values);  // e.g.: /path1/path2/*
-    bool parseAttributeValue(const std::string& xpath, const std::string& attributeName, std::string& value);
-    bool parseAttributesValue(const std::string& xpath, std::map<std::string, std::string>& attributes);
+    bool parseNodeValue(const std::string& xpath, std::string& value) const;
+    bool parseNodesValue(const std::string& xpath, std::map<std::string, std::string>& values) const;  // e.g.: /path1/path2/*
+    bool parseAttributeValue(const std::string& xpath, const std::string& attributeName, std::string& value) const;
+    bool parseAttributesValue(const std::string& xpath, std::map<std::string, std::string>& attributes) const;
     
     static xmlNodePtr getChildNode(xmlNodePtr node, const std::string& childName);
     static std::string getNodeInnerText(xmlNodePtr node);
@@ -35,7 +35,7 @@ public:
     
 public:
     template <class TNodeHandler>
-    bool parseWithHandler(const std::string& xpath, TNodeHandler& handler);
+    bool parseWithHandler(const std::string& xpath, TNodeHandler& handler) const;
     xmlXPathObjectPtr evalXPathOnNode(xmlNodePtr node, const std::string& xpath);
     
 private:
@@ -82,7 +82,7 @@ inline std::string XmlParser::getNodeOuterXml(xmlNodePtr node)
 }
 
 template <class TNodeHandler>
-bool XmlParser::parseWithHandler(const std::string& xpath, TNodeHandler& handler)
+bool XmlParser::parseWithHandler(const std::string& xpath, TNodeHandler& handler) const
 {
     bool result = false;
     if (m_doc == NULL || m_xpathCtx == NULL)
