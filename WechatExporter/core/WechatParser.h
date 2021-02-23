@@ -305,77 +305,6 @@ private:
     bool parseSessionsInGroupApp(const std::string& userRoot, std::vector<Session>& sessions);
 };
 
-enum SessionParsingOption
-{
-    SPO_IGNORE_AVATAR = 1 << 0,
-    SPO_IGNORE_AUDIO = 1 << 1,
-    SPO_IGNORE_IMAGE = 1 << 2,
-    SPO_IGNORE_VIDEO = 1 << 3,
-    SPO_IGNORE_EMOJI = 1 << 4,
-    SPO_IGNORE_FILE = 1 << 5,
-    SPO_IGNORE_CARD = 1 << 6,
-    SPO_IGNORE_SHARING = 1 << 7,
-    SPO_IGNORE_HTML_ENC = 1 << 8,
-    SPO_TEXT_MODE = 0xFFFF,
-    SPO_DESC = 1 << 16,
-    SPO_ICON_IN_SESSION = 1 << 17,     // Put Head Icon and Emoji files in the folder of session
-    SPO_SYNC_LOADING = 1 << 18
-};
-
-class TemplateValues
-{
-private:
-    std::string m_name;
-    std::map<std::string, std::string> m_values;
-    
-public:
-    using const_iterator = std::map<std::string, std::string>::const_iterator;
- 
-public:
-    TemplateValues()
-    {
-    }
-    TemplateValues(const std::string& name) : m_name(name)
-    {
-    }
-    std::string getName() const
-    {
-        return m_name;
-    }
-    void setName(const std::string& name)
-    {
-        m_name = name;
-    }
-    std::string& operator[](const std::string& k)
-    {
-        return m_values[k];
-    }
-    bool hasValue(const std::string& key) const
-    {
-        return m_values.find(key) != m_values.cend();
-    }
-    
-    const_iterator cbegin() const
-    {
-        return m_values.cbegin();
-    }
-    
-    const_iterator cend() const
-    {
-        return m_values.cend();
-    }
-    
-    void clear()
-    {
-        m_values.clear();
-    }
-    
-    void clearName()
-    {
-        m_name.clear();
-    }
-};
-
 class SessionParser
 {
 private:
@@ -392,20 +321,6 @@ private:
     
 public:
     SessionParser(Friend& myself, Friends& friends, const ITunesDb& iTunesDb, const Shell& shell, int options, Downloader& downloader, std::function<std::string(const std::string&)> localeFunc);
-    void ignoreAudio(bool ignoreAudio = true)
-    {
-        if (ignoreAudio)
-            m_options |= SPO_IGNORE_AUDIO;
-        else
-            m_options &= ~SPO_IGNORE_AUDIO;
-    }
-    void setOrder(bool asc = true)
-    {
-        if (asc)
-            m_options &= ~SPO_DESC;
-        else
-            m_options |= SPO_DESC;
-    }
 
     int parse(const std::string& userBase, const std::string& outputBase, const Session& session, std::function<bool(const std::vector<TemplateValues>&)> handler);
 
@@ -419,7 +334,7 @@ private:
     bool requireFile(const std::string& vpath, const std::string& dest) const;
     bool parseRow(MsgRecord& record, const std::string& userBase, const std::string& path, const Session& session, std::vector<TemplateValues>& tvs);
     bool parseForwardedMsgs(const std::string& userBase, const std::string& outputPath, const Session& session, const MsgRecord& record, const std::string& title, const std::string& message, std::vector<TemplateValues>& tvs);
-    std::string buildContentFromTemplateValues(const TemplateValues& values) const;
+    
     void parseImage(const std::string& sessionPath, const std::string& sessionAssertsPath, const std::string& src, const std::string& srcPre, const std::string& dest, const std::string& srcThumb, const std::string& destThumb, TemplateValues& templateValues);
     void parseVideo(const std::string& sessionPath, const std::string& sessionAssertsPath, const std::string& src, const std::string& dest, const std::string& srcThumb, const std::string& destThumb, const std::string& width, const std::string& height, TemplateValues& templateValues);
     void parseFile(const std::string& sessionPath, const std::string& sessionAssertsPath, const std::string& src, const std::string& dest, const std::string& fileName, TemplateValues& templateValues);

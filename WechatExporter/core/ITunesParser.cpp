@@ -18,6 +18,7 @@
 
 #include "OSDef.h"
 #include "Utils.h"
+#include "FileSystem.h"
 
 inline std::string getPlistStringValue(plist_t node)
 {
@@ -341,6 +342,40 @@ std::string ITunesDb::findRealPath(const std::string& relativePath) const
     std::string fieldId = findFileId(relativePath);
     return fileIdToRealPath(fieldId);
 }
+
+
+bool ITunesDb::copyFile(const std::string& vpath, const std::string& dest) const
+{
+#ifndef NDEBUG
+    // Make debug more effective
+    if (existsFile(normalizePath(dest)))
+    {
+        return true;
+    }
+#endif
+    
+    const ITunesFile* file = findITunesFile(vpath);
+    if (NULL != file)
+    {
+        std::string srcPath = getRealPath(*file);
+        if (!srcPath.empty())
+        {
+            normalizePath(srcPath);
+            std::string destPath = normalizePath(dest);
+            bool result = ::copyFile(srcPath, destPath, true);
+            if (result)
+            {
+                updateFileTime(dest, ITunesDb::parseModifiedTime(file->blob));
+            }
+            return result;
+        }
+    }
+    
+    return false;
+}
+
+
+
 
 ManifestParser::ManifestParser(const std::string& manifestPath, const Shell* shell) : m_manifestPath(manifestPath), m_shell(shell)
 {

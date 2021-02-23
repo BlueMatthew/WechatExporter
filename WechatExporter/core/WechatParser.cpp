@@ -1211,7 +1211,7 @@ int SessionParser::parse(const std::string& userBase, const std::string& outputB
         record.message = pMessage != NULL ? reinterpret_cast<const char*>(pMessage) : "";
         record.des = sqlite3_column_int(stmt, 2);
         record.type = sqlite3_column_int(stmt, 3);
-        record.msgId = sqlite3_column_int(stmt, 4);
+        record.msgId = std::to_string(sqlite3_column_int(stmt, 4));
         if (parseRow(record, userBase, outputBase, session, tvs))
         {
             count++;
@@ -1233,10 +1233,9 @@ bool SessionParser::parseRow(MsgRecord& record, const std::string& userBase, con
 {
     TemplateValues& templateValues = *(tvs.emplace(tvs.end(), "msg"));
     
-	std::string msgIdStr = std::to_string(record.msgId);
     std::string assetsDir = combinePath(outputPath, session.getOutputFileName() + "_files");
     
-    templateValues["%%MSGID%%"] = std::to_string(record.msgId);
+    templateValues["%%MSGID%%"] = record.msgId;
 	templateValues["%%NAME%%"] = "";
 	templateValues["%%TIME%%"] = fromUnixTime(record.createTime);
 	templateValues["%%MESSAGE%%"] = "";
@@ -1262,26 +1261,7 @@ bool SessionParser::parseRow(MsgRecord& record, const std::string& userBase, con
     writeFile(combinePath(outputPath, "../dbg", "msg" + std::to_string(record.type) + ".txt"), record.message);
 #endif
     
-    /*
-     MSGTYPE_TEXT: 1,
-     MSGTYPE_IMAGE: 3,
-     MSGTYPE_VOICE: 34,
-     MSGTYPE_VIDEO: 43,
-     MSGTYPE_MICROVIDEO: 62,
-     MSGTYPE_EMOTICON: 47,
-     MSGTYPE_APP: 49,
-     MSGTYPE_VOIPMSG: 50,
-     MSGTYPE_VOIPNOTIFY: 52,
-     MSGTYPE_VOIPINVITE: 53,
-     MSGTYPE_LOCATION: 48,
-     MSGTYPE_STATUSNOTIFY: 51,
-     MSGTYPE_SYSNOTICE: 9999,
-     MSGTYPE_POSSIBLEFRIEND_MSG: 40,
-     MSGTYPE_VERIFYMSG: 37,
-     MSGTYPE_SHARECARD: 42,
-     MSGTYPE_SYS: 10000,
-     MSGTYPE_RECALLED: 10002,
-     */
+   
     if (record.type == 10000 || record.type == 10002 /*recall*/)
     {
         templateValues.setName("system");
@@ -1314,7 +1294,7 @@ bool SessionParser::parseRow(MsgRecord& record, const std::string& userBase, con
                 voicelen = std::stoi(vlenstr);
             }
             
-            audioSrcFile = m_iTunesDb.findITunesFile(combinePath(userBase, "Audio", session.getHash(), msgIdStr + ".aud"));
+            audioSrcFile = m_iTunesDb.findITunesFile(combinePath(userBase, "Audio", session.getHash(), record.msgId + ".aud"));
             if (NULL != audioSrcFile)
             {
                 audioSrc = m_iTunesDb.getRealPath(*audioSrcFile);
@@ -1328,7 +1308,7 @@ bool SessionParser::parseRow(MsgRecord& record, const std::string& userBase, con
         else
         {
             m_pcmData.clear();
-            std::string mp3Path = combinePath(assetsDir, msgIdStr + ".mp3");
+            std::string mp3Path = combinePath(assetsDir, record.msgId + ".mp3");
 
             silkToPcm(audioSrc, m_pcmData);
             
@@ -1340,7 +1320,7 @@ bool SessionParser::parseRow(MsgRecord& record, const std::string& userBase, con
             }
 
             templateValues.setName("audio");
-            templateValues["%%AUDIOPATH%%"] = session.getOutputFileName() + "_files/" + msgIdStr + ".mp3";
+            templateValues["%%AUDIOPATH%%"] = session.getOutputFileName() + "_files/" + record.msgId + ".mp3";
         }
     }
     else if (record.type == 47)
@@ -1410,8 +1390,8 @@ bool SessionParser::parseRow(MsgRecord& record, const std::string& userBase, con
             senderId = attrs["fromusername"];
         }
         
-        std::string vfile = combinePath(userBase, "Video", session.getHash(), msgIdStr);
-        parseVideo(outputPath, session.getOutputFileName() + "_files", vfile + ".mp4", msgIdStr + ".mp4", vfile + ".video_thum", msgIdStr + "_thum.jpg", attrs["cdnthumbwidth"], attrs["cdnthumbheight"], templateValues);
+        std::string vfile = combinePath(userBase, "Video", session.getHash(), record.msgId);
+        parseVideo(outputPath, session.getOutputFileName() + "_files", vfile + ".mp4", record.msgId + ".mp4", vfile + ".video_thum", record.msgId + "_thum.jpg", attrs["cdnthumbwidth"], attrs["cdnthumbheight"], templateValues);
     }
     else if (record.type == 50)
     {
@@ -1431,8 +1411,8 @@ bool SessionParser::parseRow(MsgRecord& record, const std::string& userBase, con
     }
     else if (record.type == 3)
     {
-		std::string vfile = combinePath(userBase, "Img", session.getHash(), msgIdStr);
-        parseImage(outputPath, session.getOutputFileName() + "_files", vfile + ".pic", "", msgIdStr + ".jpg", vfile + ".pic_thum", msgIdStr + "_thumb.jpg", templateValues);
+		std::string vfile = combinePath(userBase, "Img", session.getHash(), record.msgId);
+        parseImage(outputPath, session.getOutputFileName() + "_files", vfile + ".pic", "", record.msgId + ".jpg", vfile + ".pic_thum", record.msgId + "_thumb.jpg", templateValues);
     }
     else if (record.type == 48)
     {
@@ -1490,13 +1470,13 @@ bool SessionParser::parseRow(MsgRecord& record, const std::string& userBase, con
                 xmlParser.parseNodeValue("/msg/appmsg/title", title);
                 xmlParser.parseNodeValue("/msg/appmsg/appattach/fileext", attachFileExtName);
                 
-                std::string attachFileName = userBase + "/OpenData/" + session.getHash() + "/" + msgIdStr;
+                std::string attachFileName = userBase + "/OpenData/" + session.getHash() + "/" + record.msgId;
                 if (!attachFileExtName.empty())
                 {
                     attachFileName += "." + attachFileExtName;
                 }
                 
-                std::string attachOutputFileName = msgIdStr + "_" + title;
+                std::string attachOutputFileName = record.msgId + "_" + title;
                 parseFile(outputPath, session.getOutputFileName() + "_files", attachFileName, attachOutputFileName, title, templateValues);
             }
             else if (appMsgType == "19")    // Forwarded Msgs
@@ -1570,7 +1550,7 @@ bool SessionParser::parseRow(MsgRecord& record, const std::string& userBase, con
             else if (appMsgType == "51")
             {
 #ifndef NDEBUG
-                writeFile(combinePath(outputPath, "../dbg", "msg" + std::to_string(record.type) + "_app_" + appMsgType + "_" + msgIdStr + ".txt"), record.message);
+                writeFile(combinePath(outputPath, "../dbg", "msg" + std::to_string(record.type) + "_app_" + appMsgType + "_" + record.msgId + ".txt"), record.message);
 #endif
                 // Channels SHI PIN HAO
                 std::map<std::string, std::string> nodes = { {"objectId", ""}, {"nickname", ""}, {"avatar", ""}, {"desc", ""}, {"mediaCount", ""}, {"feedType", ""}, {"desc", ""}, {"username", ""}};
@@ -1594,7 +1574,7 @@ bool SessionParser::parseRow(MsgRecord& record, const std::string& userBase, con
                 {
                     templateValues.setName("channels");
                     
-                    std::string thumbFile = session.getOutputFileName() + "_files/" + msgIdStr + ".jpg";
+                    std::string thumbFile = session.getOutputFileName() + "_files/" + record.msgId + ".jpg";
                     templateValues["%%CHANNELTHUMBPATH%%"] = thumbFile;
                     ensureDirectoryExisted(combinePath(outputPath, session.getOutputFileName() + "_files"));
                     m_downloader.addTask(thumbUrl, combinePath(outputPath, thumbFile), 0);
@@ -1641,7 +1621,7 @@ bool SessionParser::parseRow(MsgRecord& record, const std::string& userBase, con
         {
             // Failed to parse APPMSG type
 #ifndef NDEBUG
-            writeFile(combinePath(outputPath, "../dbg", "msg" + std::to_string(record.type) + "_app_invld_" + msgIdStr + ".txt"), record.message);
+            writeFile(combinePath(outputPath, "../dbg", "msg" + std::to_string(record.type) + "_app_invld_" + record.msgId + ".txt"), record.message);
 #endif
             templateValues["%%MESSAGE%%"] = getLocaleString("[Link]");
         }
@@ -1654,7 +1634,7 @@ bool SessionParser::parseRow(MsgRecord& record, const std::string& userBase, con
     else
     {
 #ifndef NDEBUG
-        writeFile(combinePath(outputPath, "../dbg", "msg_unknwn_type_" + std::to_string(record.type) + msgIdStr + ".txt"), record.message);
+        writeFile(combinePath(outputPath, "../dbg", "msg_unknwn_type_" + std::to_string(record.type) + record.msgId + ".txt"), record.message);
 #endif
         if ((m_options & SPO_IGNORE_HTML_ENC) == 0)
         {
@@ -1925,99 +1905,6 @@ void SessionParser::parseChannelCard(const std::string& sessionPath, const std::
     templateValues["%%EXTRA_CLS%%"] = "channel-card";
 }
 
-class ForwardMsgsHandler
-{
-private:
-    XmlParser& m_xmlParser;
-    int m_msgId;
-    std::vector<ForwardMsg>& m_forwardedMsgs;
-public:
-
-    ForwardMsgsHandler(XmlParser& xmlParser, int msgId, std::vector<ForwardMsg>& forwardedMsgs) : m_xmlParser(xmlParser), m_msgId(msgId), m_forwardedMsgs(forwardedMsgs)
-    {
-    }
-    
-    bool operator() (xmlNodeSetPtr xpathNodes)
-    {
-        for (int idx = 0; idx < xpathNodes->nodeNr; ++idx)
-        {
-            ForwardMsg fmsg = {m_msgId};
-            
-            // templateValues.setName("msg");
-            // templateValues["%%ALIGNMENT%%"] = "left";
-            
-            xmlNode *cur = xpathNodes->nodeTab[idx];
-            
-            XmlParser::getNodeAttributeValue(cur, "datatype", fmsg.dataType);
-            XmlParser::getNodeAttributeValue(cur, "dataid", fmsg.dataId);
-            XmlParser::getNodeAttributeValue(cur, "subtype", fmsg.subType);
-            
-            xmlNodePtr childNode = xmlFirstElementChild(cur);
-            bool hasDataTitle = false;
-            while (NULL != childNode)
-            {
-                if (xmlStrcmp(childNode->name, BAD_CAST("sourcename")) == 0)
-                {
-                    fmsg.displayName = XmlParser::getNodeInnerText(childNode);
-                }
-                else if (xmlStrcmp(childNode->name, BAD_CAST("sourcetime")) == 0)
-                {
-                    fmsg.msgTime = XmlParser::getNodeInnerText(childNode);
-                }
-                else if (xmlStrcmp(childNode->name, BAD_CAST("datadesc")) == 0)
-                {
-                    if (!hasDataTitle)
-                    {
-                        fmsg.message = XmlParser::getNodeInnerText(childNode);
-                    }
-                }
-                else if (xmlStrcmp(childNode->name, BAD_CAST("dataitemsource")) == 0)
-                {
-                    if (!XmlParser::getChildNodeContent(childNode, "realchatname", fmsg.usrName))
-                    {
-                        XmlParser::getChildNodeContent(childNode, "fromusr", fmsg.usrName);
-                    }
-                }
-                else if (xmlStrcmp(childNode->name, BAD_CAST("srcMsgCreateTime")) == 0)
-                {
-                    fmsg.srcMsgTime = XmlParser::getNodeInnerText(childNode);
-                }
-                else if (xmlStrcmp(childNode->name, BAD_CAST("datafmt")) == 0)
-                {
-                    fmsg.dataFormat = XmlParser::getNodeInnerText(childNode);
-                }
-                else if (xmlStrcmp(childNode->name, BAD_CAST("weburlitem")) == 0)
-                {
-                    XmlParser::getChildNodeContent(childNode, "title", fmsg.message);
-                    XmlParser::getChildNodeContent(childNode, "link", fmsg.link);
-                }
-                else if (xmlStrcmp(childNode->name, BAD_CAST("datatitle")) == 0)
-                {
-                    fmsg.message = XmlParser::getNodeInnerText(childNode);
-                    hasDataTitle = true;
-                }
-                else if (xmlStrcmp(childNode->name, BAD_CAST("recordxml")) == 0)
-                {
-                    xmlNodePtr nodeRecordInfo = XmlParser::getChildNode(childNode, "recordinfo");
-                    if (NULL != nodeRecordInfo)
-                    {
-                        fmsg.nestedMsgs = XmlParser::getNodeOuterXml(nodeRecordInfo);
-                    }
-                }
-                else if (xmlStrcmp(childNode->name, BAD_CAST("locitem")) == 0)
-                {
-                    fmsg.nestedMsgs = XmlParser::getNodeOuterXml(childNode);
-                }
-
-                childNode = childNode->next;
-            }
-            
-            m_forwardedMsgs.push_back(fmsg);
-        }
-        return true;
-    }
-};
-
 bool SessionParser::parseForwardedMsgs(const std::string& userBase, const std::string& outputPath, const Session& session, const MsgRecord& record, const std::string& title, const std::string& message, std::vector<TemplateValues>& tvs)
 {
     XmlParser xmlParser(message);
@@ -2026,8 +1913,6 @@ bool SessionParser::parseForwardedMsgs(const std::string& userBase, const std::s
     std::string portraitPath = ((m_options & SPO_ICON_IN_SESSION) == SPO_ICON_IN_SESSION) ? session.getOutputFileName() + "_files/Portrait/" : "Portrait/";
     std::string localPortrait;
     std::string remotePortrait;
-    
-    std::string msgIdStr = std::to_string(record.msgId);
     
     tvs.push_back(TemplateValues("notice"));
     TemplateValues& beginTv = tvs.back();
@@ -2059,8 +1944,8 @@ bool SessionParser::parseForwardedMsgs(const std::string& userBase, const std::s
             else if (it->dataType == "2")
             {
                 std::string fileExtName = it->dataFormat.empty() ? "" : ("." + it->dataFormat);
-                std::string vfile = userBase + "/OpenData/" + session.getHash() + "/" + msgIdStr + "/" + it->dataId;
-                parseImage(outputPath, session.getOutputFileName() + "_files/" + msgIdStr, vfile + fileExtName, vfile + fileExtName + "_pre3", it->dataId + ".jpg", vfile + ".record_thumb", it->dataId + "_thumb.jpg", tv);
+                std::string vfile = userBase + "/OpenData/" + session.getHash() + "/" + record.msgId + "/" + it->dataId;
+                parseImage(outputPath, session.getOutputFileName() + "_files/" + record.msgId, vfile + fileExtName, vfile + fileExtName + "_pre3", it->dataId + ".jpg", vfile + ".record_thumb", it->dataId + "_thumb.jpg", tv);
             }
             else if (it->dataType == "3")
             {
@@ -2069,14 +1954,14 @@ bool SessionParser::parseForwardedMsgs(const std::string& userBase, const std::s
             else if (it->dataType == "4")
             {
                 std::string fileExtName = it->dataFormat.empty() ? "" : ("." + it->dataFormat);
-                std::string vfile = userBase + "/OpenData/" + session.getHash() + "/" + msgIdStr + "/" + it->dataId;
-                parseVideo(outputPath, session.getOutputFileName() + "_files/" + msgIdStr, vfile + fileExtName, it->dataId + fileExtName, vfile + ".record_thumb", it->dataId + "_thumb.jpg", "", "", tv);
+                std::string vfile = userBase + "/OpenData/" + session.getHash() + "/" + record.msgId + "/" + it->dataId;
+                parseVideo(outputPath, session.getOutputFileName() + "_files/" + record.msgId, vfile + fileExtName, it->dataId + fileExtName, vfile + ".record_thumb", it->dataId + "_thumb.jpg", "", "", tv);
                 
             }
             else if (it->dataType == "5")
             {
-                std::string vfile = userBase + "/OpenData/" + session.getHash() + "/" + msgIdStr + "/" + it->dataId + ".record_thumb";
-                std::string dest = session.getOutputFileName() + "_files/" + msgIdStr + "/" + it->dataId + "_thumb.jpg";
+                std::string vfile = userBase + "/OpenData/" + session.getHash() + "/" + record.msgId + "/" + it->dataId + ".record_thumb";
+                std::string dest = session.getOutputFileName() + "_files/" + record.msgId + "/" + it->dataId + "_thumb.jpg";
                 bool hasThumb = false;
                 if ((m_options & SPO_IGNORE_SHARING) == 0)
                 {
@@ -2116,8 +2001,8 @@ bool SessionParser::parseForwardedMsgs(const std::string& userBase, const std::s
             else if (it->dataType == "8")
             {
                 std::string fileExtName = it->dataFormat.empty() ? "" : ("." + it->dataFormat);
-                std::string vfile = userBase + "/OpenData/" + session.getHash() + "/" + msgIdStr + "/" + it->dataId;
-                parseFile(outputPath, session.getOutputFileName() + "_files/" + msgIdStr, vfile + fileExtName, it->dataId + fileExtName, it->message, tv);
+                std::string vfile = userBase + "/OpenData/" + session.getHash() + "/" + record.msgId + "/" + it->dataId;
+                parseFile(outputPath, session.getOutputFileName() + "_files/" + record.msgId, vfile + fileExtName, it->dataId + fileExtName, it->message, tv);
             }
             else if (it->dataType == "16")
             {
@@ -2150,7 +2035,7 @@ bool SessionParser::parseForwardedMsgs(const std::string& userBase, const std::s
             }
             
             tv["%%NAME%%"] = it->displayName;
-            tv["%%MSGID%%"] = msgIdStr + "_" + it->dataId;
+            tv["%%MSGID%%"] = record.msgId + "_" + it->dataId;
             tv["%%TIME%%"] = it->srcMsgTime.empty() ? it->msgTime : fromUnixTime(static_cast<unsigned int>(std::atoi(it->srcMsgTime.c_str())));
             
             localPortrait = portraitPath + (it->protrait.empty() ? "DefaultProfileHead@2x.png" : session.getLocalPortrait());

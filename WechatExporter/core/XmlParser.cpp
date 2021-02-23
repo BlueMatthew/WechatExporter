@@ -184,25 +184,25 @@ xmlXPathObjectPtr XmlParser::evalXPathOnNode(xmlNodePtr node, const std::string&
     return xmlXPathNodeEval(node, BAD_CAST(xpath.c_str()), m_xpathCtx);
 }
 
-bool XmlParser::parseNodeValue(const std::string& xpath, std::string& value)
+bool XmlParser::parseNodeValue(const std::string& xpath, std::string& value) const
 {
     NodeValueHandler handler = {value};
     return parseWithHandler(xpath, handler);
 }
 
-bool XmlParser::parseNodesValue(const std::string& xpath, std::map<std::string, std::string>& values)
+bool XmlParser::parseNodesValue(const std::string& xpath, std::map<std::string, std::string>& values) const
 {
     NodesValueHandler handler = {values};
     return parseWithHandler(xpath, handler);
 }
 
-bool XmlParser::parseAttributeValue(const std::string& xpath, const std::string& attributeName, std::string& value)
+bool XmlParser::parseAttributeValue(const std::string& xpath, const std::string& attributeName, std::string& value) const
 {
     AttributeHandler handler = {attributeName, value};
     return parseWithHandler(xpath, handler);
 }
 
-bool XmlParser::parseAttributesValue(const std::string& xpath, std::map<std::string, std::string>& attributes)
+bool XmlParser::parseAttributesValue(const std::string& xpath, std::map<std::string, std::string>& attributes) const
 {
     AttributesHandler handler = {attributes};
     return parseWithHandler(xpath, handler);
