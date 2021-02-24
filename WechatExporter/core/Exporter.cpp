@@ -30,7 +30,7 @@ struct FriendDownloadHandler
     }
 };
 
-Exporter::Exporter(const std::string& workDir, const std::string& backup, const std::string& output, Shell* shell, Logger* logger)
+Exporter::Exporter(const std::string& workDir, const std::string& backup, const std::string& output, Logger* logger)
 {
     m_running = false;
     m_iTunesDb = NULL;
@@ -38,7 +38,6 @@ Exporter::Exporter(const std::string& workDir, const std::string& backup, const 
     m_workDir = workDir;
     m_backup = backup;
     m_output = output;
-    m_shell = shell;
     m_logger = logger;
     m_notifier = NULL;
     m_cancelled = false;
@@ -50,7 +49,6 @@ Exporter::Exporter(const std::string& workDir, const std::string& backup, const 
 Exporter::~Exporter()
 {
     releaseITunes();
-    m_shell = NULL;
     m_logger = NULL;
     m_notifier = NULL;
 }
@@ -135,7 +133,7 @@ bool Exporter::run()
         return false;
     }
 
-    if (!m_shell->existsDirectory(m_output))
+    if (!existsDirectory(m_output))
     {
         m_logger->write(formatString(getLocaleString("Can't access output directory: %s"), m_output.c_str()));
         return false;
@@ -317,15 +315,15 @@ bool Exporter::exportUser(Friend& user, std::string& userOutputPath)
     // Use display name first, it it can't be created, use uid hash
     userOutputPath = user.getOutputFileName();
     std::string outputBase = combinePath(m_output, userOutputPath);
-    if (!m_shell->existsDirectory(outputBase))
+    if (!existsDirectory(outputBase))
     {
-        if (!m_shell->makeDirectory(outputBase))
+        if (!makeDirectory(outputBase))
         {
             userOutputPath = user.getHash();
             outputBase = combinePath(m_output, userOutputPath);
-            if (!m_shell->existsDirectory(outputBase))
+            if (!existsDirectory(outputBase))
             {
-                if (!m_shell->makeDirectory(outputBase))
+                if (!makeDirectory(outputBase))
                 {
                     return false;
                 }
@@ -336,14 +334,14 @@ bool Exporter::exportUser(Friend& user, std::string& userOutputPath)
     if ((m_options & SPO_IGNORE_AVATAR) == 0)
     {
         std::string portraitPath = combinePath(outputBase, "Portrait");
-        m_shell->makeDirectory(portraitPath);
+        makeDirectory(portraitPath);
         std::string defaultPortrait = combinePath(portraitPath, "DefaultProfileHead@2x.png");
-        m_shell->copyFile(combinePath(m_workDir, "res", "DefaultProfileHead@2x.png"), defaultPortrait, true);
+        copyFile(combinePath(m_workDir, "res", "DefaultProfileHead@2x.png"), defaultPortrait, true);
     }
     if ((m_options & SPO_ICON_IN_SESSION) == 0 && (m_options & SPO_IGNORE_EMOJI) == 0)
     {
         std::string emojiPath = combinePath(outputBase, "Emoji");
-        m_shell->makeDirectory(emojiPath);
+        makeDirectory(emojiPath);
     }
     
     m_logger->write(formatString(getLocaleString("Handling account: %s, Wechat Id: %s"), user.getDisplayName().c_str(), user.getUsrName().c_str()));
@@ -492,7 +490,7 @@ bool Exporter::loadUserFriendsAndSessions(const Friend& user, Friends& friends, 
 
     m_logger->debug("Wechat Friends(" + std::to_string(friends.friends.size()) + ") for: " + user.getDisplayName() + " loaded.");
 
-    SessionsParser sessionsParser(m_iTunesDb, m_iTunesDbShare, m_shell, m_wechatInfo.getCellDataVersion(), detailedInfo);
+    SessionsParser sessionsParser(m_iTunesDb, m_iTunesDbShare, m_wechatInfo.getCellDataVersion(), detailedInfo);
     
     sessionsParser.parse(user, sessions, friends);
  
@@ -513,13 +511,13 @@ int Exporter::exportSession(const Friend& user, SessionParser& sessionParser, co
     if ((m_options & SPO_IGNORE_AVATAR) == 0)
     {
         std::string portraitPath = combinePath(sessionBasePath, "Portrait");
-        m_shell->makeDirectory(portraitPath);
+        makeDirectory(portraitPath);
         std::string defaultPortrait = combinePath(portraitPath, "DefaultProfileHead@2x.png");
-        m_shell->copyFile(combinePath(m_workDir, "res", "DefaultProfileHead@2x.png"), defaultPortrait, true);
+        copyFile(combinePath(m_workDir, "res", "DefaultProfileHead@2x.png"), defaultPortrait, true);
     }
     if ((m_options & SPO_IGNORE_EMOJI) == 0)
     {
-        m_shell->makeDirectory(combinePath(sessionBasePath, "Emoji"));
+        makeDirectory(combinePath(sessionBasePath, "Emoji"));
     }
 
     std::vector<std::string> messages;
@@ -582,7 +580,7 @@ bool Exporter::buildFileNameForUser(Friend& user, std::set<std::string>& existin
     bool succeeded = false;
     for (int idx = 0; idx < 3; ++idx)
     {
-        std::string outputFileName = m_shell->removeInvalidCharsForFileName(names[idx]);
+        std::string outputFileName = removeInvalidCharsForFileName(names[idx]);
         if (isValidFileName(outputFileName))
         {
             if ( existingFileNames.find(outputFileName) != existingFileNames.cend())

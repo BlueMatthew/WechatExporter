@@ -110,9 +110,6 @@
     <ClInclude Include="..\WechatExporter\core\RawMessage.h">
       <Filter>core</Filter>
     </ClInclude>
-    <ClInclude Include="..\WechatExporter\core\Shell.h">
-      <Filter>core</Filter>
-    </ClInclude>
     <ClInclude Include="..\WechatExporter\core\Utils.h">
       <Filter>core</Filter>
     </ClInclude>
@@ -123,9 +120,6 @@
       <Filter>core</Filter>
     </ClInclude>
     <ClInclude Include="LoggerImpl.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="ShellImpl.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Core.h">

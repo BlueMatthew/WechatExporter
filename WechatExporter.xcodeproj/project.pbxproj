@@ -48,7 +48,6 @@
 		342EDB07252471D6006A295A /* Logger.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Logger.h; sourceTree = "<group>"; };
 		342EDB0825247852006A295A /* Utils.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = Utils.cpp; sourceTree = "<group>"; };
 		342EDB0A252495BD006A295A /* libxml2.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libxml2.tbd; path = usr/lib/libxml2.tbd; sourceTree = SDKROOT; };
-		342EDB0C25249618006A295A /* Shell.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Shell.h; sourceTree = "<group>"; };
 		343F6112252322D500FFE085 /* WechatExporter.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = WechatExporter.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		343F6115252322D500FFE085 /* AppDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AppDelegate.h; sourceTree = "<group>"; };
 		343F6116252322D500FFE085 /* AppDelegate.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = AppDelegate.m; sourceTree = "<group>"; };
@@ -76,7 +75,6 @@
 		34AB9A1325B8908D006D3617 /* FileSystemImpl_Win.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = FileSystemImpl_Win.cpp; sourceTree = "<group>"; };
 		34AB9A1425B890A0006D3617 /* FileSystemImpl_Mac.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = FileSystemImpl_Mac.cpp; sourceTree = "<group>"; };
 		34CC0787253D98CA00AC8860 /* ByteArrayLocater.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ByteArrayLocater.h; sourceTree = "<group>"; };
-		34E3E9022525C20E0093042D /* ShellImpl.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ShellImpl.h; sourceTree = "<group>"; };
 		34E3E9032525C2640093042D /* LoggerImpl.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = LoggerImpl.h; sourceTree = "<group>"; };
 		34E3E9092531BD8E0093042D /* Utils_md5.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Utils_md5.cpp; sourceTree = "<group>"; };
 		34E3E90B2531BE1F0093042D /* Utils_protobuf.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Utils_protobuf.cpp; sourceTree = "<group>"; };
@@ -139,7 +137,6 @@
 				343F6121252322D600FFE085 /* main.m */,
 				343F611D252322D600FFE085 /* Main.storyboard */,
 				341A5B2E253828F300914BE3 /* res */,
-				34E3E9022525C20E0093042D /* ShellImpl.h */,
 				343F6118252322D500FFE085 /* ViewController.h */,
 				343F6119252322D500FFE085 /* ViewController.mm */,
 				343F6123252322D600FFE085 /* WechatExporter.entitlements */,
@@ -165,7 +162,6 @@
 				34E3E9232535555F0093042D /* RawMessage.cpp */,
 				34E3E922253555470093042D /* RawMessage.h */,
 				345C8D4E2543F5E30036368C /* semaphore.h */,
-				342EDB0C25249618006A295A /* Shell.h */,
 				34ED31E725528A1800C42698 /* Utils_audio.cpp */,
 				34E3E9092531BD8E0093042D /* Utils_md5.cpp */,
 				34E3E90B2531BE1F0093042D /* Utils_protobuf.cpp */,
