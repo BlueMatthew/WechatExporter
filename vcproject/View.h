@@ -612,6 +612,9 @@ protected:
 		::EnableWindow(GetDlgItem(IDC_CANCEL), !enabled && cancellable);
 		::ShowWindow(GetDlgItem(IDC_CANCEL), enabled ? SW_HIDE : SW_SHOW);
 		::ShowWindow(GetDlgItem(IDC_CLOSE), enabled ? SW_SHOW : SW_HIDE);
+
+		UINT state = enabled ? MF_ENABLED : (MF_DISABLED | MF_GRAYED);
+		EnableMenuItem(::GetSystemMenu(::GetParent(m_hWnd), FALSE), SC_CLOSE, MF_BYCOMMAND | state);
 	}
 
 	void UpdateBackups(const std::vector<BackupManifest>& manifests)
