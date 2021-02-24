@@ -9,7 +9,6 @@
 #include <chrono>
 #include "Core.h"
 #include "LoggerImpl.h"
-#include "ShellImpl.h"
 #include "ExportNotifierImpl.h"
 // #include "ColoredControls.h"
 #include "LogListBox.h"
@@ -24,7 +23,6 @@ private:
 	CLogListBox				m_logListBox;
 	CSortListViewCtrl		m_sessionsListCtrl;
 
-	ShellImpl			m_shell;
 	LoggerImpl*			m_logger;
 	ExportNotifierImpl* m_notifier;
 	Exporter*			m_exporter;
@@ -43,7 +41,7 @@ private:
 		CWaitCursor m_waitCursor;
 	public:
 
-		CLoadingHandler(HWND hWnd, const std::string& resDir, const std::string& backupDir, Shell* shell, Logger* logger) : m_hWnd(hWnd), m_exp(resDir, backupDir, "", shell, logger)
+		CLoadingHandler(HWND hWnd, const std::string& resDir, const std::string& backupDir, Logger* logger) : m_hWnd(hWnd), m_exp(resDir, backupDir, "", logger)
 		{
 			m_task = std::async(std::launch::async, &Exporter::loadUsersAndSessions, &m_exp);
 		}
@@ -120,14 +118,14 @@ public:
 		if (!lastBackupDir.IsEmpty() && lastBackupDir != backupDir)
 		{
 			CW2A backupDir(CT2W(lastBackupDir), CP_UTF8);
-			ManifestParser parser((LPCSTR)backupDir, &m_shell);
+			ManifestParser parser((LPCSTR)backupDir);
 			parser.parse(manifests);
 		}
 #endif
 		if (!backupDir.IsEmpty())
 		{
 			CW2A backupDir(CT2W(backupDir), CP_UTF8);
-			ManifestParser parser((LPCSTR)backupDir, &m_shell);
+			ManifestParser parser((LPCSTR)backupDir);
 			parser.parse(manifests);
 		}
 
@@ -239,7 +237,7 @@ public:
 		{
 			CW2A backupDir(CT2W(folder.m_szFolderPath), CP_UTF8);
 
-			ManifestParser parser((LPCSTR)backupDir, &m_shell);
+			ManifestParser parser((LPCSTR)backupDir);
 			std::vector<BackupManifest> manifests;
 			if (parser.parse(manifests) && !manifests.empty())
 			{
@@ -302,9 +300,9 @@ public:
 		EnableInteractiveCtrls(FALSE, FALSE);
 		
 		std::string backup = manifest.getPath();
-		CLoadingHandler *handler = new CLoadingHandler(m_hWnd, (LPCSTR)resDir, backup, &m_shell, m_logger);
+		CLoadingHandler *handler = new CLoadingHandler(m_hWnd, (LPCSTR)resDir, backup, m_logger);
 		_Module.GetMessageLoop()->AddIdleHandler(handler);
-		// Exporter exp((LPCSTR)resDir, backup, "", &m_shell, m_logger);
+		// Exporter exp((LPCSTR)resDir, backup, "", m_logger);
 
 		return 0;
 	}
@@ -537,7 +535,7 @@ public:
 			}
 		}
 
-		m_exporter = new Exporter((LPCSTR)resDir, backup, (LPCSTR)output, &m_shell, m_logger);
+		m_exporter = new Exporter((LPCSTR)resDir, backup, (LPCSTR)output, m_logger);
 		m_exporter->setNotifier(m_notifier);
 		m_exporter->setOrder(!descOrder);
 		m_exporter->setSyncLoading(!asyncLoading);

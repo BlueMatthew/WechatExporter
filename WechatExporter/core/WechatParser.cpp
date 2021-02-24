@@ -772,7 +772,7 @@ bool WechatInfoParser::parsePreferences(WechatInfo& wechatInfo)
     return true;
 }
 
-SessionsParser::SessionsParser(ITunesDb *iTunesDb, ITunesDb *iTunesDbShare, Shell* shell, const std::string& cellDataVersion, bool detailedInfo/* = true*/) : m_iTunesDb(iTunesDb), m_iTunesDbShare(iTunesDbShare), m_shell(shell), m_cellDataVersion(cellDataVersion), m_detailedInfo(detailedInfo)
+SessionsParser::SessionsParser(ITunesDb *iTunesDb, ITunesDb *iTunesDbShare, const std::string& cellDataVersion, bool detailedInfo/* = true*/) : m_iTunesDb(iTunesDb), m_iTunesDbShare(iTunesDbShare), m_cellDataVersion(cellDataVersion), m_detailedInfo(detailedInfo)
 {
     if (cellDataVersion.empty())
     {
