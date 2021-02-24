@@ -186,7 +186,7 @@ public:
     std::string getRealPath(const ITunesFile& file) const;
     
     static unsigned int parseModifiedTime(const std::vector<unsigned char>& data);
-    bool copyFile(const std::string& vpath, const std::string& dest) const;
+    bool copyFile(const std::string& vpath, const std::string& dest, bool overwrite = false) const;
     
 protected:
     mutable std::vector<ITunesFile *> m_files;

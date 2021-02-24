@@ -344,15 +344,13 @@ std::string ITunesDb::findRealPath(const std::string& relativePath) const
 }
 
 
-bool ITunesDb::copyFile(const std::string& vpath, const std::string& dest) const
+bool ITunesDb::copyFile(const std::string& vpath, const std::string& dest, bool overwrite/* = false*/) const
 {
-#ifndef NDEBUG
-    // Make debug more effective
-    if (existsFile(normalizePath(dest)))
+    std::string destPath = normalizePath(dest);
+    if (!overwrite && existsFile(destPath))
     {
         return true;
     }
-#endif
     
     const ITunesFile* file = findITunesFile(vpath);
     if (NULL != file)
