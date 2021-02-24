@@ -15,7 +15,6 @@
 #include <atomic>
 
 #include "Logger.h"
-#include "Shell.h"
 #include "WechatObjects.h"
 #include "ITunesParser.h"
 #include "semaphore.h"
@@ -40,7 +39,6 @@ protected:
     std::string m_backup;
     std::string m_output;
     Logger* m_logger;
-    Shell* m_shell;
     
     ITunesDb *m_iTunesDb;
     ITunesDb *m_iTunesDbShare;
@@ -60,7 +58,7 @@ protected:
     std::vector<std::pair<Friend, std::vector<Session>>> m_usersAndSessions;
     
 public:
-    Exporter(const std::string& workDir, const std::string& backup, const std::string& output, Shell* shell, Logger* logger);
+    Exporter(const std::string& workDir, const std::string& backup, const std::string& output, Logger* logger);
     ~Exporter();
 
     void setNotifier(ExportNotifier *notifier);

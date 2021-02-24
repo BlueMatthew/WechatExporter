@@ -1,5 +1,5 @@
 //
-//  ViewController.m
+//  ViewController.mm
 //  WechatExporter
 //
 //  Created by Matthew on 2020/9/29.
@@ -11,13 +11,11 @@
 #include "ITunesParser.h"
 
 #include "LoggerImpl.h"
-#include "ShellImpl.h"
 #include "ExportNotifierImpl.h"
 #include "RawMessage.h"
 #include "Utils.h"
 #include "Exporter.h"
 #include "FileSystem.h"
-
 
 #include <sqlite3.h>
 #include <fstream>
@@ -34,7 +32,6 @@ void errorLogCallback(void *pArg, int iErrCode, const char *zMsg)
 
 @interface ViewController() <NSTableViewDelegate>
 {
-    ShellImpl* m_shell;
     LoggerImpl* m_logger;
     ExportNotifierImpl *m_notifier;
     Exporter* m_exporter;
@@ -103,11 +100,6 @@ void errorLogCallback(void *pArg, int iErrCode, const char *zMsg)
         delete m_logger;
         m_logger = NULL;
     }
-    if (NULL != m_shell)
-    {
-        delete m_shell;
-        m_shell = NULL;
-    }
     
     [self.btnBackup setAction:nil];
     [self.btnBackup setTarget:nil];
@@ -154,8 +146,7 @@ void errorLogCallback(void *pArg, int iErrCode, const char *zMsg)
     self.btnCancel.autoresizingMask = NSViewMinXMargin | NSViewMaxYMargin;
     self.btnQuit.autoresizingMask = NSViewMinXMargin | NSViewMaxYMargin;
     self.btnExport.autoresizingMask = NSViewMinXMargin | NSViewMaxYMargin;
-    
-    m_shell = new ShellImpl();
+
     m_logger = new LoggerImpl(self);
     m_notifier = new ExportNotifierImpl(self);
     m_exporter = NULL;
@@ -241,7 +232,7 @@ void errorLogCallback(void *pArg, int iErrCode, const char *zMsg)
     {
         NSString *backupDir = [NSString pathWithComponents:components];
 
-        ManifestParser parser([backupDir UTF8String], m_shell);
+        ManifestParser parser([backupDir UTF8String]);
         std::vector<BackupManifest> manifests;
         if (parser.parse(manifests))
         {
@@ -361,7 +352,7 @@ void errorLogCallback(void *pArg, int iErrCode, const char *zMsg)
         __strong typeof(weakSelf) strongSelf = weakSelf;  // strong by default
         if (nil != strongSelf)
         {
-            Exporter exp([workDir UTF8String], [backupDir UTF8String], "", strongSelf->m_shell, strongSelf->m_logger);
+            Exporter exp([workDir UTF8String], [backupDir UTF8String], "", strongSelf->m_logger);
             exp.loadUsersAndSessions();
             exp.swapUsersAndSessions(strongSelf->m_usersAndSessions);
         }
@@ -425,7 +416,7 @@ void errorLogCallback(void *pArg, int iErrCode, const char *zMsg)
         {
             NSURL *backupUrl = panel.directoryURL;
             
-            ManifestParser parser([backupUrl.path UTF8String], self->m_shell);
+            ManifestParser parser([backupUrl.path UTF8String]);
             std::vector<BackupManifest> manifests;
             if (parser.parse(manifests) && !manifests.empty())
             {
@@ -584,7 +575,7 @@ void errorLogCallback(void *pArg, int iErrCode, const char *zMsg)
     std::map<std::string, std::set<std::string>> usersAndSessions;
     [m_dataSource getSelectedUserAndSessions:usersAndSessions];
     
-    m_exporter = new Exporter([workDir UTF8String], [backup UTF8String], [output UTF8String], m_shell, m_logger);
+    m_exporter = new Exporter([workDir UTF8String], [backup UTF8String], [output UTF8String], m_logger);
     if (nil != descOrder && [descOrder boolValue])
     {
         m_exporter->setOrder(false);

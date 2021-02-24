@@ -13,7 +13,6 @@
 #include <sstream>
 #include <iomanip>
 #include <ctime>
-#include "Shell.h"
 #include "Utils.h"
 
 #ifndef ITunesParser_h
@@ -232,11 +231,10 @@ class ManifestParser
 {
 protected:
     std::string m_manifestPath;
-	const Shell* m_shell;
 	mutable std::string m_lastError;
 
 public:
-    ManifestParser(const std::string& m_manifestPath, const Shell* shell);
+    ManifestParser(const std::string& manifestPath);
     bool parse(std::vector<BackupManifest>& manifets) const;
 	std::string getLastError() const;
 

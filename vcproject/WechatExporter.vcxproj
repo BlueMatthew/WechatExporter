@@ -274,7 +274,6 @@ xcopy "$(ProjectDir)..\WechatExporter\res"  "$(OutDir)res"  /Y /S /E</Command>
     <ClInclude Include="..\WechatExporter\core\OSDef.h" />
     <ClInclude Include="..\WechatExporter\core\RawMessage.h" />
     <ClInclude Include="..\WechatExporter\core\semaphore.h" />
-    <ClInclude Include="..\WechatExporter\core\Shell.h" />
     <ClInclude Include="..\WechatExporter\core\Utils.h" />
     <ClInclude Include="..\WechatExporter\core\WechatObjects.h" />
     <ClInclude Include="..\WechatExporter\core\WechatParser.h" />
@@ -289,7 +288,6 @@ xcopy "$(ProjectDir)..\WechatExporter\res"  "$(OutDir)res"  /Y /S /E</Command>
     <ClInclude Include="LogListBox.h" />
     <ClInclude Include="MainFrm.h" />
     <ClInclude Include="resource.h" />
-    <ClInclude Include="ShellImpl.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="VersionDetector.h" />
     <ClInclude Include="View.h" />

@@ -375,7 +375,7 @@ bool ITunesDb::copyFile(const std::string& vpath, const std::string& dest, bool 
 
 
 
-ManifestParser::ManifestParser(const std::string& manifestPath, const Shell* shell) : m_manifestPath(manifestPath), m_shell(shell)
+ManifestParser::ManifestParser(const std::string& manifestPath) : m_manifestPath(manifestPath)
 {
 }
 
@@ -405,7 +405,7 @@ bool ManifestParser::parse(std::vector<BackupManifest>& manifests) const
 bool ManifestParser::parseDirectory(const std::string& path, std::vector<BackupManifest>& manifests) const
 {
     std::vector<std::string> subDirectories;
-    if (!m_shell->listSubDirectories(path, subDirectories))
+    if (!listSubDirectories(path, subDirectories))
     {
 #ifndef NDEBUG
 #endif
@@ -448,21 +448,21 @@ bool ManifestParser::isValidBackupId(const std::string& backupPath, const std::s
 	//	return false;
 	// }
 
-	if (!m_shell->existsFile(fileName))
+	if (!existsFile(fileName))
 	{
 		m_lastError += "Info.plist not found\r\n";
 		return false;
 	}
 
 	fileName = combinePath(path, "Manifest.plist");
-	if (!m_shell->existsFile(fileName))
+	if (!existsFile(fileName))
 	{
 		m_lastError += "Manifest.plist not found\r\n";
 		return false;
 	}
 
 	fileName = combinePath(path, "Manifest.db");
-	if (!m_shell->existsFile(fileName))
+	if (!existsFile(fileName))
 	{
 		m_lastError += "Manifest.db not found\r\n";
 		return false;

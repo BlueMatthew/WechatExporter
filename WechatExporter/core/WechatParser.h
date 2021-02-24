@@ -16,7 +16,6 @@
 #include <atomic>
 #include <map>
 #include "Utils.h"
-#include "Shell.h"
 #include "Downloader.h"
 #include "ByteArrayLocater.h"
 #include "WechatObjects.h"
@@ -288,12 +287,11 @@ class SessionsParser
 private:
     ITunesDb *m_iTunesDb;
     ITunesDb *m_iTunesDbShare;
-    Shell*      m_shell;
     std::string m_cellDataVersion;
     bool        m_detailedInfo;
 
 public:
-    SessionsParser(ITunesDb *iTunesDb, ITunesDb *iTunesDbShare, Shell* shell, const std::string& cellDataVersion, bool detailedInfo = true);
+    SessionsParser(ITunesDb *iTunesDb, ITunesDb *iTunesDbShare, const std::string& cellDataVersion, bool detailedInfo = true);
     
     bool parse(const Friend& user, std::vector<Session>& sessions, const Friends& friends);
 
