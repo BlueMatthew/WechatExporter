@@ -1168,7 +1168,7 @@ bool SessionsParser::parseSessionsInGroupApp(const std::string& userRoot, std::v
     return true;
 }
 
-SessionParser::SessionParser(Friend& myself, Friends& friends, const ITunesDb& iTunesDb, const Shell& shell, int options, Downloader& downloader, std::function<std::string(const std::string&)> localeFunc) : m_options(options), m_myself(myself), m_friends(friends), m_iTunesDb(iTunesDb), m_shell(shell), m_downloader(downloader)
+SessionParser::SessionParser(Friend& myself, Friends& friends, const ITunesDb& iTunesDb, const Shell& shell, int options, Downloader& downloader, MessageParser& msgParser, std::function<std::string(const std::string&)> localeFunc) : m_options(options), m_myself(myself), m_friends(friends), m_iTunesDb(iTunesDb), m_shell(shell), m_downloader(downloader), m_msgParser(msgParser)
 {
     m_localFunction = std::move(localeFunc);
 }
@@ -1198,6 +1198,8 @@ int SessionParser::parse(const std::string& userBase, const std::string& outputB
         return false;
     }
 
+    // MessageParser msgParser(m_iTunesDb, m_downloader, m_friends, m_myself, m_options, outputBase);
+    
     std::vector<TemplateValues> tvs;
     MsgRecord record;
 
@@ -1212,7 +1214,8 @@ int SessionParser::parse(const std::string& userBase, const std::string& outputB
         record.des = sqlite3_column_int(stmt, 2);
         record.type = sqlite3_column_int(stmt, 3);
         record.msgId = std::to_string(sqlite3_column_int(stmt, 4));
-        if (parseRow(record, userBase, outputBase, session, tvs))
+        // if (parseRow(record, userBase, outputBase, session, tvs))
+        if (m_msgParser.parse(record, session, tvs))
         {
             count++;
             if (handler(tvs))
