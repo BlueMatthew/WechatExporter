@@ -202,6 +202,9 @@ bool Exporter::runImpl()
     std::time(&startTime);
     notifyStart();
     
+#ifndef NDEBUG
+    makeDirectory(combinePath(m_output, "dbg"));
+#endif
     loadStrings();
     loadTemplates();
     
@@ -372,8 +375,6 @@ bool Exporter::exportUser(Friend& user, std::string& userOutputPath)
         itUser = m_usersAndSessionsFilter.find(user.getUsrName());
     }
     
-    std::function<std::string(const std::string&)> localeFunction = std::bind(&Exporter::getLocaleString, this, std::placeholders::_1);
-
     Downloader downloader(m_logger);
 #ifndef NDEBUG
     m_logger->debug("UA: " + m_wechatInfo.buildUserAgent());
@@ -387,7 +388,13 @@ bool Exporter::exportUser(Friend& user, std::string& userOutputPath)
         downloader.addTask(user.getPortrait(), combinePath(outputBase, "Portrait", user.getLocalPortrait()), 0);
     }
     
-    SessionParser sessionParser(*myself, friends, *m_iTunesDb, *m_shell, m_options, downloader, localeFunction);
+    // MessageParser(const ITunesDb& iTunesDb, Downloader& downloader, Friends& friends, Friend myself, int options, const std::string& outputPath, std::function<std::string(const std::string&)>& localeFunc);
+    
+    std::function<std::string(const std::string&)> localeFunction = std::bind(&Exporter::getLocaleString, this, std::placeholders::_1);
+    MessageParser msgParser(*m_iTunesDb, downloader, friends, *myself, m_options, outputBase, localeFunction);
+    
+    std::function<std::string(const std::string&)> localeFunction2 = std::bind(&Exporter::getLocaleString, this, std::placeholders::_1);
+    SessionParser sessionParser(*myself, friends, *m_iTunesDb, *m_shell, m_options, downloader, msgParser, localeFunction2);
     std::set<std::string> sessionFileNames;
     for (std::vector<Session>::iterator it = sessions.begin(); it != sessions.end(); ++it)
     {

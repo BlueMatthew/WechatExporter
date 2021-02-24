@@ -318,9 +318,10 @@ private:
     Friend m_myself;
     
     mutable std::vector<unsigned char> m_pcmData;  // buffer
+    MessageParser& m_msgParser;
     
 public:
-    SessionParser(Friend& myself, Friends& friends, const ITunesDb& iTunesDb, const Shell& shell, int options, Downloader& downloader, std::function<std::string(const std::string&)> localeFunc);
+    SessionParser(Friend& myself, Friends& friends, const ITunesDb& iTunesDb, const Shell& shell, int options, Downloader& downloader, MessageParser& msgParser, std::function<std::string(const std::string&)> localeFunc);
 
     int parse(const std::string& userBase, const std::string& outputBase, const Session& session, std::function<bool(const std::vector<TemplateValues>&)> handler);
 
