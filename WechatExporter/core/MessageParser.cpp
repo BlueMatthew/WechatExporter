@@ -16,7 +16,7 @@
 
 MessageParserBase::MessageParserBase(const ITunesDb& iTunesDb, Downloader& downloader, Friends& friends, Friend myself, int options, const std::string& outputPath, std::function<std::string(const std::string&)>& localeFunc) : m_iTunesDb(iTunesDb), m_downloader(downloader), m_friends(friends), m_myself(myself), m_options(options), m_outputPath(outputPath)
 {
-    m_userBase = "Document/" + m_myself.getHash();
+    m_userBase = "Documents/" + m_myself.getHash();
     m_localFunction = std::move(localeFunc);
 }
 
