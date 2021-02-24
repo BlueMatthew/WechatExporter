@@ -354,6 +354,8 @@ void errorLogCallback(void *pArg, int iErrCode, const char *zMsg)
     __block NSString *backupDir = [NSString stringWithString:backupPath];
     __block NSString *workDir = [[NSBundle mainBundle] resourcePath];
     typeof(self) __weak weakSelf = self;
+    
+    [self setUIEnabled:NO withCancellable:NO];
     dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
         
         __strong typeof(weakSelf) strongSelf = weakSelf;  // strong by default
@@ -372,14 +374,10 @@ void errorLogCallback(void *pArg, int iErrCode, const char *zMsg)
                 strongSelf->m_logger->write("Data Loaded.");
     #endif
                 [strongSelf loadUsers];
+                [strongSelf setUIEnabled:YES withCancellable:NO];
             }
         });
     });
-    
-    
-    
-
-
     
 }
 
@@ -652,36 +650,39 @@ void errorLogCallback(void *pArg, int iErrCode, const char *zMsg)
     });
 }
 
+- (void)setUIEnabled:(BOOL)enabled withCancellable:(BOOL)cancellable
+{
+    if (enabled)
+    {
+        self.view.window.styleMask |= NSClosableWindowMask;
+        [self.progressBar stopAnimation:nil];
+    }
+    else
+    {
+        self.view.window.styleMask &= ~NSClosableWindowMask;
+        [self.progressBar startAnimation:nil];
+    }
+    
+    [self.popupBackup setEnabled:enabled];
+    [self.btnOutput setEnabled:enabled];
+    [self.btnBackup setEnabled:enabled];
+    [self.btnExport setEnabled:enabled];
+    [self.btnCancel setEnabled:!enabled && cancellable];
+    [self.btnCancel setHidden:enabled];
+    [self.btnQuit setHidden:!enabled];
+    [self.chkboxDesc setEnabled:enabled];
+    [self.chkboxTextMode setEnabled:enabled];
+    [self.chkboxSaveFilesInSessionFolder setEnabled:enabled];
+}
+
 - (void)onStart
 {
-    self.view.window.styleMask &= ~NSClosableWindowMask;
-    [self.popupBackup setEnabled:NO];
-    [self.btnOutput setEnabled:NO];
-    [self.btnBackup setEnabled:NO];
-    [self.btnExport setEnabled:NO];
-    [self.btnCancel setEnabled:YES];
-    [self.btnCancel setHidden:NO];
-    [self.btnQuit setHidden:YES];
-    [self.chkboxDesc setEnabled:NO];
-    [self.chkboxTextMode setEnabled:NO];
-    [self.chkboxSaveFilesInSessionFolder setEnabled:NO];
-    [self.progressBar startAnimation:nil];
+    [self setUIEnabled:NO withCancellable:YES];
 }
 
 - (void)onComplete:(BOOL)cancelled
 {
-    self.view.window.styleMask |= NSClosableWindowMask;
-    [self.btnExport setEnabled:YES];
-    [self.btnQuit setHidden:NO];
-    [self.btnCancel setEnabled:NO];
-    [self.btnCancel setHidden:YES];
-    [self.popupBackup setEnabled:YES];
-    [self.btnOutput setEnabled:YES];
-    [self.btnBackup setEnabled:YES];
-    [self.chkboxDesc setEnabled:YES];
-    [self.chkboxTextMode setEnabled:YES];
-    [self.chkboxSaveFilesInSessionFolder setEnabled:YES];
-    [self.progressBar stopAnimation:nil];
+    [self setUIEnabled:YES withCancellable:YES];
     
     if (m_exporter)
     {
