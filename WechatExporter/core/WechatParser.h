@@ -308,41 +308,17 @@ private:
 class SessionParser
 {
 private:
-    std::function<std::string(const std::string&)> m_localFunction;
-
-    int m_options;
-    Friends& m_friends;
-    const ITunesDb& m_iTunesDb;
-    const Shell&  m_shell;
-    Downloader& m_downloader;
-    Friend m_myself;
     
-    mutable std::vector<unsigned char> m_pcmData;  // buffer
+    int m_options;
     MessageParser& m_msgParser;
     
 public:
-    SessionParser(Friend& myself, Friends& friends, const ITunesDb& iTunesDb, const Shell& shell, int options, Downloader& downloader, MessageParser& msgParser, std::function<std::string(const std::string&)> localeFunc);
+    SessionParser(MessageParser& msgParser, int options);
 
-    int parse(const std::string& userBase, const std::string& outputBase, const Session& session, std::function<bool(const std::vector<TemplateValues>&)> handler);
+    int parse(const Session& session, std::function<bool(const std::vector<TemplateValues>&)> handler);
 
 private:
-	std::string getLocaleString(const std::string& key) const
-    {
-        return m_localFunction(key);
-    }
-    
-    std::string getDisplayTime(int ms) const;
-    bool requireFile(const std::string& vpath, const std::string& dest) const;
-    bool parseRow(MsgRecord& record, const std::string& userBase, const std::string& path, const Session& session, std::vector<TemplateValues>& tvs);
-    bool parseForwardedMsgs(const std::string& userBase, const std::string& outputPath, const Session& session, const MsgRecord& record, const std::string& title, const std::string& message, std::vector<TemplateValues>& tvs);
-    
-    void parseImage(const std::string& sessionPath, const std::string& sessionAssertsPath, const std::string& src, const std::string& srcPre, const std::string& dest, const std::string& srcThumb, const std::string& destThumb, TemplateValues& templateValues);
-    void parseVideo(const std::string& sessionPath, const std::string& sessionAssertsPath, const std::string& src, const std::string& dest, const std::string& srcThumb, const std::string& destThumb, const std::string& width, const std::string& height, TemplateValues& templateValues);
-    void parseFile(const std::string& sessionPath, const std::string& sessionAssertsPath, const std::string& src, const std::string& dest, const std::string& fileName, TemplateValues& templateValues);
-    void parseCard(const std::string& sessionPath, const std::string& portraitDir, const std::string& cardMessage, TemplateValues& templateValues);
-    void parseChannelCard(const std::string& sessionPath, const std::string& portraitDir, const std::string& usrName, const std::string& avatar, const std::string& name, TemplateValues& templateValues);
-    
-    void ensureDirectoryExisted(const std::string& path);
+	
     
 };
 
