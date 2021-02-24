@@ -143,6 +143,13 @@ xmlNodePtr XmlParser::getChildNode(xmlNodePtr node, const std::string& childName
     return result;
 }
 
+xmlNodePtr XmlParser::getNextNodeSibling(xmlNodePtr node)
+{
+    return xmlNextElementSibling(node);
+}
+
+
+
 bool XmlParser::getNodeAttributeValue(xmlNodePtr node, const std::string& attributeName, std::string& value)
 {
     xmlChar* attr = xmlGetProp(node, BAD_CAST(attributeName.c_str()));

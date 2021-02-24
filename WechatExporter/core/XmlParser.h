@@ -27,6 +27,7 @@ public:
     bool parseAttributesValue(const std::string& xpath, std::map<std::string, std::string>& attributes) const;
     
     static xmlNodePtr getChildNode(xmlNodePtr node, const std::string& childName);
+    static xmlNodePtr getNextNodeSibling(xmlNodePtr node);
     static std::string getNodeInnerText(xmlNodePtr node);
     static std::string getNodeInnerXml(xmlNodePtr node);
     static std::string getNodeOuterXml(xmlNodePtr node);
