@@ -10,6 +10,9 @@
 #define MessageParser_h
 
 #include <string>
+#ifndef NDEBUG
+#include <cassert>
+#endif
 #include "WechatObjects.h"
 #include "Downloader.h"
 #include "ITunesParser.h"
@@ -145,7 +148,7 @@ struct WechatTemplateHandler
     {
         std::string linkName;
         std::string linkType;
-        std::string linkValue;
+        std::string linkHidden;
         
         for (int idx = 0; idx < xpathNodes->nodeNr; ++idx)
         {
@@ -153,6 +156,14 @@ struct WechatTemplateHandler
             
             XmlParser::getNodeAttributeValue(cur, "name", linkName);
             XmlParser::getNodeAttributeValue(cur, "type", linkType);
+            XmlParser::getNodeAttributeValue(cur, "hidden", linkHidden);
+            
+            std::string linkValue;
+            if (linkHidden == "1")
+            {
+                m_templateText = replaceAll(m_templateText, "$" + linkName + "$", linkValue);
+                continue;
+            }
             
             if (linkType == "link_plain")
             {
@@ -177,11 +188,27 @@ struct WechatTemplateHandler
                 
                 linkValue = join(linkValues, linkSep.c_str());
             }
+            else if (linkType == "link_admin_explain")
+            {
+                XmlParser::getChildNodeContent(cur, "title", linkValue);
+            }
+            else if (linkType == "link_revoke_qrcode")
+            {
+                XmlParser::getChildNodeContent(cur, "title", linkValue);
+            }
+            else if (linkType == "new_link_succeed_contact")
+            {
+                XmlParser::getChildNodeContent(cur, "title", linkValue);
+            }
             else
             {
+                // Try to find value of title
+                if (!XmlParser::getChildNodeContent(cur, "title", linkValue))
+                {
 #ifndef NDEBUG
-                assert(false);
+                    assert(false);
 #endif
+                }
             }
             m_templateText = replaceAll(m_templateText, "$" + linkName + "$", linkValue);
             
@@ -289,22 +316,22 @@ class MessageParserBase
 protected:
     const ITunesDb& m_iTunesDb;
     Downloader& m_downloader;
-    const Session& m_session;
-    
+
     Friends& m_friends;
     Friend m_myself;
+    int m_options;
     
     const std::string m_outputPath;
+    std::string m_userBase;
 
-    int m_options;
-
+    std::function<std::string(const std::string&)> m_localFunction;
+    
 public:
-    MessageParserBase(const ITunesDb& iTunesDb, Downloader& downloader, const Session& session, Friends& friends, Friend myself, const std::string& outputPath);
+    MessageParserBase(const ITunesDb& iTunesDb, Downloader& downloader, Friends& friends, Friend myself, int options, const std::string& outputPath, std::function<std::string(const std::string&)>& localeFunc);
     
     std::string getLocaleString(const std::string& key) const
     {
-        // return m_localFunction(key);
-        return "";
+        return m_localFunction(key);
     }
     
     void ensureDirectoryExisted(const std::string& path)
@@ -323,6 +350,7 @@ public:
     static const int MSGTYPE_TEXT = 1;
     static const int MSGTYPE_IMAGE = 3;
     static const int MSGTYPE_VOICE = 34;
+    static const int MSGTYPE_PUSHMAIL = 35;
     static const int MSGTYPE_VERIFYMSG = 37;
     static const int MSGTYPE_POSSIBLEFRIEND = 40;
     static const int MSGTYPE_SHARECARD = 42;
@@ -339,6 +367,8 @@ public:
     static const int MSGTYPE_MICROVIDEO = 62;
     
     static const int MSGTYPE_NOTICE = 64;
+    
+    static const int MSGTYPE_IMCARD = 66;
     
     // Transfer          = 2000, // 转账
     //   RedEnvelope       = 2001, // 红包
@@ -383,49 +413,49 @@ public:
     static const int FWDMSG_DATATYPE_MINI_PROGRAM = 19;
     static const int FWDMSG_DATATYPE_CHANNELS = 19;
     
-    MessageParser(const ITunesDb& iTunesDb, Downloader& downloader, const Session& session, Friends& friends, Friend myself, const std::string& outputPath);
+    MessageParser(const ITunesDb& iTunesDb, Downloader& downloader, Friends& friends, Friend myself, int options, const std::string& outputPath, std::function<std::string(const std::string&)>& localeFunc);
     
-    bool parse(MsgRecord& record, const std::string& userBase, const std::string& path, const Session& session, std::vector<TemplateValues>& tvs);
+    bool parse(MsgRecord& record, const Session& session, std::vector<TemplateValues>& tvs);
     
 protected:
-    void parseText(const MsgRecord& record, TemplateValues& tv);
-    void parseImage(const MsgRecord& record, const std::string& userBase, TemplateValues& tv);
-    void parseVoice(const MsgRecord& record, const std::string& userBase, TemplateValues& tv);
-    void parseVideo(const MsgRecord& record, const std::string& userBase, std::string& senderId, TemplateValues& tv);
-    void parseEmotion(const MsgRecord& record, const std::string& userBase, TemplateValues& tv);
-    void parseAppMsg(const MsgRecord& record, const std::string& userBase, std::string& senderId, std::string& fwdMsg, std::string& fwdMsgTitle, TemplateValues& tv);
-    void parseCall(const MsgRecord& record, TemplateValues& tv);
-    void parseLocation(const MsgRecord& record, TemplateValues& tv);
-    void parseStatusNotify(const MsgRecord& record, TemplateValues& tv);
-    void parsePossibleFriend(const MsgRecord& record, const std::string& userBase, TemplateValues& tv);
-    void parseVerification(const MsgRecord& record, const std::string& userBase, TemplateValues& tv);
-    void parseCard(const MsgRecord& record, const std::string& userBase, TemplateValues& tv);
-    void parseNotice(const MsgRecord& record, TemplateValues& tv);  // 64
-    void parseSysNotice(const MsgRecord& record, TemplateValues& tv);   // 9999
-    void parseSystem(const MsgRecord& record, TemplateValues& tv);
-    void parseRecall(const MsgRecord& record, TemplateValues& tv);
+    void parseText(const MsgRecord& record, const Session& session, TemplateValues& tv);
+    void parseImage(const MsgRecord& record, const Session& session, TemplateValues& tv);
+    void parseVoice(const MsgRecord& record, const Session& session, TemplateValues& tv);
+    void parsePushMail(const MsgRecord& record, const Session& session, TemplateValues& tv);
+    void parseVideo(const MsgRecord& record, const Session& session, std::string& senderId, TemplateValues& tv);
+    void parseEmotion(const MsgRecord& record, const Session& session, TemplateValues& tv);
+    void parseAppMsg(const MsgRecord& record, const Session& session, std::string& senderId, std::string& fwdMsg, std::string& fwdMsgTitle, TemplateValues& tv);
+    void parseCall(const MsgRecord& record, const Session& session, TemplateValues& tv);
+    void parseLocation(const MsgRecord& record, const Session& session, TemplateValues& tv);
+    void parseStatusNotify(const MsgRecord& record, const Session& session, TemplateValues& tv);
+    void parsePossibleFriend(const MsgRecord& record, const Session& session, TemplateValues& tv);
+    void parseVerification(const MsgRecord& record, const Session& session, TemplateValues& tv);
+    void parseCard(const MsgRecord& record, const Session& session, TemplateValues& tv);
+    void parseNotice(const MsgRecord& record, const Session& session, TemplateValues& tv);  // 64
+    void parseSysNotice(const MsgRecord& record, const Session& session, TemplateValues& tv);   // 9999
+    void parseSystem(const MsgRecord& record, const Session& session, TemplateValues& tv);
     
     // APP MSG
-    void parseAppMsgText(const AppMsgInfo& appMsgInfo, const XmlParser& xmlParser, const std::string& userBase, TemplateValues& tv);
-    void parseAppMsgImage(const AppMsgInfo& appMsgInfo, const XmlParser& xmlParser, const std::string& userBase, TemplateValues& tv);
-    void parseAppMsgAudio(const AppMsgInfo& appMsgInfo, const XmlParser& xmlParser, const std::string& userBase, TemplateValues& tv);
-    void parseAppMsgVideo(const AppMsgInfo& appMsgInfo, const XmlParser& xmlParser, const std::string& userBase, TemplateValues& tv);
-    void parseAppMsgEmotion(const AppMsgInfo& appMsgInfo, const XmlParser& xmlParser, const std::string& userBase, TemplateValues& tv);
-    void parseAppMsgUrl(const AppMsgInfo& appMsgInfo, const XmlParser& xmlParser, const std::string& userBase, TemplateValues& tv);
-    void parseAppMsgAttachment(const AppMsgInfo& appMsgInfo, const XmlParser& xmlParser, const std::string& userBase, TemplateValues& tv);
-    void parseAppMsgOpen(const AppMsgInfo& appMsgInfo, const XmlParser& xmlParser, const std::string& userBase, TemplateValues& tv);
-    void parseAppMsgEmoji(const AppMsgInfo& appMsgInfo, const XmlParser& xmlParser, const std::string& userBase, TemplateValues& tv);
-    void parseAppMsgRtLocation(const AppMsgInfo& appMsgInfo, const XmlParser& xmlParser, const std::string& userBase, TemplateValues& tv);
-    void parseAppMsgFwdMsg(const AppMsgInfo& appMsgInfo, const XmlParser& xmlParser, const std::string& userBase, std::string& fwdMsg, std::string& fwdMsgTitle, TemplateValues& tv);
-    void parseAppMsgCard(const AppMsgInfo& appMsgInfo, const XmlParser& xmlParser, const std::string& userBase, TemplateValues& tv);
-    void parseAppMsgChannelCard(const AppMsgInfo& appMsgInfo, const XmlParser& xmlParser, const std::string& userBase, TemplateValues& tv);
-    void parseAppMsgChannels(const AppMsgInfo& appMsgInfo, const XmlParser& xmlParser, const std::string& userBase, TemplateValues& tv);
-    void parseAppMsgRefer(const AppMsgInfo& appMsgInfo, const XmlParser& xmlParser, const std::string& userBase, TemplateValues& tv);
-    void parseAppMsgTransfer(const AppMsgInfo& appMsgInfo, const XmlParser& xmlParser, const std::string& userBase, TemplateValues& tv);
-    void parseAppMsgRedPacket(const AppMsgInfo& appMsgInfo, const XmlParser& xmlParser, const std::string& userBase, TemplateValues& tv);
-    void parseAppMsgReaderType(const AppMsgInfo& appMsgInfo, const XmlParser& xmlParser, const std::string& userBase, TemplateValues& tv);
-    void parseAppMsgUnknownType(const AppMsgInfo& appMsgInfo, const XmlParser& xmlParser, const std::string& userBase, TemplateValues& tv);
-    void parseAppMsgDefault(const AppMsgInfo& appMsgInfo, const XmlParser& xmlParser, const std::string& userBase, TemplateValues& tv);
+    void parseAppMsgText(const AppMsgInfo& appMsgInfo, const XmlParser& xmlParser, const Session& session, TemplateValues& tv);
+        void parseAppMsgImage(const AppMsgInfo& appMsgInfo, const XmlParser& xmlParser, const Session& session, TemplateValues& tv);
+        void parseAppMsgAudio(const AppMsgInfo& appMsgInfo, const XmlParser& xmlParser, const Session& session, TemplateValues& tv);
+        void parseAppMsgVideo(const AppMsgInfo& appMsgInfo, const XmlParser& xmlParser, const Session& session, TemplateValues& tv);
+        void parseAppMsgEmotion(const AppMsgInfo& appMsgInfo, const XmlParser& xmlParser, const Session& session, TemplateValues& tv);
+        void parseAppMsgUrl(const AppMsgInfo& appMsgInfo, const XmlParser& xmlParser, const Session& session, TemplateValues& tv);
+        void parseAppMsgAttachment(const AppMsgInfo& appMsgInfo, const XmlParser& xmlParser, const Session& session, TemplateValues& tv);
+        void parseAppMsgOpen(const AppMsgInfo& appMsgInfo, const XmlParser& xmlParser, const Session& session, TemplateValues& tv);
+        void parseAppMsgEmoji(const AppMsgInfo& appMsgInfo, const XmlParser& xmlParser, const Session& session, TemplateValues& tv);
+        void parseAppMsgRtLocation(const AppMsgInfo& appMsgInfo, const XmlParser& xmlParser, const Session& session, TemplateValues& tv);
+        void parseAppMsgFwdMsg(const AppMsgInfo& appMsgInfo, const XmlParser& xmlParser, const Session& session, std::string& fwdMsg, std::string& fwdMsgTitle, TemplateValues& tv);
+        void parseAppMsgCard(const AppMsgInfo& appMsgInfo, const XmlParser& xmlParser, const Session& session, TemplateValues& tv);
+        void parseAppMsgChannelCard(const AppMsgInfo& appMsgInfo, const XmlParser& xmlParser, const Session& session, TemplateValues& tv);
+        void parseAppMsgChannels(const AppMsgInfo& appMsgInfo, const XmlParser& xmlParser, const Session& session, TemplateValues& tv);
+        void parseAppMsgRefer(const AppMsgInfo& appMsgInfo, const XmlParser& xmlParser, const Session& session, TemplateValues& tv);
+        void parseAppMsgTransfer(const AppMsgInfo& appMsgInfo, const XmlParser& xmlParser, const Session& session, TemplateValues& tv);
+        void parseAppMsgRedPacket(const AppMsgInfo& appMsgInfo, const XmlParser& xmlParser, const Session& session, TemplateValues& tv);
+        void parseAppMsgReaderType(const AppMsgInfo& appMsgInfo, const XmlParser& xmlParser, const Session& session, TemplateValues& tv);
+        void parseAppMsgUnknownType(const AppMsgInfo& appMsgInfo, const XmlParser& xmlParser, const Session& session, TemplateValues& tv);
+        void parseAppMsgDefault(const AppMsgInfo& appMsgInfo, const XmlParser& xmlParser, const Session& session, TemplateValues& tv);
     
     // FORWARDEWD MSG
     
@@ -436,7 +466,7 @@ protected:
     void parseFile(const std::string& sessionPath, const std::string& sessionAssertsPath, const std::string& src, const std::string& dest, const std::string& fileName, TemplateValues& templateValues);
     void parseCard(const std::string& sessionPath, const std::string& portraitDir, const std::string& cardMessage, TemplateValues& templateValues);
     void parseChannelCard(const std::string& sessionPath, const std::string& portraitDir, const std::string& usrName, const std::string& avatar, const std::string& name, TemplateValues& templateValues);
-    bool parseForwardedMsgs(const std::string& userBase, const std::string& outputPath, const Session& session, const MsgRecord& record, const std::string& title, const std::string& message, std::vector<TemplateValues>& tvs);
+    bool parseForwardedMsgs(const Session& session, const MsgRecord& record, const std::string& title, const std::string& message, std::vector<TemplateValues>& tvs);
     
     std::string getDisplayTime(int ms) const;
 protected:
