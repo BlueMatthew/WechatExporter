@@ -393,8 +393,7 @@ bool Exporter::exportUser(Friend& user, std::string& userOutputPath)
     std::function<std::string(const std::string&)> localeFunction = std::bind(&Exporter::getLocaleString, this, std::placeholders::_1);
     MessageParser msgParser(*m_iTunesDb, downloader, friends, *myself, m_options, outputBase, localeFunction);
     
-    std::function<std::string(const std::string&)> localeFunction2 = std::bind(&Exporter::getLocaleString, this, std::placeholders::_1);
-    SessionParser sessionParser(*myself, friends, *m_iTunesDb, *m_shell, m_options, downloader, msgParser, localeFunction2);
+    SessionParser sessionParser(msgParser, m_options);
     std::set<std::string> sessionFileNames;
     for (std::vector<Session>::iterator it = sessions.begin(); it != sessions.end(); ++it)
     {
@@ -530,7 +529,7 @@ int Exporter::exportSession(const Friend& user, SessionParser& sessionParser, co
     }
     std::function<bool(const std::vector<TemplateValues>&)> handler = std::bind(&Exporter::exportMessage, this, std::cref(session), std::placeholders::_1, std::ref(messages));
     
-    int count = sessionParser.parse(userBase, outputBase, session, handler);
+    int count = sessionParser.parse(session, handler);
     if (count > 0 && !messages.empty())
     {
         const size_t pageSize = 1000;
