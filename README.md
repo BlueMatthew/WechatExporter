@@ -45,4 +45,4 @@ iTunes 12.10.9.3 + 微信 7.0.15
 iTunes 12.9.5.5 + 微信 7.0.2  
 Windows 10 + iTunes 12.11.0.26(Microsoft Store) + 微信 7.0.2  
 Windows 10 + iTunes 12.11.0.26(Microsoft Store) + 微信 8.0.1  
-Mac Catalina (Embedded iTunes) + 微信 8.0.1  
+Mac Catalina (Embedded iTunes) + 微信 8.0.1/8.0.2  
