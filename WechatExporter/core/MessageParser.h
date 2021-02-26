@@ -58,9 +58,9 @@ struct ForwardMsg
     std::string dataFormat;
     std::string msgTime;
     std::string srcMsgTime;
-    std::string message;
-    std::string link;
-    std::string nestedMsgs;
+#ifndef NDEBUG
+    std::string rawMessage;
+#endif
 };
 
 struct AppMsgInfo
@@ -74,6 +74,17 @@ struct AppMsgInfo
     std::string appId;
     std::string appName;
     std::string localAppIcon;
+};
+
+struct FwdMsgInfo
+{
+    std::string msgId;
+    int msgType;
+#ifndef NDEBUG
+    std::string message;
+#endif
+    int appMsgType;
+    
 };
 
 class TemplateValues
@@ -161,7 +172,7 @@ struct WechatTemplateHandler
             std::string linkValue;
             if (linkHidden == "1")
             {
-                m_templateText = replaceAll(m_templateText, "$" + linkName + "$", linkValue);
+                replaceAll(m_templateText, "$" + linkName + "$", linkValue);
                 continue;
             }
             
@@ -210,7 +221,7 @@ struct WechatTemplateHandler
 #endif
                 }
             }
-            m_templateText = replaceAll(m_templateText, "$" + linkName + "$", linkValue);
+            replaceAll(m_templateText, "$" + linkName + "$", linkValue);
             
         }
         
@@ -236,17 +247,22 @@ public:
         {
             ForwardMsg fmsg = {m_msgId};
             
+
             // templateValues.setName("msg");
             // templateValues["%%ALIGNMENT%%"] = "left";
             
             xmlNode *cur = xpathNodes->nodeTab[idx];
             
+#ifndef NDEBUG
+            fmsg.rawMessage = XmlParser::getNodeOuterXml(cur);
+#endif
             XmlParser::getNodeAttributeValue(cur, "datatype", fmsg.dataType);
             XmlParser::getNodeAttributeValue(cur, "dataid", fmsg.dataId);
             XmlParser::getNodeAttributeValue(cur, "subtype", fmsg.subType);
             
             xmlNodePtr childNode = xmlFirstElementChild(cur);
             bool hasDataTitle = false;
+            /*
             while (NULL != childNode)
             {
                 if (xmlStrcmp(childNode->name, BAD_CAST("sourcename")) == 0)
@@ -301,9 +317,10 @@ public:
                 {
                     fmsg.nestedMsgs = XmlParser::getNodeOuterXml(childNode);
                 }
-
+            
                 childNode = childNode->next;
             }
+             */
             
             m_forwardedMsgs.push_back(fmsg);
         }
@@ -311,40 +328,7 @@ public:
     }
 };
 
-class MessageParserBase
-{
-protected:
-    const ITunesDb& m_iTunesDb;
-    Downloader& m_downloader;
-
-    Friends& m_friends;
-    Friend m_myself;
-    int m_options;
-    
-    const std::string m_outputPath;
-    std::string m_userBase;
-
-    std::function<std::string(const std::string&)> m_localFunction;
-    
-public:
-    MessageParserBase(const ITunesDb& iTunesDb, Downloader& downloader, Friends& friends, Friend myself, int options, const std::string& outputPath, std::function<std::string(const std::string&)>& localeFunc);
-    
-    std::string getLocaleString(const std::string& key) const
-    {
-        return m_localFunction(key);
-    }
-    
-    void ensureDirectoryExisted(const std::string& path)
-    {
-        if (existsDirectory(path))
-        {
-            makeDirectory(path);
-        }
-    }
-    
-};
-
-class MessageParser : public MessageParserBase
+class MessageParser
 {
 public:
     static const int MSGTYPE_TEXT = 1;
@@ -411,7 +395,8 @@ public:
     static const int FWDMSG_DATATYPE_CARD = 16;
     static const int FWDMSG_DATATYPE_NESTED_FWD_MSG = 17;
     static const int FWDMSG_DATATYPE_MINI_PROGRAM = 19;
-    static const int FWDMSG_DATATYPE_CHANNELS = 19;
+    static const int FWDMSG_DATATYPE_CHANNELS = 22;
+    static const int FWDMSG_DATATYPE_CHANNEL_CARD = 26;
     
     MessageParser(const ITunesDb& iTunesDb, Downloader& downloader, Friends& friends, Friend myself, int options, const std::string& outputPath, std::function<std::string(const std::string&)>& localeFunc);
     
@@ -458,7 +443,17 @@ protected:
     void parseAppMsgDefault(const AppMsgInfo& appMsgInfo, const XmlParser& xmlParser, const Session& session, TemplateValues& tv);
 
     // FORWARDEWD MSG
-    
+    void parseFwdMsgText(const ForwardMsg& fwdMsg, const XmlParser& xmlParser, xmlNodePtr itemNode, const Session& session, TemplateValues& tv);
+    void parseFwdMsgImage(const ForwardMsg& fwdMsg, const XmlParser& xmlParser, xmlNodePtr itemNode, const Session& session, TemplateValues& tv);
+    void parseFwdMsgVideo(const ForwardMsg& fwdMsg, const XmlParser& xmlParser, xmlNodePtr itemNode, const Session& session, TemplateValues& tv);
+    void parseFwdMsgLink(const ForwardMsg& fwdMsg, const XmlParser& xmlParser, xmlNodePtr itemNode, const Session& session, TemplateValues& tv);
+    void parseFwdMsgLocation(const ForwardMsg& fwdMsg, const XmlParser& xmlParser, xmlNodePtr itemNode, const Session& session, TemplateValues& tv);
+    void parseFwdMsgAttach(const ForwardMsg& fwdMsg, const XmlParser& xmlParser, xmlNodePtr itemNode, const Session& session, TemplateValues& tv);
+    void parseFwdMsgCard(const ForwardMsg& fwdMsg, const XmlParser& xmlParser, xmlNodePtr itemNode, const Session& session, TemplateValues& tv);
+    void parseFwdMsgNestedFwdMsg(const ForwardMsg& fwdMsg, const XmlParser& xmlParser, xmlNodePtr itemNode, const Session& session, std::string& nestedFwdMsg, std::string& nestedFwdMsgTitle, TemplateValues& tv);
+    void parseFwdMsgMiniProgram(const ForwardMsg& fwdMsg, const XmlParser& xmlParser, xmlNodePtr itemNode, const Session& session, TemplateValues& tv);
+    void parseFwdMsgChannels(const ForwardMsg& fwdMsg, const XmlParser& xmlParser, xmlNodePtr itemNode, const Session& session, TemplateValues& tv);
+    void parseFwdMsgChannelCard(const ForwardMsg& fwdMsg, const XmlParser& xmlParser, xmlNodePtr itemNode, const Session& session, TemplateValues& tv);
     
     // Implementation
     void parseImage(const std::string& sessionPath, const std::string& sessionAssertsPath, const std::string& src, const std::string& srcPre, const std::string& dest, const std::string& srcThumb, const std::string& destThumb, TemplateValues& templateValues);
@@ -466,22 +461,38 @@ protected:
     void parseFile(const std::string& sessionPath, const std::string& sessionAssertsPath, const std::string& src, const std::string& dest, const std::string& fileName, TemplateValues& templateValues);
     void parseCard(const std::string& sessionPath, const std::string& portraitDir, const std::string& cardMessage, TemplateValues& templateValues);
     void parseChannelCard(const std::string& sessionPath, const std::string& portraitDir, const std::string& usrName, const std::string& avatar, const std::string& name, TemplateValues& templateValues);
+    void parseChannels(const std::string& msgId, const XmlParser& xmlParser, xmlNodePtr parentNode, const std::string& finderFeedXPath, const Session& session, TemplateValues& tv);
     bool parseForwardedMsgs(const Session& session, const MsgRecord& record, const std::string& title, const std::string& message, std::vector<TemplateValues>& tvs);
     
     std::string getDisplayTime(int ms) const;
+    std::string getLocaleString(const std::string& key) const
+    {
+        return m_localFunction(key);
+    }
+    
+    void ensureDirectoryExisted(const std::string& path)
+    {
+        if (!existsDirectory(path))
+        {
+            makeDirectory(path);
+        }
+    }
+
+protected:
+    const ITunesDb& m_iTunesDb;
+    Downloader& m_downloader;
+
+    Friends& m_friends;
+    Friend m_myself;
+    int m_options;
+    
+    const std::string m_outputPath;
+    std::string m_userBase;
+
+    std::function<std::string(const std::string&)> m_localFunction;
+    
 protected:
     mutable std::vector<unsigned char> m_pcmData;  // buffer
-};
-
-
-class FwdMessageParser : public MessageParser
-{
-public:
-    
-    
-    
-    
-    
 };
 
 #endif /* MessageParser_h */

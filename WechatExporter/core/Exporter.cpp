@@ -266,16 +266,16 @@ bool Exporter::runImpl()
         exportUser(*it, userOutputPath);
         
         std::string userItem = getTemplate("listitem");
-        userItem = replaceAll(userItem, "%%ITEMPICPATH%%", userOutputPath + "/Portrait/" + it->getLocalPortrait());
+        replaceAll(userItem, "%%ITEMPICPATH%%", userOutputPath + "/Portrait/" + it->getLocalPortrait());
         if ((m_options & SPO_IGNORE_HTML_ENC) == 0)
         {
-            userItem = replaceAll(userItem, "%%ITEMLINK%%", encodeUrl(it->getOutputFileName()) + "/index." + m_extName);
-            userItem = replaceAll(userItem, "%%ITEMTEXT%%", safeHTML(it->getDisplayName()));
+            replaceAll(userItem, "%%ITEMLINK%%", encodeUrl(it->getOutputFileName()) + "/index." + m_extName);
+            replaceAll(userItem, "%%ITEMTEXT%%", safeHTML(it->getDisplayName()));
         }
         else
         {
-            userItem = replaceAll(userItem, "%%ITEMLINK%%", it->getOutputFileName() + "/index." + m_extName);
-            userItem = replaceAll(userItem, "%%ITEMTEXT%%", it->getDisplayName());
+            replaceAll(userItem, "%%ITEMLINK%%", it->getOutputFileName() + "/index." + m_extName);
+            replaceAll(userItem, "%%ITEMTEXT%%", it->getDisplayName());
         }
         
         htmlBody += userItem;
@@ -284,8 +284,8 @@ bool Exporter::runImpl()
     std::string fileName = combinePath(m_output, "index." + m_extName);
 
     std::string html = getTemplate("listframe");
-    html = replaceAll(html, "%%USERNAME%%", "");
-    html = replaceAll(html, "%%TBODY%%", htmlBody);
+    replaceAll(html, "%%USERNAME%%", "");
+    replaceAll(html, "%%TBODY%%", htmlBody);
     
     writeFile(fileName, html);
     
@@ -439,16 +439,16 @@ bool Exporter::exportUser(Friend& user, std::string& userOutputPath)
         if (count > 0)
         {
             std::string userItem = getTemplate("listitem");
-            userItem = replaceAll(userItem, "%%ITEMPICPATH%%", "Portrait/" + it->getLocalPortrait());
+            replaceAll(userItem, "%%ITEMPICPATH%%", "Portrait/" + it->getLocalPortrait());
             if ((m_options & SPO_IGNORE_HTML_ENC) == 0)
             {
-                userItem = replaceAll(userItem, "%%ITEMLINK%%", encodeUrl(it->getOutputFileName()) + "." + m_extName);
-                userItem = replaceAll(userItem, "%%ITEMTEXT%%", safeHTML(sessionDisplayName));
+                replaceAll(userItem, "%%ITEMLINK%%", encodeUrl(it->getOutputFileName()) + "." + m_extName);
+                replaceAll(userItem, "%%ITEMTEXT%%", safeHTML(sessionDisplayName));
             }
             else
             {
-                userItem = replaceAll(userItem, "%%ITEMLINK%%", it->getOutputFileName() + "." + m_extName);
-                userItem = replaceAll(userItem, "%%ITEMTEXT%%", sessionDisplayName);
+                replaceAll(userItem, "%%ITEMLINK%%", it->getOutputFileName() + "." + m_extName);
+                replaceAll(userItem, "%%ITEMTEXT%%", sessionDisplayName);
             }
             
             userBody += userItem;
@@ -456,8 +456,8 @@ bool Exporter::exportUser(Friend& user, std::string& userOutputPath)
     }
 
     std::string html = getTemplate("listframe");
-    html = replaceAll(html, "%%USERNAME%%", " - " + user.getDisplayName());
-    html = replaceAll(html, "%%TBODY%%", userBody);
+    replaceAll(html, "%%USERNAME%%", " - " + user.getDisplayName());
+    replaceAll(html, "%%TBODY%%", userBody);
     
     std::string fileName = combinePath(outputBase, "index." + m_extName);
     writeFile(fileName, html);
@@ -547,12 +547,12 @@ int Exporter::exportSession(const Friend& user, SessionParser& sessionParser, co
         }
         
         std::string scripts = (m_options & SPO_SYNC_LOADING) || (messages.size() <= pageSize) ? "" : getTemplate("scripts");
-        scripts = replaceAll(scripts, "%%JSONDATA%%", moreMsgs);
+        replaceAll(scripts, "%%JSONDATA%%", moreMsgs);
 
         std::string html = getTemplate("frame");
-        html = replaceAll(html, "%%DISPLAYNAME%%", session.getDisplayName());
-        html = replaceAll(html, "%%BODY%%", join(b, e, ""));
-        html = replaceAll(html, "%%LOADING_SCRIPTS%%", scripts);
+        replaceAll(html, "%%DISPLAYNAME%%", session.getDisplayName());
+        replaceAll(html, "%%BODY%%", join(b, e, ""));
+        replaceAll(html, "%%LOADING_SCRIPTS%%", scripts);
         
         std::string fileName = combinePath(outputBase, session.getOutputFileName() + "." + m_extName);
         writeFile(fileName, html);
@@ -716,7 +716,7 @@ std::string Exporter::buildContentFromTemplateValues(const TemplateValues& value
     {
         if (startsWith(it->first, "%"))
         {
-            content = replaceAll(content, it->first, it->second);
+            replaceAll(content, it->first, it->second);
         }
     }
     
