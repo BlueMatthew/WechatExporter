@@ -14,14 +14,10 @@
 #include <plist/plist.h>
 #include "XmlParser.h"
 
-MessageParserBase::MessageParserBase(const ITunesDb& iTunesDb, Downloader& downloader, Friends& friends, Friend myself, int options, const std::string& outputPath, std::function<std::string(const std::string&)>& localeFunc) : m_iTunesDb(iTunesDb), m_downloader(downloader), m_friends(friends), m_myself(myself), m_options(options), m_outputPath(outputPath)
+MessageParser::MessageParser(const ITunesDb& iTunesDb, Downloader& downloader, Friends& friends, Friend myself, int options, const std::string& outputPath, std::function<std::string(const std::string&)>& localeFunc) : m_iTunesDb(iTunesDb), m_downloader(downloader), m_friends(friends), m_myself(myself), m_options(options), m_outputPath(outputPath)
 {
     m_userBase = "Documents/" + m_myself.getHash();
     m_localFunction = std::move(localeFunc);
-}
-
-MessageParser::MessageParser(const ITunesDb& iTunesDb, Downloader& downloader, Friends& friends, Friend myself, int options, const std::string& outputPath, std::function<std::string(const std::string&)>& localeFunc) : MessageParserBase(iTunesDb, downloader, friends, myself, options, outputPath, localeFunc)
-{
 }
 
 bool MessageParser::parse(MsgRecord& record, const Session& session, std::vector<TemplateValues>& tvs)
@@ -745,6 +741,7 @@ void MessageParser::parseAppMsgCard(const AppMsgInfo& appMsgInfo, const XmlParse
 {
     parseAppMsgDefault(appMsgInfo, xmlParser, session, tv);
 }
+
 void MessageParser::parseAppMsgChannelCard(const AppMsgInfo& appMsgInfo, const XmlParser& xmlParser, const Session& session, TemplateValues& tv)
 {
     // Channel Card
@@ -761,43 +758,8 @@ void MessageParser::parseAppMsgChannels(const AppMsgInfo& appMsgInfo, const XmlP
 #ifndef NDEBUG
     writeFile(combinePath(m_outputPath, "../dbg", "msg" + std::to_string(appMsgInfo.msgType) + "_app_" + std::to_string(appMsgInfo.appMsgType) + "_" + appMsgInfo.msgId + ".txt"), appMsgInfo.message);
 #endif
-    // Channels SHI PIN HAO
-    std::map<std::string, std::string> nodes = { {"objectId", ""}, {"nickname", ""}, {"avatar", ""}, {"desc", ""}, {"mediaCount", ""}, {"feedType", ""}, {"desc", ""}, {"username", ""}};
-    xmlParser.parseNodesValue("/msg/appmsg/finderFeed/*", nodes);
-    std::map<std::string, std::string> videoNodes = { {"mediaType", ""}, {"url", ""}, {"thumbUrl", ""}, {"coverUrl", ""}, {"videoPlayDuration", ""}};
-    xmlParser.parseNodesValue("/msg/appmsg/finderFeed/mediaList/media/*", videoNodes);
-    std::string thumbUrl;
-    if ((m_options & SPO_IGNORE_SHARING) == 0)
-    {
-        thumbUrl = videoNodes["thumbUrl"].empty() ? videoNodes["coverUrl"] : videoNodes["thumbUrl"];
-    }
     
-    std::string portraitDir = ((m_options & SPO_ICON_IN_SESSION) == SPO_ICON_IN_SESSION) ? session.getOutputFileName() + "_files/Portrait" : "Portrait";
-    
-    tv["%%CARDNAME%%"] = nodes["nickname"];
-    tv["%%CHANNELS%%"] = getLocaleString("Channels");
-    tv["%%MESSAGE%%"] = nodes["desc"];
-    tv["%%EXTRA_CLS%%"] = "channels";
-    
-    if (!thumbUrl.empty())
-    {
-        tv.setName("channels");
-        
-        std::string thumbFile = session.getOutputFileName() + "_files/" + appMsgInfo.msgId + ".jpg";
-        tv["%%CHANNELTHUMBPATH%%"] = thumbFile;
-        ensureDirectoryExisted(combinePath(m_outputPath, session.getOutputFileName() + "_files"));
-        m_downloader.addTask(thumbUrl, combinePath(m_outputPath, thumbFile), 0);
-        
-        if (!nodes["avatar"].empty())
-        {
-            tv["%%CARDIMGPATH%%"] = portraitDir + "/" + nodes["username"] + ".jpg";
-            std::string localFile = combinePath(portraitDir, nodes["username"] + ".jpg");
-            ensureDirectoryExisted(portraitDir);
-            m_downloader.addTask(nodes["avatar"], combinePath(m_outputPath, localFile), 0);
-        }
-
-        tv["%%CHANNELURL%%"] = videoNodes["url"];
-    }
+    parseChannels(appMsgInfo.msgId, xmlParser, NULL, "/msg/appmsg/finderFeed", session, tv);
 }
 
 void MessageParser::parseAppMsgRefer(const AppMsgInfo& appMsgInfo, const XmlParser& xmlParser, const Session& session, TemplateValues& tv)
@@ -893,6 +855,155 @@ void MessageParser::parseAppMsgDefault(const AppMsgInfo& appMsgInfo, const XmlPa
     }
 }
 
+////////////////////////////////
+
+void MessageParser::parseFwdMsgText(const ForwardMsg& fwdMsg, const XmlParser& xmlParser, xmlNode *itemNode, const Session& session, TemplateValues& tv)
+{
+    std::string message;
+    xmlParser.getChildNodeContent(itemNode, "datadesc", message);
+    static std::vector<std::pair<std::string, std::string>> replaces = { {"\r\n", "<br />"}, {"\r", "<br />"}, {"\n", "<br />"}};
+    replaceAll(message, replaces);
+    tv["%%MESSAGE%%"] = message;
+}
+
+void MessageParser::parseFwdMsgImage(const ForwardMsg& fwdMsg, const XmlParser& xmlParser, xmlNode *itemNode, const Session& session, TemplateValues& tv)
+{
+    std::string fileExtName = fwdMsg.dataFormat.empty() ? "" : ("." + fwdMsg.dataFormat);
+    std::string vfile = m_userBase + "/OpenData/" + session.getHash() + "/" + fwdMsg.msgId + "/" + fwdMsg.dataId;
+    parseImage(m_outputPath, session.getOutputFileName() + "_files/" + fwdMsg.msgId, vfile + fileExtName, vfile + fileExtName + "_pre3", fwdMsg.dataId + ".jpg", vfile + ".record_thumb", fwdMsg.dataId + "_thumb.jpg", tv);
+}
+
+void MessageParser::parseFwdMsgVideo(const ForwardMsg& fwdMsg, const XmlParser& xmlParser, xmlNodePtr itemNode, const Session& session, TemplateValues& tv)
+{
+    std::string fileExtName = fwdMsg.dataFormat.empty() ? "" : ("." + fwdMsg.dataFormat);
+    std::string vfile = m_userBase + "/OpenData/" + session.getHash() + "/" + fwdMsg.msgId + "/" + fwdMsg.dataId;
+    parseVideo(m_outputPath, session.getOutputFileName() + "_files/" + fwdMsg.msgId, vfile + fileExtName, fwdMsg.dataId + fileExtName, vfile + ".record_thumb", fwdMsg.dataId + "_thumb.jpg", "", "", tv);
+                    
+}
+
+void MessageParser::parseFwdMsgLink(const ForwardMsg& fwdMsg, const XmlParser& xmlParser, xmlNodePtr itemNode, const Session& session, TemplateValues& tv)
+{
+    std::string link;
+    std::string title;
+    std::string thumbUrl;
+    std::string message;
+    xmlNodePtr urlItemNode = xmlParser.getChildNode(itemNode, "weburlitem");
+    if (NULL != urlItemNode)
+    {
+        XmlParser::getChildNodeContent(urlItemNode, "title", title);
+        XmlParser::getChildNodeContent(urlItemNode, "link", link);
+        XmlParser::getChildNodeContent(urlItemNode, "thumburl", thumbUrl);
+        XmlParser::getChildNodeContent(urlItemNode, "desc", message);
+    }
+    
+    std::string vfile = m_userBase + "/OpenData/" + session.getHash() + "/" + fwdMsg.msgId + "/" + fwdMsg.dataId + ".record_thumb";
+    std::string dest = session.getOutputFileName() + "_files/" + fwdMsg.msgId + "/" + fwdMsg.dataId + "_thumb.jpg";
+    bool hasThumb = false;
+    if ((m_options & SPO_IGNORE_SHARING) == 0)
+    {
+        hasThumb = m_iTunesDb.copyFile(vfile, combinePath(m_outputPath, dest));
+    }
+    
+    if (!(link.empty()))
+    {
+        tv.setName(hasThumb ? "share" : "plainshare");
+
+        tv["%%SHARINGIMGPATH%%"] = dest;
+        tv["%%SHARINGURL%%"] = link;
+        tv["%%SHARINGTITLE%%"] = title;
+        tv["%%MESSAGE%%"] = message;
+    }
+    else
+    {
+        tv["%%MESSAGE%%"] = title;
+    }
+}
+
+void MessageParser::parseFwdMsgLocation(const ForwardMsg& fwdMsg, const XmlParser& xmlParser, xmlNodePtr itemNode, const Session& session, TemplateValues& tv)
+{
+    std::string label;
+    std::string message;
+    std::string lng;
+    std::string lat;
+    xmlNodePtr locItemNode = xmlParser.getChildNode(itemNode, "locitem");
+    if (NULL != locItemNode)
+    {
+        XmlParser::getChildNodeContent(locItemNode, "label", label);
+        XmlParser::getChildNodeContent(locItemNode, "poiname", message);
+        XmlParser::getChildNodeContent(locItemNode, "lat", lat);
+        XmlParser::getChildNodeContent(locItemNode, "lng", lng);
+    }
+
+    if (!lat.empty() && !lng.empty() && !message.empty())
+    {
+        tv["%%MESSAGE%%"] = formatString(getLocaleString("[Location (%s,%s) %s]"), lat.c_str(), lng.c_str(), message.c_str());
+    }
+    else
+    {
+        tv["%%MESSAGE%%"] = getLocaleString("[Location]");
+    }
+    tv.setName("msg");
+}
+
+void MessageParser::parseFwdMsgAttach(const ForwardMsg& fwdMsg, const XmlParser& xmlParser, xmlNodePtr itemNode, const Session& session, TemplateValues& tv)
+{
+    std::string message;
+    xmlParser.getChildNodeContent(itemNode, "datatitle", message);
+    
+    std::string fileExtName = fwdMsg.dataFormat.empty() ? "" : ("." + fwdMsg.dataFormat);
+    std::string vfile = m_userBase + "/OpenData/" + session.getHash() + "/" + fwdMsg.msgId + "/" + fwdMsg.dataId;
+    parseFile(m_outputPath, session.getOutputFileName() + "_files/" + fwdMsg.msgId, vfile + fileExtName, fwdMsg.dataId + fileExtName, message, tv);
+}
+
+void MessageParser::parseFwdMsgCard(const ForwardMsg& fwdMsg, const XmlParser& xmlParser, xmlNodePtr itemNode, const Session& session, TemplateValues& tv)
+{
+    std::string cardContent;
+    xmlParser.getChildNodeContent(itemNode, "datadesc", cardContent);
+    
+    std::string portraitDir = ((m_options & SPO_ICON_IN_SESSION) == SPO_ICON_IN_SESSION) ? session.getOutputFileName() + "_files/Portrait" : "Portrait";
+    parseCard(m_outputPath, portraitDir, cardContent, tv);
+}
+
+void MessageParser::MessageParser::parseFwdMsgNestedFwdMsg(const ForwardMsg& fwdMsg, const XmlParser& xmlParser, xmlNodePtr itemNode, const Session& session, std::string& nestedFwdMsg, std::string& nestedFwdMsgTitle, TemplateValues& tv)
+{
+    xmlParser.getChildNodeContent(itemNode, "datadesc", nestedFwdMsgTitle);
+    xmlNodePtr nodeRecordInfo = XmlParser::getChildNode(itemNode, "recordinfo");
+    if (NULL != nodeRecordInfo)
+    {
+        nestedFwdMsg = XmlParser::getNodeOuterXml(nodeRecordInfo);
+    }
+    
+    tv["%%MESSAGE%%"] = nestedFwdMsgTitle;
+}
+
+void MessageParser::MessageParser::parseFwdMsgMiniProgram(const ForwardMsg& fwdMsg, const XmlParser& xmlParser, xmlNodePtr itemNode, const Session& session, TemplateValues& tv)
+{
+    std::string title;
+    xmlParser.getChildNodeContent(itemNode, "datatitle", title);
+    tv["%%MESSAGE%%"] = title;
+}
+
+void MessageParser::MessageParser::parseFwdMsgChannels(const ForwardMsg& fwdMsg, const XmlParser& xmlParser, xmlNodePtr itemNode, const Session& session, TemplateValues& tv)
+{
+    parseChannels(fwdMsg.msgId, xmlParser, itemNode, "./finderFeed", session, tv);
+}
+
+void MessageParser::MessageParser::parseFwdMsgChannelCard(const ForwardMsg& fwdMsg, const XmlParser& xmlParser, xmlNodePtr itemNode, const Session& session, TemplateValues& tv)
+{
+    std::string usrName;
+    std::string avatar;
+    std::string nickName;
+    xmlNodePtr cardItemNode = xmlParser.getChildNode(itemNode, "finderShareNameCard");
+    if (NULL != cardItemNode)
+    {
+        XmlParser::getChildNodeContent(cardItemNode, "username", usrName);
+        XmlParser::getChildNodeContent(cardItemNode, "avatar", avatar);
+        XmlParser::getChildNodeContent(cardItemNode, "nickname", nickName);
+    }
+    
+    std::string portraitDir = ((m_options & SPO_ICON_IN_SESSION) == SPO_ICON_IN_SESSION) ? session.getOutputFileName() + "_files/Portrait" : "Portrait";
+    parseChannelCard(m_outputPath, portraitDir, usrName, avatar, nickName, tv);
+}
 
 ///////////////////////////////
 // Implementation
@@ -1065,6 +1176,59 @@ void MessageParser::parseChannelCard(const std::string& sessionPath, const std::
     templateValues["%%EXTRA_CLS%%"] = "channel-card";
 }
 
+void MessageParser::parseChannels(const std::string& msgId, const XmlParser& xmlParser, xmlNodePtr parentNode, const std::string& finderFeedXPath, const Session& session, TemplateValues& tv)
+{
+    // Channels SHI PIN HAO
+    std::map<std::string, std::string> nodes = { {"objectId", ""}, {"nickname", ""}, {"avatar", ""}, {"desc", ""}, {"mediaCount", ""}, {"feedType", ""}, {"desc", ""}, {"username", ""}};
+    std::map<std::string, std::string> videoNodes = { {"mediaType", ""}, {"url", ""}, {"thumbUrl", ""}, {"coverUrl", ""}, {"videoPlayDuration", ""}};
+    
+    if (NULL == parentNode)
+    {
+        xmlParser.parseNodesValue(finderFeedXPath + "/*", nodes);
+        xmlParser.parseNodesValue(finderFeedXPath + "/mediaList/media/*", videoNodes);
+    }
+    else
+    {
+        xmlParser.parseChildNodesValue(parentNode, finderFeedXPath + "/*", nodes);
+        xmlParser.parseChildNodesValue(parentNode, finderFeedXPath + "/mediaList/media/*", videoNodes);
+    }
+#ifndef NDEBUG
+    assert(nodes["mediaCount"] == "1");
+#endif
+    std::string thumbUrl;
+    if ((m_options & SPO_IGNORE_SHARING) == 0)
+    {
+        thumbUrl = videoNodes["thumbUrl"].empty() ? videoNodes["coverUrl"] : videoNodes["thumbUrl"];
+    }
+    
+    std::string portraitDir = ((m_options & SPO_ICON_IN_SESSION) == SPO_ICON_IN_SESSION) ? session.getOutputFileName() + "_files/Portrait" : "Portrait";
+    
+    tv["%%CARDNAME%%"] = nodes["nickname"];
+    tv["%%CHANNELS%%"] = getLocaleString("Channels");
+    tv["%%MESSAGE%%"] = nodes["desc"];
+    tv["%%EXTRA_CLS%%"] = "channels";
+    
+    if (!thumbUrl.empty())
+    {
+        tv.setName("channels");
+        
+        std::string thumbFile = session.getOutputFileName() + "_files/" + msgId + ".jpg";
+        tv["%%CHANNELTHUMBPATH%%"] = thumbFile;
+        ensureDirectoryExisted(combinePath(m_outputPath, session.getOutputFileName() + "_files"));
+        m_downloader.addTask(thumbUrl, combinePath(m_outputPath, thumbFile), 0);
+        
+        if (!nodes["avatar"].empty())
+        {
+            tv["%%CARDIMGPATH%%"] = portraitDir + "/" + nodes["username"] + ".jpg";
+            std::string localFile = combinePath(portraitDir, nodes["username"] + ".jpg");
+            ensureDirectoryExisted(portraitDir);
+            m_downloader.addTask(nodes["avatar"], combinePath(m_outputPath, localFile), 0);
+        }
+
+        tv["%%CHANNELURL%%"] = videoNodes["url"];
+    }
+}
+
 bool MessageParser::parseForwardedMsgs(const Session& session, const MsgRecord& record, const std::string& title, const std::string& message, std::vector<TemplateValues>& tvs)
 {
     XmlParser xmlParser(message);
@@ -1078,137 +1242,93 @@ bool MessageParser::parseForwardedMsgs(const Session& session, const MsgRecord& 
     TemplateValues& beginTv = tvs.back();
     beginTv["%%MESSAGE%%"] = formatString(getLocaleString("<< %s"), title.c_str());
     beginTv["%%EXTRA_CLS%%"] = "fmsgtag";   // tag for forwarded msg
-
-    if (xmlParser.parseWithHandler("/recordinfo/datalist/dataitem", handler))
+    
+    XmlParser::XPathEnumerator enumerator(xmlParser, "/recordinfo/datalist/dataitem");
+    while (enumerator.hasNext())
     {
-        for (std::vector<ForwardMsg>::const_iterator it = forwardedMsgs.begin(); it != forwardedMsgs.end(); ++it)
+        xmlNodePtr node = enumerator.nextNode();
+        if (NULL != node)
         {
+            ForwardMsg fmsg = { record.msgId };
+
+            XmlParser::getNodeAttributeValue(node, "datatype", fmsg.dataType);
+            XmlParser::getNodeAttributeValue(node, "dataid", fmsg.dataId);
+            XmlParser::getNodeAttributeValue(node, "subtype", fmsg.subType);
+            
+            XmlParser::getChildNodeContent(node, "sourcename", fmsg.displayName);
+            XmlParser::getChildNodeContent(node, "sourcetime", fmsg.msgTime);
+            XmlParser::getChildNodeContent(node, "srcMsgCreateTime", fmsg.srcMsgTime);
+            XmlParser::getChildNodeContent(node, "datafmt", fmsg.dataFormat);
+            
+#ifndef NDEBUG
+            fmsg.rawMessage = xmlParser.getNodeOuterXml(node);
+            writeFile(combinePath(m_outputPath, "../dbg", "fwdmsg_" + fmsg.dataType + ".txt"), fmsg.rawMessage);
+#endif
             TemplateValues& tv = *(tvs.emplace(tvs.end(), "msg"));
             tv["%%ALIGNMENT%%"] = "left";
             tv["%%EXTRA_CLS%%"] = "fmsg";   // forwarded msg
-            // 1: message
-            // 2: image
-            // 4: video
-            // 5: link
-            // 6: location
-            // 8: File
-            // 16: Card
-            // 17: Nested Forwarded Messages
-            // 19: mini program
-            // 22: Channels
             
-            if (it->dataType == "1")
+            std::string nestedFwdMsgTitle;
+            std::string nestedFwdMsg;
+            int dataType = fmsg.dataType.empty() ? 0 : std::atoi(fmsg.dataType.c_str());
+            switch (dataType)
             {
-                tv["%%MESSAGE%%"] = replaceAll(replaceAll(replaceAll(it->message, "\r\n", "<br />"), "\r", "<br />"), "\n", "<br />");
-            }
-            else if (it->dataType == "2")
-            {
-                std::string fileExtName = it->dataFormat.empty() ? "" : ("." + it->dataFormat);
-                std::string vfile = m_userBase + "/OpenData/" + session.getHash() + "/" + record.msgId + "/" + it->dataId;
-                parseImage(m_outputPath, session.getOutputFileName() + "_files/" + record.msgId, vfile + fileExtName, vfile + fileExtName + "_pre3", it->dataId + ".jpg", vfile + ".record_thumb", it->dataId + "_thumb.jpg", tv);
-            }
-            else if (it->dataType == "3")
-            {
-                tv["%%MESSAGE%%"] = it->message;
-            }
-            else if (it->dataType == "4")
-            {
-                std::string fileExtName = it->dataFormat.empty() ? "" : ("." + it->dataFormat);
-                std::string vfile = m_userBase + "/OpenData/" + session.getHash() + "/" + record.msgId + "/" + it->dataId;
-                parseVideo(m_outputPath, session.getOutputFileName() + "_files/" + record.msgId, vfile + fileExtName, it->dataId + fileExtName, vfile + ".record_thumb", it->dataId + "_thumb.jpg", "", "", tv);
-                
-            }
-            else if (it->dataType == "5")
-            {
-                std::string vfile = m_userBase + "/OpenData/" + session.getHash() + "/" + record.msgId + "/" + it->dataId + ".record_thumb";
-                std::string dest = session.getOutputFileName() + "_files/" + record.msgId + "/" + it->dataId + "_thumb.jpg";
-                bool hasThumb = false;
-                if ((m_options & SPO_IGNORE_SHARING) == 0)
-                {
-                    hasThumb = m_iTunesDb.copyFile(vfile, combinePath(m_outputPath, dest));
-                }
-                
-                if (!(it->link.empty()))
-                {
-                    tv.setName(hasThumb ? "share" : "plainshare");
-
-                    tv["%%SHARINGIMGPATH%%"] = dest;
-                    tv["%%SHARINGURL%%"] = it->link;
-                    tv["%%SHARINGTITLE%%"] = it->message;
-                    // tv["%%MESSAGE%%"] = nodes["des"];
-                }
-                else
-                {
-                    tv["%%MESSAGE%%"] = it->message;
-                }
-            }
-            else if (it->dataType == "6")
-            {
-                // Location
-                std::map<std::string, std::string> attrs = { {"poiname", ""}, {"lng", ""}, {"lat", ""}, {"label", ""} };
-                
-                XmlParser xmlParser(it->nestedMsgs);
-                if (xmlParser.parseNodesValue("/locitem/*", attrs) && !attrs["lat"].empty() && !attrs["lng"].empty() && !attrs["poiname"].empty())
-                {
-                    tv["%%MESSAGE%%"] = formatString(getLocaleString("[Location (%s,%s) %s]"), attrs["lat"].c_str(), attrs["lng"].c_str(), attrs["poiname"].c_str());
-                }
-                else
-                {
-                    tv["%%MESSAGE%%"] = getLocaleString("[Location]");
-                }
-                tv.setName("msg");
-            }
-            else if (it->dataType == "8")
-            {
-                std::string fileExtName = it->dataFormat.empty() ? "" : ("." + it->dataFormat);
-                std::string vfile = m_userBase + "/OpenData/" + session.getHash() + "/" + record.msgId + "/" + it->dataId;
-                parseFile(m_outputPath, session.getOutputFileName() + "_files/" + record.msgId, vfile + fileExtName, it->dataId + fileExtName, it->message, tv);
-            }
-            else if (it->dataType == "16")
-            {
-                // Card
-                std::string portraitDir = ((m_options & SPO_ICON_IN_SESSION) == SPO_ICON_IN_SESSION) ? session.getOutputFileName() + "_files/Portrait" : "Portrait";
-                parseCard(m_outputPath, portraitDir, it->message, tv);
-            }
-            else if (it->dataType == "17")
-            {
-                // parseForwardedMsgs(userBase, outputPath, session, record, title, it->message, tvs);
-                tv["%%MESSAGE%%"] = it->message;
-            }
-            else if (it->dataType == "19")
-            {
-                // Mini Program
-                tv["%%MESSAGE%%"] = it->message;
-            }
-            else if (it->dataType == "22")
-            {
-                // Channels
-                
-                tv["%%MESSAGE%%"] = it->message;
-            }
-            else
-            {
+                case FWDMSG_DATATYPE_TEXT:  // 1
+                    parseFwdMsgText(fmsg, xmlParser, node, session, tv);
+                    break;
+                case FWDMSG_DATATYPE_IMAGE: // 2
+                    parseFwdMsgImage(fmsg, xmlParser, node, session, tv);
+                    break;
+                case FWDMSG_DATATYPE_VIDEO: // 4
+                    parseFwdMsgVideo(fmsg, xmlParser, node, session, tv);
+                    break;
+                case FWDMSG_DATATYPE_LINK: //
+                    parseFwdMsgLink(fmsg, xmlParser, node, session, tv);
+                    break;
+                case FWDMSG_DATATYPE_LOCATION: //
+                    parseFwdMsgLocation(fmsg, xmlParser, node, session, tv);
+                    break;
+                case FWDMSG_DATATYPE_ATTACH: //
+                    parseFwdMsgAttach(fmsg, xmlParser, node, session, tv);
+                    break;
+                case FWDMSG_DATATYPE_CARD: //
+                    parseFwdMsgCard(fmsg, xmlParser, node, session, tv);
+                    break;
+                case FWDMSG_DATATYPE_NESTED_FWD_MSG: //
+                    parseFwdMsgNestedFwdMsg(fmsg, xmlParser, node, session, nestedFwdMsg, nestedFwdMsgTitle, tv);
+                    break;
+                case FWDMSG_DATATYPE_MINI_PROGRAM: //   19
+                    parseFwdMsgMiniProgram(fmsg, xmlParser, node, session, tv);
+                    break;
+                case FWDMSG_DATATYPE_CHANNELS: //   22
+                    parseFwdMsgChannels(fmsg, xmlParser, node, session, tv);
+                    break;
+                case FWDMSG_DATATYPE_CHANNEL_CARD: //    26
+                    parseFwdMsgChannelCard(fmsg, xmlParser, node, session, tv);
+                    break;
+                default:
+                    parseFwdMsgText(fmsg, xmlParser, node, session, tv);
 #ifndef NDEBUG
-                writeFile(combinePath(m_outputPath, "../dbg", "fwdmsg_unknwn_" + it->dataType + ".txt"), it->message);
+                    writeFile(combinePath(m_outputPath, "../dbg", "fwdmsg_unknwn_" + fmsg.dataType + ".txt"), fmsg.rawMessage);
 #endif
-                tv["%%MESSAGE%%"] = it->message;
+                    break;
             }
             
-            tv["%%NAME%%"] = it->displayName;
-            tv["%%MSGID%%"] = record.msgId + "_" + it->dataId;
-            tv["%%TIME%%"] = it->srcMsgTime.empty() ? it->msgTime : fromUnixTime(static_cast<unsigned int>(std::atoi(it->srcMsgTime.c_str())));
-            
-            localPortrait = portraitPath + (it->protrait.empty() ? "DefaultProfileHead@2x.png" : session.getLocalPortrait());
-            remotePortrait = it->protrait;
+            tv["%%NAME%%"] = fmsg.displayName;
+            tv["%%MSGID%%"] = record.msgId + "_" + fmsg.dataId;
+            tv["%%TIME%%"] = fmsg.srcMsgTime.empty() ? fmsg.msgTime : fromUnixTime(static_cast<unsigned int>(std::atoi(fmsg.srcMsgTime.c_str())));
+
+            localPortrait = portraitPath + (fmsg.protrait.empty() ? "DefaultProfileHead@2x.png" : session.getLocalPortrait());
+            remotePortrait = fmsg.protrait;
             tv["%%AVATAR%%"] = localPortrait;
-            if (!it->usrName.empty() && it->protrait.empty())
+            if (!fmsg.usrName.empty() && fmsg.protrait.empty())
             {
-                const Friend *f = (m_myself.getUsrName() == it->usrName) ? &m_myself : m_friends.getFriendByUid(it->usrName);
+                const Friend *f = (m_myself.getUsrName() == fmsg.usrName) ? &m_myself : m_friends.getFriendByUid(fmsg.usrName);
                 std::string localPortrait = portraitPath + ((NULL != f) ? f->getLocalPortrait() : "DefaultProfileHead@2x.png");
                 remotePortrait = (NULL != f) ? f->getPortrait() : "";
-                
+
                 tv["%%AVATAR%%"] = localPortrait;
-                
+
                 if ((m_options & SPO_IGNORE_AVATAR) == 0)
                 {
                     if (!remotePortrait.empty() && !localPortrait.empty())
@@ -1217,13 +1337,12 @@ bool MessageParser::parseForwardedMsgs(const Session& session, const MsgRecord& 
                     }
                 }
             }
-            
-            if ((it->dataType == "17") && !it->nestedMsgs.empty())
+
+            if ((dataType == FWDMSG_DATATYPE_NESTED_FWD_MSG) && !nestedFwdMsg.empty())
             {
-                parseForwardedMsgs(session, record, it->message, it->nestedMsgs, tvs);
+                parseForwardedMsgs(session, record, nestedFwdMsgTitle, nestedFwdMsg, tvs);
             }
         }
-        
     }
     
     tvs.push_back(TemplateValues("notice"));
