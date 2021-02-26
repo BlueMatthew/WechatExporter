@@ -148,8 +148,6 @@ xmlNodePtr XmlParser::getNextNodeSibling(xmlNodePtr node)
     return xmlNextElementSibling(node);
 }
 
-
-
 bool XmlParser::getNodeAttributeValue(xmlNodePtr node, const std::string& attributeName, std::string& value)
 {
     xmlChar* attr = xmlGetProp(node, BAD_CAST(attributeName.c_str()));
@@ -201,6 +199,29 @@ bool XmlParser::parseNodesValue(const std::string& xpath, std::map<std::string, 
 {
     NodesValueHandler handler = {values};
     return parseWithHandler(xpath, handler);
+}
+
+bool XmlParser::parseChildNodesValue(xmlNodePtr parentNode, const std::string& xpath, std::map<std::string, std::string>& values) const
+{
+    XPathEnumerator enumerator(*this, parentNode, xpath);
+    if (enumerator.isInvalid())
+    {
+        return false;
+    }
+    
+    while (enumerator.hasNext())
+    {
+        xmlNodePtr cur = enumerator.nextNode();
+        
+        std::string name = reinterpret_cast<const char*>(cur->name);
+        std::map<std::string, std::string>::iterator it = values.find(name);
+        if (it != values.end())
+        {
+            it->second = getNodeInnerText(cur);
+        }
+    }
+    
+    return true;
 }
 
 bool XmlParser::parseAttributeValue(const std::string& xpath, const std::string& attributeName, std::string& value) const
