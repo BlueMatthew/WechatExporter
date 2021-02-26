@@ -14,7 +14,7 @@
 #include <plist/plist.h>
 #include "XmlParser.h"
 
-MessageParser::MessageParser(const ITunesDb& iTunesDb, Downloader& downloader, Friends& friends, Friend myself, int options, const std::string& outputPath, std::function<std::string(const std::string&)>& localeFunc) : m_iTunesDb(iTunesDb), m_downloader(downloader), m_friends(friends), m_myself(myself), m_options(options), m_outputPath(outputPath)
+MessageParser::MessageParser(const ITunesDb& iTunesDb, const ITunesDb& iTunesDbShare, Downloader& downloader, Friends& friends, Friend myself, int options, const std::string& resPath, const std::string& outputPath, std::function<std::string(const std::string&)>& localeFunc) : m_iTunesDb(iTunesDb), m_iTunesDbShare(iTunesDbShare), m_downloader(downloader), m_friends(friends), m_myself(myself), m_options(options), m_resPath(resPath), m_outputPath(outputPath)
 {
     m_userBase = "Documents/" + m_myself.getHash();
     m_localFunction = std::move(localeFunc);
@@ -191,6 +191,7 @@ bool MessageParser::parse(MsgRecord& record, const Session& session, std::vector
     {
         if (!remotePortrait.empty() && !localPortrait.empty())
         {
+            // copyPortraitIcon(senderId, remotePortrait, combinePath(m_outputPath, portraitPath));
             
             m_downloader.addTask(remotePortrait, combinePath(m_outputPath, localPortrait), record.createTime);
         }
@@ -391,9 +392,8 @@ void MessageParser::parseAppMsg(const MsgRecord& record, const Session& session,
         tv["%%APPNAME%%"] = appMsgInfo.appName;
         std::string vFile = combinePath(m_userBase, "appicon", appMsgInfo.appId + ".png");
         std::string portraitDir = ((m_options & SPO_ICON_IN_SESSION) == SPO_ICON_IN_SESSION) ? session.getOutputFileName() + "_files/Portrait" : "Portrait";
-        
-        std::string destFileName = combinePath(m_outputPath, portraitDir, "appicon_" + appMsgInfo.appId + ".png");
-        if (m_iTunesDb.copyFile(vFile, destFileName))
+
+        if (m_iTunesDb.copyFile(vFile, combinePath(m_outputPath, portraitDir), "appicon_" + appMsgInfo.appId + ".png"))
         {
             appMsgInfo.localAppIcon = portraitDir + "/appicon_" + appMsgInfo.appId + ".png";
             tv["%%APPICONPATH%%"] = appMsgInfo.localAppIcon;
@@ -896,19 +896,19 @@ void MessageParser::parseFwdMsgLink(const ForwardMsg& fwdMsg, const XmlParser& x
         XmlParser::getChildNodeContent(urlItemNode, "desc", message);
     }
     
-    std::string vfile = m_userBase + "/OpenData/" + session.getHash() + "/" + fwdMsg.msgId + "/" + fwdMsg.dataId + ".record_thumb";
-    std::string dest = session.getOutputFileName() + "_files/" + fwdMsg.msgId + "/" + fwdMsg.dataId + "_thumb.jpg";
+    
     bool hasThumb = false;
     if ((m_options & SPO_IGNORE_SHARING) == 0)
     {
-        hasThumb = m_iTunesDb.copyFile(vfile, combinePath(m_outputPath, dest));
+        std::string vfile = m_userBase + "/OpenData/" + session.getHash() + "/" + fwdMsg.msgId + "/" + fwdMsg.dataId + ".record_thumb";
+        hasThumb = m_iTunesDb.copyFile(vfile, combinePath(m_outputPath, session.getOutputFileName() + "_files", fwdMsg.msgId), fwdMsg.dataId + "_thumb.jpg");
     }
     
     if (!(link.empty()))
     {
         tv.setName(hasThumb ? "share" : "plainshare");
 
-        tv["%%SHARINGIMGPATH%%"] = dest;
+        tv["%%SHARINGIMGPATH%%"] = session.getOutputFileName() + "_files/" + fwdMsg.msgId + "/" + fwdMsg.dataId + "_thumb.jpg";
         tv["%%SHARINGURL%%"] = link;
         tv["%%SHARINGTITLE%%"] = title;
         tv["%%MESSAGE%%"] = message;
@@ -1051,14 +1051,15 @@ void MessageParser::parseImage(const std::string& sessionPath, const std::string
     bool hasImage = false;
     if ((m_options & SPO_IGNORE_IMAGE) == 0)
     {
-        hasThumb = m_iTunesDb.copyFile(srcThumb, combinePath(sessionPath, sessionAssertsPath, destThumb));
+        std::string fullAssertsPath = combinePath(sessionPath, sessionAssertsPath);
+        hasThumb = m_iTunesDb.copyFile(srcThumb, fullAssertsPath, destThumb);
         if (!srcPre.empty())
         {
-            hasImage = m_iTunesDb.copyFile(srcPre, combinePath(sessionPath, sessionAssertsPath, dest));
+            hasImage = m_iTunesDb.copyFile(srcPre, fullAssertsPath, dest);
         }
         if (!hasImage)
         {
-            hasImage = m_iTunesDb.copyFile(src, combinePath(sessionPath, sessionAssertsPath, dest));
+            hasImage = m_iTunesDb.copyFile(src, fullAssertsPath, dest);
         }
     }
 
@@ -1131,10 +1132,13 @@ void MessageParser::parseCard(const std::string& sessionPath, const std::string&
             ensureDirectoryExisted(portraitDir);
             m_downloader.addTask(portraitUrl, combinePath(sessionPath, localfile), 0);
         }
+        else if (!attrs["nickname"].empty())
+        {
+            templateValues["%%MESSAGE%%"] = formatString(getLocaleString("[Contact Card] %s"), attrs["nickname"].c_str());
+        }
         else
         {
-            templateValues.setName("msg");
-            templateValues["%%MESSAGE%%"] = formatString(getLocaleString("[Contact Card] %s"), attrs["username"].c_str());
+            templateValues["%%MESSAGE%%"] = getLocaleString("[Contact Card]");
         }
     }
     else
@@ -1235,8 +1239,6 @@ bool MessageParser::parseForwardedMsgs(const Session& session, const MsgRecord& 
     std::vector<ForwardMsg> forwardedMsgs;
     ForwardMsgsHandler handler(xmlParser, record.msgId, forwardedMsgs);
     std::string portraitPath = ((m_options & SPO_ICON_IN_SESSION) == SPO_ICON_IN_SESSION) ? session.getOutputFileName() + "_files/Portrait/" : "Portrait/";
-    std::string localPortrait;
-    std::string remotePortrait;
     
     tvs.push_back(TemplateValues("notice"));
     TemplateValues& beginTv = tvs.back();
@@ -1326,28 +1328,17 @@ bool MessageParser::parseForwardedMsgs(const Session& session, const MsgRecord& 
             tv["%%MSGID%%"] = record.msgId + "_" + fmsg.dataId;
             tv["%%TIME%%"] = fmsg.srcMsgTime.empty() ? fmsg.msgTime : fromUnixTime(static_cast<unsigned int>(std::atoi(fmsg.srcMsgTime.c_str())));
 
-            localPortrait = portraitPath + (fmsg.portrait.empty() ? "DefaultProfileHead@2x.png" : session.getLocalPortrait());
-            remotePortrait = fmsg.portrait;
-            tv["%%AVATAR%%"] = localPortrait;
-            if (!fmsg.usrName.empty() && fmsg.portrait.empty())
+            // std::string localPortrait;
+            // bool hasPortrait = false;
+            // localPortrait = combinePath(portraitPath, fmsg.usrName + ".jpg");
+            if (copyPortraitIcon(fmsg.usrName, fmsg.portrait, combinePath(m_outputPath, portraitPath)))
             {
-                const Friend *f = (m_myself.getUsrName() == fmsg.usrName) ? &m_myself : m_friends.getFriendByUid(fmsg.usrName);
-                if (f == NULL)
-                {
-                    int aa = 0;
-                }
-                std::string localPortrait = portraitPath + ((NULL != f) ? f->getLocalPortrait() : "DefaultProfileHead@2x.png");
-                remotePortrait = (NULL != f) ? f->getPortrait() : "";
-
-                tv["%%AVATAR%%"] = localPortrait;
-
-                if ((m_options & SPO_IGNORE_AVATAR) == 0)
-                {
-                    if (!remotePortrait.empty() && !localPortrait.empty())
-                    {
-                        m_downloader.addTask(remotePortrait, combinePath(m_outputPath, localPortrait), record.createTime);
-                    }
-                }
+                tv["%%AVATAR%%"] = portraitPath + "/" + fmsg.usrName + ".jpg";
+            }
+            else
+            {
+                ensureDefaultPortraitIconExisted(portraitPath);
+                tv["%%AVATAR%%"] = portraitPath + "/DefaultProfileHead@2x.png";
             }
 
             if ((dataType == FWDMSG_DATATYPE_NESTED_FWD_MSG) && !nestedFwdMsg.empty())
@@ -1374,4 +1365,50 @@ std::string MessageParser::getDisplayTime(int ms) const
 {
     if (ms < 1000) return "1\'";
     return std::to_string(std::round((double)ms)) + "\"";
+}
+
+bool MessageParser::copyPortraitIcon(const std::string& usrName, const std::string& portraitUrl, const std::string& destPath)
+{
+    return copyPortraitIcon(usrName, md5(usrName), portraitUrl, destPath);
+}
+
+bool MessageParser::copyPortraitIcon(const std::string& usrName, const std::string& usrNameHash, const std::string& portraitUrl, const std::string& destPath)
+{
+    std::string destFileName = usrName + ".jpg";
+    std::string avatarPath = "share/" + m_myself.getHash() + "/session/headImg/" + usrNameHash + ".pic";
+    bool hasPortrait = m_iTunesDbShare.copyFile(avatarPath, destPath, destFileName);
+    if (!hasPortrait)
+    {
+        if (portraitUrl.empty())
+        {
+            const Friend *f = (m_myself.getUsrName() == usrName) ? &m_myself : m_friends.getFriend(usrNameHash);
+            if (NULL != f)
+            {
+                std::string url = f->getPortrait();
+                if (!url.empty())
+                {
+                    m_downloader.addTask(portraitUrl, combinePath(destPath, destFileName), 0);
+                    hasPortrait = true;
+                }
+            }
+        }
+        else
+        {
+            m_downloader.addTask(portraitUrl, combinePath(destPath, destFileName), 0);
+            hasPortrait = true;
+        }
+    }
+    
+    return hasPortrait;
+}
+
+void MessageParser::ensureDefaultPortraitIconExisted(const std::string& portraitPath)
+{
+    std::string dest = combinePath(m_outputPath, portraitPath);
+    ensureDirectoryExisted(dest);
+    dest = combinePath(m_outputPath, "DefaultProfileHead@2x.png");
+    if (!existsFile(dest))
+    {
+        copyFile(combinePath(m_resPath, "res", "DefaultProfileHead@2x.png"), dest, false);
+    }
 }

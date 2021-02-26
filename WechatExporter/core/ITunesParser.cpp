@@ -359,7 +359,6 @@ bool ITunesDb::copyFile(const std::string& vpath, const std::string& dest, bool 
         if (!srcPath.empty())
         {
             normalizePath(srcPath);
-            std::string destPath = normalizePath(dest);
             bool result = ::copyFile(srcPath, destPath, true);
             if (result)
             {
@@ -372,8 +371,36 @@ bool ITunesDb::copyFile(const std::string& vpath, const std::string& dest, bool 
     return false;
 }
 
-
-
+bool ITunesDb::copyFile(const std::string& vpath, const std::string& destPath, const std::string& destFileName, bool overwrite/* = false*/) const
+{
+    std::string destFullPath = normalizePath(combinePath(destPath, destFileName));
+    if (!overwrite && existsFile(destFullPath))
+    {
+        return true;
+    }
+    
+    const ITunesFile* file = findITunesFile(vpath);
+    if (NULL != file)
+    {
+        std::string srcPath = getRealPath(*file);
+        if (!srcPath.empty())
+        {
+            normalizePath(srcPath);
+            if (!existsDirectory(destPath))
+            {
+                makeDirectory(destPath);
+            }
+            bool result = ::copyFile(srcPath, destFullPath, true);
+            if (result)
+            {
+                updateFileTime(destFullPath, ITunesDb::parseModifiedTime(file->blob));
+            }
+            return result;
+        }
+    }
+    
+    return false;
+}
 
 ManifestParser::ManifestParser(const std::string& manifestPath) : m_manifestPath(manifestPath)
 {
