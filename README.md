@@ -10,13 +10,13 @@
 3. 执行解压出来的WechatExport.exe/WechatExporter (Windows下如果运行报缺少必须的dll文件，请安装[Visual C++ 2017 redist](https://aka.ms/vs/16/release/vc_redist.x64.exe)后再尝试运行)
 
 4. 按界面提示进行操作。  
-![Windows界面截屏](https://src.wakin.org/github/wxexp/screenshots/win.png) ![MacOS界面截屏](https://src.wakin.org/github/wxexp/screenshots/mac.png)
+![Windows界面截屏](https://src.wakin.org/github/wxexp/screenshots/win.png) ![MacOS界面截屏](https://src.wakin.org/github/wxexp/screenshots/mac.png###)
 
 ## 模版修改
 解压目录下的res\templates(MacOS版本位于Contents\Resources\res)子目录里存放了输出聊天记录的html页面模版，其中通过两个%包含起来的字符串，譬如，%%NAME%%，不要修改之外，其它页面内容和格式都可以自行调整。
 
 ## 系统依赖：
-Windows版本：Windows 7+(XP未测试，但应该也可以运行), [Visual C++ 2017 redist](https://aka.ms/vs/16/release/vc_redist.x64.exe) at [The latest supported Visual C++ downloads](https://support.microsoft.com/en-us/help/2977003/the-latest-supported-visual-c-downloads)  
+Windows版本：Windows 7+(XP不支持), [Visual C++ 2017 redist](https://aka.ms/vs/16/release/vc_redist.x64.exe) at [The latest supported Visual C++ downloads](https://support.microsoft.com/en-us/help/2977003/the-latest-supported-visual-c-downloads)  
 MacOS版本：MacOS 10.10(Yosemite)+
 
 
@@ -45,4 +45,4 @@ iTunes 12.10.9.3 + 微信 7.0.15
 iTunes 12.9.5.5 + 微信 7.0.2  
 Windows 10 + iTunes 12.11.0.26(Microsoft Store) + 微信 7.0.2  
 Windows 10 + iTunes 12.11.0.26(Microsoft Store) + 微信 8.0.1  
-Mac Catalina (Embedded iTunes) + 微信 8.0.1  
+Mac Catalina (Embedded iTunes) + 微信 8.0.1/8.0.2  
