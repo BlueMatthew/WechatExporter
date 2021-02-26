@@ -6,248 +6,280 @@
 		<meta name="apple-mobile-web-app-capable" content="yes">
 		<meta content="yes" name="apple-touch-fullscreen">
 		<style type=text/css>
-			body
-      {
-        background-color: #ebebeb;
-        font-family: "-apple-system", "Helvetica Neue", "Roboto", "Segoe UI", sans-serif;
-        font-size: 10.5pt;
-      }
-      .chat-left, .media-left
-      {
-        clear:both;
-        overflow: auto;
-      }
-      .chat-left div.avatar-box,
-      .media-left div.avatar-box
-      {
-        float: left;
-      }
-      .chat-left div.nt-box,
-      .media-left div.nt-box
-      {
-        margin: 0 50px 2px 50px;
-        padding: 0px;
-        color: #848484;
-        font-size: 80%;
-        text-align: left;
-      }
-      .chat-left div.content-box
-      {
-        background-color: white;
-        /*float: left;*/
-        margin: 0 50px 10px 50px;
-        padding: 10px 10px 10px 10px;
-        border-radius:8px;
-      }
-      .media-left div.content-box
-      {
-        /*float: left;*/
-        margin: 0 50px 10px 50px;
-        padding: 10px 10px 10px 10px;
-      }
-      .chat-left.channels .content-box, .chat-right.channels .content-box
-      {
-        width:320px;
-      }
-      .refermsg
-      {
-        font-size: 90%;
-      }
-
-      .chat-right, .media-right
-      {
-        clear:both;
-        overflow: auto;
-      }
-      .chat-right div.avatar-box,
-      .media-right div.avatar-box
-      {
-        float: right;
-      }
-      .chat-right div.nt-box,
-      .media-right div.nt-box
-      {
-        margin: 0px 50px 2px 50px;
-        padding: 0px;
-        color: #848484;
-        font-size: 80%;
-        text-align: right;
-      }
-      .chat-right div.content-box
-      {
-        /*float:right;*/
-        background-color: #b2e281;
-        margin: 0px 50px 10px 50px;
-        padding: 10px 10px 10px 10px;
-        border-radius: 8px;
-      }
-      .media-right div.content-box
-      {
-        float: right;
-        margin: 0px 0px 10px 50px;
-        padding: 10px 10px 10px 10px;
-      }
-
-      .name-right
-      {
-        display: none;
-      }
-      img.avatar
-      {
-        width: 40px;
-        height: 40px;
-        border-radius: 4px;
-      }
-
-      .triangle
-      {
-        height: 0px;
-        width: 0px;
-        border-width: 6px;
-        border-style: solid;
-        position: relative;
-      }
-      .chat-left .triangle
-      {
-        float: left;
-        border-color: transparent white transparent transparent;
-        left: -22px;
-      }
-      .chat-right .triangle
-      {
-        float: right;
-        border-color: transparent transparent transparent #b2e281;
-        right: -22px;
-      }
-
-      .chat-notice
-      {
-        clear: both;
-        font-size: 80%;
-        color: white;
-        text-align: center;
-        margin-top: 15px;
-        margin-bottom: 15px;
-      }
-      .chat-notice span
-      {
-        background-color: #cecece;
-        line-height: 25px;
-        border-radius: 4px;
-        padding: 5px 10px;
-      }
-      .chat-notice.fmsgtag span
-      {
-        background-color: #008080;
-      }
-      audio
-      {
-        max-width: 220px;
-      }
-      video
-      {
-        max-width: 350px;
-      }
-      .chat-left .content-box.msg
-      {
-        text-indent: -12px;
-      }
-      .image
-      {
-        width:90px;
-        /*transition: all 2s;*/
-        border-radius:8px;
-        max-width: 360px;
-        max-height: 240px;
-      }
-      img
-      {
-        image-orientation: from-image;
-      }
-      img[src=""]
-      {
-        display: none;
-      }
-      img.app-icon
-      {
-        width: 24px;
-        height: 24px;
-        vertical-align:middle;
-        border-radius: 2px;
-      }
-
-      img.channel-poster
-      {
-        object-fit: cover;
-        width: 320px;
-        height: 320px;
-      }
-      .image:hover, .channel-poster:hover
-      {
-          cursor: crosshair;
-          /* transform: scale(5); */
-      }
-
-      img.card-avatar
-      {
-        width: 42px;
-        height: 42px;
-        vertical-align:middle;
-      }
-      div.card-name
-      {
-        display: flex;
-        align-items:center;
-      }
-      div.card-name span
-      {
-        margin-left: 8px;
-      }
-      span.channel-title
-      {
-        margin-left: 2px;
-      }
-      div.card-type
-      {
-        border-top: 1px dotted #dedede;
-        margin: 10px 2px 2px 2px;
-        padding: 4 12px 8px 0px;
-        line-height: 1.6;
-      }
-      .contact-card .card-avatar
-      {
-        border-radius: 4px;
-      }
-      .channel-card .card-avatar
-      {
-        border-radius: 21px;
-      }
-      span.channel-title
-      {
-        overflow: hidden;
-        text-overflow: ellipsis;
-        -o-text-overflow: ellipsis;
-        white-space: nowrap;
-        -webkit-line-clamp: 1;
-        -webkit-box-orient: vertical;
-        word-break: break-all;
-        width: 300px;
-        display:block;
-      }
-      
-      .dont-break-out
-      {
-        overflow-wrap: break-word;
-        word-wrap: break-word;
-      
-        -ms-word-break: break-all;
-        /*word-break: break-all;*/
-        word-break: break-word;
-        -ms-hyphens: auto;
-        -moz-hyphens: auto;
-        -webkit-hyphens: auto;
-        hyphens: auto;
-      }
+		body
+		{
+			background-color: white;
+			font-family: "-apple-system", "Helvetica Neue", "Roboto", "Segoe UI", sans-serif;
+  		font-size: 10.5pt;
+      		margin: 0px;
+		}
+	  	.chat-left, .media-left
+	  	{
+			clear:both;
+			overflow: auto;
+			width:720px;
+			margin:0 auto;
+			background-color: #ebebeb;
+			padding: 8px 8px;
+	  	}
+		.chat-left div.avatar-box,
+		.media-left div.avatar-box
+		{
+			float: left;
+		}
+		.chat-left div.avatar-box
+		{
+			padding-top: 14px;
+		}
+		.chat-left div.nt-box,
+		.media-left div.nt-box
+		{
+			margin: 0 50px 2px 50px;
+			padding: 0px;
+			color: #848484;
+			font-size: 80%;
+			text-align: left;
+		}
+		.chat-left div.content-box
+		{
+			position: relative;
+			background-color: white;
+			/*float: left;*/
+			margin: 0 50px 10px 50px;
+			padding: 10px 10px 10px 10px;
+			border-radius:8px;
+		}
+		.media-left div.content-box
+		{
+			/*float: left;*/
+			margin: 0 50px 10px 50px;
+			padding: 10px 10px 10px 10px;
+    	}
+	    div.content-box
+	    {
+	      width:fit-content;
+	      width:-webkit-fit-content;
+	      width:-moz-fit-content;
+	    }
+		.chat-left.channels .content-box, .chat-right.channels .content-box
+		{
+			width:320px;
+		}
+		.refermsg
+		{
+			font-size: 90%;
+		}
+		
+		.chat-right, .media-right
+		{
+			clear:both;
+			overflow: auto;
+			width: 720px;
+			margin: 0 auto;
+			background-color: #ebebeb;
+			padding: 8px 8px;
+		}
+		.chat-right div.avatar-box,
+		.media-right div.avatar-box
+		{
+			float: right;
+		}
+		.chat-right div.nt-box,
+		.media-right div.nt-box
+		{
+			margin: 0px 50px 2px 50px;
+			padding: 0px;
+			color: #848484;
+			font-size: 80%;
+			text-align: right;
+		}
+		.chat-right div.content-box
+		{
+      		position: relative;
+			background-color: #b2e281;
+			margin: 0px 50px 10px auto;
+			padding: 10px 10px 10px 10px;
+			border-radius: 8px;
+		}
+		.media-right div.content-box
+		{
+			float: right;
+			margin: 0px 0px 10px 50px;
+			padding: 10px 10px 10px 10px;
+		}
+		
+		.name-right
+		{
+			display: none;
+		}
+		img.avatar
+		{
+			width: 40px;
+			height: 40px;
+			border-radius: 4px;
+		}
+		
+		.triangle
+		{
+			height: 0px;
+			width: 0px;
+			border-width: 6px;
+			border-style: solid;
+			position: relative;
+		}
+		.chat-left .triangle
+		{
+			position: absolute;
+			border-color: transparent white transparent transparent;
+			left: -12px;
+			top: 12px;
+		}
+		.chat-right .triangle
+		{
+			position: absolute;
+			border-color: transparent transparent transparent #b2e281;
+			right: -12px;
+			top: 12px;
+		}
+		
+		.chat-notice
+		{
+			clear: both;
+			font-size: 80%;
+			text-align: center;
+			margin-top: 15px;
+			margin-bottom: 15px;
+			width:720px;
+			margin:0 auto;
+			background-color: #ebebeb;
+			padding: 0px 8px;
+    	}
+    	.chat-notice .content-box
+		{
+			width: 80%;
+			margin:0 auto;
+		}
+		.chat-notice.fmsgtag .content-box
+		{
+			background-color: #008080;
+			border-radius: 4px;
+			font-size: 100%;
+			padding: 5px 10px;
+		}
+		audio
+		{
+			max-width: 220px;
+		}
+		video
+		{
+			max-width: 320px;
+		}
+		.image
+		{
+			width:90px;
+			/*transition: all 2s;*/
+			border-radius:8px;
+			max-width: 360px;
+			max-height: 240px;
+			min-width: 120px;
+			min-height: 24px;
+		}
+		img
+		{
+			image-orientation: from-image;
+		}
+		img[src=""]
+		{
+			display: none;
+		}
+		img.app-icon
+		{
+			width: 24px;
+			height: 24px;
+			vertical-align:middle;
+			border-radius: 2px;
+		}
+		img.channel-poster
+		{
+			object-fit: cover;
+			width: 320px;
+			height: 320px;
+		}
+		.image:hover, .channel-poster:hover
+		{
+			cursor: crosshair;
+		  	/* transform: scale(5); */
+		}
+		
+		img.card-avatar
+		{
+			width: 42px;
+			height: 42px;
+			vertical-align:middle;
+		}
+		div.card-name
+		{
+			display: flex;
+			align-items:center;
+		}
+		div.card-name span
+		{
+			margin-left: 8px;
+		}
+		span.channel-title
+		{
+			margin-left: 2px;
+		}
+		div.card-type
+		{
+			border-top: 1px dotted #dedede;
+			margin: 10px 2px 2px 2px;
+			padding: 4 12px 8px 0px;
+			line-height: 1.6;
+		}
+		.contact-card .card-avatar
+		{
+			border-radius: 4px;
+		}
+		.channel-card .card-avatar
+		{
+			border-radius: 21px;
+		}
+		span.channel-title
+		{
+			overflow: hidden;
+			text-overflow: ellipsis;
+			-o-text-overflow: ellipsis;
+			white-space: nowrap;
+			-webkit-line-clamp: 1;
+			-webkit-box-orient: vertical;
+			word-break: break-all;
+			width: 300px;
+			display:block;
+		}
+		.appinfo
+		{
+			/*padding-top: 12px;*/
+		}
+		.app-name
+		{
+			/* padding-left: 10px; */
+			color: #999;
+		}
+		
+		.dont-break-out
+		{
+			overflow-wrap: break-word;
+			word-wrap: break-word;
+			
+			-ms-word-break: break-all;
+			/*word-break: break-all;*/
+			word-break: break-word;
+			-ms-hyphens: auto;
+			-moz-hyphens: auto;
+			-webkit-hyphens: auto;
+			hyphens: auto;
+		}
   
 		</style>
 		<title>%%DISPLAYNAME%% - 微信聊天记录</title>
