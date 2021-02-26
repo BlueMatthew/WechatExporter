@@ -31,16 +31,41 @@
 #include <curl/curl.h>
 #include "OSDef.h"
 
-
-std::string replaceAll(std::string input, std::string search, std::string replace)
+void replaceAll(std::string& input, const std::string& search, const std::string& replace)
 {
-    std::string result = input;
     size_t pos = 0;
-    while((pos = result.find(search, pos)) != std::string::npos)
+    while((pos = input.find(search, pos)) != std::string::npos)
     {
-         result.replace(pos, search.length(), replace);
+        input.replace(pos, search.length(), replace);
          pos += replace.length();
     }
+}
+
+void replaceAll(std::string& input, const std::vector<std::pair<std::string, std::string>>& pairs)
+{
+    for (std::vector<std::pair<std::string, std::string>>::const_iterator it = pairs.cbegin(); it != pairs.cend(); ++it)
+    {
+        size_t pos = 0;
+        while((pos = input.find(it->first, pos)) != std::string::npos)
+        {
+            input.replace(pos, it->first.length(), it->second);
+            pos += it->second.length();
+        }
+    }
+}
+
+std::string replaceAll(const std::string& input, const std::string& search, const std::string& replace)
+{
+    std::string result = input;
+    replaceAll(result, search, replace);
+    return result;
+}
+
+std::string replaceAll(const std::string& input, const std::vector<std::pair<std::string, std::string>>& pairs)
+{
+    std::string result = input;
+    replaceAll(result, pairs);
+
     return result;
 }
 
@@ -167,14 +192,9 @@ void normalizePath(std::string& path)
 
 std::string safeHTML(const std::string& s)
 {
-    std::string result = replaceAll(s, "&", "&amp;");
-    result = replaceAll(result, " ", "&nbsp;");
-    result = replaceAll(result, "<", "&lt;");
-    result = replaceAll(result, ">", "&gt;");
-    result = replaceAll(result, "\r\n", "<br/>");
-    result = replaceAll(result, "\r", "<br/>");
-    result = replaceAll(result, "\n", "<br/>");
-    return result;
+    static std::vector<std::pair<std::string, std::string>> replaces =
+    { {"&", "&amp;"}, {" ", "&nbsp;"}, {"<", "&lt;"}, {">", "&gt;"}, {"\r\n", "<br/>"}, {"\r", "<br/>"}, {"\n", "<br/>"} };
+    return replaceAll(s, replaces);
 }
 
 void removeHtmlTags(std::string& html)
@@ -425,7 +445,7 @@ bool copyFile(const std::string& src, const std::string& dest)
 */
 
 #ifdef _WIN32
-std::string utf8ToLocalAnsi(std::string utf8Str)
+std::string utf8ToLocalAnsi(const std::string& utf8Str)
 {
 	CW2A pszA(CA2W(utf8Str.c_str(), CP_UTF8));
 	return std::string((LPCSTR)pszA);
