@@ -46,6 +46,19 @@ struct MsgRecord
     std::string msgId;
 };
 
+struct AppMsgInfo
+{
+    std::string msgId;
+    int msgType;
+#ifndef NDEBUG
+    std::string message;
+#endif
+    int appMsgType;
+    std::string appId;
+    std::string appName;
+    std::string localAppIcon;
+};
+
 struct ForwardMsg
 {
     std::string msgId;
@@ -61,30 +74,6 @@ struct ForwardMsg
 #ifndef NDEBUG
     std::string rawMessage;
 #endif
-};
-
-struct AppMsgInfo
-{
-    std::string msgId;
-    int msgType;
-#ifndef NDEBUG
-    std::string message;
-#endif
-    int appMsgType;
-    std::string appId;
-    std::string appName;
-    std::string localAppIcon;
-};
-
-struct FwdMsgInfo
-{
-    std::string msgId;
-    int msgType;
-#ifndef NDEBUG
-    std::string message;
-#endif
-    int appMsgType;
-    
 };
 
 class TemplateValues
@@ -398,9 +387,11 @@ public:
     static const int FWDMSG_DATATYPE_CHANNELS = 22;
     static const int FWDMSG_DATATYPE_CHANNEL_CARD = 26;
     
-    MessageParser(const ITunesDb& iTunesDb, Downloader& downloader, Friends& friends, Friend myself, int options, const std::string& outputPath, std::function<std::string(const std::string&)>& localeFunc);
+    MessageParser(const ITunesDb& iTunesDb, const ITunesDb& iTunesDbShare, Downloader& downloader, Friends& friends, Friend myself, int options, const std::string& resPath, const std::string& outputPath, std::function<std::string(const std::string&)>& localeFunc);
     
     bool parse(MsgRecord& record, const Session& session, std::vector<TemplateValues>& tvs);
+    bool copyPortraitIcon(const std::string& usrName, const std::string& portraitUrl, const std::string& destPath);
+    bool copyPortraitIcon(const std::string& usrName, const std::string& usrNameHash, const std::string& portraitUrl, const std::string& destPath);
     
 protected:
     void parseText(const MsgRecord& record, const Session& session, TemplateValues& tv);
@@ -477,15 +468,18 @@ protected:
             makeDirectory(path);
         }
     }
-
+    
+    void ensureDefaultPortraitIconExisted(const std::string& portraitPath);
 protected:
     const ITunesDb& m_iTunesDb;
+    const ITunesDb& m_iTunesDbShare;
     Downloader& m_downloader;
 
     Friends& m_friends;
     Friend m_myself;
     int m_options;
     
+    const std::string m_resPath;
     const std::string m_outputPath;
     std::string m_userBase;
 

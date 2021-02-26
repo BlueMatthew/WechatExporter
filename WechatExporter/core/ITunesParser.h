@@ -186,6 +186,7 @@ public:
     
     static unsigned int parseModifiedTime(const std::vector<unsigned char>& data);
     bool copyFile(const std::string& vpath, const std::string& dest, bool overwrite = false) const;
+    bool copyFile(const std::string& vpath, const std::string& destPath, const std::string& destFileName, bool overwrite = false) const;
     
 protected:
     mutable std::vector<ITunesFile *> m_files;
