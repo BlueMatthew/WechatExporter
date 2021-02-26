@@ -11,25 +11,6 @@
 #include "Downloader.h"
 #include "WechatParser.h"
 
-struct FriendDownloadHandler
-{
-    Downloader& downloadPool;
-    std::string& userRoot;
-    
-    FriendDownloadHandler(Downloader& dlPool, std::string& usrRoot) : downloadPool(dlPool), userRoot(usrRoot)
-    {
-    }
-    
-    void operator()(const Friend& f)
-    {
-        std::string url = f.getPortrait();
-        if (!url.empty())
-        {
-            downloadPool.addTask(url, combinePath(userRoot, f.getLocalPortrait()), 0);
-        }
-    }
-};
-
 Exporter::Exporter(const std::string& workDir, const std::string& backup, const std::string& output, Logger* logger)
 {
     m_running = false;
@@ -363,8 +344,6 @@ bool Exporter::exportUser(Friend& user, std::string& userOutputPath)
         myself = &user;
     }
     
-    // friends.handleFriend(FriendDownloadHandler(downloader, portraitPath));
-    
     std::string userBody;
     
     std::map<std::string, std::set<std::string>>::const_iterator itUser = m_usersAndSessionsFilter.cend();
@@ -378,19 +357,18 @@ bool Exporter::exportUser(Friend& user, std::string& userOutputPath)
     m_logger->debug("UA: " + m_wechatInfo.buildUserAgent());
 #endif
     downloader.setUserAgent(m_wechatInfo.buildUserAgent());
+    
+    std::function<std::string(const std::string&)> localeFunction = std::bind(&Exporter::getLocaleString, this, std::placeholders::_1);
+    MessageParser msgParser(*m_iTunesDb, *m_iTunesDbShare, downloader, friends, *myself, m_options, m_workDir, outputBase, localeFunction);
+    
     if ((m_options & SPO_IGNORE_AVATAR) == 0)
     {
 #ifndef NDEBUG
-		m_logger->debug("Download avatar: *" + user.getPortrait() + "* => " + combinePath(outputBase, "Portrait", user.getLocalPortrait()));
+        m_logger->debug("Download avatar: *" + user.getPortrait() + "* => " + combinePath(outputBase, "Portrait", user.getLocalPortrait()));
 #endif
-        downloader.addTask(user.getPortrait(), combinePath(outputBase, "Portrait", user.getLocalPortrait()), 0);
+        msgParser.copyPortraitIcon(user.getUsrName(), user.getHash(), "Portrait");
+        // downloader.addTask(user.getPortrait(), combinePath(outputBase, "Portrait", user.getLocalPortrait()), 0);
     }
-    
-    // MessageParser(const ITunesDb& iTunesDb, Downloader& downloader, Friends& friends, Friend myself, int options, const std::string& outputPath, std::function<std::string(const std::string&)>& localeFunc);
-    
-    std::function<std::string(const std::string&)> localeFunction = std::bind(&Exporter::getLocaleString, this, std::placeholders::_1);
-    MessageParser msgParser(*m_iTunesDb, downloader, friends, *myself, m_options, outputBase, localeFunction);
-    
     SessionParser sessionParser(msgParser, m_options);
     std::set<std::string> sessionFileNames;
     for (std::vector<Session>::iterator it = sessions.begin(); it != sessions.end(); ++it)
@@ -512,8 +490,8 @@ int Exporter::exportSession(const Friend& user, SessionParser& sessionParser, co
     {
         std::string portraitPath = combinePath(sessionBasePath, "Portrait");
         makeDirectory(portraitPath);
-        std::string defaultPortrait = combinePath(portraitPath, "DefaultProfileHead@2x.png");
-        copyFile(combinePath(m_workDir, "res", "DefaultProfileHead@2x.png"), defaultPortrait, true);
+        // std::string defaultPortrait = combinePath(portraitPath, "DefaultProfileHead@2x.png");
+        // copyFile(combinePath(m_workDir, "res", "DefaultProfileHead@2x.png"), defaultPortrait, true);
     }
     if ((m_options & SPO_IGNORE_EMOJI) == 0)
     {
