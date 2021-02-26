@@ -74,7 +74,7 @@ private:
     };
     
 public:
-    void setVersion(constg std::string& version)
+    void setVersion(const std::string& version)
     {
         m_version = version;
         m_shortVersion = version;

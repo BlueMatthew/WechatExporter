@@ -1259,6 +1259,14 @@ bool MessageParser::parseForwardedMsgs(const Session& session, const MsgRecord& 
             XmlParser::getChildNodeContent(node, "sourcetime", fmsg.msgTime);
             XmlParser::getChildNodeContent(node, "srcMsgCreateTime", fmsg.srcMsgTime);
             XmlParser::getChildNodeContent(node, "datafmt", fmsg.dataFormat);
+            xmlNodePtr srcNode = XmlParser::getChildNode(node, "dataitemsource");
+            if (NULL != srcNode)
+            {
+                if (!XmlParser::getChildNodeContent(srcNode, "realchatname", fmsg.usrName))
+                {
+                    XmlParser::getChildNodeContent(srcNode, "fromusr", fmsg.usrName);
+                }
+            }
             
 #ifndef NDEBUG
             fmsg.rawMessage = xmlParser.getNodeOuterXml(node);
