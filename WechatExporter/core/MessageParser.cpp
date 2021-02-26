@@ -474,6 +474,17 @@ void MessageParser::parseAppMsg(const MsgRecord& record, const Session& session,
             parseAppMsgUnknownType(appMsgInfo, xmlParser, session, tv);
             break;
     }
+    
+#ifdef NDEBUG
+    std::string vThumbFile = m_userBase + "/OpenData/" + session.getHash() + "/" + appMsgInfo.msgId + ".pic_thum";
+    std::string destPath = combinePath(m_outputPath, session.getOutputFileName() + "_files", appMsgInfo.msgId + ".thumb.jpg");
+    
+    std::string fileId = m_iTunesDb.findFileId(vThumbFile);
+    if (!fileId.empty() && !existsFile(destPath))
+    {
+        assert(false);
+    }
+#endif
 }
 
 void MessageParser::parseCall(const MsgRecord& record, const Session& session, TemplateValues& tv)
@@ -677,10 +688,21 @@ void MessageParser::parseAppMsgUrl(const AppMsgInfo& appMsgInfo, const XmlParser
     xmlParser.parseNodeValue("/msg/appmsg/title", title);
     xmlParser.parseNodeValue("/msg/appmsg/des", desc);
     xmlParser.parseNodeValue("/msg/appmsg/url", url);
-    xmlParser.parseNodeValue("/msg/appmsg/thumburl", thumbUrl);
-    if (thumbUrl.empty())
+    
+    // Check Local File
+    std::string vThumbFile = m_userBase + "/OpenData/" + session.getHash() + "/" + appMsgInfo.msgId + ".pic_thum";
+    std::string destPath = combinePath(m_outputPath, session.getOutputFileName() + "_files");
+    if (m_iTunesDb.copyFile(vThumbFile, destPath, appMsgInfo.msgId + ".thumb.jpg"))
     {
-        thumbUrl = appMsgInfo.localAppIcon;
+        thumbUrl = session.getOutputFileName() + "_files/" + appMsgInfo.msgId + ".thumb.jpg";
+    }
+    else
+    {
+        xmlParser.parseNodeValue("/msg/appmsg/thumburl", thumbUrl);
+        if (thumbUrl.empty())
+        {
+            thumbUrl = appMsgInfo.localAppIcon;
+        }
     }
     
     tv.setName(thumbUrl.empty() ? "plainshare" : "share");
