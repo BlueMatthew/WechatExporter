@@ -1326,12 +1326,16 @@ bool MessageParser::parseForwardedMsgs(const Session& session, const MsgRecord& 
             tv["%%MSGID%%"] = record.msgId + "_" + fmsg.dataId;
             tv["%%TIME%%"] = fmsg.srcMsgTime.empty() ? fmsg.msgTime : fromUnixTime(static_cast<unsigned int>(std::atoi(fmsg.srcMsgTime.c_str())));
 
-            localPortrait = portraitPath + (fmsg.protrait.empty() ? "DefaultProfileHead@2x.png" : session.getLocalPortrait());
-            remotePortrait = fmsg.protrait;
+            localPortrait = portraitPath + (fmsg.portrait.empty() ? "DefaultProfileHead@2x.png" : session.getLocalPortrait());
+            remotePortrait = fmsg.portrait;
             tv["%%AVATAR%%"] = localPortrait;
-            if (!fmsg.usrName.empty() && fmsg.protrait.empty())
+            if (!fmsg.usrName.empty() && fmsg.portrait.empty())
             {
                 const Friend *f = (m_myself.getUsrName() == fmsg.usrName) ? &m_myself : m_friends.getFriendByUid(fmsg.usrName);
+                if (f == NULL)
+                {
+                    int aa = 0;
+                }
                 std::string localPortrait = portraitPath + ((NULL != f) ? f->getLocalPortrait() : "DefaultProfileHead@2x.png");
                 remotePortrait = (NULL != f) ? f->getPortrait() : "";
 

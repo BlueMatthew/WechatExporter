@@ -51,7 +51,7 @@ struct ForwardMsg
     std::string msgId;
     std::string usrName;
     std::string displayName;
-    std::string protrait;
+    std::string portrait;
     std::string dataType;
     std::string subType;
     std::string dataId;
