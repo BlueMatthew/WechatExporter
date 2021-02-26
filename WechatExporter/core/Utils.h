@@ -22,7 +22,11 @@ typedef int mode_t;
 #ifndef Utils_h
 #define Utils_h
 
-std::string replaceAll(std::string input, std::string search, std::string format);
+void replaceAll(std::string& input, const std::string& search, const std::string& replace);
+void replaceAll(std::string& input, const std::vector<std::pair<std::string, std::string>>& pairs);
+std::string replaceAll(const std::string& input, const std::string& search, const std::string& replace);
+std::string replaceAll(const std::string& input, const std::vector<std::pair<std::string, std::string>>& pairs);
+
 
 bool endsWith(const std::string& str, const std::string& suffix);
 bool endsWith(const std::string& str, std::string::value_type ch);
@@ -74,7 +78,7 @@ bool appendFile(const std::string& path, const unsigned char* data, unsigned int
 // bool copyFile(const std::string& src, const std::string& dest);
 
 #ifdef _WIN32
-std::string utf8ToLocalAnsi(std::string utf8Str);
+std::string utf8ToLocalAnsi(const std::string& utf8Str);
 #else
 #define utf8ToLocalAnsi(utf8Str) utf8Str
 #endif
