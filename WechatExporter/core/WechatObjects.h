@@ -74,7 +74,7 @@ private:
     };
     
 public:
-    void setVersion(std::string version)
+    void setVersion(constg std::string& version)
     {
         m_version = version;
         m_shortVersion = version;
@@ -109,7 +109,7 @@ public:
     {
         return m_shortVersion;
     }
-    void setCellDataVersion(std::string cellDataVersion)
+    void setCellDataVersion(const std::string& cellDataVersion)
     {
         m_cellDataVersion = cellDataVersion;
     }
