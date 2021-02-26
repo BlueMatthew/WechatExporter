@@ -46,16 +46,16 @@ bool deleteDirectory(const std::string& path)
 	CW2T pszT(CA2W(path.c_str(), CP_UTF8));
 
 	SHFILEOPSTRUCT file_op = {
-	NULL,
-	FO_DELETE,
-	(LPCTSTR)pszT,
-	TEXT(""),
-	FOF_NOCONFIRMATION |
-	FOF_NOERRORUI |
-	FOF_SILENT,
-	FALSE,
-	0,
-	TEXT("") };
+        NULL,
+        FO_DELETE,
+        (LPCTSTR)pszT,
+        TEXT(""),
+        FOF_NOCONFIRMATION |
+        FOF_NOERRORUI |
+        FOF_SILENT,
+        FALSE,
+        0,
+        TEXT("") };
 	return SHFileOperation(&file_op) == 0;
 }
 
@@ -107,6 +107,9 @@ bool copyFile(const std::string& src, const std::string& dest, bool overwrite)
 	CW2T pszDest(CA2W(dest.c_str(), CP_UTF8));
 
 	BOOL bRet = ::CopyFile((LPCTSTR)pszSrc, (LPCTSTR)pszDest, (overwrite ? FALSE : TRUE));
+#ifndef NDEBUG
+    assert(bRet);
+#endif
 	return (bRet == TRUE);
 }
 
@@ -118,7 +121,11 @@ bool moveFile(const std::string& src, const std::string& dest, bool overwrite/* 
 	{
 		::DeleteFile((LPCTSTR)pszDest);
 	}
-	return ::MoveFile((LPCTSTR)pszSrc, (LPCTSTR)pszDest) == TRUE;
+	BOOL bRet = ::MoveFile((LPCTSTR)pszSrc, (LPCTSTR)pszDest) == TRUE;
+#ifndef NDEBUG
+    assert(bRet);
+#endif
+    return bRet;
 }
 
 CString removeInvalidCharsForFileName(const CString& fileName)

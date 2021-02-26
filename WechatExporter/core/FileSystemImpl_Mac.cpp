@@ -180,10 +180,27 @@ finish:
 bool copyFile(const std::string& src, const std::string& dest, bool overwrite/* = true*/)
 {
     std::ifstream ss(src, std::ios::binary);
+    if (!ss.is_open())
+    {
+#ifndef NDEBUG
+        assert(false);
+#endif
+        return false;
+    }
     std::ofstream ds(dest, std::ios::binary);
-
+    if (!ds.is_open())
+    {
+#ifndef NDEBUG
+        assert(false);
+#endif
+        ss.close();
+        return false;
+    }
     ds << ss.rdbuf();
 
+    ss.close();
+    ds.close();
+    
     return true;
 }
 
@@ -193,7 +210,11 @@ bool moveFile(const std::string& src, const std::string& dest, bool overwrite/* 
     {
         remove(dest.c_str());
     }
-    return rename(src.c_str(), dest.c_str()) == 0;
+    int ret = rename(src.c_str(), dest.c_str());;
+#ifndef NDEBUG
+    assert(ret == 0);
+#endif
+    return ret == 0;
 }
 
 bool isValidFileName(const std::string& fileName)
