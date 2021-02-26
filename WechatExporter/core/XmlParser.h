@@ -16,6 +16,8 @@
 #include <libxml/tree.h>
 #include <libxml/xpath.h>
 
+class XmlParser;
+
 class XmlParser
 {
 public:
@@ -23,6 +25,7 @@ public:
     ~XmlParser();
     bool parseNodeValue(const std::string& xpath, std::string& value) const;
     bool parseNodesValue(const std::string& xpath, std::map<std::string, std::string>& values) const;  // e.g.: /path1/path2/*
+    bool parseChildNodesValue(xmlNodePtr parentNode, const std::string& xpath, std::map<std::string, std::string>& values) const;  // e.g.: /path1/path2/*
     bool parseAttributeValue(const std::string& xpath, const std::string& attributeName, std::string& value) const;
     bool parseAttributesValue(const std::string& xpath, std::map<std::string, std::string>& attributes) const;
     
@@ -33,6 +36,56 @@ public:
     static std::string getNodeOuterXml(xmlNodePtr node);
     static bool getChildNodeContent(xmlNodePtr node, const std::string& childName, std::string& value);
     static bool getNodeAttributeValue(xmlNodePtr node, const std::string& attributeName, std::string& value);
+    
+    class XPathEnumerator
+    {
+    public:
+        XPathEnumerator(const XmlParser& xmlParser, xmlNodePtr curNode, const std::string& xpath) : m_xPathObj(NULL), m_numberOfNodes(0), m_cursor(-1)
+        {
+            m_xPathObj = xmlXPathNodeEval(curNode, BAD_CAST(xpath.c_str()), xmlParser.m_xpathCtx);
+            if (NULL != m_xPathObj && NULL != m_xPathObj->nodesetval)
+            {
+                m_numberOfNodes = m_xPathObj->nodesetval->nodeNr;
+            }
+        }
+        
+        XPathEnumerator(const XmlParser& xmlParser, const std::string& xpath) : m_xPathObj(NULL), m_numberOfNodes(0), m_cursor(-1)
+        {
+            m_xPathObj = xmlXPathEvalExpression(BAD_CAST(xpath.c_str()), xmlParser.m_xpathCtx);
+            if (NULL != m_xPathObj && NULL != m_xPathObj->nodesetval)
+            {
+                m_numberOfNodes = m_xPathObj->nodesetval->nodeNr;
+            }
+        }
+        
+        bool isInvalid() const
+        {
+            return NULL == m_xPathObj;
+        }
+        
+        bool hasNext() const
+        {
+            return m_cursor < (m_numberOfNodes - 1);
+        }
+        
+        xmlNodePtr nextNode()
+        {
+            return m_xPathObj->nodesetval->nodeTab[++m_cursor];
+        }
+        
+        ~XPathEnumerator()
+        {
+            if (NULL != m_xPathObj)
+            {
+                xmlXPathFreeObject(m_xPathObj);
+            }
+        }
+        
+    private:
+        xmlXPathObjectPtr m_xPathObj;
+        int m_numberOfNodes;
+        mutable int m_cursor;
+    };
     
 public:
     template <class TNodeHandler>
