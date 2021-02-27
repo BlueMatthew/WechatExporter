@@ -1198,20 +1198,20 @@ int SessionParser::parse(const Session& session, std::function<bool(const std::v
     }
 
     std::vector<TemplateValues> tvs;
-    WXMSG record;
+    WXMSG msg;
 
     while (sqlite3_step(stmt) == SQLITE_ROW)
     {
         tvs.clear();
         
-        record.createTime = sqlite3_column_int(stmt, 0);
+        msg.createTime = sqlite3_column_int(stmt, 0);
         const unsigned char* pMessage = sqlite3_column_text(stmt, 1);
         
-        record.content = pMessage != NULL ? reinterpret_cast<const char*>(pMessage) : "";
-        record.des = sqlite3_column_int(stmt, 2);
-        record.type = sqlite3_column_int(stmt, 3);
-        record.msgId = std::to_string(sqlite3_column_int(stmt, 4));
-        if (m_msgParser.parse(record, session, tvs))
+        msg.content = pMessage != NULL ? reinterpret_cast<const char*>(pMessage) : "";
+        msg.des = sqlite3_column_int(stmt, 2);
+        msg.type = sqlite3_column_int(stmt, 3);
+        msg.msgId = std::to_string(sqlite3_column_int(stmt, 4));
+        if (m_msgParser.parse(msg, session, tvs))
         {
             count++;
             if (handler(tvs))
@@ -1226,4 +1226,117 @@ int SessionParser::parse(const Session& session, std::function<bool(const std::v
     sqlite3_close(db);
     
     return count;
+}
+
+SessionParser::MessageEnumerator* SessionParser::buildMsgEnumerator(const Session& session)
+{
+    return new MessageEnumerator(session, m_options);
+}
+
+struct MSG_ENUMERATOR_CONTEXT
+{
+    sqlite3* db;
+    sqlite3_stmt* stmt;
+    
+    MSG_ENUMERATOR_CONTEXT(sqlite3* d, sqlite3_stmt* s) : db(d), stmt(s)
+    {
+        
+    }
+    
+    ~MSG_ENUMERATOR_CONTEXT()
+    {
+        if (NULL != stmt) sqlite3_finalize(stmt);
+        if (NULL != db) sqlite3_close(db);
+    }
+};
+
+SessionParser::MessageEnumerator::MessageEnumerator(const Session& session, int options)
+{
+    MSG_ENUMERATOR_CONTEXT* context = new MSG_ENUMERATOR_CONTEXT(NULL, NULL);
+    m_context = context;
+    
+    int rc = openSqlite3ReadOnly(session.getDbFile(), &(context->db));
+    if (rc != SQLITE_OK)
+    {
+        sqlite3_close(context->db);
+        context->db = NULL;
+        return;
+    }
+    
+    std::string sql = "SELECT CreateTime,Message,Des,Type,MesLocalID FROM Chat_" + session.getHash() + " ORDER BY CreateTime";
+    if ((options & SPO_DESC) == SPO_DESC)
+    {
+        sql += " DESC";
+    }
+    
+    sqlite3_stmt* stmt = NULL;
+    rc = sqlite3_prepare_v2(context->db, sql.c_str(), (int)(sql.size()), &(context->stmt), NULL);
+    if (rc != SQLITE_OK)
+    {
+        sqlite3_close(context->db);
+        context->db = NULL;
+        return;
+    }
+}
+
+SessionParser::MessageEnumerator::~MessageEnumerator()
+{
+    if (NULL != m_context)
+    {
+        MSG_ENUMERATOR_CONTEXT* context = reinterpret_cast<MSG_ENUMERATOR_CONTEXT *>(m_context);
+        if (NULL != context)
+        {
+            delete context;
+        }
+        m_context = NULL;
+    }
+}
+
+bool SessionParser::MessageEnumerator::isInvalid() const
+{
+    if (NULL != m_context)
+    {
+        const MSG_ENUMERATOR_CONTEXT* context = reinterpret_cast<const MSG_ENUMERATOR_CONTEXT *>(m_context);
+        if (NULL != context)
+        {
+            return NULL != context->db && NULL != context->stmt;
+        }
+    }
+    
+    return false;
+}
+
+bool SessionParser::MessageEnumerator::nextMessage(WXMSG& msg)
+{
+    if (NULL == m_context)
+    {
+        return NULL;
+    }
+        
+    MSG_ENUMERATOR_CONTEXT* context = reinterpret_cast<MSG_ENUMERATOR_CONTEXT *>(m_context);
+    if (NULL == context || NULL == context->db || NULL == context->stmt)
+    {
+        return false;
+    }
+    
+    if (sqlite3_step(context->stmt) == SQLITE_ROW)
+    {
+        msg.createTime = sqlite3_column_int(context->stmt, 0);
+        const unsigned char* pMessage = sqlite3_column_text(context->stmt, 1);
+        if (pMessage != NULL)
+        {
+            msg.content = reinterpret_cast<const char*>(pMessage);
+        }
+        else
+        {
+            msg.content.clear();
+        }
+        msg.des = sqlite3_column_int(context->stmt, 2);
+        msg.type = sqlite3_column_int(context->stmt, 3);
+        msg.msgId = std::to_string(sqlite3_column_int(context->stmt, 4));
+        
+        return true;
+    }
+    
+    return false;
 }
