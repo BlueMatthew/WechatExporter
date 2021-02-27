@@ -305,6 +305,23 @@ private:
 
 class SessionParser
 {
+public:
+    class MessageEnumerator
+    {
+    protected:
+        MessageEnumerator(const Session& session, int options);
+        
+        friend SessionParser;
+    public:
+        bool isInvalid() const;
+        bool nextMessage(WXMSG& msg);
+        
+        ~MessageEnumerator();
+    private:
+        
+        void* m_context;
+    };
+    
 private:
     
     int m_options;
@@ -313,11 +330,7 @@ private:
 public:
     SessionParser(MessageParser& msgParser, int options);
 
-    int parse(const Session& session, std::function<bool(const std::vector<TemplateValues>&)> handler);
-
-private:
-	
-    
+    MessageEnumerator* buildMsgEnumerator(const Session& session);
 };
 
 
