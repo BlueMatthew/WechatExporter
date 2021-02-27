@@ -1172,62 +1172,6 @@ SessionParser::SessionParser(MessageParser& msgParser, int options) : m_options(
 {
 }
 
-int SessionParser::parse(const Session& session, std::function<bool(const std::vector<TemplateValues>&)> handler)
-{
-    int count = 0;
-    sqlite3 *db = NULL;
-    int rc = openSqlite3ReadOnly(session.getDbFile(), &db);
-    if (rc != SQLITE_OK)
-    {
-        sqlite3_close(db);
-        return false;
-    }
-    
-    std::string sql = "SELECT CreateTime,Message,Des,Type,MesLocalID FROM Chat_" + session.getHash() + " ORDER BY CreateTime";
-    if ((m_options & SPO_DESC) == SPO_DESC)
-    {
-        sql += " DESC";
-    }
-    
-    sqlite3_stmt* stmt = NULL;
-    rc = sqlite3_prepare_v2(db, sql.c_str(), (int)(sql.size()), &stmt, NULL);
-    if (rc != SQLITE_OK)
-    {
-        sqlite3_close(db);
-        return false;
-    }
-
-    std::vector<TemplateValues> tvs;
-    WXMSG msg;
-
-    while (sqlite3_step(stmt) == SQLITE_ROW)
-    {
-        tvs.clear();
-        
-        msg.createTime = sqlite3_column_int(stmt, 0);
-        const unsigned char* pMessage = sqlite3_column_text(stmt, 1);
-        
-        msg.content = pMessage != NULL ? reinterpret_cast<const char*>(pMessage) : "";
-        msg.des = sqlite3_column_int(stmt, 2);
-        msg.type = sqlite3_column_int(stmt, 3);
-        msg.msgId = std::to_string(sqlite3_column_int(stmt, 4));
-        if (m_msgParser.parse(msg, session, tvs))
-        {
-            count++;
-            if (handler(tvs))
-            {
-                // cancelled
-                break;
-            }
-        }
-    }
-    
-    sqlite3_finalize(stmt);
-    sqlite3_close(db);
-    
-    return count;
-}
-
 SessionParser::MessageEnumerator* SessionParser::buildMsgEnumerator(const Session& session)
 {
     return new MessageEnumerator(session, m_options);
