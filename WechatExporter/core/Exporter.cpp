@@ -503,7 +503,6 @@ int Exporter::exportSession(const Friend& user, const MessageParser& msgParser, 
     {
         messages.reserve(session.getRecordCount());
     }
-    // std::function<bool(const std::vector<TemplateValues>&)> handler = std::bind(&Exporter::exportMessage, this, std::cref(session), std::placeholders::_1, std::ref(messages));
     
     int numberOfMsgs = 0;
     SessionParser sessionParser(m_options);
@@ -513,7 +512,6 @@ int Exporter::exportSession(const Friend& user, const MessageParser& msgParser, 
     while (enumerator->nextMessage(msg))
     {
         tvs.clear();
-        // (WXMSG& msg, const Session& session, std::vector<TemplateValues>& tvs) const;
         msgParser.parse(msg, session, tvs);
         exportMessage(session, tvs, messages);
         ++numberOfMsgs;
@@ -524,7 +522,6 @@ int Exporter::exportSession(const Friend& user, const MessageParser& msgParser, 
         }
     }
 
-    // numberOfMsgs = sessionParser.parse(session, handler);
     if (numberOfMsgs > 0 && !messages.empty())
     {
         const size_t pageSize = 1000;
