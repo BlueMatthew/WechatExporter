@@ -325,10 +325,9 @@ public:
 private:
     
     int m_options;
-    MessageParser& m_msgParser;
     
 public:
-    SessionParser(MessageParser& msgParser, int options);
+    SessionParser(int options);
 
     MessageEnumerator* buildMsgEnumerator(const Session& session);
 };
