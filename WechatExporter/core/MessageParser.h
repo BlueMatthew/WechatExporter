@@ -37,7 +37,7 @@ enum SessionParsingOption
     SPO_SYNC_LOADING = 1 << 18
 };
 
-struct WxMsg
+struct WXMSG
 {
     int createTime;
     std::string message;
@@ -46,18 +46,18 @@ struct WxMsg
     std::string msgId;
 };
 
-struct AppMsg
+struct APPMSG
 {
-    const WxMsg *msg;
+    const WXMSG *msg;
     int appMsgType;
     std::string appId;
     std::string appName;
     std::string localAppIcon;
 };
 
-struct ForwardMsg
+struct FWDMSG
 {
-    const WxMsg *msg;
+    const WXMSG *msg;
     std::string usrName;
     std::string displayName;
     std::string portrait;
@@ -218,11 +218,11 @@ class ForwardMsgsHandler
 {
 private:
     XmlParser& m_xmlParser;
-    const WxMsg *m_msg;
-    std::vector<ForwardMsg>& m_forwardedMsgs;
+    const WXMSG *m_msg;
+    std::vector<FWDMSG>& m_forwardedMsgs;
 public:
 
-    ForwardMsgsHandler(XmlParser& xmlParser, const WxMsg *msg, std::vector<ForwardMsg>& forwardedMsgs) : m_xmlParser(xmlParser), m_msg(msg), m_forwardedMsgs(forwardedMsgs)
+    ForwardMsgsHandler(XmlParser& xmlParser, const WXMSG *msg, std::vector<FWDMSG>& forwardedMsgs) : m_xmlParser(xmlParser), m_msg(msg), m_forwardedMsgs(forwardedMsgs)
     {
     }
     
@@ -230,7 +230,7 @@ public:
     {
         for (int idx = 0; idx < xpathNodes->nodeNr; ++idx)
         {
-            ForwardMsg fmsg = {m_msg};
+            FWDMSG fmsg = {m_msg};
 
             // templateValues.setName("msg");
             // templateValues["%%ALIGNMENT%%"] = "left";
@@ -384,62 +384,62 @@ public:
     
     MessageParser(const ITunesDb& iTunesDb, const ITunesDb& iTunesDbShare, Downloader& downloader, Friends& friends, Friend myself, int options, const std::string& resPath, const std::string& outputPath, std::function<std::string(const std::string&)>& localeFunc);
     
-    bool parse(WxMsg& record, const Session& session, std::vector<TemplateValues>& tvs);
+    bool parse(WXMSG& record, const Session& session, std::vector<TemplateValues>& tvs);
     bool copyPortraitIcon(const std::string& usrName, const std::string& portraitUrl, const std::string& destPath);
     bool copyPortraitIcon(const std::string& usrName, const std::string& usrNameHash, const std::string& portraitUrl, const std::string& destPath);
     
 protected:
-    void parseText(const WxMsg& record, const Session& session, TemplateValues& tv);
-    void parseImage(const WxMsg& record, const Session& session, TemplateValues& tv);
-    void parseVoice(const WxMsg& record, const Session& session, TemplateValues& tv);
-    void parsePushMail(const WxMsg& record, const Session& session, TemplateValues& tv);
-    void parseVideo(const WxMsg& record, const Session& session, std::string& senderId, TemplateValues& tv);
-    void parseEmotion(const WxMsg& record, const Session& session, TemplateValues& tv);
-    void parseAppMsg(const WxMsg& record, const Session& session, std::string& senderId, std::string& fwdMsg, std::string& fwdMsgTitle, TemplateValues& tv);
-    void parseCall(const WxMsg& record, const Session& session, TemplateValues& tv);
-    void parseLocation(const WxMsg& record, const Session& session, TemplateValues& tv);
-    void parseStatusNotify(const WxMsg& record, const Session& session, TemplateValues& tv);
-    void parsePossibleFriend(const WxMsg& record, const Session& session, TemplateValues& tv);
-    void parseVerification(const WxMsg& record, const Session& session, TemplateValues& tv);
-    void parseCard(const WxMsg& record, const Session& session, TemplateValues& tv);
-    void parseNotice(const WxMsg& record, const Session& session, TemplateValues& tv);  // 64
-    void parseSysNotice(const WxMsg& record, const Session& session, TemplateValues& tv);   // 9999
-    void parseSystem(const WxMsg& record, const Session& session, TemplateValues& tv);
+    void parseText(const WXMSG& msg, const Session& session, TemplateValues& tv);
+    void parseImage(const WXMSG& msg, const Session& session, TemplateValues& tv);
+    void parseVoice(const WXMSG& msg, const Session& session, TemplateValues& tv);
+    void parsePushMail(const WXMSG& msg, const Session& session, TemplateValues& tv);
+    void parseVideo(const WXMSG& msg, const Session& session, std::string& senderId, TemplateValues& tv);
+    void parseEmotion(const WXMSG& msg, const Session& session, TemplateValues& tv);
+    void parseAppMsg(const WXMSG& msg, const Session& session, std::string& senderId, std::string& fwdMsg, std::string& fwdMsgTitle, TemplateValues& tv);
+    void parseCall(const WXMSG& msg, const Session& session, TemplateValues& tv);
+    void parseLocation(const WXMSG& msg, const Session& session, TemplateValues& tv);
+    void parseStatusNotify(const WXMSG& msg, const Session& session, TemplateValues& tv);
+    void parsePossibleFriend(const WXMSG& msg, const Session& session, TemplateValues& tv);
+    void parseVerification(const WXMSG& msg, const Session& session, TemplateValues& tv);
+    void parseCard(const WXMSG& msg, const Session& session, TemplateValues& tv);
+    void parseNotice(const WXMSG& msg, const Session& session, TemplateValues& tv);  // 64
+    void parseSysNotice(const WXMSG& msg, const Session& session, TemplateValues& tv);   // 9999
+    void parseSystem(const WXMSG& msg, const Session& session, TemplateValues& tv);
     
     // APP MSG
-    void parseAppMsgText(const AppMsg& appMsgInfo, const XmlParser& xmlParser, const Session& session, TemplateValues& tv);
-    void parseAppMsgImage(const AppMsg& appMsgInfo, const XmlParser& xmlParser, const Session& session, TemplateValues& tv);
-    void parseAppMsgAudio(const AppMsg& appMsgInfo, const XmlParser& xmlParser, const Session& session, TemplateValues& tv);
-    void parseAppMsgVideo(const AppMsg& appMsgInfo, const XmlParser& xmlParser, const Session& session, TemplateValues& tv);
-    void parseAppMsgEmotion(const AppMsg& appMsgInfo, const XmlParser& xmlParser, const Session& session, TemplateValues& tv);
-    void parseAppMsgUrl(const AppMsg& appMsgInfo, const XmlParser& xmlParser, const Session& session, TemplateValues& tv);
-    void parseAppMsgAttachment(const AppMsg& appMsgInfo, const XmlParser& xmlParser, const Session& session, TemplateValues& tv);
-    void parseAppMsgOpen(const AppMsg& appMsgInfo, const XmlParser& xmlParser, const Session& session, TemplateValues& tv);
-    void parseAppMsgEmoji(const AppMsg& appMsgInfo, const XmlParser& xmlParser, const Session& session, TemplateValues& tv);
-    void parseAppMsgRtLocation(const AppMsg& appMsgInfo, const XmlParser& xmlParser, const Session& session, TemplateValues& tv);
-    void parseAppMsgFwdMsg(const AppMsg& appMsgInfo, const XmlParser& xmlParser, const Session& session, std::string& fwdMsg, std::string& fwdMsgTitle, TemplateValues& tv);
-    void parseAppMsgCard(const AppMsg& appMsgInfo, const XmlParser& xmlParser, const Session& session, TemplateValues& tv);
-    void parseAppMsgChannelCard(const AppMsg& appMsgInfo, const XmlParser& xmlParser, const Session& session, TemplateValues& tv);
-    void parseAppMsgChannels(const AppMsg& appMsgInfo, const XmlParser& xmlParser, const Session& session, TemplateValues& tv);
-    void parseAppMsgRefer(const AppMsg& appMsgInfo, const XmlParser& xmlParser, const Session& session, TemplateValues& tv);
-    void parseAppMsgTransfer(const AppMsg& appMsgInfo, const XmlParser& xmlParser, const Session& session, TemplateValues& tv);
-    void parseAppMsgRedPacket(const AppMsg& appMsgInfo, const XmlParser& xmlParser, const Session& session, TemplateValues& tv);
-    void parseAppMsgReaderType(const AppMsg& appMsgInfo, const XmlParser& xmlParser, const Session& session, TemplateValues& tv);
-    void parseAppMsgUnknownType(const AppMsg& appMsgInfo, const XmlParser& xmlParser, const Session& session, TemplateValues& tv);
-    void parseAppMsgDefault(const AppMsg& appMsgInfo, const XmlParser& xmlParser, const Session& session, TemplateValues& tv);
+    void parseAppMsgText(const APPMSG& appMsgInfo, const XmlParser& xmlParser, const Session& session, TemplateValues& tv);
+    void parseAppMsgImage(const APPMSG& appMsgInfo, const XmlParser& xmlParser, const Session& session, TemplateValues& tv);
+    void parseAppMsgAudio(const APPMSG& appMsgInfo, const XmlParser& xmlParser, const Session& session, TemplateValues& tv);
+    void parseAppMsgVideo(const APPMSG& appMsgInfo, const XmlParser& xmlParser, const Session& session, TemplateValues& tv);
+    void parseAppMsgEmotion(const APPMSG& appMsgInfo, const XmlParser& xmlParser, const Session& session, TemplateValues& tv);
+    void parseAppMsgUrl(const APPMSG& appMsgInfo, const XmlParser& xmlParser, const Session& session, TemplateValues& tv);
+    void parseAppMsgAttachment(const APPMSG& appMsgInfo, const XmlParser& xmlParser, const Session& session, TemplateValues& tv);
+    void parseAppMsgOpen(const APPMSG& appMsgInfo, const XmlParser& xmlParser, const Session& session, TemplateValues& tv);
+    void parseAppMsgEmoji(const APPMSG& appMsgInfo, const XmlParser& xmlParser, const Session& session, TemplateValues& tv);
+    void parseAppMsgRtLocation(const APPMSG& appMsgInfo, const XmlParser& xmlParser, const Session& session, TemplateValues& tv);
+    void parseAppMsgFwdMsg(const APPMSG& appMsgInfo, const XmlParser& xmlParser, const Session& session, std::string& fwdMsg, std::string& fwdMsgTitle, TemplateValues& tv);
+    void parseAppMsgCard(const APPMSG& appMsgInfo, const XmlParser& xmlParser, const Session& session, TemplateValues& tv);
+    void parseAppMsgChannelCard(const APPMSG& appMsgInfo, const XmlParser& xmlParser, const Session& session, TemplateValues& tv);
+    void parseAppMsgChannels(const APPMSG& appMsgInfo, const XmlParser& xmlParser, const Session& session, TemplateValues& tv);
+    void parseAppMsgRefer(const APPMSG& appMsgInfo, const XmlParser& xmlParser, const Session& session, TemplateValues& tv);
+    void parseAppMsgTransfer(const APPMSG& appMsgInfo, const XmlParser& xmlParser, const Session& session, TemplateValues& tv);
+    void parseAppMsgRedPacket(const APPMSG& appMsgInfo, const XmlParser& xmlParser, const Session& session, TemplateValues& tv);
+    void parseAppMsgReaderType(const APPMSG& appMsgInfo, const XmlParser& xmlParser, const Session& session, TemplateValues& tv);
+    void parseAppMsgUnknownType(const APPMSG& appMsgInfo, const XmlParser& xmlParser, const Session& session, TemplateValues& tv);
+    void parseAppMsgDefault(const APPMSG& appMsgInfo, const XmlParser& xmlParser, const Session& session, TemplateValues& tv);
 
     // FORWARDEWD MSG
-    void parseFwdMsgText(const ForwardMsg& fwdMsg, const XmlParser& xmlParser, xmlNodePtr itemNode, const Session& session, TemplateValues& tv);
-    void parseFwdMsgImage(const ForwardMsg& fwdMsg, const XmlParser& xmlParser, xmlNodePtr itemNode, const Session& session, TemplateValues& tv);
-    void parseFwdMsgVideo(const ForwardMsg& fwdMsg, const XmlParser& xmlParser, xmlNodePtr itemNode, const Session& session, TemplateValues& tv);
-    void parseFwdMsgLink(const ForwardMsg& fwdMsg, const XmlParser& xmlParser, xmlNodePtr itemNode, const Session& session, TemplateValues& tv);
-    void parseFwdMsgLocation(const ForwardMsg& fwdMsg, const XmlParser& xmlParser, xmlNodePtr itemNode, const Session& session, TemplateValues& tv);
-    void parseFwdMsgAttach(const ForwardMsg& fwdMsg, const XmlParser& xmlParser, xmlNodePtr itemNode, const Session& session, TemplateValues& tv);
-    void parseFwdMsgCard(const ForwardMsg& fwdMsg, const XmlParser& xmlParser, xmlNodePtr itemNode, const Session& session, TemplateValues& tv);
-    void parseFwdMsgNestedFwdMsg(const ForwardMsg& fwdMsg, const XmlParser& xmlParser, xmlNodePtr itemNode, const Session& session, std::string& nestedFwdMsg, std::string& nestedFwdMsgTitle, TemplateValues& tv);
-    void parseFwdMsgMiniProgram(const ForwardMsg& fwdMsg, const XmlParser& xmlParser, xmlNodePtr itemNode, const Session& session, TemplateValues& tv);
-    void parseFwdMsgChannels(const ForwardMsg& fwdMsg, const XmlParser& xmlParser, xmlNodePtr itemNode, const Session& session, TemplateValues& tv);
-    void parseFwdMsgChannelCard(const ForwardMsg& fwdMsg, const XmlParser& xmlParser, xmlNodePtr itemNode, const Session& session, TemplateValues& tv);
+    void parseFwdMsgText(const FWDMSG& fwdMsg, const XmlParser& xmlParser, xmlNodePtr itemNode, const Session& session, TemplateValues& tv);
+    void parseFwdMsgImage(const FWDMSG& fwdMsg, const XmlParser& xmlParser, xmlNodePtr itemNode, const Session& session, TemplateValues& tv);
+    void parseFwdMsgVideo(const FWDMSG& fwdMsg, const XmlParser& xmlParser, xmlNodePtr itemNode, const Session& session, TemplateValues& tv);
+    void parseFwdMsgLink(const FWDMSG& fwdMsg, const XmlParser& xmlParser, xmlNodePtr itemNode, const Session& session, TemplateValues& tv);
+    void parseFwdMsgLocation(const FWDMSG& fwdMsg, const XmlParser& xmlParser, xmlNodePtr itemNode, const Session& session, TemplateValues& tv);
+    void parseFwdMsgAttach(const FWDMSG& fwdMsg, const XmlParser& xmlParser, xmlNodePtr itemNode, const Session& session, TemplateValues& tv);
+    void parseFwdMsgCard(const FWDMSG& fwdMsg, const XmlParser& xmlParser, xmlNodePtr itemNode, const Session& session, TemplateValues& tv);
+    void parseFwdMsgNestedFwdMsg(const FWDMSG& fwdMsg, const XmlParser& xmlParser, xmlNodePtr itemNode, const Session& session, std::string& nestedFwdMsg, std::string& nestedFwdMsgTitle, TemplateValues& tv);
+    void parseFwdMsgMiniProgram(const FWDMSG& fwdMsg, const XmlParser& xmlParser, xmlNodePtr itemNode, const Session& session, TemplateValues& tv);
+    void parseFwdMsgChannels(const FWDMSG& fwdMsg, const XmlParser& xmlParser, xmlNodePtr itemNode, const Session& session, TemplateValues& tv);
+    void parseFwdMsgChannelCard(const FWDMSG& fwdMsg, const XmlParser& xmlParser, xmlNodePtr itemNode, const Session& session, TemplateValues& tv);
     
     // Implementation
     void parseImage(const std::string& sessionPath, const std::string& sessionAssertsPath, const std::string& src, const std::string& srcPre, const std::string& dest, const std::string& srcThumb, const std::string& destThumb, TemplateValues& templateValues);
@@ -448,7 +448,7 @@ protected:
     void parseCard(const std::string& sessionPath, const std::string& portraitDir, const std::string& cardMessage, TemplateValues& templateValues);
     void parseChannelCard(const std::string& sessionPath, const std::string& portraitDir, const std::string& usrName, const std::string& avatar, const std::string& name, TemplateValues& templateValues);
     void parseChannels(const std::string& msgId, const XmlParser& xmlParser, xmlNodePtr parentNode, const std::string& finderFeedXPath, const Session& session, TemplateValues& tv);
-    bool parseForwardedMsgs(const Session& session, const WxMsg& record, const std::string& title, const std::string& message, std::vector<TemplateValues>& tvs);
+    bool parseForwardedMsgs(const Session& session, const WXMSG& record, const std::string& title, const std::string& message, std::vector<TemplateValues>& tvs);
     
     std::string getDisplayTime(int ms) const;
     std::string getLocaleString(const std::string& key) const
