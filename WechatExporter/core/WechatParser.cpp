@@ -1207,7 +1207,7 @@ int SessionParser::parse(const Session& session, std::function<bool(const std::v
         record.createTime = sqlite3_column_int(stmt, 0);
         const unsigned char* pMessage = sqlite3_column_text(stmt, 1);
         
-        record.message = pMessage != NULL ? reinterpret_cast<const char*>(pMessage) : "";
+        record.content = pMessage != NULL ? reinterpret_cast<const char*>(pMessage) : "";
         record.des = sqlite3_column_int(stmt, 2);
         record.type = sqlite3_column_int(stmt, 3);
         record.msgId = std::to_string(sqlite3_column_int(stmt, 4));

@@ -40,7 +40,7 @@ enum SessionParsingOption
 struct WXMSG
 {
     int createTime;
-    std::string message;
+    std::string content;
     int des;
     int type;
     std::string msgId;
