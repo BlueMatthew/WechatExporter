@@ -46,7 +46,7 @@ struct WXMSG
     std::string msgId;
 };
 
-struct APPMSG
+struct WXAPPMSG
 {
     const WXMSG *msg;
     int appMsgType;
@@ -55,7 +55,7 @@ struct APPMSG
     std::string localAppIcon;
 };
 
-struct FWDMSG
+struct WXFWDMSG
 {
     const WXMSG *msg;
     std::string usrName;
@@ -214,104 +214,6 @@ struct WechatTemplateHandler
     }
 };
 
-class ForwardMsgsHandler
-{
-private:
-    XmlParser& m_xmlParser;
-    const WXMSG *m_msg;
-    std::vector<FWDMSG>& m_forwardedMsgs;
-public:
-
-    ForwardMsgsHandler(XmlParser& xmlParser, const WXMSG *msg, std::vector<FWDMSG>& forwardedMsgs) : m_xmlParser(xmlParser), m_msg(msg), m_forwardedMsgs(forwardedMsgs)
-    {
-    }
-    
-    bool operator() (xmlNodeSetPtr xpathNodes)
-    {
-        for (int idx = 0; idx < xpathNodes->nodeNr; ++idx)
-        {
-            FWDMSG fmsg = {m_msg};
-
-            // templateValues.setName("msg");
-            // templateValues["%%ALIGNMENT%%"] = "left";
-            
-            xmlNode *cur = xpathNodes->nodeTab[idx];
-            
-#ifndef NDEBUG
-            fmsg.rawMessage = XmlParser::getNodeOuterXml(cur);
-#endif
-            XmlParser::getNodeAttributeValue(cur, "datatype", fmsg.dataType);
-            XmlParser::getNodeAttributeValue(cur, "dataid", fmsg.dataId);
-            XmlParser::getNodeAttributeValue(cur, "subtype", fmsg.subType);
-            
-            xmlNodePtr childNode = xmlFirstElementChild(cur);
-            bool hasDataTitle = false;
-            /*
-            while (NULL != childNode)
-            {
-                if (xmlStrcmp(childNode->name, BAD_CAST("sourcename")) == 0)
-                {
-                    fmsg.displayName = XmlParser::getNodeInnerText(childNode);
-                }
-                else if (xmlStrcmp(childNode->name, BAD_CAST("sourcetime")) == 0)
-                {
-                    fmsg.msgTime = XmlParser::getNodeInnerText(childNode);
-                }
-                else if (xmlStrcmp(childNode->name, BAD_CAST("datadesc")) == 0)
-                {
-                    if (!hasDataTitle)
-                    {
-                        fmsg.message = XmlParser::getNodeInnerText(childNode);
-                    }
-                }
-                else if (xmlStrcmp(childNode->name, BAD_CAST("dataitemsource")) == 0)
-                {
-                    if (!XmlParser::getChildNodeContent(childNode, "realchatname", fmsg.usrName))
-                    {
-                        XmlParser::getChildNodeContent(childNode, "fromusr", fmsg.usrName);
-                    }
-                }
-                else if (xmlStrcmp(childNode->name, BAD_CAST("srcMsgCreateTime")) == 0)
-                {
-                    fmsg.srcMsgTime = XmlParser::getNodeInnerText(childNode);
-                }
-                else if (xmlStrcmp(childNode->name, BAD_CAST("datafmt")) == 0)
-                {
-                    fmsg.dataFormat = XmlParser::getNodeInnerText(childNode);
-                }
-                else if (xmlStrcmp(childNode->name, BAD_CAST("weburlitem")) == 0)
-                {
-                    XmlParser::getChildNodeContent(childNode, "title", fmsg.message);
-                    XmlParser::getChildNodeContent(childNode, "link", fmsg.link);
-                }
-                else if (xmlStrcmp(childNode->name, BAD_CAST("datatitle")) == 0)
-                {
-                    fmsg.message = XmlParser::getNodeInnerText(childNode);
-                    hasDataTitle = true;
-                }
-                else if (xmlStrcmp(childNode->name, BAD_CAST("recordxml")) == 0)
-                {
-                    xmlNodePtr nodeRecordInfo = XmlParser::getChildNode(childNode, "recordinfo");
-                    if (NULL != nodeRecordInfo)
-                    {
-                        fmsg.nestedMsgs = XmlParser::getNodeOuterXml(nodeRecordInfo);
-                    }
-                }
-                else if (xmlStrcmp(childNode->name, BAD_CAST("locitem")) == 0)
-                {
-                    fmsg.nestedMsgs = XmlParser::getNodeOuterXml(childNode);
-                }
-            
-                childNode = childNode->next;
-            }
-             */
-            
-            m_forwardedMsgs.push_back(fmsg);
-        }
-        return true;
-    }
-};
-
 class MessageParser
 {
 public:
@@ -407,39 +309,39 @@ protected:
     void parseSystem(const WXMSG& msg, const Session& session, TemplateValues& tv);
     
     // APP MSG
-    void parseAppMsgText(const APPMSG& appMsg, const XmlParser& xmlParser, const Session& session, TemplateValues& tv);
-    void parseAppMsgImage(const APPMSG& appMsg, const XmlParser& xmlParser, const Session& session, TemplateValues& tv);
-    void parseAppMsgAudio(const APPMSG& appMsg, const XmlParser& xmlParser, const Session& session, TemplateValues& tv);
-    void parseAppMsgVideo(const APPMSG& appMsg, const XmlParser& xmlParser, const Session& session, TemplateValues& tv);
-    void parseAppMsgEmotion(const APPMSG& appMsg, const XmlParser& xmlParser, const Session& session, TemplateValues& tv);
-    void parseAppMsgUrl(const APPMSG& appMsg, const XmlParser& xmlParser, const Session& session, TemplateValues& tv);
-    void parseAppMsgAttachment(const APPMSG& appMsg, const XmlParser& xmlParser, const Session& session, TemplateValues& tv);
-    void parseAppMsgOpen(const APPMSG& appMsg, const XmlParser& xmlParser, const Session& session, TemplateValues& tv);
-    void parseAppMsgEmoji(const APPMSG& appMsg, const XmlParser& xmlParser, const Session& session, TemplateValues& tv);
-    void parseAppMsgRtLocation(const APPMSG& appMsg, const XmlParser& xmlParser, const Session& session, TemplateValues& tv);
-    void parseAppMsgFwdMsg(const APPMSG& appMsg, const XmlParser& xmlParser, const Session& session, std::string& fwdMsg, std::string& fwdMsgTitle, TemplateValues& tv);
-    void parseAppMsgCard(const APPMSG& appMsg, const XmlParser& xmlParser, const Session& session, TemplateValues& tv);
-    void parseAppMsgChannelCard(const APPMSG& appMsg, const XmlParser& xmlParser, const Session& session, TemplateValues& tv);
-    void parseAppMsgChannels(const APPMSG& appMsg, const XmlParser& xmlParser, const Session& session, TemplateValues& tv);
-    void parseAppMsgRefer(const APPMSG& appMsg, const XmlParser& xmlParser, const Session& session, TemplateValues& tv);
-    void parseAppMsgTransfer(const APPMSG& appMsg, const XmlParser& xmlParser, const Session& session, TemplateValues& tv);
-    void parseAppMsgRedPacket(const APPMSG& appMsg, const XmlParser& xmlParser, const Session& session, TemplateValues& tv);
-    void parseAppMsgReaderType(const APPMSG& appMsg, const XmlParser& xmlParser, const Session& session, TemplateValues& tv);
-    void parseAppMsgUnknownType(const APPMSG& appMsg, const XmlParser& xmlParser, const Session& session, TemplateValues& tv);
-    void parseAppMsgDefault(const APPMSG& appMsg, const XmlParser& xmlParser, const Session& session, TemplateValues& tv);
+    void parseAppMsgText(const WXAPPMSG& appMsg, const XmlParser& xmlParser, const Session& session, TemplateValues& tv);
+    void parseAppMsgImage(const WXAPPMSG& appMsg, const XmlParser& xmlParser, const Session& session, TemplateValues& tv);
+    void parseAppMsgAudio(const WXAPPMSG& appMsg, const XmlParser& xmlParser, const Session& session, TemplateValues& tv);
+    void parseAppMsgVideo(const WXAPPMSG& appMsg, const XmlParser& xmlParser, const Session& session, TemplateValues& tv);
+    void parseAppMsgEmotion(const WXAPPMSG& appMsg, const XmlParser& xmlParser, const Session& session, TemplateValues& tv);
+    void parseAppMsgUrl(const WXAPPMSG& appMsg, const XmlParser& xmlParser, const Session& session, TemplateValues& tv);
+    void parseAppMsgAttachment(const WXAPPMSG& appMsg, const XmlParser& xmlParser, const Session& session, TemplateValues& tv);
+    void parseAppMsgOpen(const WXAPPMSG& appMsg, const XmlParser& xmlParser, const Session& session, TemplateValues& tv);
+    void parseAppMsgEmoji(const WXAPPMSG& appMsg, const XmlParser& xmlParser, const Session& session, TemplateValues& tv);
+    void parseAppMsgRtLocation(const WXAPPMSG& appMsg, const XmlParser& xmlParser, const Session& session, TemplateValues& tv);
+    void parseAppMsgFwdMsg(const WXAPPMSG& appMsg, const XmlParser& xmlParser, const Session& session, std::string& fwdMsg, std::string& fwdMsgTitle, TemplateValues& tv);
+    void parseAppMsgCard(const WXAPPMSG& appMsg, const XmlParser& xmlParser, const Session& session, TemplateValues& tv);
+    void parseAppMsgChannelCard(const WXAPPMSG& appMsg, const XmlParser& xmlParser, const Session& session, TemplateValues& tv);
+    void parseAppMsgChannels(const WXAPPMSG& appMsg, const XmlParser& xmlParser, const Session& session, TemplateValues& tv);
+    void parseAppMsgRefer(const WXAPPMSG& appMsg, const XmlParser& xmlParser, const Session& session, TemplateValues& tv);
+    void parseAppMsgTransfer(const WXAPPMSG& appMsg, const XmlParser& xmlParser, const Session& session, TemplateValues& tv);
+    void parseAppMsgRedPacket(const WXAPPMSG& appMsg, const XmlParser& xmlParser, const Session& session, TemplateValues& tv);
+    void parseAppMsgReaderType(const WXAPPMSG& appMsg, const XmlParser& xmlParser, const Session& session, TemplateValues& tv);
+    void parseAppMsgUnknownType(const WXAPPMSG& appMsg, const XmlParser& xmlParser, const Session& session, TemplateValues& tv);
+    void parseAppMsgDefault(const WXAPPMSG& appMsg, const XmlParser& xmlParser, const Session& session, TemplateValues& tv);
 
     // FORWARDEWD MSG
-    void parseFwdMsgText(const FWDMSG& fwdMsg, const XmlParser& xmlParser, xmlNodePtr itemNode, const Session& session, TemplateValues& tv);
-    void parseFwdMsgImage(const FWDMSG& fwdMsg, const XmlParser& xmlParser, xmlNodePtr itemNode, const Session& session, TemplateValues& tv);
-    void parseFwdMsgVideo(const FWDMSG& fwdMsg, const XmlParser& xmlParser, xmlNodePtr itemNode, const Session& session, TemplateValues& tv);
-    void parseFwdMsgLink(const FWDMSG& fwdMsg, const XmlParser& xmlParser, xmlNodePtr itemNode, const Session& session, TemplateValues& tv);
-    void parseFwdMsgLocation(const FWDMSG& fwdMsg, const XmlParser& xmlParser, xmlNodePtr itemNode, const Session& session, TemplateValues& tv);
-    void parseFwdMsgAttach(const FWDMSG& fwdMsg, const XmlParser& xmlParser, xmlNodePtr itemNode, const Session& session, TemplateValues& tv);
-    void parseFwdMsgCard(const FWDMSG& fwdMsg, const XmlParser& xmlParser, xmlNodePtr itemNode, const Session& session, TemplateValues& tv);
-    void parseFwdMsgNestedFwdMsg(const FWDMSG& fwdMsg, const XmlParser& xmlParser, xmlNodePtr itemNode, const Session& session, std::string& nestedFwdMsg, std::string& nestedFwdMsgTitle, TemplateValues& tv);
-    void parseFwdMsgMiniProgram(const FWDMSG& fwdMsg, const XmlParser& xmlParser, xmlNodePtr itemNode, const Session& session, TemplateValues& tv);
-    void parseFwdMsgChannels(const FWDMSG& fwdMsg, const XmlParser& xmlParser, xmlNodePtr itemNode, const Session& session, TemplateValues& tv);
-    void parseFwdMsgChannelCard(const FWDMSG& fwdMsg, const XmlParser& xmlParser, xmlNodePtr itemNode, const Session& session, TemplateValues& tv);
+    void parseFwdMsgText(const WXFWDMSG& fwdMsg, const XmlParser& xmlParser, xmlNodePtr itemNode, const Session& session, TemplateValues& tv);
+    void parseFwdMsgImage(const WXFWDMSG& fwdMsg, const XmlParser& xmlParser, xmlNodePtr itemNode, const Session& session, TemplateValues& tv);
+    void parseFwdMsgVideo(const WXFWDMSG& fwdMsg, const XmlParser& xmlParser, xmlNodePtr itemNode, const Session& session, TemplateValues& tv);
+    void parseFwdMsgLink(const WXFWDMSG& fwdMsg, const XmlParser& xmlParser, xmlNodePtr itemNode, const Session& session, TemplateValues& tv);
+    void parseFwdMsgLocation(const WXFWDMSG& fwdMsg, const XmlParser& xmlParser, xmlNodePtr itemNode, const Session& session, TemplateValues& tv);
+    void parseFwdMsgAttach(const WXFWDMSG& fwdMsg, const XmlParser& xmlParser, xmlNodePtr itemNode, const Session& session, TemplateValues& tv);
+    void parseFwdMsgCard(const WXFWDMSG& fwdMsg, const XmlParser& xmlParser, xmlNodePtr itemNode, const Session& session, TemplateValues& tv);
+    void parseFwdMsgNestedFwdMsg(const WXFWDMSG& fwdMsg, const XmlParser& xmlParser, xmlNodePtr itemNode, const Session& session, std::string& nestedFwdMsg, std::string& nestedFwdMsgTitle, TemplateValues& tv);
+    void parseFwdMsgMiniProgram(const WXFWDMSG& fwdMsg, const XmlParser& xmlParser, xmlNodePtr itemNode, const Session& session, TemplateValues& tv);
+    void parseFwdMsgChannels(const WXFWDMSG& fwdMsg, const XmlParser& xmlParser, xmlNodePtr itemNode, const Session& session, TemplateValues& tv);
+    void parseFwdMsgChannelCard(const WXFWDMSG& fwdMsg, const XmlParser& xmlParser, xmlNodePtr itemNode, const Session& session, TemplateValues& tv);
     
     // Implementation
     void parseImage(const std::string& sessionPath, const std::string& sessionAssertsPath, const std::string& src, const std::string& srcPre, const std::string& dest, const std::string& srcThumb, const std::string& destThumb, TemplateValues& templateValues);
