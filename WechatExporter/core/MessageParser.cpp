@@ -20,7 +20,7 @@ MessageParser::MessageParser(const ITunesDb& iTunesDb, const ITunesDb& iTunesDbS
     m_localFunction = std::move(localeFunc);
 }
 
-bool MessageParser::parse(WXMSG& msg, const Session& session, std::vector<TemplateValues>& tvs)
+bool MessageParser::parse(WXMSG& msg, const Session& session, std::vector<TemplateValues>& tvs) const
 {
     TemplateValues& tv = *(tvs.emplace(tvs.end(), "msg"));
 
@@ -210,7 +210,7 @@ bool MessageParser::parse(WXMSG& msg, const Session& session, std::vector<Templa
     return true;
 }
 
-void MessageParser::parseText(const WXMSG& msg, const Session& session, TemplateValues& tv)
+void MessageParser::parseText(const WXMSG& msg, const Session& session, TemplateValues& tv) const
 {
     if ((m_options & SPO_IGNORE_HTML_ENC) == 0)
     {
@@ -222,13 +222,13 @@ void MessageParser::parseText(const WXMSG& msg, const Session& session, Template
     }
 }
 
-void MessageParser::parseImage(const WXMSG& msg, const Session& session, TemplateValues& tv)
+void MessageParser::parseImage(const WXMSG& msg, const Session& session, TemplateValues& tv) const
 {
     std::string vFile = combinePath(m_userBase, "Img", session.getHash(), msg.msgId);
     parseImage(m_outputPath, session.getOutputFileName() + "_files", vFile + ".pic", "", msg.msgId + ".jpg", vFile + ".pic_thum", msg.msgId + "_thumb.jpg", tv);
 }
 
-void MessageParser::parseVoice(const WXMSG& msg, const Session& session, TemplateValues& tv)
+void MessageParser::parseVoice(const WXMSG& msg, const Session& session, TemplateValues& tv) const
 {
     std::string audioSrc;
     int voiceLen = -1;
@@ -273,7 +273,7 @@ void MessageParser::parseVoice(const WXMSG& msg, const Session& session, Templat
     }
 }
 
-void MessageParser::parsePushMail(const WXMSG& msg, const Session& session, TemplateValues& tv)
+void MessageParser::parsePushMail(const WXMSG& msg, const Session& session, TemplateValues& tv) const
 {
     std::string subject;
     std::string digest;
@@ -288,7 +288,7 @@ void MessageParser::parsePushMail(const WXMSG& msg, const Session& session, Temp
     tv["%%MESSAGE%%"] = digest;
 }
 
-void MessageParser::parseVideo(const WXMSG& msg, const Session& session, std::string& senderId, TemplateValues& tv)
+void MessageParser::parseVideo(const WXMSG& msg, const Session& session, std::string& senderId, TemplateValues& tv) const
 {
     std::map<std::string, std::string> attrs = { {"fromusername", ""}, {"cdnthumbwidth", ""}, {"cdnthumbheight", ""} };
     XmlParser xmlParser(msg.content);
@@ -305,7 +305,7 @@ void MessageParser::parseVideo(const WXMSG& msg, const Session& session, std::st
     parseVideo(m_outputPath, session.getOutputFileName() + "_files", vfile + ".mp4", msg.msgId + ".mp4", vfile + ".video_thum", msg.msgId + "_thum.jpg", attrs["cdnthumbwidth"], attrs["cdnthumbheight"], tv);
 }
 
-void MessageParser::parseEmotion(const WXMSG& msg, const Session& session, TemplateValues& tv)
+void MessageParser::parseEmotion(const WXMSG& msg, const Session& session, TemplateValues& tv) const
 {
     std::string url;
     if ((m_options & SPO_IGNORE_EMOJI) == 0)
@@ -356,7 +356,7 @@ void MessageParser::parseEmotion(const WXMSG& msg, const Session& session, Templ
     }
 }
 
-void MessageParser::parseAppMsg(const WXMSG& msg, const Session& session, std::string& senderId, std::string& forwardedMsg, std::string& forwardedMsgTitle, TemplateValues& tv)
+void MessageParser::parseAppMsg(const WXMSG& msg, const Session& session, std::string& senderId, std::string& forwardedMsg, std::string& forwardedMsgTitle, TemplateValues& tv) const
 {
     WXAPPMSG appMsg = {&msg, 0};
     XmlParser xmlParser(msg.content, true);
@@ -486,13 +486,13 @@ void MessageParser::parseAppMsg(const WXMSG& msg, const Session& session, std::s
 #endif
 }
 
-void MessageParser::parseCall(const WXMSG& msg, const Session& session, TemplateValues& tv)
+void MessageParser::parseCall(const WXMSG& msg, const Session& session, TemplateValues& tv) const
 {
     tv.setName("msg");
     tv["%%MESSAGE%%"] = getLocaleString("[Video/Audio Call]");
 }
 
-void MessageParser::parseLocation(const WXMSG& msg, const Session& session, TemplateValues& tv)
+void MessageParser::parseLocation(const WXMSG& msg, const Session& session, TemplateValues& tv) const
 {
     std::map<std::string, std::string> attrs = { {"x", ""}, {"y", ""}, {"label", ""}, {"poiname", ""} };
     
@@ -511,7 +511,7 @@ void MessageParser::parseLocation(const WXMSG& msg, const Session& session, Temp
     tv.setName("msg");
 }
 
-void MessageParser::parseStatusNotify(const WXMSG& msg, const Session& session, TemplateValues& tv)
+void MessageParser::parseStatusNotify(const WXMSG& msg, const Session& session, TemplateValues& tv) const
 {
 #ifndef NDEBUG
     writeFile(combinePath(m_outputPath, "../dbg", "msg_" + std::to_string(msg.type) + msg.msgId + ".txt"), msg.content);
@@ -519,7 +519,7 @@ void MessageParser::parseStatusNotify(const WXMSG& msg, const Session& session, 
     parseText(msg, session, tv);
 }
 
-void MessageParser::parsePossibleFriend(const WXMSG& msg, const Session& session, TemplateValues& tv)
+void MessageParser::parsePossibleFriend(const WXMSG& msg, const Session& session, TemplateValues& tv) const
 {
 #ifndef NDEBUG
     writeFile(combinePath(m_outputPath, "../dbg", "msg_" + std::to_string(msg.type) + msg.msgId + ".txt"), msg.content);
@@ -527,7 +527,7 @@ void MessageParser::parsePossibleFriend(const WXMSG& msg, const Session& session
     parseText(msg, session, tv);
 }
 
-void MessageParser::parseVerification(const WXMSG& msg, const Session& session, TemplateValues& tv)
+void MessageParser::parseVerification(const WXMSG& msg, const Session& session, TemplateValues& tv) const
 {
 #ifndef NDEBUG
     writeFile(combinePath(m_outputPath, "../dbg", "msg_" + std::to_string(msg.type) + msg.msgId + ".txt"), msg.content);
@@ -535,13 +535,13 @@ void MessageParser::parseVerification(const WXMSG& msg, const Session& session, 
     parseText(msg, session, tv);
 }
 
-void MessageParser::parseCard(const WXMSG& msg, const Session& session, TemplateValues& tv)
+void MessageParser::parseCard(const WXMSG& msg, const Session& session, TemplateValues& tv) const
 {
     std::string portraitDir = ((m_options & SPO_ICON_IN_SESSION) == SPO_ICON_IN_SESSION) ? session.getOutputFileName() + "_files/Portrait" : "Portrait";
     parseCard(m_outputPath, portraitDir, msg.content, tv);
 }
 
-void MessageParser::parseNotice(const WXMSG& msg, const Session& session, TemplateValues& tv)
+void MessageParser::parseNotice(const WXMSG& msg, const Session& session, TemplateValues& tv) const
 {
 #ifndef NDEBUG
     writeFile(combinePath(m_outputPath, "../dbg", "msg_" + std::to_string(msg.type) + msg.msgId + ".txt"), msg.content);
@@ -556,7 +556,7 @@ void MessageParser::parseNotice(const WXMSG& msg, const Session& session, Templa
     }
 }
 
-void MessageParser::parseSysNotice(const WXMSG& msg, const Session& session, TemplateValues& tv)
+void MessageParser::parseSysNotice(const WXMSG& msg, const Session& session, TemplateValues& tv) const
 {
 #ifndef NDEBUG
     writeFile(combinePath(m_outputPath, "../dbg", "msg_" + std::to_string(msg.type) + msg.msgId + ".txt"), msg.content);
@@ -567,7 +567,7 @@ void MessageParser::parseSysNotice(const WXMSG& msg, const Session& session, Tem
     tv["%%MESSAGE%%"] = sysMsg;
 }
 
-void MessageParser::parseSystem(const WXMSG& msg, const Session& session, TemplateValues& tv)
+void MessageParser::parseSystem(const WXMSG& msg, const Session& session, TemplateValues& tv) const
 {
     tv.setName("notice");
     if (startsWith(msg.content, "<sysmsg"))
@@ -653,7 +653,7 @@ void MessageParser::parseSystem(const WXMSG& msg, const Session& session, Templa
 
 ////////////////////////////////
 
-void MessageParser::parseAppMsgText(const WXAPPMSG& appMsg, const XmlParser& xmlParser, const Session& session, TemplateValues& tv)
+void MessageParser::parseAppMsgText(const WXAPPMSG& appMsg, const XmlParser& xmlParser, const Session& session, TemplateValues& tv) const
 {
     std::string title;
     xmlParser.parseNodeValue("/msg/appmsg/title", title);
@@ -661,27 +661,27 @@ void MessageParser::parseAppMsgText(const WXAPPMSG& appMsg, const XmlParser& xml
     tv["%%MESSAGE%%"] = title.empty() ? getLocaleString("[Link]") : title;
 }
 
-void MessageParser::parseAppMsgImage(const WXAPPMSG& appMsg, const XmlParser& xmlParser, const Session& session, TemplateValues& tv)
+void MessageParser::parseAppMsgImage(const WXAPPMSG& appMsg, const XmlParser& xmlParser, const Session& session, TemplateValues& tv) const
 {
     parseAppMsgDefault(appMsg, xmlParser, session, tv);
 }
 
-void MessageParser::parseAppMsgAudio(const WXAPPMSG& appMsg, const XmlParser& xmlParser, const Session& session, TemplateValues& tv)
+void MessageParser::parseAppMsgAudio(const WXAPPMSG& appMsg, const XmlParser& xmlParser, const Session& session, TemplateValues& tv) const
 {
     parseAppMsgDefault(appMsg, xmlParser, session, tv);
 }
 
-void MessageParser::parseAppMsgVideo(const WXAPPMSG& appMsg, const XmlParser& xmlParser, const Session& session, TemplateValues& tv)
+void MessageParser::parseAppMsgVideo(const WXAPPMSG& appMsg, const XmlParser& xmlParser, const Session& session, TemplateValues& tv) const
 {
     parseAppMsgDefault(appMsg, xmlParser, session, tv);
 }
 
-void MessageParser::parseAppMsgEmotion(const WXAPPMSG& appMsg, const XmlParser& xmlParser, const Session& session, TemplateValues& tv)
+void MessageParser::parseAppMsgEmotion(const WXAPPMSG& appMsg, const XmlParser& xmlParser, const Session& session, TemplateValues& tv) const
 {
     parseAppMsgDefault(appMsg, xmlParser, session, tv);
 }
 
-void MessageParser::parseAppMsgUrl(const WXAPPMSG& appMsg, const XmlParser& xmlParser, const Session& session, TemplateValues& tv)
+void MessageParser::parseAppMsgUrl(const WXAPPMSG& appMsg, const XmlParser& xmlParser, const Session& session, TemplateValues& tv) const
 {
     std::string title;
     std::string desc;
@@ -714,7 +714,7 @@ void MessageParser::parseAppMsgUrl(const WXAPPMSG& appMsg, const XmlParser& xmlP
     tv["%%MESSAGE%%"] = desc;
 }
 
-void MessageParser::parseAppMsgAttachment(const WXAPPMSG& appMsg, const XmlParser& xmlParser, const Session& session, TemplateValues& tv)
+void MessageParser::parseAppMsgAttachment(const WXAPPMSG& appMsg, const XmlParser& xmlParser, const Session& session, TemplateValues& tv) const
 {
 #ifndef NDEBUG
     writeFile(combinePath(m_outputPath, "../dbg", "msg_" + std::to_string(appMsg.msg->type) + "_attach_" + appMsg.msg->msgId + ".txt"), appMsg.msg->content);
@@ -734,23 +734,23 @@ void MessageParser::parseAppMsgAttachment(const WXAPPMSG& appMsg, const XmlParse
     parseFile(m_outputPath, session.getOutputFileName() + "_files", attachFileName, attachOutputFileName, title, tv);
 }
 
-void MessageParser::parseAppMsgOpen(const WXAPPMSG& appMsg, const XmlParser& xmlParser, const Session& session, TemplateValues& tv)
+void MessageParser::parseAppMsgOpen(const WXAPPMSG& appMsg, const XmlParser& xmlParser, const Session& session, TemplateValues& tv) const
 {
     parseAppMsgDefault(appMsg, xmlParser, session, tv);
 }
 
-void MessageParser::parseAppMsgEmoji(const WXAPPMSG& appMsg, const XmlParser& xmlParser, const Session& session, TemplateValues& tv)
+void MessageParser::parseAppMsgEmoji(const WXAPPMSG& appMsg, const XmlParser& xmlParser, const Session& session, TemplateValues& tv) const
 {
     // Can't parse the detail info of emoji as the url is encrypted
     parseAppMsgDefault(appMsg, xmlParser, session, tv);
 }
 
-void MessageParser::parseAppMsgRtLocation(const WXAPPMSG& appMsg, const XmlParser& xmlParser, const Session& session, TemplateValues& tv)
+void MessageParser::parseAppMsgRtLocation(const WXAPPMSG& appMsg, const XmlParser& xmlParser, const Session& session, TemplateValues& tv) const
 {
     tv["%%MESSAGE%%"] = getLocaleString("[Real-time Location]");
 }
 
-void MessageParser::parseAppMsgFwdMsg(const WXAPPMSG& appMsg, const XmlParser& xmlParser, const Session& session, std::string& forwardedMsg, std::string& forwardedMsgTitle, TemplateValues& tv)
+void MessageParser::parseAppMsgFwdMsg(const WXAPPMSG& appMsg, const XmlParser& xmlParser, const Session& session, std::string& forwardedMsg, std::string& forwardedMsgTitle, TemplateValues& tv) const
 {
     std::string title;
     xmlParser.parseNodeValue("/msg/appmsg/title", title);
@@ -764,12 +764,12 @@ void MessageParser::parseAppMsgFwdMsg(const WXAPPMSG& appMsg, const XmlParser& x
     forwardedMsgTitle = title;
 }
 
-void MessageParser::parseAppMsgCard(const WXAPPMSG& appMsg, const XmlParser& xmlParser, const Session& session, TemplateValues& tv)
+void MessageParser::parseAppMsgCard(const WXAPPMSG& appMsg, const XmlParser& xmlParser, const Session& session, TemplateValues& tv) const
 {
     parseAppMsgDefault(appMsg, xmlParser, session, tv);
 }
 
-void MessageParser::parseAppMsgChannelCard(const WXAPPMSG& appMsg, const XmlParser& xmlParser, const Session& session, TemplateValues& tv)
+void MessageParser::parseAppMsgChannelCard(const WXAPPMSG& appMsg, const XmlParser& xmlParser, const Session& session, TemplateValues& tv) const
 {
     // Channel Card
     std::map<std::string, std::string> nodes = { {"username", ""}, {"avatar", ""}, {"nickname", ""}};
@@ -780,7 +780,7 @@ void MessageParser::parseAppMsgChannelCard(const WXAPPMSG& appMsg, const XmlPars
     parseChannelCard(m_outputPath, portraitDir, nodes["username"], nodes["avatar"], nodes["nickname"], tv);
 }
 
-void MessageParser::parseAppMsgChannels(const WXAPPMSG& appMsg, const XmlParser& xmlParser, const Session& session, TemplateValues& tv)
+void MessageParser::parseAppMsgChannels(const WXAPPMSG& appMsg, const XmlParser& xmlParser, const Session& session, TemplateValues& tv) const
 {
 #ifndef NDEBUG
     writeFile(combinePath(m_outputPath, "../dbg", "msg" + std::to_string(appMsg.msg->type) + "_app_" + std::to_string(appMsg.appMsgType) + "_" + appMsg.msg->msgId + ".txt"), appMsg.msg->content);
@@ -789,7 +789,7 @@ void MessageParser::parseAppMsgChannels(const WXAPPMSG& appMsg, const XmlParser&
     parseChannels(appMsg.msg->msgId, xmlParser, NULL, "/msg/appmsg/finderFeed", session, tv);
 }
 
-void MessageParser::parseAppMsgRefer(const WXAPPMSG& appMsg, const XmlParser& xmlParser, const Session& session, TemplateValues& tv)
+void MessageParser::parseAppMsgRefer(const WXAPPMSG& appMsg, const XmlParser& xmlParser, const Session& session, TemplateValues& tv) const
 {
     // Refer Message
     std::string title;
@@ -835,22 +835,22 @@ void MessageParser::parseAppMsgRefer(const WXAPPMSG& appMsg, const XmlParser& xm
     }
 }
 
-void MessageParser::parseAppMsgTransfer(const WXAPPMSG& appMsg, const XmlParser& xmlParser, const Session& session, TemplateValues& tv)
+void MessageParser::parseAppMsgTransfer(const WXAPPMSG& appMsg, const XmlParser& xmlParser, const Session& session, TemplateValues& tv) const
 {
     tv["%%MESSAGE%%"] = getLocaleString("[Transfer]");
 }
 
-void MessageParser::parseAppMsgRedPacket(const WXAPPMSG& appMsg, const XmlParser& xmlParser, const Session& session, TemplateValues& tv)
+void MessageParser::parseAppMsgRedPacket(const WXAPPMSG& appMsg, const XmlParser& xmlParser, const Session& session, TemplateValues& tv) const
 {
     tv["%%MESSAGE%%"] = getLocaleString("[Red Packet]");
 }
 
-void MessageParser::parseAppMsgReaderType(const WXAPPMSG& appMsg, const XmlParser& xmlParser, const Session& session, TemplateValues& tv)
+void MessageParser::parseAppMsgReaderType(const WXAPPMSG& appMsg, const XmlParser& xmlParser, const Session& session, TemplateValues& tv) const
 {
     parseAppMsgDefault(appMsg, xmlParser, session, tv);
 }
 
-void MessageParser::parseAppMsgUnknownType(const WXAPPMSG& appMsg, const XmlParser& xmlParser, const Session& session, TemplateValues& tv)
+void MessageParser::parseAppMsgUnknownType(const WXAPPMSG& appMsg, const XmlParser& xmlParser, const Session& session, TemplateValues& tv) const
 {
 #ifndef NDEBUG
     writeFile(combinePath(m_outputPath, "../dbg", "msg" + std::to_string(appMsg.msg->type) + "_app_unknwn_" + std::to_string(appMsg.appMsgType) + ".txt"), appMsg.msg->content);
@@ -858,7 +858,7 @@ void MessageParser::parseAppMsgUnknownType(const WXAPPMSG& appMsg, const XmlPars
     parseAppMsgDefault(appMsg, xmlParser, session, tv);
 }
 
-void MessageParser::parseAppMsgDefault(const WXAPPMSG& appMsg, const XmlParser& xmlParser, const Session& session, TemplateValues& tv)
+void MessageParser::parseAppMsgDefault(const WXAPPMSG& appMsg, const XmlParser& xmlParser, const Session& session, TemplateValues& tv) const
 {
     std::map<std::string, std::string> nodes = { {"title", ""}, {"type", ""}, {"des", ""}, {"url", ""}, {"thumburl", ""}, {"recorditem", ""} };
     xmlParser.parseNodesValue("/msg/appmsg/*", nodes);
@@ -884,7 +884,7 @@ void MessageParser::parseAppMsgDefault(const WXAPPMSG& appMsg, const XmlParser& 
 
 ////////////////////////////////
 
-void MessageParser::parseFwdMsgText(const WXFWDMSG& fwdMsg, const XmlParser& xmlParser, xmlNode *itemNode, const Session& session, TemplateValues& tv)
+void MessageParser::parseFwdMsgText(const WXFWDMSG& fwdMsg, const XmlParser& xmlParser, xmlNode *itemNode, const Session& session, TemplateValues& tv) const
 {
     std::string message;
     xmlParser.getChildNodeContent(itemNode, "datadesc", message);
@@ -893,14 +893,14 @@ void MessageParser::parseFwdMsgText(const WXFWDMSG& fwdMsg, const XmlParser& xml
     tv["%%MESSAGE%%"] = message;
 }
 
-void MessageParser::parseFwdMsgImage(const WXFWDMSG& fwdMsg, const XmlParser& xmlParser, xmlNode *itemNode, const Session& session, TemplateValues& tv)
+void MessageParser::parseFwdMsgImage(const WXFWDMSG& fwdMsg, const XmlParser& xmlParser, xmlNode *itemNode, const Session& session, TemplateValues& tv) const
 {
     std::string fileExtName = fwdMsg.dataFormat.empty() ? "" : ("." + fwdMsg.dataFormat);
     std::string vfile = m_userBase + "/OpenData/" + session.getHash() + "/" + fwdMsg.msg->msgId + "/" + fwdMsg.dataId;
     parseImage(m_outputPath, session.getOutputFileName() + "_files/" + fwdMsg.msg->msgId, vfile + fileExtName, vfile + fileExtName + "_pre3", fwdMsg.dataId + ".jpg", vfile + ".record_thumb", fwdMsg.dataId + "_thumb.jpg", tv);
 }
 
-void MessageParser::parseFwdMsgVideo(const WXFWDMSG& fwdMsg, const XmlParser& xmlParser, xmlNodePtr itemNode, const Session& session, TemplateValues& tv)
+void MessageParser::parseFwdMsgVideo(const WXFWDMSG& fwdMsg, const XmlParser& xmlParser, xmlNodePtr itemNode, const Session& session, TemplateValues& tv) const
 {
     std::string fileExtName = fwdMsg.dataFormat.empty() ? "" : ("." + fwdMsg.dataFormat);
     std::string vfile = m_userBase + "/OpenData/" + session.getHash() + "/" + fwdMsg.msg->msgId + "/" + fwdMsg.dataId;
@@ -908,7 +908,7 @@ void MessageParser::parseFwdMsgVideo(const WXFWDMSG& fwdMsg, const XmlParser& xm
                     
 }
 
-void MessageParser::parseFwdMsgLink(const WXFWDMSG& fwdMsg, const XmlParser& xmlParser, xmlNodePtr itemNode, const Session& session, TemplateValues& tv)
+void MessageParser::parseFwdMsgLink(const WXFWDMSG& fwdMsg, const XmlParser& xmlParser, xmlNodePtr itemNode, const Session& session, TemplateValues& tv) const
 {
     std::string link;
     std::string title;
@@ -946,7 +946,7 @@ void MessageParser::parseFwdMsgLink(const WXFWDMSG& fwdMsg, const XmlParser& xml
     }
 }
 
-void MessageParser::parseFwdMsgLocation(const WXFWDMSG& fwdMsg, const XmlParser& xmlParser, xmlNodePtr itemNode, const Session& session, TemplateValues& tv)
+void MessageParser::parseFwdMsgLocation(const WXFWDMSG& fwdMsg, const XmlParser& xmlParser, xmlNodePtr itemNode, const Session& session, TemplateValues& tv) const
 {
     std::string label;
     std::string message;
@@ -973,7 +973,7 @@ void MessageParser::parseFwdMsgLocation(const WXFWDMSG& fwdMsg, const XmlParser&
     tv.setName("msg");
 }
 
-void MessageParser::parseFwdMsgAttach(const WXFWDMSG& fwdMsg, const XmlParser& xmlParser, xmlNodePtr itemNode, const Session& session, TemplateValues& tv)
+void MessageParser::parseFwdMsgAttach(const WXFWDMSG& fwdMsg, const XmlParser& xmlParser, xmlNodePtr itemNode, const Session& session, TemplateValues& tv) const
 {
     std::string message;
     xmlParser.getChildNodeContent(itemNode, "datatitle", message);
@@ -983,7 +983,7 @@ void MessageParser::parseFwdMsgAttach(const WXFWDMSG& fwdMsg, const XmlParser& x
     parseFile(m_outputPath, session.getOutputFileName() + "_files/" + fwdMsg.msg->msgId, vfile + fileExtName, fwdMsg.dataId + fileExtName, message, tv);
 }
 
-void MessageParser::parseFwdMsgCard(const WXFWDMSG& fwdMsg, const XmlParser& xmlParser, xmlNodePtr itemNode, const Session& session, TemplateValues& tv)
+void MessageParser::parseFwdMsgCard(const WXFWDMSG& fwdMsg, const XmlParser& xmlParser, xmlNodePtr itemNode, const Session& session, TemplateValues& tv) const
 {
     std::string cardContent;
     xmlParser.getChildNodeContent(itemNode, "datadesc", cardContent);
@@ -992,7 +992,7 @@ void MessageParser::parseFwdMsgCard(const WXFWDMSG& fwdMsg, const XmlParser& xml
     parseCard(m_outputPath, portraitDir, cardContent, tv);
 }
 
-void MessageParser::MessageParser::parseFwdMsgNestedFwdMsg(const WXFWDMSG& fwdMsg, const XmlParser& xmlParser, xmlNodePtr itemNode, const Session& session, std::string& nestedFwdMsg, std::string& nestedFwdMsgTitle, TemplateValues& tv)
+void MessageParser::MessageParser::parseFwdMsgNestedFwdMsg(const WXFWDMSG& fwdMsg, const XmlParser& xmlParser, xmlNodePtr itemNode, const Session& session, std::string& nestedFwdMsg, std::string& nestedFwdMsgTitle, TemplateValues& tv) const
 {
     xmlParser.getChildNodeContent(itemNode, "datadesc", nestedFwdMsgTitle);
     xmlNodePtr nodeRecordInfo = XmlParser::getChildNode(itemNode, "recordinfo");
@@ -1004,19 +1004,19 @@ void MessageParser::MessageParser::parseFwdMsgNestedFwdMsg(const WXFWDMSG& fwdMs
     tv["%%MESSAGE%%"] = nestedFwdMsgTitle;
 }
 
-void MessageParser::MessageParser::parseFwdMsgMiniProgram(const WXFWDMSG& fwdMsg, const XmlParser& xmlParser, xmlNodePtr itemNode, const Session& session, TemplateValues& tv)
+void MessageParser::MessageParser::parseFwdMsgMiniProgram(const WXFWDMSG& fwdMsg, const XmlParser& xmlParser, xmlNodePtr itemNode, const Session& session, TemplateValues& tv) const
 {
     std::string title;
     xmlParser.getChildNodeContent(itemNode, "datatitle", title);
     tv["%%MESSAGE%%"] = title;
 }
 
-void MessageParser::MessageParser::parseFwdMsgChannels(const WXFWDMSG& fwdMsg, const XmlParser& xmlParser, xmlNodePtr itemNode, const Session& session, TemplateValues& tv)
+void MessageParser::MessageParser::parseFwdMsgChannels(const WXFWDMSG& fwdMsg, const XmlParser& xmlParser, xmlNodePtr itemNode, const Session& session, TemplateValues& tv) const
 {
     parseChannels(fwdMsg.msg->msgId, xmlParser, itemNode, "./finderFeed", session, tv);
 }
 
-void MessageParser::MessageParser::parseFwdMsgChannelCard(const WXFWDMSG& fwdMsg, const XmlParser& xmlParser, xmlNodePtr itemNode, const Session& session, TemplateValues& tv)
+void MessageParser::MessageParser::parseFwdMsgChannelCard(const WXFWDMSG& fwdMsg, const XmlParser& xmlParser, xmlNodePtr itemNode, const Session& session, TemplateValues& tv) const
 {
     std::string usrName;
     std::string avatar;
@@ -1036,7 +1036,7 @@ void MessageParser::MessageParser::parseFwdMsgChannelCard(const WXFWDMSG& fwdMsg
 ///////////////////////////////
 // Implementation
 
-void MessageParser::parseVideo(const std::string& sessionPath, const std::string& sessionAssertsPath, const std::string& srcVideo, const std::string& destVideo, const std::string& srcThumb, const std::string& destThumb, const std::string& width, const std::string& height, TemplateValues& templateValues)
+void MessageParser::parseVideo(const std::string& sessionPath, const std::string& sessionAssertsPath, const std::string& srcVideo, const std::string& destVideo, const std::string& srcThumb, const std::string& destThumb, const std::string& width, const std::string& height, TemplateValues& templateValues) const
 {
     bool hasThumb = false;
     bool hasVideo = false;
@@ -1073,7 +1073,7 @@ void MessageParser::parseVideo(const std::string& sessionPath, const std::string
 }
 
 
-void MessageParser::parseImage(const std::string& sessionPath, const std::string& sessionAssertsPath, const std::string& src, const std::string& srcPre, const std::string& dest, const std::string& srcThumb, const std::string& destThumb, TemplateValues& templateValues)
+void MessageParser::parseImage(const std::string& sessionPath, const std::string& sessionAssertsPath, const std::string& src, const std::string& srcPre, const std::string& dest, const std::string& srcThumb, const std::string& destThumb, TemplateValues& templateValues) const
 {
     bool hasThumb = false;
     bool hasImage = false;
@@ -1110,7 +1110,7 @@ void MessageParser::parseImage(const std::string& sessionPath, const std::string
     }
 }
 
-void MessageParser::parseFile(const std::string& sessionPath, const std::string& sessionAssertsPath, const std::string& src, const std::string& dest, const std::string& fileName, TemplateValues& templateValues)
+void MessageParser::parseFile(const std::string& sessionPath, const std::string& sessionAssertsPath, const std::string& src, const std::string& dest, const std::string& fileName, TemplateValues& templateValues) const
 {
     bool hasFile = false;
     if ((m_options & SPO_IGNORE_FILE) == 0)
@@ -1132,7 +1132,7 @@ void MessageParser::parseFile(const std::string& sessionPath, const std::string&
     }
 }
 
-void MessageParser::parseCard(const std::string& sessionPath, const std::string& portraitDir, const std::string& cardMessage, TemplateValues& templateValues)
+void MessageParser::parseCard(const std::string& sessionPath, const std::string& portraitDir, const std::string& cardMessage, TemplateValues& templateValues) const
 {
     // static std::regex pattern42_1("nickname ?= ?\"(.+?)\"");
     // static std::regex pattern42_2("smallheadimgurl ?= ?\"(.+?)\"");
@@ -1176,7 +1176,7 @@ void MessageParser::parseCard(const std::string& sessionPath, const std::string&
     templateValues["%%EXTRA_CLS%%"] = "contact-card";
 }
 
-void MessageParser::parseChannelCard(const std::string& sessionPath, const std::string& portraitDir, const std::string& usrName, const std::string& avatar, const std::string& name, TemplateValues& templateValues)
+void MessageParser::parseChannelCard(const std::string& sessionPath, const std::string& portraitDir, const std::string& usrName, const std::string& avatar, const std::string& name, TemplateValues& templateValues) const
 {
     bool hasImg = false;
     if ((m_options & SPO_IGNORE_SHARING) == 0)
@@ -1208,7 +1208,7 @@ void MessageParser::parseChannelCard(const std::string& sessionPath, const std::
     templateValues["%%EXTRA_CLS%%"] = "channel-card";
 }
 
-void MessageParser::parseChannels(const std::string& msgId, const XmlParser& xmlParser, xmlNodePtr parentNode, const std::string& finderFeedXPath, const Session& session, TemplateValues& tv)
+void MessageParser::parseChannels(const std::string& msgId, const XmlParser& xmlParser, xmlNodePtr parentNode, const std::string& finderFeedXPath, const Session& session, TemplateValues& tv) const
 {
     // Channels SHI PIN HAO
     std::map<std::string, std::string> nodes = { {"objectId", ""}, {"nickname", ""}, {"avatar", ""}, {"desc", ""}, {"mediaCount", ""}, {"feedType", ""}, {"desc", ""}, {"username", ""}};
@@ -1261,7 +1261,7 @@ void MessageParser::parseChannels(const std::string& msgId, const XmlParser& xml
     }
 }
 
-bool MessageParser::parseForwardedMsgs(const Session& session, const WXMSG& msg, const std::string& title, const std::string& message, std::vector<TemplateValues>& tvs)
+bool MessageParser::parseForwardedMsgs(const Session& session, const WXMSG& msg, const std::string& title, const std::string& message, std::vector<TemplateValues>& tvs) const
 {
     std::string portraitPath = ((m_options & SPO_ICON_IN_SESSION) == SPO_ICON_IN_SESSION) ? session.getOutputFileName() + "_files/Portrait/" : "Portrait/";
     
@@ -1393,12 +1393,12 @@ std::string MessageParser::getDisplayTime(int ms) const
     return std::to_string(std::round((double)ms)) + "\"";
 }
 
-bool MessageParser::copyPortraitIcon(const std::string& usrName, const std::string& portraitUrl, const std::string& destPath)
+bool MessageParser::copyPortraitIcon(const std::string& usrName, const std::string& portraitUrl, const std::string& destPath) const
 {
     return copyPortraitIcon(usrName, md5(usrName), portraitUrl, destPath);
 }
 
-bool MessageParser::copyPortraitIcon(const std::string& usrName, const std::string& usrNameHash, const std::string& portraitUrl, const std::string& destPath)
+bool MessageParser::copyPortraitIcon(const std::string& usrName, const std::string& usrNameHash, const std::string& portraitUrl, const std::string& destPath) const
 {
     std::string destFileName = usrName + ".jpg";
     std::string avatarPath = "share/" + m_myself.getHash() + "/session/headImg/" + usrNameHash + ".pic";
@@ -1428,7 +1428,7 @@ bool MessageParser::copyPortraitIcon(const std::string& usrName, const std::stri
     return hasPortrait;
 }
 
-void MessageParser::ensureDefaultPortraitIconExisted(const std::string& portraitPath)
+void MessageParser::ensureDefaultPortraitIconExisted(const std::string& portraitPath) const
 {
     std::string dest = combinePath(m_outputPath, portraitPath);
     ensureDirectoryExisted(dest);
