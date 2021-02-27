@@ -179,15 +179,20 @@ finish:
 
 bool copyFile(const std::string& src, const std::string& dest, bool overwrite/* = true*/)
 {
-    std::ifstream ss(src, std::ios::binary);
+    if (existsFile(dest) && !overwrite)
+    {
+        return false;
+    }
+    
+    std::ifstream ss(src, std::ios::in | std::ios::binary);
     if (!ss.is_open())
     {
 #ifndef NDEBUG
-        assert(false);
+        // assert(false);
 #endif
         return false;
     }
-    std::ofstream ds(dest, std::ios::binary);
+    std::ofstream ds(dest, std::ios::out | std::ios::binary | std::ios::trunc);
     if (!ds.is_open())
     {
 #ifndef NDEBUG
