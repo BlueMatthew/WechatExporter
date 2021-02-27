@@ -1198,7 +1198,7 @@ int SessionParser::parse(const Session& session, std::function<bool(const std::v
     }
 
     std::vector<TemplateValues> tvs;
-    MsgRecord record;
+    WxMsg record;
 
     while (sqlite3_step(stmt) == SQLITE_ROW)
     {
