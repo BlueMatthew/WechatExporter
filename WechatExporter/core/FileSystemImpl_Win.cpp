@@ -11,6 +11,9 @@
 #include "FileSystem.h"
 // #include <direct.h>
 #include <algorithm>
+#ifndef NDEBUG
+#include <cassert>
+#endif
 #include <atlstr.h>
 #include <sys/utime.h>
 #include <Shlwapi.h>
