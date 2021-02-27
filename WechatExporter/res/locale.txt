@@ -32,8 +32,8 @@
 		"value": "[位置]"
 	},
 	{
-		"key": "[Location (%s,%s) %s]",
-		"value": "[位置 (%s,%s]) %s]"
+		"key": "[Location] %s (%s,%s)",
+		"value": "[位置] %s (%s,%s)"
 	},
 	{
 		"key": "[Red Packet]",
