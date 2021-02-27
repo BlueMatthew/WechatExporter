@@ -407,26 +407,26 @@ protected:
     void parseSystem(const WXMSG& msg, const Session& session, TemplateValues& tv);
     
     // APP MSG
-    void parseAppMsgText(const APPMSG& appMsgInfo, const XmlParser& xmlParser, const Session& session, TemplateValues& tv);
-    void parseAppMsgImage(const APPMSG& appMsgInfo, const XmlParser& xmlParser, const Session& session, TemplateValues& tv);
-    void parseAppMsgAudio(const APPMSG& appMsgInfo, const XmlParser& xmlParser, const Session& session, TemplateValues& tv);
-    void parseAppMsgVideo(const APPMSG& appMsgInfo, const XmlParser& xmlParser, const Session& session, TemplateValues& tv);
-    void parseAppMsgEmotion(const APPMSG& appMsgInfo, const XmlParser& xmlParser, const Session& session, TemplateValues& tv);
-    void parseAppMsgUrl(const APPMSG& appMsgInfo, const XmlParser& xmlParser, const Session& session, TemplateValues& tv);
-    void parseAppMsgAttachment(const APPMSG& appMsgInfo, const XmlParser& xmlParser, const Session& session, TemplateValues& tv);
-    void parseAppMsgOpen(const APPMSG& appMsgInfo, const XmlParser& xmlParser, const Session& session, TemplateValues& tv);
-    void parseAppMsgEmoji(const APPMSG& appMsgInfo, const XmlParser& xmlParser, const Session& session, TemplateValues& tv);
-    void parseAppMsgRtLocation(const APPMSG& appMsgInfo, const XmlParser& xmlParser, const Session& session, TemplateValues& tv);
-    void parseAppMsgFwdMsg(const APPMSG& appMsgInfo, const XmlParser& xmlParser, const Session& session, std::string& fwdMsg, std::string& fwdMsgTitle, TemplateValues& tv);
-    void parseAppMsgCard(const APPMSG& appMsgInfo, const XmlParser& xmlParser, const Session& session, TemplateValues& tv);
-    void parseAppMsgChannelCard(const APPMSG& appMsgInfo, const XmlParser& xmlParser, const Session& session, TemplateValues& tv);
-    void parseAppMsgChannels(const APPMSG& appMsgInfo, const XmlParser& xmlParser, const Session& session, TemplateValues& tv);
-    void parseAppMsgRefer(const APPMSG& appMsgInfo, const XmlParser& xmlParser, const Session& session, TemplateValues& tv);
-    void parseAppMsgTransfer(const APPMSG& appMsgInfo, const XmlParser& xmlParser, const Session& session, TemplateValues& tv);
-    void parseAppMsgRedPacket(const APPMSG& appMsgInfo, const XmlParser& xmlParser, const Session& session, TemplateValues& tv);
-    void parseAppMsgReaderType(const APPMSG& appMsgInfo, const XmlParser& xmlParser, const Session& session, TemplateValues& tv);
-    void parseAppMsgUnknownType(const APPMSG& appMsgInfo, const XmlParser& xmlParser, const Session& session, TemplateValues& tv);
-    void parseAppMsgDefault(const APPMSG& appMsgInfo, const XmlParser& xmlParser, const Session& session, TemplateValues& tv);
+    void parseAppMsgText(const APPMSG& appMsg, const XmlParser& xmlParser, const Session& session, TemplateValues& tv);
+    void parseAppMsgImage(const APPMSG& appMsg, const XmlParser& xmlParser, const Session& session, TemplateValues& tv);
+    void parseAppMsgAudio(const APPMSG& appMsg, const XmlParser& xmlParser, const Session& session, TemplateValues& tv);
+    void parseAppMsgVideo(const APPMSG& appMsg, const XmlParser& xmlParser, const Session& session, TemplateValues& tv);
+    void parseAppMsgEmotion(const APPMSG& appMsg, const XmlParser& xmlParser, const Session& session, TemplateValues& tv);
+    void parseAppMsgUrl(const APPMSG& appMsg, const XmlParser& xmlParser, const Session& session, TemplateValues& tv);
+    void parseAppMsgAttachment(const APPMSG& appMsg, const XmlParser& xmlParser, const Session& session, TemplateValues& tv);
+    void parseAppMsgOpen(const APPMSG& appMsg, const XmlParser& xmlParser, const Session& session, TemplateValues& tv);
+    void parseAppMsgEmoji(const APPMSG& appMsg, const XmlParser& xmlParser, const Session& session, TemplateValues& tv);
+    void parseAppMsgRtLocation(const APPMSG& appMsg, const XmlParser& xmlParser, const Session& session, TemplateValues& tv);
+    void parseAppMsgFwdMsg(const APPMSG& appMsg, const XmlParser& xmlParser, const Session& session, std::string& fwdMsg, std::string& fwdMsgTitle, TemplateValues& tv);
+    void parseAppMsgCard(const APPMSG& appMsg, const XmlParser& xmlParser, const Session& session, TemplateValues& tv);
+    void parseAppMsgChannelCard(const APPMSG& appMsg, const XmlParser& xmlParser, const Session& session, TemplateValues& tv);
+    void parseAppMsgChannels(const APPMSG& appMsg, const XmlParser& xmlParser, const Session& session, TemplateValues& tv);
+    void parseAppMsgRefer(const APPMSG& appMsg, const XmlParser& xmlParser, const Session& session, TemplateValues& tv);
+    void parseAppMsgTransfer(const APPMSG& appMsg, const XmlParser& xmlParser, const Session& session, TemplateValues& tv);
+    void parseAppMsgRedPacket(const APPMSG& appMsg, const XmlParser& xmlParser, const Session& session, TemplateValues& tv);
+    void parseAppMsgReaderType(const APPMSG& appMsg, const XmlParser& xmlParser, const Session& session, TemplateValues& tv);
+    void parseAppMsgUnknownType(const APPMSG& appMsg, const XmlParser& xmlParser, const Session& session, TemplateValues& tv);
+    void parseAppMsgDefault(const APPMSG& appMsg, const XmlParser& xmlParser, const Session& session, TemplateValues& tv);
 
     // FORWARDEWD MSG
     void parseFwdMsgText(const FWDMSG& fwdMsg, const XmlParser& xmlParser, xmlNodePtr itemNode, const Session& session, TemplateValues& tv);
