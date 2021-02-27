@@ -516,7 +516,13 @@ int Exporter::exportSession(const Friend& user, SessionParser& sessionParser, co
         msgParser.parse(msg, session, tvs);
         exportMessage(session, tvs, messages);
         ++numberOfMsgs;
+        
+        if (m_cancelled)
+        {
+            break;
+        }
     }
+
     // numberOfMsgs = sessionParser.parse(session, handler);
     if (numberOfMsgs > 0 && !messages.empty())
     {
