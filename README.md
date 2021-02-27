@@ -13,8 +13,10 @@
 ![Windows界面截屏](https://src.wakin.org/github/wxexp/screenshots/win.png) ![MacOS界面截屏](https://src.wakin.org/github/wxexp/screenshots/mac.png###)
 
 ## 模版修改
-解压目录下的res\templates(MacOS版本位于Contents\Resources\res)子目录里存放了输出聊天记录的html页面模版，其中通过两个%包含起来的字符串，譬如，%%NAME%%，不要修改之外，其它页面内容和格式都可以自行调整。
-
+解压目录下的res\templates(MacOS版本位于Contents\Resources\res)子目录里存放了输出聊天记录的html页面模版，其中通过两个%包含起来的字符串，譬如，%%NAME%%，不要修改之外，其它页面内容和格式都可以自行调整。  
+  
+特别感谢Chao.M帮忙优化当前的模版。  
+  
 ## 系统依赖：
 Windows版本：Windows 7+(XP不支持), [Visual C++ 2017 redist](https://aka.ms/vs/16/release/vc_redist.x64.exe) at [The latest supported Visual C++ downloads](https://support.microsoft.com/en-us/help/2977003/the-latest-supported-visual-c-downloads)  
 MacOS版本：MacOS 10.10(Yosemite)+
