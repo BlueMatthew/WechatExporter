@@ -410,7 +410,7 @@ bool Exporter::exportUser(Friend& user, std::string& userOutputPath)
                 downloader.addTask(it->getPortrait(), combinePath(outputBase, "Portrait", it->getLocalPortrait()), 0);
             }
         }
-        int count = exportSession(*myself, sessionParser, *it, userBase, outputBase);
+        int count = exportSession(*myself, sessionParser, msgParser, *it, userBase, outputBase);
         
         m_logger->write(formatString(getLocaleString("Succeeded handling %d messages."), count));
         
@@ -478,7 +478,7 @@ bool Exporter::loadUserFriendsAndSessions(const Friend& user, Friends& friends, 
     return true;
 }
 
-int Exporter::exportSession(const Friend& user, SessionParser& sessionParser, const Session& session, const std::string& userBase, const std::string& outputBase)
+int Exporter::exportSession(const Friend& user, SessionParser& sessionParser, const MessageParser& msgParser, const Session& session, const std::string& userBase, const std::string& outputBase)
 {
     if (session.isDbFileEmpty())
     {
@@ -503,10 +503,22 @@ int Exporter::exportSession(const Friend& user, SessionParser& sessionParser, co
     {
         messages.reserve(session.getRecordCount());
     }
-    std::function<bool(const std::vector<TemplateValues>&)> handler = std::bind(&Exporter::exportMessage, this, std::cref(session), std::placeholders::_1, std::ref(messages));
+    // std::function<bool(const std::vector<TemplateValues>&)> handler = std::bind(&Exporter::exportMessage, this, std::cref(session), std::placeholders::_1, std::ref(messages));
     
-    int count = sessionParser.parse(session, handler);
-    if (count > 0 && !messages.empty())
+    int numberOfMsgs = 0;
+    std::unique_ptr<SessionParser::MessageEnumerator> enumerator(sessionParser.buildMsgEnumerator(session));
+    std::vector<TemplateValues> tvs;
+    WXMSG msg;
+    while (enumerator->nextMessage(msg))
+    {
+        tvs.clear();
+        // (WXMSG& msg, const Session& session, std::vector<TemplateValues>& tvs) const;
+        msgParser.parse(msg, session, tvs);
+        exportMessage(session, tvs, messages);
+        ++numberOfMsgs;
+    }
+    // numberOfMsgs = sessionParser.parse(session, handler);
+    if (numberOfMsgs > 0 && !messages.empty())
     {
         const size_t pageSize = 1000;
         auto b = messages.cbegin();
@@ -543,7 +555,7 @@ int Exporter::exportSession(const Friend& user, SessionParser& sessionParser, co
         writeFile(fileName, html);
     }
     
-    return count;
+    return numberOfMsgs;
 }
 
 bool Exporter::exportMessage(const Session& session, const std::vector<TemplateValues>& tvs, std::vector<std::string>& messages)
