@@ -528,6 +528,13 @@ int Exporter::exportSession(const Friend& user, SessionParser& sessionParser, co
         replaceAll(scripts, "%%JSONDATA%%", moreMsgs);
 
         std::string html = getTemplate("frame");
+#ifndef NDEBUG
+        replaceAll(html, "%%USRNAME%%", user.getUsrName() + " - " + user.getHash());
+        replaceAll(html, "%%SESSION_USRNAME%%", session.getUsrName() + " - " + session.getHash());
+#else
+        replaceAll(html, "%%USRNAME%%", "");
+        replaceAll(html, "%%SESSION_USRNAME%%", "");
+#endif
         replaceAll(html, "%%DISPLAYNAME%%", session.getDisplayName());
         replaceAll(html, "%%BODY%%", join(b, e, ""));
         replaceAll(html, "%%LOADING_SCRIPTS%%", scripts);
