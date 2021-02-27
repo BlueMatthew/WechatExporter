@@ -475,14 +475,17 @@ void MessageParser::parseAppMsg(const MsgRecord& record, const Session& session,
             break;
     }
     
-#ifdef NDEBUG
+#ifndef NDEBUG
     std::string vThumbFile = m_userBase + "/OpenData/" + session.getHash() + "/" + appMsgInfo.msgId + ".pic_thum";
-    std::string destPath = combinePath(m_outputPath, session.getOutputFileName() + "_files", appMsgInfo.msgId + ".thumb.jpg");
+    std::string destPath = combinePath(m_outputPath, session.getOutputFileName() + "_files", appMsgInfo.msgId + "_thum.jpg");
     
     std::string fileId = m_iTunesDb.findFileId(vThumbFile);
     if (!fileId.empty() && !existsFile(destPath))
     {
-        assert(false);
+        if (appMsgInfo.appMsgType != 19)
+        {
+            // assert(false);
+        }
     }
 #endif
 }
@@ -495,12 +498,15 @@ void MessageParser::parseCall(const MsgRecord& record, const Session& session, T
 
 void MessageParser::parseLocation(const MsgRecord& record, const Session& session, TemplateValues& tv)
 {
-    std::map<std::string, std::string> attrs = { {"x", ""}, {"y", ""}, {"label", ""} };
+    std::map<std::string, std::string> attrs = { {"x", ""}, {"y", ""}, {"label", ""}, {"poiname", ""} };
     
     XmlParser xmlParser(record.message);
-    if (xmlParser.parseAttributesValue("/msg/location", attrs) && !attrs["x"].empty() && !attrs["y"].empty() && !attrs["label"].empty())
+    xmlParser.parseAttributesValue("/msg/location", attrs);
+    
+    std::string location = (!attrs["poiname"].empty() && !attrs["label"].empty()) ? (attrs["poiname"] + " - " + attrs["label"]) : (attrs["poiname"] + attrs["label"]);
+    if (!location.empty())
     {
-        tv["%%MESSAGE%%"] = formatString(getLocaleString("[Location (%s,%s) %s]"), attrs["x"].c_str(), attrs["y"].c_str(), attrs["label"].c_str());
+        tv["%%MESSAGE%%"] = formatString(getLocaleString("[Location] %s (%s,%s)"), location.c_str(), attrs["x"].c_str(), attrs["y"].c_str());
     }
     else
     {
@@ -692,9 +698,9 @@ void MessageParser::parseAppMsgUrl(const AppMsgInfo& appMsgInfo, const XmlParser
     // Check Local File
     std::string vThumbFile = m_userBase + "/OpenData/" + session.getHash() + "/" + appMsgInfo.msgId + ".pic_thum";
     std::string destPath = combinePath(m_outputPath, session.getOutputFileName() + "_files");
-    if (m_iTunesDb.copyFile(vThumbFile, destPath, appMsgInfo.msgId + ".thumb.jpg"))
+    if (m_iTunesDb.copyFile(vThumbFile, destPath, appMsgInfo.msgId + "_thum.jpg"))
     {
-        thumbUrl = session.getOutputFileName() + "_files/" + appMsgInfo.msgId + ".thumb.jpg";
+        thumbUrl = session.getOutputFileName() + "_files/" + appMsgInfo.msgId + "_thum.jpg";
     }
     else
     {
@@ -714,18 +720,21 @@ void MessageParser::parseAppMsgUrl(const AppMsgInfo& appMsgInfo, const XmlParser
 
 void MessageParser::parseAppMsgAttachment(const AppMsgInfo& appMsgInfo, const XmlParser& xmlParser, const Session& session, TemplateValues& tv)
 {
+#ifndef NDEBUG
+    writeFile(combinePath(m_outputPath, "../dbg", "msg_" + std::to_string(appMsgInfo.msgType) + "_attach_" + appMsgInfo.msgId + ".txt"), appMsgInfo.message);
+#endif
     std::string title;
     std::string attachFileExtName;
     xmlParser.parseNodeValue("/msg/appmsg/title", title);
     xmlParser.parseNodeValue("/msg/appmsg/appattach/fileext", attachFileExtName);
     
     std::string attachFileName = m_userBase + "/OpenData/" + session.getHash() + "/" + appMsgInfo.msgId;
+    std::string attachOutputFileName = appMsgInfo.msgId;
     if (!attachFileExtName.empty())
     {
         attachFileName += "." + attachFileExtName;
+        attachOutputFileName += "." + attachFileExtName;
     }
-    
-    std::string attachOutputFileName = appMsgInfo.msgId + "_" + title;
     parseFile(m_outputPath, session.getOutputFileName() + "_files", attachFileName, attachOutputFileName, title, tv);
 }
 
@@ -956,9 +965,10 @@ void MessageParser::parseFwdMsgLocation(const ForwardMsg& fwdMsg, const XmlParse
         XmlParser::getChildNodeContent(locItemNode, "lng", lng);
     }
 
-    if (!lat.empty() && !lng.empty() && !message.empty())
+    std::string location = (!message.empty() && !label.empty()) ? (message + " - " + label) : (message + label);
+    if (!location.empty())
     {
-        tv["%%MESSAGE%%"] = formatString(getLocaleString("[Location (%s,%s) %s]"), lat.c_str(), lng.c_str(), message.c_str());
+        tv["%%MESSAGE%%"] = formatString(getLocaleString("[Location] %s (%s,%s)"), location.c_str(), lat.c_str(), lng.c_str());
     }
     else
     {
