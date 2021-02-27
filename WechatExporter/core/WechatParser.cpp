@@ -1168,7 +1168,7 @@ bool SessionsParser::parseSessionsInGroupApp(const std::string& userRoot, std::v
     return true;
 }
 
-SessionParser::SessionParser(MessageParser& msgParser, int options) : m_options(options), m_msgParser(msgParser)
+SessionParser::SessionParser(int options) : m_options(options)
 {
 }
 

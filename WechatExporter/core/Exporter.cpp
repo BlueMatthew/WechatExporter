@@ -369,7 +369,7 @@ bool Exporter::exportUser(Friend& user, std::string& userOutputPath)
         msgParser.copyPortraitIcon(user.getUsrName(), user.getHash(), "Portrait");
         // downloader.addTask(user.getPortrait(), combinePath(outputBase, "Portrait", user.getLocalPortrait()), 0);
     }
-    SessionParser sessionParser(msgParser, m_options);
+    
     std::set<std::string> sessionFileNames;
     for (std::vector<Session>::iterator it = sessions.begin(); it != sessions.end(); ++it)
     {
@@ -410,7 +410,7 @@ bool Exporter::exportUser(Friend& user, std::string& userOutputPath)
                 downloader.addTask(it->getPortrait(), combinePath(outputBase, "Portrait", it->getLocalPortrait()), 0);
             }
         }
-        int count = exportSession(*myself, sessionParser, msgParser, *it, userBase, outputBase);
+        int count = exportSession(*myself, msgParser, *it, userBase, outputBase);
         
         m_logger->write(formatString(getLocaleString("Succeeded handling %d messages."), count));
         
@@ -478,7 +478,7 @@ bool Exporter::loadUserFriendsAndSessions(const Friend& user, Friends& friends, 
     return true;
 }
 
-int Exporter::exportSession(const Friend& user, SessionParser& sessionParser, const MessageParser& msgParser, const Session& session, const std::string& userBase, const std::string& outputBase)
+int Exporter::exportSession(const Friend& user, const MessageParser& msgParser, const Session& session, const std::string& userBase, const std::string& outputBase)
 {
     if (session.isDbFileEmpty())
     {
@@ -506,6 +506,7 @@ int Exporter::exportSession(const Friend& user, SessionParser& sessionParser, co
     // std::function<bool(const std::vector<TemplateValues>&)> handler = std::bind(&Exporter::exportMessage, this, std::cref(session), std::placeholders::_1, std::ref(messages));
     
     int numberOfMsgs = 0;
+    SessionParser sessionParser(m_options);
     std::unique_ptr<SessionParser::MessageEnumerator> enumerator(sessionParser.buildMsgEnumerator(session));
     std::vector<TemplateValues> tvs;
     WXMSG msg;
