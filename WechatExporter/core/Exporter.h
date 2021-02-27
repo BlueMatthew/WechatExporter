@@ -23,7 +23,6 @@
 #ifndef Exporter_h
 #define Exporter_h
 
-class SessionParser;
 class MessageParser;
 class TemplateValues;
 
@@ -85,7 +84,7 @@ protected:
     bool exportUser(Friend& user, std::string& userOutputPath);
     // bool loadUserSessions(Friend& user, std::vector<Session>& sessions) const;
     bool loadUserFriendsAndSessions(const Friend& user, Friends& friends, std::vector<Session>& sessions, bool detailedInfo = true) const;
-    int exportSession(const Friend& user, SessionParser& sessionParser, const MessageParser& msgParser, const Session& session, const std::string& userBase, const std::string& outputBase);
+    int exportSession(const Friend& user, const MessageParser& msgParser, const Session& session, const std::string& userBase, const std::string& outputBase);
     
     bool exportMessage(const Session& session, const std::vector<TemplateValues>& tvs, std::vector<std::string>& messages);
 
