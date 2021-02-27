@@ -358,7 +358,7 @@ void MessageParser::parseEmotion(const WXMSG& msg, const Session& session, Templ
 
 void MessageParser::parseAppMsg(const WXMSG& msg, const Session& session, std::string& senderId, std::string& forwardedMsg, std::string& forwardedMsgTitle, TemplateValues& tv)
 {
-    APPMSG appMsgInfo = {&msg, 0};
+    APPMSG appMsg = {&msg, 0};
     XmlParser xmlParser(msg.message, true);
     if (senderId.empty())
     {
@@ -380,105 +380,105 @@ void MessageParser::parseAppMsg(const WXMSG& msg, const Session& session, std::s
 #ifndef NDEBUG
     writeFile(combinePath(m_outputPath, "../dbg", "msg" + std::to_string(msg.type) + "_app_" + appMsgTypeStr + ".txt"), msg.message);
 #endif
-    appMsgInfo.appMsgType = std::atoi(appMsgTypeStr.c_str());
-    xmlParser.parseAttributeValue("/msg/appmsg", "appid", appMsgInfo.appId);
-    if (!appMsgInfo.appId.empty())
+    appMsg.appMsgType = std::atoi(appMsgTypeStr.c_str());
+    xmlParser.parseAttributeValue("/msg/appmsg", "appid", appMsg.appId);
+    if (!appMsg.appId.empty())
     {
-        xmlParser.parseNodeValue("/msg/appinfo/appname", appMsgInfo.appName);
-        tv["%%APPNAME%%"] = appMsgInfo.appName;
-        std::string vFile = combinePath(m_userBase, "appicon", appMsgInfo.appId + ".png");
+        xmlParser.parseNodeValue("/msg/appinfo/appname", appMsg.appName);
+        tv["%%APPNAME%%"] = appMsg.appName;
+        std::string vFile = combinePath(m_userBase, "appicon", appMsg.appId + ".png");
         std::string portraitDir = ((m_options & SPO_ICON_IN_SESSION) == SPO_ICON_IN_SESSION) ? session.getOutputFileName() + "_files/Portrait" : "Portrait";
 
-        if (m_iTunesDb.copyFile(vFile, combinePath(m_outputPath, portraitDir), "appicon_" + appMsgInfo.appId + ".png"))
+        if (m_iTunesDb.copyFile(vFile, combinePath(m_outputPath, portraitDir), "appicon_" + appMsg.appId + ".png"))
         {
-            appMsgInfo.localAppIcon = portraitDir + "/appicon_" + appMsgInfo.appId + ".png";
-            tv["%%APPICONPATH%%"] = appMsgInfo.localAppIcon;
+            appMsg.localAppIcon = portraitDir + "/appicon_" + appMsg.appId + ".png";
+            tv["%%APPICONPATH%%"] = appMsg.localAppIcon;
         }
     }
 
-    switch (appMsgInfo.appMsgType)
+    switch (appMsg.appMsgType)
     {
         case APPMSGTYPE_TEXT: // 1
-            parseAppMsgText(appMsgInfo, xmlParser, session, tv);
+            parseAppMsgText(appMsg, xmlParser, session, tv);
             break;
         case APPMSGTYPE_IMG: // 2
-            parseAppMsgImage(appMsgInfo, xmlParser, session, tv);
+            parseAppMsgImage(appMsg, xmlParser, session, tv);
             break;
         case APPMSGTYPE_AUDIO: // 3
-            parseAppMsgAudio(appMsgInfo, xmlParser, session, tv);
+            parseAppMsgAudio(appMsg, xmlParser, session, tv);
             break;
         case APPMSGTYPE_VIDEO: // 4
-            parseAppMsgVideo(appMsgInfo, xmlParser, session, tv);
+            parseAppMsgVideo(appMsg, xmlParser, session, tv);
             break;
         case APPMSGTYPE_URL: // 5
-            parseAppMsgUrl(appMsgInfo, xmlParser, session, tv);
+            parseAppMsgUrl(appMsg, xmlParser, session, tv);
             break;
         case APPMSGTYPE_ATTACH: // 6
-            parseAppMsgAttachment(appMsgInfo, xmlParser, session, tv);
+            parseAppMsgAttachment(appMsg, xmlParser, session, tv);
             break;
         case APPMSGTYPE_OPEN: // 7
-            parseAppMsgOpen(appMsgInfo, xmlParser, session, tv);
+            parseAppMsgOpen(appMsg, xmlParser, session, tv);
             break;
         case APPMSGTYPE_EMOJI: // 8
-            parseAppMsgEmoji(appMsgInfo, xmlParser, session, tv);
+            parseAppMsgEmoji(appMsg, xmlParser, session, tv);
             break;
         case APPMSGTYPE_VOICE_REMIND: // 9
-            parseAppMsgUnknownType(appMsgInfo, xmlParser, session, tv);
+            parseAppMsgUnknownType(appMsg, xmlParser, session, tv);
             break;
 
         case APPMSGTYPE_SCAN_GOOD: // 10
-            parseAppMsgUnknownType(appMsgInfo, xmlParser, session, tv);
+            parseAppMsgUnknownType(appMsg, xmlParser, session, tv);
             break;
             
         case APPMSGTYPE_GOOD: // 13
-            parseAppMsgUnknownType(appMsgInfo, xmlParser, session, tv);
+            parseAppMsgUnknownType(appMsg, xmlParser, session, tv);
             break;
 
         case APPMSGTYPE_EMOTION: // 15
-            parseAppMsgUnknownType(appMsgInfo, xmlParser, session, tv);
+            parseAppMsgUnknownType(appMsg, xmlParser, session, tv);
             break;
 
         case APPMSGTYPE_CARD_TICKET: // 16
-            parseAppMsgUnknownType(appMsgInfo, xmlParser, session, tv);
+            parseAppMsgUnknownType(appMsg, xmlParser, session, tv);
             break;
 
         case APPMSGTYPE_REALTIME_LOCATION: // 17
-            parseAppMsgRtLocation(appMsgInfo, xmlParser, session, tv);
+            parseAppMsgRtLocation(appMsg, xmlParser, session, tv);
             break;
         case APPMSGTYPE_FWD_MSG: // 19
-            parseAppMsgFwdMsg(appMsgInfo, xmlParser, session, forwardedMsg, forwardedMsgTitle, tv);
+            parseAppMsgFwdMsg(appMsg, xmlParser, session, forwardedMsg, forwardedMsgTitle, tv);
             break;
         case APPMSGTYPE_CHANNEL_CARD:   // 50
-            parseAppMsgChannelCard(appMsgInfo, xmlParser, session, tv);
+            parseAppMsgChannelCard(appMsg, xmlParser, session, tv);
             break;
         case APPMSGTYPE_CHANNELS:   // 51
-            parseAppMsgChannels(appMsgInfo, xmlParser, session, tv);
+            parseAppMsgChannels(appMsg, xmlParser, session, tv);
             break;
         case APPMSGTYPE_REFER:  // 57
-            parseAppMsgRefer(appMsgInfo, xmlParser, session, tv);
+            parseAppMsgRefer(appMsg, xmlParser, session, tv);
             break;
         case APPMSGTYPE_TRANSFERS: // 2000
-            parseAppMsgTransfer(appMsgInfo, xmlParser, session, tv);
+            parseAppMsgTransfer(appMsg, xmlParser, session, tv);
             break;
         case APPMSGTYPE_RED_ENVELOPES: // 2001
-            parseAppMsgRedPacket(appMsgInfo, xmlParser, session, tv);
+            parseAppMsgRedPacket(appMsg, xmlParser, session, tv);
             break;
         case APPMSGTYPE_READER_TYPE: // 100001
-            parseAppMsgReaderType(appMsgInfo, xmlParser, session, tv);
+            parseAppMsgReaderType(appMsg, xmlParser, session, tv);
             break;
         default:
-            parseAppMsgUnknownType(appMsgInfo, xmlParser, session, tv);
+            parseAppMsgUnknownType(appMsg, xmlParser, session, tv);
             break;
     }
     
 #ifndef NDEBUG
-    std::string vThumbFile = m_userBase + "/OpenData/" + session.getHash() + "/" + appMsgInfo.msg->msgId + ".pic_thum";
-    std::string destPath = combinePath(m_outputPath, session.getOutputFileName() + "_files", appMsgInfo.msg->msgId + "_thum.jpg");
+    std::string vThumbFile = m_userBase + "/OpenData/" + session.getHash() + "/" + appMsg.msg->msgId + ".pic_thum";
+    std::string destPath = combinePath(m_outputPath, session.getOutputFileName() + "_files", appMsg.msg->msgId + "_thum.jpg");
     
     std::string fileId = m_iTunesDb.findFileId(vThumbFile);
     if (!fileId.empty() && !existsFile(destPath))
     {
-        if (appMsgInfo.appMsgType != 19)
+        if (appMsg.appMsgType != 19)
         {
             // assert(false);
         }
@@ -653,7 +653,7 @@ void MessageParser::parseSystem(const WXMSG& msg, const Session& session, Templa
 
 ////////////////////////////////
 
-void MessageParser::parseAppMsgText(const APPMSG& appMsgInfo, const XmlParser& xmlParser, const Session& session, TemplateValues& tv)
+void MessageParser::parseAppMsgText(const APPMSG& appMsg, const XmlParser& xmlParser, const Session& session, TemplateValues& tv)
 {
     std::string title;
     xmlParser.parseNodeValue("/msg/appmsg/title", title);
@@ -661,27 +661,27 @@ void MessageParser::parseAppMsgText(const APPMSG& appMsgInfo, const XmlParser& x
     tv["%%MESSAGE%%"] = title.empty() ? getLocaleString("[Link]") : title;
 }
 
-void MessageParser::parseAppMsgImage(const APPMSG& appMsgInfo, const XmlParser& xmlParser, const Session& session, TemplateValues& tv)
+void MessageParser::parseAppMsgImage(const APPMSG& appMsg, const XmlParser& xmlParser, const Session& session, TemplateValues& tv)
 {
-    parseAppMsgDefault(appMsgInfo, xmlParser, session, tv);
+    parseAppMsgDefault(appMsg, xmlParser, session, tv);
 }
 
-void MessageParser::parseAppMsgAudio(const APPMSG& appMsgInfo, const XmlParser& xmlParser, const Session& session, TemplateValues& tv)
+void MessageParser::parseAppMsgAudio(const APPMSG& appMsg, const XmlParser& xmlParser, const Session& session, TemplateValues& tv)
 {
-    parseAppMsgDefault(appMsgInfo, xmlParser, session, tv);
+    parseAppMsgDefault(appMsg, xmlParser, session, tv);
 }
 
-void MessageParser::parseAppMsgVideo(const APPMSG& appMsgInfo, const XmlParser& xmlParser, const Session& session, TemplateValues& tv)
+void MessageParser::parseAppMsgVideo(const APPMSG& appMsg, const XmlParser& xmlParser, const Session& session, TemplateValues& tv)
 {
-    parseAppMsgDefault(appMsgInfo, xmlParser, session, tv);
+    parseAppMsgDefault(appMsg, xmlParser, session, tv);
 }
 
-void MessageParser::parseAppMsgEmotion(const APPMSG& appMsgInfo, const XmlParser& xmlParser, const Session& session, TemplateValues& tv)
+void MessageParser::parseAppMsgEmotion(const APPMSG& appMsg, const XmlParser& xmlParser, const Session& session, TemplateValues& tv)
 {
-    parseAppMsgDefault(appMsgInfo, xmlParser, session, tv);
+    parseAppMsgDefault(appMsg, xmlParser, session, tv);
 }
 
-void MessageParser::parseAppMsgUrl(const APPMSG& appMsgInfo, const XmlParser& xmlParser, const Session& session, TemplateValues& tv)
+void MessageParser::parseAppMsgUrl(const APPMSG& appMsg, const XmlParser& xmlParser, const Session& session, TemplateValues& tv)
 {
     std::string title;
     std::string desc;
@@ -692,18 +692,18 @@ void MessageParser::parseAppMsgUrl(const APPMSG& appMsgInfo, const XmlParser& xm
     xmlParser.parseNodeValue("/msg/appmsg/url", url);
     
     // Check Local File
-    std::string vThumbFile = m_userBase + "/OpenData/" + session.getHash() + "/" + appMsgInfo.msg->msgId + ".pic_thum";
+    std::string vThumbFile = m_userBase + "/OpenData/" + session.getHash() + "/" + appMsg.msg->msgId + ".pic_thum";
     std::string destPath = combinePath(m_outputPath, session.getOutputFileName() + "_files");
-    if (m_iTunesDb.copyFile(vThumbFile, destPath, appMsgInfo.msg->msgId + "_thum.jpg"))
+    if (m_iTunesDb.copyFile(vThumbFile, destPath, appMsg.msg->msgId + "_thum.jpg"))
     {
-        thumbUrl = session.getOutputFileName() + "_files/" + appMsgInfo.msg->msgId + "_thum.jpg";
+        thumbUrl = session.getOutputFileName() + "_files/" + appMsg.msg->msgId + "_thum.jpg";
     }
     else
     {
         xmlParser.parseNodeValue("/msg/appmsg/thumburl", thumbUrl);
         if (thumbUrl.empty())
         {
-            thumbUrl = appMsgInfo.localAppIcon;
+            thumbUrl = appMsg.localAppIcon;
         }
     }
     
@@ -714,18 +714,18 @@ void MessageParser::parseAppMsgUrl(const APPMSG& appMsgInfo, const XmlParser& xm
     tv["%%MESSAGE%%"] = desc;
 }
 
-void MessageParser::parseAppMsgAttachment(const APPMSG& appMsgInfo, const XmlParser& xmlParser, const Session& session, TemplateValues& tv)
+void MessageParser::parseAppMsgAttachment(const APPMSG& appMsg, const XmlParser& xmlParser, const Session& session, TemplateValues& tv)
 {
 #ifndef NDEBUG
-    writeFile(combinePath(m_outputPath, "../dbg", "msg_" + std::to_string(appMsgInfo.msg->type) + "_attach_" + appMsgInfo.msg->msgId + ".txt"), appMsgInfo.msg->message);
+    writeFile(combinePath(m_outputPath, "../dbg", "msg_" + std::to_string(appMsg.msg->type) + "_attach_" + appMsg.msg->msgId + ".txt"), appMsg.msg->message);
 #endif
     std::string title;
     std::string attachFileExtName;
     xmlParser.parseNodeValue("/msg/appmsg/title", title);
     xmlParser.parseNodeValue("/msg/appmsg/appattach/fileext", attachFileExtName);
     
-    std::string attachFileName = m_userBase + "/OpenData/" + session.getHash() + "/" + appMsgInfo.msg->msgId;
-    std::string attachOutputFileName = appMsgInfo.msg->msgId;
+    std::string attachFileName = m_userBase + "/OpenData/" + session.getHash() + "/" + appMsg.msg->msgId;
+    std::string attachOutputFileName = appMsg.msg->msgId;
     if (!attachFileExtName.empty())
     {
         attachFileName += "." + attachFileExtName;
@@ -734,29 +734,29 @@ void MessageParser::parseAppMsgAttachment(const APPMSG& appMsgInfo, const XmlPar
     parseFile(m_outputPath, session.getOutputFileName() + "_files", attachFileName, attachOutputFileName, title, tv);
 }
 
-void MessageParser::parseAppMsgOpen(const APPMSG& appMsgInfo, const XmlParser& xmlParser, const Session& session, TemplateValues& tv)
+void MessageParser::parseAppMsgOpen(const APPMSG& appMsg, const XmlParser& xmlParser, const Session& session, TemplateValues& tv)
 {
-    parseAppMsgDefault(appMsgInfo, xmlParser, session, tv);
+    parseAppMsgDefault(appMsg, xmlParser, session, tv);
 }
 
-void MessageParser::parseAppMsgEmoji(const APPMSG& appMsgInfo, const XmlParser& xmlParser, const Session& session, TemplateValues& tv)
+void MessageParser::parseAppMsgEmoji(const APPMSG& appMsg, const XmlParser& xmlParser, const Session& session, TemplateValues& tv)
 {
     // Can't parse the detail info of emoji as the url is encrypted
-    parseAppMsgDefault(appMsgInfo, xmlParser, session, tv);
+    parseAppMsgDefault(appMsg, xmlParser, session, tv);
 }
 
-void MessageParser::parseAppMsgRtLocation(const APPMSG& appMsgInfo, const XmlParser& xmlParser, const Session& session, TemplateValues& tv)
+void MessageParser::parseAppMsgRtLocation(const APPMSG& appMsg, const XmlParser& xmlParser, const Session& session, TemplateValues& tv)
 {
     tv["%%MESSAGE%%"] = getLocaleString("[Real-time Location]");
 }
 
-void MessageParser::parseAppMsgFwdMsg(const APPMSG& appMsgInfo, const XmlParser& xmlParser, const Session& session, std::string& forwardedMsg, std::string& forwardedMsgTitle, TemplateValues& tv)
+void MessageParser::parseAppMsgFwdMsg(const APPMSG& appMsg, const XmlParser& xmlParser, const Session& session, std::string& forwardedMsg, std::string& forwardedMsgTitle, TemplateValues& tv)
 {
     std::string title;
     xmlParser.parseNodeValue("/msg/appmsg/title", title);
     xmlParser.parseNodeValue("/msg/appmsg/recorditem", forwardedMsg);
 #ifndef NDEBUG
-    writeFile(combinePath(m_outputPath, "../dbg", "msg" + std::to_string(appMsgInfo.msg->type) + "_app_19.txt"), forwardedMsg);
+    writeFile(combinePath(m_outputPath, "../dbg", "msg" + std::to_string(appMsg.msg->type) + "_app_19.txt"), forwardedMsg);
 #endif
     tv.setName("msg");
     tv["%%MESSAGE%%"] = title;
@@ -764,12 +764,12 @@ void MessageParser::parseAppMsgFwdMsg(const APPMSG& appMsgInfo, const XmlParser&
     forwardedMsgTitle = title;
 }
 
-void MessageParser::parseAppMsgCard(const APPMSG& appMsgInfo, const XmlParser& xmlParser, const Session& session, TemplateValues& tv)
+void MessageParser::parseAppMsgCard(const APPMSG& appMsg, const XmlParser& xmlParser, const Session& session, TemplateValues& tv)
 {
-    parseAppMsgDefault(appMsgInfo, xmlParser, session, tv);
+    parseAppMsgDefault(appMsg, xmlParser, session, tv);
 }
 
-void MessageParser::parseAppMsgChannelCard(const APPMSG& appMsgInfo, const XmlParser& xmlParser, const Session& session, TemplateValues& tv)
+void MessageParser::parseAppMsgChannelCard(const APPMSG& appMsg, const XmlParser& xmlParser, const Session& session, TemplateValues& tv)
 {
     // Channel Card
     std::map<std::string, std::string> nodes = { {"username", ""}, {"avatar", ""}, {"nickname", ""}};
@@ -780,16 +780,16 @@ void MessageParser::parseAppMsgChannelCard(const APPMSG& appMsgInfo, const XmlPa
     parseChannelCard(m_outputPath, portraitDir, nodes["username"], nodes["avatar"], nodes["nickname"], tv);
 }
 
-void MessageParser::parseAppMsgChannels(const APPMSG& appMsgInfo, const XmlParser& xmlParser, const Session& session, TemplateValues& tv)
+void MessageParser::parseAppMsgChannels(const APPMSG& appMsg, const XmlParser& xmlParser, const Session& session, TemplateValues& tv)
 {
 #ifndef NDEBUG
-    writeFile(combinePath(m_outputPath, "../dbg", "msg" + std::to_string(appMsgInfo.msg->type) + "_app_" + std::to_string(appMsgInfo.appMsgType) + "_" + appMsgInfo.msg->msgId + ".txt"), appMsgInfo.msg->message);
+    writeFile(combinePath(m_outputPath, "../dbg", "msg" + std::to_string(appMsg.msg->type) + "_app_" + std::to_string(appMsg.appMsgType) + "_" + appMsg.msg->msgId + ".txt"), appMsg.msg->message);
 #endif
     
-    parseChannels(appMsgInfo.msg->msgId, xmlParser, NULL, "/msg/appmsg/finderFeed", session, tv);
+    parseChannels(appMsg.msg->msgId, xmlParser, NULL, "/msg/appmsg/finderFeed", session, tv);
 }
 
-void MessageParser::parseAppMsgRefer(const APPMSG& appMsgInfo, const XmlParser& xmlParser, const Session& session, TemplateValues& tv)
+void MessageParser::parseAppMsgRefer(const APPMSG& appMsg, const XmlParser& xmlParser, const Session& session, TemplateValues& tv)
 {
     // Refer Message
     std::string title;
@@ -798,7 +798,7 @@ void MessageParser::parseAppMsgRefer(const APPMSG& appMsgInfo, const XmlParser& 
     if (xmlParser.parseNodesValue("/msg/appmsg/refermsg/*", nodes))
     {
 #ifndef NDEBUG
-        writeFile(combinePath(m_outputPath, "../dbg", "msg" + std::to_string(appMsgInfo.msg->type) + "_app_" + std::to_string(APPMSGTYPE_REFER) + "_ref_" + nodes["type"] + " .txt"), nodes["content"]);
+        writeFile(combinePath(m_outputPath, "../dbg", "msg" + std::to_string(appMsg.msg->type) + "_app_" + std::to_string(APPMSGTYPE_REFER) + "_ref_" + nodes["type"] + " .txt"), nodes["content"]);
 #endif
         tv.setName("refermsg");
         tv["%%MESSAGE%%"] = title;
@@ -835,30 +835,30 @@ void MessageParser::parseAppMsgRefer(const APPMSG& appMsgInfo, const XmlParser& 
     }
 }
 
-void MessageParser::parseAppMsgTransfer(const APPMSG& appMsgInfo, const XmlParser& xmlParser, const Session& session, TemplateValues& tv)
+void MessageParser::parseAppMsgTransfer(const APPMSG& appMsg, const XmlParser& xmlParser, const Session& session, TemplateValues& tv)
 {
     tv["%%MESSAGE%%"] = getLocaleString("[Transfer]");
 }
 
-void MessageParser::parseAppMsgRedPacket(const APPMSG& appMsgInfo, const XmlParser& xmlParser, const Session& session, TemplateValues& tv)
+void MessageParser::parseAppMsgRedPacket(const APPMSG& appMsg, const XmlParser& xmlParser, const Session& session, TemplateValues& tv)
 {
     tv["%%MESSAGE%%"] = getLocaleString("[Red Packet]");
 }
 
-void MessageParser::parseAppMsgReaderType(const APPMSG& appMsgInfo, const XmlParser& xmlParser, const Session& session, TemplateValues& tv)
+void MessageParser::parseAppMsgReaderType(const APPMSG& appMsg, const XmlParser& xmlParser, const Session& session, TemplateValues& tv)
 {
-    parseAppMsgDefault(appMsgInfo, xmlParser, session, tv);
+    parseAppMsgDefault(appMsg, xmlParser, session, tv);
 }
 
-void MessageParser::parseAppMsgUnknownType(const APPMSG& appMsgInfo, const XmlParser& xmlParser, const Session& session, TemplateValues& tv)
+void MessageParser::parseAppMsgUnknownType(const APPMSG& appMsg, const XmlParser& xmlParser, const Session& session, TemplateValues& tv)
 {
 #ifndef NDEBUG
-    writeFile(combinePath(m_outputPath, "../dbg", "msg" + std::to_string(appMsgInfo.msg->type) + "_app_unknwn_" + std::to_string(appMsgInfo.appMsgType) + ".txt"), appMsgInfo.msg->message);
+    writeFile(combinePath(m_outputPath, "../dbg", "msg" + std::to_string(appMsg.msg->type) + "_app_unknwn_" + std::to_string(appMsg.appMsgType) + ".txt"), appMsg.msg->message);
 #endif
-    parseAppMsgDefault(appMsgInfo, xmlParser, session, tv);
+    parseAppMsgDefault(appMsg, xmlParser, session, tv);
 }
 
-void MessageParser::parseAppMsgDefault(const APPMSG& appMsgInfo, const XmlParser& xmlParser, const Session& session, TemplateValues& tv)
+void MessageParser::parseAppMsgDefault(const APPMSG& appMsg, const XmlParser& xmlParser, const Session& session, TemplateValues& tv)
 {
     std::map<std::string, std::string> nodes = { {"title", ""}, {"type", ""}, {"des", ""}, {"url", ""}, {"thumburl", ""}, {"recorditem", ""} };
     xmlParser.parseNodesValue("/msg/appmsg/*", nodes);
