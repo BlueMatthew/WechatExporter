@@ -70,7 +70,7 @@
       <Filter>core</Filter>
     </ClCompile>
     <ClCompile Include="..\WechatExporter\core\FileSystem.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>core</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
