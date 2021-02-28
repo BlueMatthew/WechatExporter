@@ -12,6 +12,7 @@ extern "C"
 #include <lame/lame.h>
 }
 #include "Utils.h"
+#include "FileSystem.h"
 #ifdef _WIN32
 #include <atlstr.h>
 #endif

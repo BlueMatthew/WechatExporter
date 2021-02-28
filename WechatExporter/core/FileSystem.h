@@ -12,6 +12,7 @@
 #include <string>
 #include <vector>
 
+size_t getFileSize(const std::string& path);
 bool existsDirectory(const std::string& path);
 bool makeDirectory(const std::string& path);
 bool deleteFile(const std::string& path);
@@ -23,6 +24,13 @@ bool moveFile(const std::string& src, const std::string& dest, bool overwrite = 
 // ref: https://blackbeltreview.wordpress.com/2015/01/27/illegal-filename-characters-on-windows-vs-mac-os/
 bool isValidFileName(const std::string& fileName);
 std::string removeInvalidCharsForFileName(const std::string& fileName);
+
+std::string readFile(const std::string& path);
+bool readFile(const std::string& path, std::vector<unsigned char>& data);
+bool writeFile(const std::string& path, const std::vector<unsigned char>& data);
+bool writeFile(const std::string& path, const std::string& data);
+bool writeFile(const std::string& path, const unsigned char* data, unsigned int dataLength);
+bool appendFile(const std::string& path, const unsigned char* data, unsigned int dataLength);
 
 
 #endif /* FileSystem_h */
