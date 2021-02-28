@@ -1413,7 +1413,7 @@ bool MessageParser::copyPortraitIcon(const std::string& usrName, const std::stri
                 std::string url = f->getPortrait();
                 if (!url.empty())
                 {
-                    m_downloader.addTask(portraitUrl, combinePath(destPath, destFileName), 0);
+                    m_downloader.addTask(url, combinePath(destPath, destFileName), 0);
                     hasPortrait = true;
                 }
             }
