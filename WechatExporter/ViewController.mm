@@ -296,12 +296,12 @@ void errorLogCallback(void *pArg, int iErrCode, const char *zMsg)
         m_usersAndSessions.clear();
         [self.popupUsers removeAllItems];
         self.txtViewLogs.string = @"";
+        // Clear Users and Sessions
+        [m_dataSource loadData:&m_usersAndSessions withAllUsers:YES indexOfSelectedUser:-1];
+        [self.tblSessions reloadData];
         
         if (self.popupBackup.indexOfSelectedItem == -1 || self.popupBackup.indexOfSelectedItem >= m_manifests.size())
         {
-            // Clear Users and Sessions
-            [m_dataSource loadData:&m_usersAndSessions withAllUsers:YES indexOfSelectedUser:-1];
-            [self.tblSessions reloadData];
             return;
         }
         
@@ -309,9 +309,6 @@ void errorLogCallback(void *pArg, int iErrCode, const char *zMsg)
             
         if (manifest.isEncrypted())
         {
-            [m_dataSource loadData:&m_usersAndSessions withAllUsers:YES indexOfSelectedUser:-1];
-            [self.tblSessions reloadData];
-
             [self msgBox:@"不支持加密的iTunes备份。"];
             return;
         }

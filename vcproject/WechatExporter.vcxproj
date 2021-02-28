@@ -239,8 +239,7 @@ xcopy "$(ProjectDir)..\WechatExporter\res"  "$(OutDir)res"  /Y /S /E</Command>
   <ItemGroup>
     <ClCompile Include="..\WechatExporter\core\Downloader.cpp" />
     <ClCompile Include="..\WechatExporter\core\Exporter.cpp" />
-    <ClCompile Include="..\WechatExporter\core\FileSystemImpl_Mac.cpp" />
-    <ClCompile Include="..\WechatExporter\core\FileSystemImpl_Win.cpp" />
+    <ClCompile Include="..\WechatExporter\core\FileSystem.cpp" />
     <ClCompile Include="..\WechatExporter\core\ITunesParser.cpp" />
     <ClCompile Include="..\WechatExporter\core\MessageParser.cpp" />
     <ClCompile Include="..\WechatExporter\core\RawMessage.cpp" />

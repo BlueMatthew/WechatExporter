@@ -405,9 +405,10 @@ bool Exporter::exportUser(Friend& user, std::string& userOutputPath)
         }
         if ((m_options & SPO_IGNORE_AVATAR) == 0)
         {
+            msgParser.copyPortraitIcon(it->getUsrName(), it->getHash(), it->getPortrait(), combinePath(outputBase, "Portrait"));
             if (!(it->isPortraitEmpty()))
             {
-                downloader.addTask(it->getPortrait(), combinePath(outputBase, "Portrait", it->getLocalPortrait()), 0);
+                // downloader.addTask(it->getPortrait(), combinePath(outputBase, "Portrait", it->getLocalPortrait()), 0);
             }
         }
         int count = exportSession(*myself, msgParser, *it, userBase, outputBase);

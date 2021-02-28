@@ -76,11 +76,7 @@ bool Task::downloadFile()
 #endif
 
     res = curl_easy_perform(curl);
-	if (res == CURLE_OK)
-    {
-        ::moveFile(m_outputTmp, m_output);
-    }
-    else
+	if (res != CURLE_OK)
 	{
         m_error = curl_easy_strerror(res);
         if (m_retries >= MAX_RETRIES)
@@ -88,13 +84,8 @@ bool Task::downloadFile()
             fprintf(stderr, "%s: %s\n", m_error.c_str(), m_url.c_str());
         }
 	}
-    
     curl_easy_cleanup(curl);
-    
-    if (m_mtime > 0)
-    {
-        updateFileTime(m_output, m_mtime);
-    }
+
 #ifndef NDEBUG
     if (NULL != logFile)
     {
@@ -102,6 +93,18 @@ bool Task::downloadFile()
     }
 #endif
     
+    if (res == CURLE_OK)
+    {
+        ::moveFile(m_outputTmp, m_output);
+        if (m_mtime > 0)
+        {
+            updateFileTime(m_output, m_mtime);
+        }
+#ifndef NDEBUG
+        ::deleteFile(logPath);
+#endif
+    }
+
     return res == CURLE_OK;
 }
 
@@ -141,7 +144,7 @@ void Downloader::setUserAgent(const std::string& userAgent)
 void Downloader::addTask(const std::string &url, const std::string& output, time_t mtime)
 {
 #ifndef NDEBUG
-    if (url == "/0")
+    if (url == "/0" || url.empty())
     {
         int aa = 0;
     }
