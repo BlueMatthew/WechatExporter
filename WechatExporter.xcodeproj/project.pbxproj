@@ -21,11 +21,11 @@
 		343F6122252322D600FFE085 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 343F6121252322D600FFE085 /* main.m */; };
 		343F612D25234BD300FFE085 /* ITunesParser.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 343F612C25234BD300FFE085 /* ITunesParser.cpp */; };
 		343F613025234BFC00FFE085 /* libsqlite3.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 343F612F25234BFC00FFE085 /* libsqlite3.tbd */; };
+		3471A77A25EB5A9A007D186B /* FileSystem.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 34AB9A1325B8908D006D3617 /* FileSystem.cpp */; };
 		347E601525C7E55100B33BAB /* SessionDataSource.mm in Sources */ = {isa = PBXBuildFile; fileRef = 347E601425C7E55100B33BAB /* SessionDataSource.mm */; };
 		349DAD2C255D3BB800BFE204 /* XmlParser.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 349DAD2A255D3BB800BFE204 /* XmlParser.cpp */; };
 		349DAD32255E6A0700BFE204 /* Utils_thread.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 349DAD31255E6A0600BFE204 /* Utils_thread.cpp */; };
 		34A0336125E34B0300E06CC5 /* MessageParser.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 34A0335F25E34B0300E06CC5 /* MessageParser.cpp */; };
-		34A0336525E4142500E06CC5 /* FileSystemImpl_Mac.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 34AB9A1425B890A0006D3617 /* FileSystemImpl_Mac.cpp */; };
 		34E3E90A2531BD8E0093042D /* Utils_md5.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 34E3E9092531BD8E0093042D /* Utils_md5.cpp */; };
 		34E3E90C2531BE200093042D /* Utils_protobuf.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 34E3E90B2531BE1F0093042D /* Utils_protobuf.cpp */; };
 		34E3E9242535555F0093042D /* RawMessage.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 34E3E9232535555F0093042D /* RawMessage.cpp */; };
@@ -72,8 +72,7 @@
 		34A0335F25E34B0300E06CC5 /* MessageParser.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = MessageParser.cpp; sourceTree = "<group>"; };
 		34A0336025E34B0300E06CC5 /* MessageParser.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MessageParser.h; sourceTree = "<group>"; };
 		34AB9A1225B89075006D3617 /* FileSystem.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = FileSystem.h; sourceTree = "<group>"; };
-		34AB9A1325B8908D006D3617 /* FileSystemImpl_Win.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = FileSystemImpl_Win.cpp; sourceTree = "<group>"; };
-		34AB9A1425B890A0006D3617 /* FileSystemImpl_Mac.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = FileSystemImpl_Mac.cpp; sourceTree = "<group>"; };
+		34AB9A1325B8908D006D3617 /* FileSystem.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = FileSystem.cpp; sourceTree = "<group>"; };
 		34CC0787253D98CA00AC8860 /* ByteArrayLocater.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ByteArrayLocater.h; sourceTree = "<group>"; };
 		34E3E9032525C2640093042D /* LoggerImpl.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = LoggerImpl.h; sourceTree = "<group>"; };
 		34E3E9092531BD8E0093042D /* Utils_md5.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Utils_md5.cpp; sourceTree = "<group>"; };
@@ -156,8 +155,7 @@
 				342EDB052524700A006A295A /* Exporter.h */,
 				345C8D4D2543F5E30036368C /* ExportNotifier.h */,
 				34AB9A1225B89075006D3617 /* FileSystem.h */,
-				34AB9A1425B890A0006D3617 /* FileSystemImpl_Mac.cpp */,
-				34AB9A1325B8908D006D3617 /* FileSystemImpl_Win.cpp */,
+				34AB9A1325B8908D006D3617 /* FileSystem.cpp */,
 				343F612C25234BD300FFE085 /* ITunesParser.cpp */,
 				343F612B25234BD300FFE085 /* ITunesParser.h */,
 				342EDB07252471D6006A295A /* Logger.h */,
@@ -228,7 +226,7 @@
 		343F610A252322D500FFE085 /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
-				LastUpgradeCheck = 1130;
+				LastUpgradeCheck = 1200;
 				ORGANIZATIONNAME = Matthew;
 				TargetAttributes = {
 					343F6111252322D500FFE085 = {
@@ -272,7 +270,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				34A0336525E4142500E06CC5 /* FileSystemImpl_Mac.cpp in Sources */,
+				3471A77A25EB5A9A007D186B /* FileSystem.cpp in Sources */,
 				34E3E9242535555F0093042D /* RawMessage.cpp in Sources */,
 				34E3E90C2531BE200093042D /* Utils_protobuf.cpp in Sources */,
 				34A0336125E34B0300E06CC5 /* MessageParser.cpp in Sources */,
@@ -333,6 +331,7 @@
 				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
 				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
 				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
 				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
 				CLANG_WARN_STRICT_PROTOTYPES = YES;
 				CLANG_WARN_SUSPICIOUS_MOVE = YES;
@@ -393,6 +392,7 @@
 				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
 				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
 				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
 				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
 				CLANG_WARN_STRICT_PROTOTYPES = YES;
 				CLANG_WARN_SUSPICIOUS_MOVE = YES;
@@ -425,6 +425,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = WechatExporter/WechatExporter.entitlements;
+				CODE_SIGN_IDENTITY = "-";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = 1;
@@ -459,6 +460,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = WechatExporter/WechatExporter.entitlements;
+				CODE_SIGN_IDENTITY = "-";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = 1;
