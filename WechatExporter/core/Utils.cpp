@@ -399,7 +399,7 @@ int openSqlite3ReadOnly(const std::string& path, sqlite3 **ppDb)
     {
         for (std::vector<std::string>::const_iterator it = parts.cbegin(); it != parts.cend(); ++it)
         {
-            char *ptr = curl_easy_escape(curl, it->c_str(), it->size());
+            char *ptr = curl_easy_escape(curl, it->c_str(), static_cast<int>(it->size()));
             if (ptr)
             {
                 encodedParts.push_back(std::string(ptr));

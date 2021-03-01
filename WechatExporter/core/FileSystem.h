@@ -29,8 +29,8 @@ std::string readFile(const std::string& path);
 bool readFile(const std::string& path, std::vector<unsigned char>& data);
 bool writeFile(const std::string& path, const std::vector<unsigned char>& data);
 bool writeFile(const std::string& path, const std::string& data);
-bool writeFile(const std::string& path, const unsigned char* data, unsigned int dataLength);
-bool appendFile(const std::string& path, const unsigned char* data, unsigned int dataLength);
+bool writeFile(const std::string& path, const unsigned char* data, size_t dataLength);
+bool appendFile(const std::string& path, const unsigned char* data, size_t dataLength);
 
 
 #endif /* FileSystem_h */
