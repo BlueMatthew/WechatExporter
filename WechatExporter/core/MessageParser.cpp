@@ -118,35 +118,38 @@ bool MessageParser::parse(WXMSG& msg, const Session& session, std::vector<Templa
     }
     
     std::string portraitPath = ((m_options & SPO_ICON_IN_SESSION) == SPO_ICON_IN_SESSION) ? session.getOutputFileName() + "_files/Portrait/" : "Portrait/";
-    std::string emojiPath = ((m_options & SPO_ICON_IN_SESSION) == SPO_ICON_IN_SESSION) ? session.getOutputFileName() + "_files/Emoji/" : "Emoji/";
+    // std::string emojiPath = ((m_options & SPO_ICON_IN_SESSION) == SPO_ICON_IN_SESSION) ? session.getOutputFileName() + "_files/Emoji/" : "Emoji/";
     
     std::string localPortrait;
-    std::string remotePortrait;
+
+    const Friend* protraitUser = NULL;
     if (session.isChatroom())
     {
+        tv["%%ALIGNMENT%%"] = (msg.des == 0) ? "right" : "left";
         if (msg.des == 0)
         {
-            tv["%%ALIGNMENT%%"] = "right";
-            tv["%%NAME%%"] = m_myself.getDisplayName();    // Don't show name for self
-            localPortrait = portraitPath + m_myself.getLocalPortrait();
-            tv["%%AVATAR%%"] = localPortrait;
-            remotePortrait = m_myself.getPortrait();
+            tv["%%NAME%%"] = m_myself.getDisplayName();    // CSS will prevent showing the name for self
+            tv["%%AVATAR%%"] = portraitPath + m_myself.getLocalPortrait();
+            // remotePortrait = m_myself.getPortrait();
+            protraitUser = &m_myself;
         }
         else
         {
-            tv["%%ALIGNMENT%%"] = "left";
             if (!senderId.empty())
             {
-                std::string txtsender = session.getMemberName(md5(senderId));
-                const Friend *f = m_friends.getFriendByUid(senderId);
-                if (txtsender.empty() && NULL != f)
+                std::string senderHash = md5(senderId);
+                std::string senderDisplayName = session.getMemberName(senderHash);
+                const Friend *f = m_friends.getFriend(senderHash);
+                if (senderDisplayName.empty() && NULL != f)
                 {
-                    txtsender = f->getDisplayName();
+                    senderDisplayName = f->getDisplayName();
                 }
-                tv["%%NAME%%"] = txtsender.empty() ? senderId : txtsender;
-                localPortrait = portraitPath + ((NULL != f) ? f->getLocalPortrait() : "DefaultProfileHead@2x.png");
-                remotePortrait = (NULL != f) ? f->getPortrait() : "";
-                tv["%%AVATAR%%"] = localPortrait;
+                tv["%%NAME%%"] = senderDisplayName.empty() ? senderId : senderDisplayName;
+                if (NULL != f)
+                {
+                    protraitUser = f;
+                }
+                tv["%%AVATAR%%"] = portraitPath + ((NULL != f) ? f->getLocalPortrait() : "DefaultProfileHead@2x.png");
             }
             else
             {
@@ -161,9 +164,9 @@ bool MessageParser::parse(WXMSG& msg, const Session& session, std::vector<Templa
         {
             tv["%%ALIGNMENT%%"] = "right";
             tv["%%NAME%%"] = m_myself.getDisplayName();
-            localPortrait = portraitPath + m_myself.getLocalPortrait();
-            remotePortrait = m_myself.getPortrait();
-            tv["%%AVATAR%%"] = localPortrait;
+            tv["%%AVATAR%%"] = portraitPath + m_myself.getLocalPortrait();
+            
+            protraitUser = &m_myself;
         }
         else
         {
@@ -174,26 +177,29 @@ bool MessageParser::parse(WXMSG& msg, const Session& session, std::vector<Templa
             {
                 tv["%%NAME%%"] = session.getDisplayName();
                 localPortrait = portraitPath + (session.isPortraitEmpty() ? "DefaultProfileHead@2x.png" : session.getLocalPortrait());
-                remotePortrait = session.getPortrait();
+                // remotePortrait = session.getPortrait();
                 tv["%%AVATAR%%"] = localPortrait;
+                
+                protraitUser = &session;
             }
             else
             {
                 tv["%%NAME%%"] = f->getDisplayName();
                 localPortrait = portraitPath + f->getLocalPortrait();
-                remotePortrait = f->getPortrait();
+                // remotePortrait = f->getPortrait();
                 tv["%%AVATAR%%"] = localPortrait;
+                
+                protraitUser = f;
             }
         }
     }
 
     if ((m_options & SPO_IGNORE_AVATAR) == 0)
     {
-        if (!remotePortrait.empty() && !localPortrait.empty())
+        if (NULL != protraitUser)
         {
-            // copyPortraitIcon(senderId, remotePortrait, combinePath(m_outputPath, portraitPath));
-            
-            m_downloader.addTask(remotePortrait, combinePath(m_outputPath, localPortrait), msg.createTime);
+            copyPortraitIcon(*protraitUser, combinePath(m_outputPath, portraitPath));
+            // m_downloader.addTask(remotePortrait, combinePath(m_outputPath, localPortrait), msg.createTime);
         }
     }
     
@@ -209,6 +215,13 @@ bool MessageParser::parse(WXMSG& msg, const Session& session, std::vector<Templa
     }
     return true;
 }
+
+void MessageParser::parsePortrait(const WXMSG& msg, const Session& session, const std::string& senderId, TemplateValues& tv) const
+{
+    
+}
+
+/////////////////////////////////////
 
 void MessageParser::parseText(const WXMSG& msg, const Session& session, TemplateValues& tv) const
 {
@@ -345,7 +358,7 @@ void MessageParser::parseEmotion(const WXMSG& msg, const Session& session, Templ
         std::string emojiPath = ((m_options & SPO_ICON_IN_SESSION) == SPO_ICON_IN_SESSION) ? session.getOutputFileName() + "_files/Emoji/" : "Emoji/";
         localFile = emojiPath + localFile + ".gif";
         ensureDirectoryExisted(m_outputPath);
-        m_downloader.addTask(url, combinePath(m_outputPath, localFile), msg.createTime);
+        m_downloader.addTask(url, combinePath(m_outputPath, localFile), msg.createTime, "emoji");
         tv.setName("emoji");
         tv["%%EMOJIPATH%%"] = localFile;
     }
@@ -1158,7 +1171,7 @@ void MessageParser::parseCard(const std::string& sessionPath, const std::string&
             templateValues["%%CARDIMGPATH%%"] = portraitDir + "/" + attrs["username"] + ".jpg";
             std::string localfile = combinePath(portraitDir, attrs["username"] + ".jpg");
             ensureDirectoryExisted(portraitDir);
-            m_downloader.addTask(portraitUrl, combinePath(sessionPath, localfile), 0);
+            m_downloader.addTask(portraitUrl, combinePath(sessionPath, localfile), 0, "card");
         }
         else if (!attrs["nickname"].empty())
         {
@@ -1193,7 +1206,7 @@ void MessageParser::parseChannelCard(const std::string& sessionPath, const std::
             templateValues["%%CARDIMGPATH%%"] = portraitDir + "/" + usrName + ".jpg";
             std::string localfile = combinePath(portraitDir, usrName + ".jpg");
             ensureDirectoryExisted(portraitDir);
-            m_downloader.addTask(avatar, combinePath(sessionPath, localfile), 0);
+            m_downloader.addTask(avatar, combinePath(sessionPath, localfile), 0, "card");
         }
         else
         {
@@ -1247,14 +1260,14 @@ void MessageParser::parseChannels(const std::string& msgId, const XmlParser& xml
         std::string thumbFile = session.getOutputFileName() + "_files/" + msgId + ".jpg";
         tv["%%CHANNELTHUMBPATH%%"] = thumbFile;
         ensureDirectoryExisted(combinePath(m_outputPath, session.getOutputFileName() + "_files"));
-        m_downloader.addTask(thumbUrl, combinePath(m_outputPath, thumbFile), 0);
+        m_downloader.addTask(thumbUrl, combinePath(m_outputPath, thumbFile), 0, "thumb");
         
         if (!nodes["avatar"].empty())
         {
             tv["%%CARDIMGPATH%%"] = portraitDir + "/" + nodes["username"] + ".jpg";
             std::string localFile = combinePath(portraitDir, nodes["username"] + ".jpg");
             ensureDirectoryExisted(portraitDir);
-            m_downloader.addTask(nodes["avatar"], combinePath(m_outputPath, localFile), 0);
+            m_downloader.addTask(nodes["avatar"], combinePath(m_outputPath, localFile), 0, "card");
         }
 
         tv["%%CHANNELURL%%"] = videoNodes["url"];
@@ -1398,6 +1411,11 @@ bool MessageParser::copyPortraitIcon(const std::string& usrName, const std::stri
     return copyPortraitIcon(usrName, md5(usrName), portraitUrl, destPath);
 }
 
+bool MessageParser::copyPortraitIcon(const Friend& f, const std::string& destPath) const
+{
+    return copyPortraitIcon(f.getUsrName(), f.getHash(), f.getPortrait(), destPath);
+}
+
 bool MessageParser::copyPortraitIcon(const std::string& usrName, const std::string& usrNameHash, const std::string& portraitUrl, const std::string& destPath) const
 {
     std::string destFileName = usrName + ".jpg";
@@ -1413,14 +1431,14 @@ bool MessageParser::copyPortraitIcon(const std::string& usrName, const std::stri
                 std::string url = f->getPortrait();
                 if (!url.empty())
                 {
-                    m_downloader.addTask(url, combinePath(destPath, destFileName), 0);
+                    m_downloader.addTask(url, combinePath(destPath, destFileName), 0, "avatar");
                     hasPortrait = true;
                 }
             }
         }
         else
         {
-            m_downloader.addTask(portraitUrl, combinePath(destPath, destFileName), 0);
+            m_downloader.addTask(portraitUrl, combinePath(destPath, destFileName), 0, "avatar");
             hasPortrait = true;
         }
     }

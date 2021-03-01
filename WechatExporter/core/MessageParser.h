@@ -289,8 +289,12 @@ public:
     bool parse(WXMSG& msg, const Session& session, std::vector<TemplateValues>& tvs) const;
     bool copyPortraitIcon(const std::string& usrName, const std::string& portraitUrl, const std::string& destPath) const;
     bool copyPortraitIcon(const std::string& usrName, const std::string& usrNameHash, const std::string& portraitUrl, const std::string& destPath) const;
+    bool copyPortraitIcon(const Friend& f, const std::string& destPath) const;
     
 protected:
+    
+    void parsePortrait(const WXMSG& msg, const Session& session, const std::string& senderId, TemplateValues& tv) const;
+    
     void parseText(const WXMSG& msg, const Session& session, TemplateValues& tv) const;
     void parseImage(const WXMSG& msg, const Session& session, TemplateValues& tv) const;
     void parseVoice(const WXMSG& msg, const Session& session, TemplateValues& tv) const;

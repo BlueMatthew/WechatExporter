@@ -590,6 +590,13 @@ FriendsParser::FriendsParser(bool detailedInfo/* = true*/) : m_detailedInfo(deta
 {
 }
 
+#ifndef NDEBUG
+void FriendsParser::setOutputPath(const std::string& outputPath)
+{
+    m_outputPath = outputPath;
+}
+#endif
+
 bool FriendsParser::parseWcdb(const std::string& mmPath, Friends& friends)
 {
     sqlite3 *db = NULL;
@@ -666,6 +673,7 @@ bool FriendsParser::parseRemark(const void *data, int length, Friend& f)
 
 bool FriendsParser::parseAvatar(const void *data, int length, Friend& f)
 {
+
     RawMessage msg;
     if (!msg.merge(reinterpret_cast<const char *>(data), length))
     {
@@ -675,11 +683,17 @@ bool FriendsParser::parseAvatar(const void *data, int length, Friend& f)
     std::string value;
     if (msg.parse("2", value))
     {
-        f.setPortrait(value);
+        if (!Friend::isInvalidPortrait(value))
+        {
+            f.setPortrait(value);
+        }
     }
     if (msg.parse("3", value))
     {
-        f.setPortraitHD(value);
+        if (!Friend::isInvalidPortrait(value))
+        {
+            f.setPortraitHD(value);
+        }
     }
 
     return true;
@@ -992,7 +1006,10 @@ bool SessionsParser::parseCellData(const std::string& userRoot, Session& session
     }
 	if (msg.parse("1.1.14", value))
 	{
-		session.setPortrait(value);
+        if (startsWith(value, "http://") || startsWith(value, "https://"))
+        {
+            session.setPortrait(value);
+        }
 	}
 	if (msg.parse("1.5", value))
 	{
@@ -1213,7 +1230,6 @@ SessionParser::MessageEnumerator::MessageEnumerator(const Session& session, int 
         sql += " DESC";
     }
     
-    sqlite3_stmt* stmt = NULL;
     rc = sqlite3_prepare_v2(context->db, sql.c_str(), (int)(sql.size()), &(context->stmt), NULL);
     if (rc != SQLITE_OK)
     {

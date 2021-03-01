@@ -406,10 +406,6 @@ bool Exporter::exportUser(Friend& user, std::string& userOutputPath)
         if ((m_options & SPO_IGNORE_AVATAR) == 0)
         {
             msgParser.copyPortraitIcon(it->getUsrName(), it->getHash(), it->getPortrait(), combinePath(outputBase, "Portrait"));
-            if (!(it->isPortraitEmpty()))
-            {
-                // downloader.addTask(it->getPortrait(), combinePath(outputBase, "Portrait", it->getLocalPortrait()), 0);
-            }
         }
         int count = exportSession(*myself, msgParser, *it, userBase, outputBase);
         
@@ -454,6 +450,11 @@ bool Exporter::exportUser(Friend& user, std::string& userOutputPath)
         }
     }
     downloader.finishAndWaitForExit();
+    
+#ifndef NDEBUG
+    m_logger->debug(formatString("Total Downloads: %d", downloader.getCount()));
+    m_logger->debug("Download Stats: " + downloader.getStats());
+#endif
 
     return true;
 }
@@ -465,6 +466,9 @@ bool Exporter::loadUserFriendsAndSessions(const Friend& user, Friends& friends, 
     
     std::string wcdbPath = m_iTunesDb->findRealPath(combinePath(userBase, "DB", "WCDB_Contact.sqlite"));
     FriendsParser friendsParser(detailedInfo);
+#ifndef NDEBUG
+    friendsParser.setOutputPath(m_output);
+#endif
     friendsParser.parseWcdb(wcdbPath, friends);
 
     m_logger->debug("Wechat Friends(" + std::to_string(friends.friends.size()) + ") for: " + user.getDisplayName() + " loaded.");
