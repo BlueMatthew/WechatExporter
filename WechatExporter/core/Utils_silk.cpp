@@ -72,7 +72,7 @@ unsigned long GetHighResolutionTime() /* O: time in usec*/
 #endif // _WIN32
 
 /* Seed for the random number generator, which is used for simulating packet loss */
-static SKP_int32 rand_seed = 1;
+// static SKP_int32 rand_seed = 1;
 
 bool silkToPcm(const std::string& silkPath, std::vector<unsigned char>& pcmData)
 {
