@@ -29,7 +29,7 @@
 // @property (assign) NSInteger userPointer;
 // @property (assign) NSInteger sessionPointer;
 
-- (NSComparisonResult)orgIndexCompare:(SessionItem *)sessionItem:(BOOL)ascending;
+// - (NSComparisonResult)orgIndexCompare:(SessionItem *)sessionItem:(BOOL)ascending;
 - (NSComparisonResult)displayNameCompare:(SessionItem *)sessionItem ascending:(BOOL)ascending;
 - (NSComparisonResult)recordCountCompare:(SessionItem *)sessionItem ascending:(BOOL)ascending;
 - (NSComparisonResult)userIndexCompare:(SessionItem *)sessionItem ascending:(BOOL)ascending;
