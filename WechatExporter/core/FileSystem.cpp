@@ -550,7 +550,7 @@ bool writeFile(const std::string& path, const std::string& data)
     return writeFile(path, reinterpret_cast<const unsigned char*>(data.c_str()), data.size());
 }
 
-bool writeFile(const std::string& path, const unsigned char* data, unsigned int dataLength)
+bool writeFile(const std::string& path, const unsigned char* data, size_t dataLength)
 {
 #ifdef _WIN32
     CW2T pszT(CA2W(path.c_str(), CP_UTF8));
@@ -582,7 +582,7 @@ bool writeFile(const std::string& path, const unsigned char* data, unsigned int 
 #endif
 }
 
-bool appendFile(const std::string& path, const unsigned char* data, unsigned int dataLength)
+bool appendFile(const std::string& path, const unsigned char* data, size_t dataLength)
 {
 #ifdef _WIN32
     CW2T pszT(CA2W(path.c_str(), CP_UTF8));
