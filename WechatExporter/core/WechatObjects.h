@@ -12,6 +12,9 @@
 #include <map>
 #include <algorithm>
 #include <cmath>
+#ifndef NDEBUG
+#include <cassert>
+#endif
 #include "Utils.h"
 
 #ifndef WechatObjects_h
