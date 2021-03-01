@@ -272,6 +272,9 @@ class FriendsParser
 public:
     FriendsParser(bool detailedInfo = true);
     bool parseWcdb(const std::string& mmPath, Friends& friends);
+#ifndef NDEBUG
+    void setOutputPath(const std::string& outputPath);
+#endif
     
 private:
     bool parseRemark(const void *data, int length, Friend& f);
@@ -280,6 +283,9 @@ private:
     
 private:
     bool m_detailedInfo;
+#ifndef NDEBUG
+    std::string m_outputPath;
+#endif
 };
 
 class SessionsParser

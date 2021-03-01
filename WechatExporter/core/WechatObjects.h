@@ -285,8 +285,16 @@ public:
         m_userType = userType;
     }
     
+    static bool isInvalidPortrait(const std::string& portrait);
+    
     inline void setPortrait(const std::string& portrait)
     {
+#ifndef NDEBUG
+        if (isInvalidPortrait(portrait))
+        {
+            assert(false);
+        }
+#endif
         m_portrait = portrait;
     }
     
@@ -378,6 +386,11 @@ inline bool Friend::isChatroom(const std::string& usrName)
 {
     return endsWith(usrName, "@chatroom")
         || endsWith(usrName, "@im.chatroom");
+}
+
+inline bool Friend::isInvalidPortrait(const std::string& portrait)
+{
+    return !portrait.empty() && (!startsWith(portrait, "http://") && !startsWith(portrait, "https://") && !startsWith(portrait, "file://"));
 }
 
 class Friends

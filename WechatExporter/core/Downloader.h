@@ -108,7 +108,7 @@ public:
     
     void setUserAgent(const std::string& userAgent);
     
-    void addTask(const std::string &url, const std::string& output, time_t mtime);
+    void addTask(const std::string &url, const std::string& output, time_t mtime, std::string type = "");
     void setNoMoreTask();
     void run(int idx);
     
@@ -117,8 +117,16 @@ public:
     int getCount() const;
     int getRunningCount() const;
     
+#ifndef NDEBUG
+    std::string getStats() const;
+#endif
+    
 protected:
     const Task& dequeue();
+    
+#ifndef NDEBUG
+    std::map<std::string, uint32_t> m_statsType;
+#endif
 };
 
 #endif /* Downloader_h */
