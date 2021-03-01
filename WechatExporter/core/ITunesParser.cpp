@@ -528,7 +528,6 @@ bool ManifestParser::parse(const std::string& backupPath, const std::string& bac
                 plist_t iOSVersionNode = plist_access_path(node, 2, "Lockdown", "ProductVersion");
                 if (NULL != iOSVersionNode)
                 {
-                    uint8_t val = 0;
                     uint64_t length = 0;
                     const char* ptr = plist_get_string_ptr(iOSVersionNode, &length);
                     if (ptr != NULL && length > 0)

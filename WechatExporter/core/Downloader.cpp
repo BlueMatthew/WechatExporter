@@ -19,6 +19,8 @@
 #include <atlstr.h>
 #endif
 
+// #define FAKE_DOWNLOAD
+
 size_t writeData(void *buffer, size_t size, size_t nmemb, void *user_p)
 {
     Task *task = reinterpret_cast<Task *>(user_p);
@@ -47,12 +49,24 @@ bool Task::downloadFile()
     m_outputTmp = m_output + ".tmp";
     remove(utf8ToLocalAnsi(m_outputTmp).c_str());
 
-	CURLcode res;
-
+	CURLcode res = CURLE_OK;
+    CURL *curl = NULL;
+#ifndef NDEBUG
+    std::string logPath = m_output + ".log";
+    
+#ifdef _WIN32
+    CA2W pszW(logPath.c_str(), CP_UTF8);
+    FILE* logFile = _wfopen((LPCWSTR)pszW, L"wb");
+#else
+    FILE* logFile = fopen(logPath.c_str(), "wb");
+#endif
+#endif
+    
     std::string userAgent = m_userAgent.empty() ? "WeChat/7.0.15.33 CFNetwork/978.0.7 Darwin/18.6.0" : m_userAgent;
     
+#ifndef FAKE_DOWNLOAD
     // User-Agent: WeChat/7.0.15.33 CFNetwork/978.0.7 Darwin/18.6.0
-    CURL *curl = curl_easy_init();
+    curl = curl_easy_init();
     curl_easy_setopt(curl, CURLOPT_URL, m_url.c_str());
     curl_easy_setopt(curl, CURLOPT_USERAGENT, userAgent.c_str());
     curl_easy_setopt(curl, CURLOPT_FORBID_REUSE, 1L);
@@ -63,14 +77,6 @@ bool Task::downloadFile()
 	curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 0);
 	curl_easy_setopt(curl, CURLOPT_SSL_VERIFYHOST, 0);
 #ifndef NDEBUG
-    std::string logPath = m_output + ".log";
-    
-#ifdef _WIN32
-    CA2W pszW(logPath.c_str(), CP_UTF8);
-    FILE* logFile = _wfopen((LPCWSTR)pszW, L"wb");
-#else
-    FILE* logFile = fopen(logPath.c_str(), "wb");
-#endif
     curl_easy_setopt(curl, CURLOPT_VERBOSE, 1L);
     curl_easy_setopt(curl, CURLOPT_STDERR, logFile);
 #endif
@@ -85,6 +91,7 @@ bool Task::downloadFile()
         }
 	}
     curl_easy_cleanup(curl);
+#endif // no FAKE_DOWNLOAD
 
 #ifndef NDEBUG
     if (NULL != logFile)
@@ -141,7 +148,7 @@ void Downloader::setUserAgent(const std::string& userAgent)
     m_userAgent = userAgent;
 }
 
-void Downloader::addTask(const std::string &url, const std::string& output, time_t mtime)
+void Downloader::addTask(const std::string &url, const std::string& output, time_t mtime, std::string type/* = ""*/)
 {
 #ifndef NDEBUG
     if (url == "/0" || url.empty())
@@ -182,6 +189,18 @@ void Downloader::addTask(const std::string &url, const std::string& output, time
             task.setUserAgent(m_userAgent);
             m_queue.push(task);
             m_downloadTaskSize++;
+#ifndef NDEBUG
+            std::string key = type.empty() ? "unkownd" : type;
+            std::map<std::string, uint32_t>::iterator it = m_statsType.find(key);
+            if (it == m_statsType.end())
+            {
+                m_statsType.insert(std::pair<std::string, uint32_t>(key, 1));
+            }
+            else
+            {
+                ++(it->second);
+            }
+#endif
         }
         else if (output != it->second)
         {
@@ -199,6 +218,20 @@ void Downloader::addTask(const std::string &url, const std::string& output, time
 #endif
     }
 }
+
+#ifndef NDEBUG
+std::string Downloader::getStats() const
+{
+    std::string stats;
+    
+    for (std::map<std::string, uint32_t>::const_iterator it = m_statsType.cbegin(); it != m_statsType.cend(); ++it)
+    {
+        stats.append(it->first + ":" + std::to_string(it->second) + " ");
+    }
+    
+    return stats;
+}
+#endif
 
 void Downloader::setNoMoreTask()
 {
