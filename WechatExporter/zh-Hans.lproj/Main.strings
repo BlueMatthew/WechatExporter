@@ -51,7 +51,7 @@
 "O0i-cF-8Ix.title" = "Text Cell";
 
 /* Class = "NSMenuItem"; title = "Hide WechatExporter"; ObjectID = "Olw-nP-bQN"; */
-"Olw-nP-bQN.title" = "Hide WechatExporter";
+"Olw-nP-bQN.title" = "隐藏 WechatExporter";
 
 /* Class = "NSTextFieldCell"; title = "Text Cell"; ObjectID = "Q3f-RG-97F"; */
 "Q3f-RG-97F.title" = "Text Cell";
@@ -60,10 +60,10 @@
 "U0Z-kO-i9H.title" = "按消息时间倒序导出";
 
 /* Class = "NSMenuItem"; title = "File"; ObjectID = "UCE-Dj-bc1"; */
-"UCE-Dj-bc1.title" = "File";
+"UCE-Dj-bc1.title" = "文件";
 
 /* Class = "NSMenuItem"; title = "Hide Others"; ObjectID = "Vdr-fp-XzO"; */
-"Vdr-fp-XzO.title" = "Hide Others";
+"Vdr-fp-XzO.title" = "隐藏其它应用";
 
 /* Class = "NSTextFieldCell"; title = "Text Cell"; ObjectID = "X6v-WO-gkU"; */
 "X6v-WO-gkU.title" = "Text Cell";

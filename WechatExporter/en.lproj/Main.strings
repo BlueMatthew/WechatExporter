@@ -72,7 +72,7 @@
 "Xrw-Jp-zhh.title" = "Text Only";
 
 /* Class = "NSTableColumn"; headerCell.title = "聊天记录数"; ObjectID = "bsY-Rr-JHi"; */
-"bsY-Rr-JHi.headerCell.title" = "Number of Chat";
+"bsY-Rr-JHi.headerCell.title" = "Number of Msgs";
 
 /* Class = "NSMenuItem"; title = "HTML"; ObjectID = "cWo-5k-XRR"; */
 "cWo-5k-XRR.title" = "HTML";
