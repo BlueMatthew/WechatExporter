@@ -132,7 +132,7 @@
                                 </textFieldCell>
                             </textField>
                             <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="OAQ-rY-5Vw">
-                                <rect key="frame" x="12" y="376" width="108" height="16"/>
+                                <rect key="frame" x="12" y="376" width="405" height="16"/>
                                 <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                                 <textFieldCell key="cell" lineBreakMode="clipping" title="iTunes备份目录：" id="BqF-Du-vMt">
                                     <font key="font" usesAppearanceFont="YES"/>
@@ -175,7 +175,7 @@
                                 </buttonCell>
                             </button>
                             <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="9La-2q-J8z">
-                                <rect key="frame" x="12" y="322" width="68" height="16"/>
+                                <rect key="frame" x="12" y="322" width="480" height="16"/>
                                 <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                                 <textFieldCell key="cell" lineBreakMode="clipping" title="导出目录：" id="uh4-ix-NCq">
                                     <font key="font" usesAppearanceFont="YES"/>
@@ -184,7 +184,7 @@
                                 </textFieldCell>
                             </textField>
                             <button verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="pbK-5X-QkO">
-                                <rect key="frame" x="12" y="266" width="142" height="18"/>
+                                <rect key="frame" x="12" y="266" width="166" height="18"/>
                                 <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                                 <buttonCell key="cell" type="check" title="按消息时间倒序导出" bezelStyle="regularSquare" imagePosition="left" inset="2" id="U0Z-kO-i9H">
                                     <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
@@ -192,7 +192,7 @@
                                 </buttonCell>
                             </button>
                             <button toolTip="相同的文件会在不同的聊天记录子目录下重复保存，占用更多磁盘空间。" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="MHp-Fl-sSj">
-                                <rect key="frame" x="179" y="266" width="248" height="18"/>
+                                <rect key="frame" x="185" y="266" width="248" height="18"/>
                                 <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                                 <buttonCell key="cell" type="check" title="头像和表情文件存放到聊天记录子目录" bezelStyle="regularSquare" imagePosition="left" state="on" inset="2" id="n8p-ki-ape">
                                     <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
@@ -431,7 +431,7 @@ Gw
                                 </buttonCell>
                             </button>
                             <button verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="Rsr-PR-Nqr" userLabel="Chkbox TextMode">
-                                <rect key="frame" x="465" y="266" width="89" height="18"/>
+                                <rect key="frame" x="458" y="266" width="89" height="18"/>
                                 <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                                 <buttonCell key="cell" type="check" title="仅导出文本" bezelStyle="regularSquare" imagePosition="left" inset="2" id="Xrw-Jp-zhh">
                                     <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
@@ -439,7 +439,7 @@ Gw
                                 </buttonCell>
                             </button>
                             <button toolTip="通过Javascript异步加载聊天记录" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="0yy-i1-mEE">
-                                <rect key="frame" x="589" y="266" width="140" height="18"/>
+                                <rect key="frame" x="589" y="266" width="324" height="18"/>
                                 <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                                 <buttonCell key="cell" type="check" title="HTML数据异步加载" bezelStyle="regularSquare" imagePosition="left" state="on" inset="2" id="jf9-as-hdU">
                                     <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
