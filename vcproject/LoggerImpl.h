@@ -31,9 +31,9 @@ public:
 		CW2T pszT(CA2W(log.c_str(), CP_UTF8));
 		
 #if !defined(NDEBUG) || defined(DBG_PERF)
-		std::string timeString = getCurrentTimestamp(false, true) + ": ";
+		std::string timeString = getTimestampString(false, true) + ": ";
 #else
-		std::string timeString = getCurrentTimestamp() + ": ";
+		std::string timeString = getTimestampString() + ": ";
 #endif
 		CA2T szTime(timeString.c_str());
 
