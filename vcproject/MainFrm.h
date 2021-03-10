@@ -40,6 +40,7 @@ public:
 		COMMAND_ID_HANDLER(ID_FILE_DESC_ORDER, OnDescOrder)
 		COMMAND_RANGE_HANDLER(ID_FORMAT_HTML, ID_FORMAT_TEXT, OnOutputFormat)
 		COMMAND_ID_HANDLER(ID_FORMAT_ASYNC_LOADING, OnAsyncFormat)
+		COMMAND_ID_HANDLER(ID_CHK_UPDATE, OnCheckUpdate)
 		CHAIN_MSG_MAP(CUpdateUI<CMainFrame>)
 		CHAIN_MSG_MAP(CFrameWindowImpl<CMainFrame>)
 	END_MSG_MAP()
@@ -63,8 +64,9 @@ public:
 
 		CMenuHandle menu = GetMenu();
 		CMenuHandle subMenuFile = menu.GetSubMenu(0);
-		subMenuFile.CheckMenuItem(ID_FILE_DESC_ORDER, AppConfiguration::GetDescOrder() ? MF_CHECKED : MF_UNCHECKED);
-		subMenuFile.CheckMenuItem(ID_FILE_SAVING_IN_SESSION, AppConfiguration::GetSavingInSession() ? MF_CHECKED : MF_UNCHECKED);
+		subMenuFile.CheckMenuItem(ID_FILE_DESC_ORDER, MF_BYCOMMAND | (AppConfiguration::GetDescOrder() ? MF_CHECKED : MF_UNCHECKED));
+		subMenuFile.CheckMenuItem(ID_FILE_SAVING_IN_SESSION, MF_BYCOMMAND | (AppConfiguration::GetSavingInSession() ? MF_CHECKED : MF_UNCHECKED));
+		subMenuFile.CheckMenuItem(ID_CHK_UPDATE, MF_BYCOMMAND | (AppConfiguration::GetCheckingUpdateDisabled() ? MF_UNCHECKED : MF_CHECKED));
 
 		CMenuHandle subMenuFormat = menu.GetSubMenu(1);
 		UINT outputFormat = AppConfiguration::GetOutputFormat();
@@ -133,6 +135,18 @@ public:
 		subMenu.CheckMenuItem(ID_FILE_DESC_ORDER, MF_BYCOMMAND | (curDescOrder ? MF_UNCHECKED : MF_CHECKED));
 		AppConfiguration::SetDescOrder(!curDescOrder);
 		
+		return 0;
+	}
+
+	LRESULT OnCheckUpdate(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/)
+	{
+		CMenuHandle menu = GetMenu();
+		CMenuHandle subMenu = menu.GetSubMenu(0);
+		UINT menuState = subMenu.GetMenuState(ID_CHK_UPDATE, MF_BYCOMMAND);
+		BOOL autoChkUpdate = (menuState != 0xFFFFFFFF) && ((menuState & MF_CHECKED) == MF_CHECKED) ? TRUE : FALSE;
+		subMenu.CheckMenuItem(ID_CHK_UPDATE, MF_BYCOMMAND | (autoChkUpdate ? MF_UNCHECKED : MF_CHECKED));
+		AppConfiguration::SetCheckingUpdateDisabled(autoChkUpdate);
+
 		return 0;
 	}
 

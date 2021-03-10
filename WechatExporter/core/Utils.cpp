@@ -16,6 +16,7 @@
 #include <codecvt>
 #include <locale>
 #include <cstdio>
+#include <chrono>
 #ifdef _WIN32
 #include <direct.h>
 #include <atlstr.h>
@@ -228,6 +229,13 @@ std::string fromUnixTime(unsigned int unixtime)
     return ss.str();
 }
 
+uint32_t getUnixTimeStamp()
+{
+	time_t rawTime = 0;
+	time(&rawTime);
+	struct tm *localTm = localtime(&rawTime);
+	return mktime(localTm);
+}
 /*
 bool existsFile(const std::string &path)
 {
@@ -532,4 +540,9 @@ std::string getCurrentTimestamp(bool includingYMD/* = false*/, bool includingMs/
     }
 
     return std::string(buffer);
+}
+
+bool isNumber(const std::string &s)
+{
+    return !s.empty() && std::all_of(s.begin(), s.end(), ::isdigit);
 }

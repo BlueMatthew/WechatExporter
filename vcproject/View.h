@@ -12,8 +12,9 @@
 #include "ExportNotifierImpl.h"
 // #include "ColoredControls.h"
 #include "LogListBox.h"
-// #include "ITunesDetector.h"
 #include "AppConfiguration.h"
+#include "VersionDetector.h"
+#include "ViewHelper.h"
 
 class CView : public CDialogImpl<CView>, public CDialogResize<CView>
 {
@@ -43,11 +44,15 @@ private:
 
 		CLoadingHandler(HWND hWnd, const std::string& resDir, const std::string& backupDir, Logger* logger) : m_hWnd(hWnd), m_exp(resDir, backupDir, "", logger)
 		{
-			m_task = std::async(std::launch::async, &Exporter::loadUsersAndSessions, &m_exp);
 		}
 
 		~CLoadingHandler()
 		{
+		}
+
+		void startTask()
+		{
+			m_task = std::async(std::launch::async, &Exporter::loadUsersAndSessions, &m_exp);
 		}
 
 		virtual BOOL OnIdle()
@@ -69,13 +74,69 @@ private:
 
 	};
 
+	class CUpdateHandler : public CIdleHandler
+	{
+	protected:
+		HWND m_hWnd;
+		std::future<bool> m_task;
+		Updater m_updater;
+		CWaitCursor m_waitCursor;
+	public:
+
+		CUpdateHandler(HWND hWnd, const std::string& currentVersion, const std::string& userAgent) : m_hWnd(hWnd), m_updater(currentVersion)
+		{
+			m_updater.setUserAgent(userAgent);
+		}
+
+		~CUpdateHandler()
+		{
+		}
+
+		void startTask()
+		{
+			m_task = std::async(std::launch::async, &Updater::checkUpdate, &m_updater);
+		}
+
+		virtual BOOL OnIdle()
+		{
+			std::future_status status = m_task.wait_for(std::chrono::seconds(0));
+			if (status == std::future_status::ready)
+			{
+				::PostMessage(m_hWnd, WM_CHKUPDATE, 1, reinterpret_cast<LPARAM>(this));
+				return TRUE;
+			}
+
+			return FALSE;
+		}
+
+		bool hasNewVersion()
+		{
+			return m_task.get();
+		}
+
+		CString getNewVersion() const
+		{
+			CW2T pszT(CA2W(m_updater.getNewVersion().c_str(), CP_UTF8));
+			return CString(pszT);
+		}
+
+		CString getUpdateUrl() const
+		{
+			CW2T pszT(CA2W(m_updater.getUpdateUrl().c_str(), CP_UTF8));
+			return CString(pszT);
+		}
+
+	};
+
 public:
 	enum { IDD = IDD_WECHATEXPORTER_FORM };
 
 	static const DWORD WM_START = ExportNotifierImpl::WM_START;
 	static const DWORD WM_COMPLETE = ExportNotifierImpl::WM_COMPLETE;
 	static const DWORD WM_PROGRESS = ExportNotifierImpl::WM_PROGRESS;
-	static const DWORD WM_LOADDATA = WM_PROGRESS + 1;
+	static const DWORD WM_MSG_START = WM_PROGRESS;
+	static const DWORD WM_LOADDATA = WM_MSG_START + 1;
+	static const DWORD WM_CHKUPDATE = WM_MSG_START + 2;
 
 	LRESULT OnInitDialog(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 	{
@@ -134,6 +195,11 @@ public:
 			UpdateBackups(manifests);
 		}
 
+		if (!AppConfiguration::GetCheckingUpdateDisabled() && (getUnixTimeStamp() - AppConfiguration::GetLastCheckUpdateTime()) > 86400u)
+		{
+			::PostMessage(m_hWnd, WM_CHKUPDATE, 0, 0);
+		}
+
 		return TRUE;
 	}
 
@@ -178,6 +244,7 @@ public:
 		MESSAGE_HANDLER(WM_COMPLETE, OnComplete)
 		MESSAGE_HANDLER(WM_PROGRESS, OnProgress)
 		MESSAGE_HANDLER(WM_LOADDATA, OnLoadData)
+		MESSAGE_HANDLER(WM_CHKUPDATE, OnCheckUpdate)
 		NOTIFY_HANDLER(IDC_SESSIONS, LVN_ITEMCHANGING, OnListItemChanging)
 		NOTIFY_HANDLER(IDC_SESSIONS, LVN_ITEMCHANGED, OnListItemChanged)
 		NOTIFY_CODE_HANDLER(HDN_ITEMSTATEICONCLICK, OnHeaderItemStateIconClick)
@@ -227,6 +294,58 @@ public:
 		return 0;
 	}
 
+	LRESULT OnCheckUpdate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+	{
+		if (0 == wParam)
+		{
+			VersionDetector vd;
+			CString newVersion = vd.GetProductVersion();
+			CW2A pszNV(CT2W((LPCTSTR)newVersion), CP_UTF8);
+
+			char userAgent[512] = { 0 };
+			DWORD size = sizeof(userAgent);
+			ObtainUserAgentString(0, userAgent, &size);
+			CW2A pszUA(CA2W(userAgent), CP_UTF8);
+
+			CUpdateHandler *handler = new CUpdateHandler(m_hWnd, (LPCSTR)pszNV, (LPCSTR)pszUA);
+			_Module.GetMessageLoop()->AddIdleHandler(handler);
+			handler->startTask();
+		}
+		else if (1 == wParam)
+		{
+			CUpdateHandler *handler = reinterpret_cast<CUpdateHandler *>(lParam);
+			if (NULL != handler)
+			{
+				if (_Module.GetMessageLoop()->RemoveIdleHandler(handler))
+				{
+					AppConfiguration::SetLastCheckUpdateTime();
+
+					bool hasNewVersion = handler->hasNewVersion();
+					CString newVersion = handler->getNewVersion();
+					CString updateUrl = handler->getUpdateUrl();
+					delete handler;
+
+					if (hasNewVersion)
+					{
+						CString text;
+						text.Format(IDS_NEW_VERSION, (LPCTSTR)newVersion);
+						CString caption;
+						caption.LoadStringW(IDR_MAINFRAME);
+						UINT ret = MessageBoxTimeout(NULL, text, caption, MB_OKCANCEL, 0, 6000);
+						if (ret == IDOK)
+						{
+							CT2A url(updateUrl);
+							::ShellExecute(NULL, TEXT("open"), (LPCTSTR)updateUrl, NULL, NULL, SW_SHOWNORMAL);
+						}
+					}
+				}
+				// If the handler is not in array, throw it away
+			}
+		}
+		
+		return 0;
+	}
+
 	LRESULT OnBnClickedChooseBkp(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/)
 	{
 		CString text;
@@ -251,7 +370,7 @@ public:
 #ifndef NDEBUG
 				m_logger->debug(parser.getLastError());
 #endif
-				MsgBox(IDS_FAILED_TO_LOAD_BKP);
+				MsgBox(m_hWnd, IDS_FAILED_TO_LOAD_BKP);
 			}
 		}
 
@@ -281,7 +400,7 @@ public:
 		const BackupManifest& manifest = m_manifests[cbmBox.GetCurSel()];
 		if (manifest.isEncrypted())
 		{
-			MsgBox(IDS_ENC_BKP_NOT_SUPPORTED);
+			MsgBox(m_hWnd, IDS_ENC_BKP_NOT_SUPPORTED);
 			return 0;
 		}
 
@@ -302,7 +421,7 @@ public:
 		std::string backup = manifest.getPath();
 		CLoadingHandler *handler = new CLoadingHandler(m_hWnd, (LPCSTR)resDir, backup, m_logger);
 		_Module.GetMessageLoop()->AddIdleHandler(handler);
-		// Exporter exp((LPCSTR)resDir, backup, "", m_logger);
+		handler->startTask();
 
 		return 0;
 	}
@@ -372,7 +491,7 @@ public:
 
 	LRESULT OnBnClickedCancel(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/)
 	{
-		if (MsgBox(IDS_CANCEL_PROMPT, MB_OKCANCEL) == IDCANCEL)
+		if (MsgBox(m_hWnd, IDS_CANCEL_PROMPT, MB_OKCANCEL) == IDCANCEL)
 		{
 			return 0;
 		}
@@ -404,7 +523,7 @@ public:
 			LPNMHEADER pnmHeader = (LPNMHEADER)pnmh;
 			if (pnmHeader->pitem->mask & HDI_FORMAT && pnmHeader->pitem->fmt & HDF_CHECKBOX)
 			{
-				CheckAllItems(!(pnmHeader->pitem->fmt & HDF_CHECKED));
+				CheckAllItems(listViewCtrl, !(pnmHeader->pitem->fmt & HDF_CHECKED));
 				SyncHeaderCheckbox();
 				return 1;
 			}
@@ -472,14 +591,14 @@ public:
 		CComboBox cbmBox = GetDlgItem(IDC_BACKUP);
 		if (cbmBox.GetCurSel() == -1)
 		{
-			MsgBox(IDS_SEL_BACKUP_DIR);
+			MsgBox(m_hWnd, IDS_SEL_BACKUP_DIR);
 			return 0;
 		}
 
 		const BackupManifest& manifest = m_manifests[cbmBox.GetCurSel()];
 		if (manifest.isEncrypted())
 		{
-			MsgBox(IDS_ENC_BKP_NOT_SUPPORTED);
+			MsgBox(m_hWnd, IDS_ENC_BKP_NOT_SUPPORTED);
 			return 0;
 		}
 
@@ -489,7 +608,7 @@ public:
 		GetDlgItemText(IDC_OUTPUT, buffer, MAX_PATH);
 		if (!::PathFileExists(buffer))
 		{
-			MsgBox(IDS_INVALID_OUTPUT_DIR);
+			MsgBox(m_hWnd, IDS_INVALID_OUTPUT_DIR);
 			return 0;
 		}
 		CW2A output(CT2W(buffer), CP_UTF8);
@@ -598,15 +717,11 @@ protected:
 
 	void EnableInteractiveCtrls(BOOL enabled, BOOL cancellable = TRUE)
 	{
-		::EnableWindow(GetDlgItem(IDC_BACKUP), enabled);
-		::EnableWindow(GetDlgItem(IDC_CHOOSE_BKP), enabled);
-		::EnableWindow(GetDlgItem(IDC_CHOOSE_OUTPUT), enabled);
-		::EnableWindow(GetDlgItem(IDC_DESC_ORDER), enabled);
-		::EnableWindow(GetDlgItem(IDC_FILES_IN_SESSION), enabled);
-		::EnableWindow(GetDlgItem(IDC_EXPORT), enabled);
-		::EnableWindow(GetDlgItem(IDC_USERS), enabled);
-		// ::EnableWindow(GetDlgItem(IDC_SESSIONS), enabled);
-		// if (!enabled && cancellable)
+		UINT ids[] = { IDC_BACKUP, IDC_CHOOSE_BKP, IDC_CHOOSE_BKP, IDC_CHOOSE_OUTPUT, IDC_DESC_ORDER, IDC_FILES_IN_SESSION, IDC_EXPORT, IDC_USERS };
+		for (int idx = 0; idx < sizeof(ids) / sizeof(UINT); ++idx)
+		{
+			::EnableWindow(GetDlgItem(ids[idx]), enabled);
+		}
 		::EnableWindow(GetDlgItem(IDC_CANCEL), !enabled && cancellable);
 		::ShowWindow(GetDlgItem(IDC_CANCEL), enabled ? SW_HIDE : SW_SHOW);
 		::ShowWindow(GetDlgItem(IDC_CLOSE), enabled ? SW_SHOW : SW_HIDE);
@@ -615,7 +730,7 @@ protected:
 		EnableMenuItem(::GetSystemMenu(::GetParent(m_hWnd), FALSE), SC_CLOSE, MF_BYCOMMAND | state);
 	}
 
-	void UpdateBackups(const std::vector<BackupManifest>& manifests)
+	void UpdateBackups(const std::vector<BackupManifest>& manifests, BOOL onLaunch = FALSE)
 	{
 		if (manifests.empty())
 		{
@@ -657,7 +772,7 @@ protected:
 		cmb.SetRedraw(TRUE);
 		if (selectedIndex != -1 && selectedIndex < cmb.GetCount())
 		{
-			SetComboBoxCurSel(cmb, selectedIndex);
+			SetComboBoxCurSel(m_hWnd, cmb, selectedIndex);
 		}
 	}
 
@@ -737,7 +852,7 @@ protected:
 		}
 		if (cbmBox.GetCount() > 0)
 		{
-			SetComboBoxCurSel(cbmBox, 0);
+			SetComboBoxCurSel(m_hWnd, cbmBox, 0);
 		}
 	}
 
@@ -789,23 +904,7 @@ protected:
 			}
 		}
 
-		SetHeaderCheckState(TRUE);
-	}
-
-	void SetComboBoxCurSel(CComboBox &cbm, int nCurSel)
-	{
-		cbm.SetCurSel(nCurSel);
-		int nID = cbm.GetDlgCtrlID();
-		PostMessage(WM_COMMAND, MAKEWPARAM(nID, CBN_SELCHANGE), LPARAM(cbm.m_hWnd));
-	}
-
-	void CheckAllItems(BOOL fChecked)
-	{
-		CListViewCtrl listViewCtrl = GetDlgItem(IDC_SESSIONS);
-		for (int nItem = 0; nItem < ListView_GetItemCount(listViewCtrl); nItem++)
-		{
-			ListView_SetCheckState(listViewCtrl, nItem, fChecked);
-		}
+		SetHeaderCheckState(listViewCtrl, TRUE);
 	}
 
 	void SyncHeaderCheckbox()
@@ -823,51 +922,8 @@ protected:
 			}
 		}
 
-		SetHeaderCheckState(fChecked);
+		SetHeaderCheckState(listViewCtrl, fChecked);
 	}
 
-	void SetHeaderCheckState(BOOL fChecked)
-	{
-		CListViewCtrl listViewCtrl = GetDlgItem(IDC_SESSIONS);
-
-		// We need to get the current format of the header
-		// and set or remove the HDF_CHECKED flag
-		HWND header = ListView_GetHeader(listViewCtrl);
-		HDITEM hdi = { 0 };
-		hdi.mask = HDI_FORMAT;
-		Header_GetItem(header, 0, &hdi);
-		if (fChecked) {
-			hdi.fmt |= HDF_CHECKED;
-		}
-		else {
-			hdi.fmt &= ~HDF_CHECKED;
-		}
-		Header_SetItem(header, 0, &hdi);
-	}
-
-	BOOL SetHeaderCheckState()
-	{
-		CListViewCtrl listViewCtrl = GetDlgItem(IDC_SESSIONS);
-
-		HWND header = ListView_GetHeader(listViewCtrl);
-		HDITEM hdi = { 0 };
-		hdi.mask = HDI_FORMAT;
-		Header_GetItem(header, 0, &hdi);
-		return (hdi.fmt & HDF_CHECKED) == HDF_CHECKED ? TRUE : FALSE;
-	}
-
-	int MsgBox(UINT uStrId, UINT uType = MB_OK)
-	{
-		CString text;
-		text.LoadString(uStrId);
-		return MsgBox(text, uType);
-	}
-
-	int MsgBox(const CString& text, UINT uType = MB_OK)
-	{
-		CString caption;
-		caption.LoadString(IDR_MAINFRAME);
-		return MessageBox(text, caption, uType);
-	}
 
 };

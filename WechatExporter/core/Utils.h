@@ -64,6 +64,7 @@ void removeHtmlTags(std::string& html);
 std::string removeCdata(const std::string& str);
 
 std::string fromUnixTime(unsigned int unixtime);
+uint32_t getUnixTimeStamp();
 
 const char* calcVarint32Ptr(const char* p, const char* limit, uint32_t* value);
 const unsigned char* calcVarint32Ptr(const unsigned char* p, const unsigned char* limit, uint32_t* value);
@@ -97,5 +98,6 @@ bool pcmToMp3(const std::string& pcmPath, const std::string& mp3Path);
 bool pcmToMp3(const std::vector<unsigned char>& pcmData, const std::string& mp3Path);
 
 // void setThreadName(const char* threadName);
+bool isNumber(const std::string &s);
 
 #endif /* Utils_h */

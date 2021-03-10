@@ -24,6 +24,12 @@ public:
 	static CString GetLastBackupDir();
 	static CString GetDefaultBackupDir(BOOL bCheckExistence = TRUE);
 
+	static DWORD GetLastCheckUpdateTime();
+	static void SetLastCheckUpdateTime(DWORD lastCheckUpdateTime = 0);
+
+	static void SetCheckingUpdateDisabled(BOOL disabled);
+	static BOOL GetCheckingUpdateDisabled();
+
 protected:
 	static BOOL GetStringProperty(LPCTSTR name, CString& value);
 	static BOOL SetStringProperty(LPCTSTR name, LPCTSTR value);
