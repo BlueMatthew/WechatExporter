@@ -34,7 +34,7 @@ public:
 #if !defined(NDEBUG) || defined(DBG_PERF)
         std::string timeString = getTimestampString(false, true) + ": ";
 #else
-        std::string timeString = getCurrentTimestamp() + ": ";
+        std::string timeString = getTimestampString() + ": ";
 #endif
 
         __block NSString *logString = [NSString stringWithUTF8String:(timeString + log).c_str()];
