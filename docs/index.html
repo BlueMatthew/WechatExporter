@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>微信聊天记录导出程序 Wechat Exporter</title>
+    <meta charset="UTF-8">
+    <meta name="description" content="微信聊天记录导出程序 Wechat chat history exporting">
+    <meta name="keywords" content="微信,聊天记录,导出,Wechat,chat history,export, c++, c plusplus, windows, mac, macos, Visual Studio, Xcode, github">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+    <meta http-equiv="Pragma" content="no-cache" />
+    <meta http-equiv="Expires" content="0" />
+  </head>
+  <body>
+
+
+    <h1 id="wechatexporter">微信聊天记录导出程序 Wechat Exporter (for Windows/MacOS)</h1>
+    <p>C++源码：<a href="https://github.com/BlueMatthew/WechatExporter">https://github.com/BlueMatthew/WechatExporter</a></p>
+    <h2 id="操作步骤">操作步骤</h2>
+    <ol style="list-style-type: decimal">
+    <li><p>通过iTunes将手机备份到电脑上（建议备份前杀掉微信），Windows操作系统一般位于目录：C:\用户[用户名]\AppData\Roaming\Apple Computer\MobileSync\Backup\。Android手机可以找一个iPad/iPhone设备，把聊天记录迁移到iPad/iPhone设备上，然后通过iTunes备份到电脑上。</p></li>
+    <li><p>下载本代码的执行文件：<a href="binaries/x64_win.zip">Windows x64版本</a> 或者 <a href="binaries/x64_macos.zip">MacOS x64版本</a>，然后解压压缩文件</p></li>
+    <li><p>执行解压出来的WechatExport.exe/WechatExporter (Windows下如果运行报缺少必须的dll文件，请安装<a href="https://aka.ms/vs/16/release/vc_redist.x64.exe">Visual C++ 2017 redist</a>后再尝试运行)</p></li>
+    <li><p>按界面提示进行操作。<br />
+        <img src="screenshots/win.png" alt="Windows界面截屏" width="720" />
+        <br />
+        <img src="screenshots/mac.png" alt="MacOS界面截屏" width="720" /></p></li>
+    </ol>
+    <h2 id="模版修改">模版修改</h2>
+    <p>解压目录下的res(MacOS版本位于Contents)子目录里存放了输出聊天记录的html页面模版，其中通过两个%包含起来的字符串，譬如，%%NAME%%，不要修改之外，其它页面内容和格式都可以自行调整。</p>
+    <h2 id="系统依赖">系统依赖</h2>
+    <p>Windows版本：Windows 7+, <a href="https://aka.ms/vs/16/release/vc_redist.x64.exe">Visual C++ 2017 redist</a> at <a href="https://support.microsoft.com/en-us/help/2977003/the-latest-supported-visual-c-downloads">The latest supported Visual C++ downloads</a><br />MacOS版本：MacOS 10.10(Yosemite)+</p>
+    <h2 id="程序编译">程序编译</h2>
+    <p>程序依赖如下第三方库： <br />
+        - libxml2: http://www.xmlsoft.org/<br />
+        - libcurl: https://curl.se/libcurl/<br />
+        - libsqlite3: https://www.sqlite.org/index.html<br />
+        - libprotobuf: https://github.com/protocolbuffers/protobuf<br />
+        - libjsoncpp: https://github.com/open-source-parsers/jsoncpp<br />
+        - lame: http://lame.sourceforge.net/ <br />
+        - silk: https://github.com/collects/silk (也参考了： https://github.com/kn007/silk-v3-decoder)<br />
+        - libplist: https://github.com/libimobiledevice/libplist https://github.com/libimobiledevice-win32/libplist<br />
+        - libiconv(windows only): https://www.gnu.org/software/libiconv/<br />
+        - openssl(windows only)：https://github.com/openssl/openssl<br />
+        - WTL (windows only)：https://sourceforge.net/projects/wtl/</p>
+    <p>MacOS下，libxml2,libcurl,libsqlite3直接使用了Xcode自带的库，其它第三方库需自行编译。<br />libmp3lame需手动删除文件include/libmp3lame.sym中的行：lame_init_old</p>
+    <p>Windows环境下，silk自带Visual Studio工程文件，可以直接利用Visual Studio编译，其余除了libplist之外，都通过vcpkg可以编译。libplist在vcpkg中也存在，但是在编译x64-windows-static target的时候报了错，于是直接通过Visual Studio建了工程进行编译。可以直接下载<a href="binaries/x64-windows-static.zip">预编译好的静态库文件</a></p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+  </body>
+</html>
