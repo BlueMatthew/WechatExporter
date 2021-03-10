@@ -242,6 +242,9 @@ void errorLogCallback(void *pArg, int iErrCode, const char *zMsg)
     
     BOOL checkUpdateDisabled = [[NSUserDefaults standardUserDefaults] boolForKey:@"ChkUpdateDisabled"];
     NSInteger lastChkUpdateTime = [[NSUserDefaults standardUserDefaults] integerForKey:@"LastChkUpdateTime"];
+#ifndef NDEBUG
+    lastChkUpdateTime = 0;
+#endif
     if (!checkUpdateDisabled && ((getUnixTimeStamp() - (uint32_t)lastChkUpdateTime) > 86400))
     {
 #ifndef NDEBUG
@@ -319,7 +322,7 @@ void errorLogCallback(void *pArg, int iErrCode, const char *zMsg)
             
         if (manifest.isEncrypted())
         {
-            [self msgBox:@"不支持加密的iTunes备份。"];
+            [self msgBox:NSLocalizedString(@"err-encrypted-bkp-not-supported", comment: "")];
             return;
         }
         
@@ -431,7 +434,7 @@ void errorLogCallback(void *pArg, int iErrCode, const char *zMsg)
             }
             else
             {
-                [self msgBox:@"解析iTunes Backup文件失败。"];
+                [self msgBox:NSLocalizedString(@"err-failed-to-parse-backup", comment: "")];
             }
         }
     })];
@@ -471,20 +474,20 @@ void errorLogCallback(void *pArg, int iErrCode, const char *zMsg)
 {
     if (NULL != m_exporter)
     {
-        [self msgBox:@"导出已经在执行。"];
+        [self msgBox:NSLocalizedString(@"err-exp-is-running", comment: "")];
         return;
     }
     
     if (self.popupBackup.indexOfSelectedItem == -1 || self.popupBackup.indexOfSelectedItem >= m_manifests.size())
     {
-        [self msgBox:@"请选择iTunes备份目录。"];
+        [self msgBox:NSLocalizedString(@"err-no-backup-dir", comment: "")];
         return;
     }
     
     const BackupManifest& manifest = m_manifests[self.popupBackup.indexOfSelectedItem];
     if (manifest.isEncrypted())
     {
-        [self msgBox:@"不支持加密的iTunes Backup。请使用不加密形式备份iPhone/iPad设备。"];
+        [self msgBox:NSLocalizedString(@"err-encrypted-bkp-not-supported", comment: "")];
         return;
     }
     
@@ -493,20 +496,20 @@ void errorLogCallback(void *pArg, int iErrCode, const char *zMsg)
     BOOL isDir = NO;
     if (![[NSFileManager defaultManager] fileExistsAtPath:backupPath isDirectory:&isDir] || !isDir)
     {
-        [self msgBox:@"iTunes备份目录不存在。"];
+        [self msgBox:NSLocalizedString(@"err-backup-dir-doesnt-exist", comment: "")];
         return;
     }
     
     NSString *outputPath = self.txtboxOutput.stringValue;
     if (nil == outputPath || [outputPath isEqualToString:@""])
     {
-        [self msgBox:@"请选择输出目录。"];
+        [self msgBox:NSLocalizedString(@"err-no-output-dir", comment: "")];
         return;
     }
     
     if (![[NSFileManager defaultManager] fileExistsAtPath:outputPath isDirectory:&isDir] || !isDir)
     {
-        [self msgBox:@"输出目录不存在。"];
+        [self msgBox:NSLocalizedString(@"err-output-dir-doesnt-exist", comment: "")];
         // self.txtboxOutput focus
         return;
     }
@@ -565,7 +568,7 @@ void errorLogCallback(void *pArg, int iErrCode, const char *zMsg)
 
     if (backup == nil || output == nil)
     {
-        [self msgBox:@"参数错误。"];
+        [self msgBox:NSLocalizedString(@"err-wrong-param", comment: "")];
         return;
     }
     
@@ -618,7 +621,7 @@ void errorLogCallback(void *pArg, int iErrCode, const char *zMsg)
         return;
     }
     
-    [self.popupUsers addItemWithTitle:@"所有微信账户的聊天记录"];
+    [self.popupUsers addItemWithTitle:NSLocalizedString(@"txt-all-wechat-users", comment: "")];
     // CComboBox cbmBox = GetDlgItem(IDC_USERS);
     for (std::vector<std::pair<Friend, std::vector<Session>>>::const_iterator it = m_usersAndSessions.cbegin(); it != m_usersAndSessions.cend(); ++it)
     {
@@ -757,15 +760,15 @@ void errorLogCallback(void *pArg, int iErrCode, const char *zMsg)
     }
 }
 
-#define UIKitLocalizedString(key) [[NSBundle bundleWithIdentifier:@"com.apple.AppKit"] localizedStringForKey:key value:@"" table:nil]
-
 - (void)showNewVersion:(NSString *)version withUrl:(NSString *)url
 {
     NSAlert *alert = [[NSAlert alloc] init];
-    NSString *message = [NSString stringWithFormat:@"发现新版本：%@，是否下载？", version];
-    __block NSString *title = [NSRunningApplication currentApplication].localizedName;
-    [alert addButtonWithTitle:UIKitLocalizedString(@"YES")];
-    [alert addButtonWithTitle:UIKitLocalizedString(@"NO")];
+    
+    NSString *message = [NSString stringWithFormat:NSLocalizedString(@"prompt-new-version-found", comment: ""), version];
+    NSString *title = [NSRunningApplication currentApplication].localizedName;
+
+    [alert addButtonWithTitle:NSLocalizedString(@"btn-yes", comment: "")];
+    [alert addButtonWithTitle:NSLocalizedString(@"btn-no", comment: "")];
     alert.messageText = message;
     alert.window.title = title;
     [alert beginSheetModalForWindow:self.view.window completionHandler:^(NSModalResponse returnCode) {
