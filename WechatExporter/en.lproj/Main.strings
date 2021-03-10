@@ -78,7 +78,7 @@
 "cWo-5k-XRR.title" = "HTML";
 
 /* Class = "NSButtonCell"; title = "关闭"; ObjectID = "dkl-Nk-ye1"; */
-"dkl-Nk-ye1.title" = "Quit";
+"dkl-Nk-ye1.title" = "Close";
 
 /* Class = "NSTextFieldCell"; title = "Table View Cell"; ObjectID = "fos-aD-v3q"; */
 "fos-aD-v3q.title" = "Table View Cell";
