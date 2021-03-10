@@ -69,7 +69,7 @@ STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "About"
 FONT 9, "Segoe UI", 0, 0, 0x0
 BEGIN
-    DEFPUSHBUTTON   "OK",IDOK,130,81,50,14
+    DEFPUSHBUTTON   "È·¶¨",IDOK,130,81,50,14
     CTEXT           "WechatExporter Application v1.0\n\n(c) Copyright 2020",IDC_VERSION,25,57,78,32
     ICON            IDR_MAINFRAME,IDC_STATIC,55,26,20,20
     GROUPBOX        "",IDC_STATIC,7,7,115,88
@@ -123,19 +123,6 @@ BEGIN
     END
 END
 #endif    // APSTUDIO_INVOKED
-
-
-/////////////////////////////////////////////////////////////////////////////
-//
-// Accelerator
-//
-
-IDR_MAINFRAME ACCELERATORS
-BEGIN
-    "N",            ID_FILE_NEW,            VIRTKEY, CONTROL, NOINVERT
-    "O",            ID_FILE_OPEN,           VIRTKEY, CONTROL, NOINVERT
-    "S",            ID_FILE_SAVE,           VIRTKEY, CONTROL, NOINVERT
-END
 
 
 /////////////////////////////////////////////////////////////////////////////
@@ -237,6 +224,176 @@ END
 
 
 /////////////////////////////////////////////////////////////////////////////
+// English resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
+LANGUAGE LANG_ENGLISH, SUBLANG_NEUTRAL
+#pragma code_page(1252)
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Menu
+//
+
+IDR_MAINFRAME MENU
+BEGIN
+    POPUP "&File"
+    BEGIN
+        MENUITEM "Earlier To Newer",            ID_FILE_DESC_ORDER, CHECKED
+        MENUITEM "Save Avatar/Emoji in Chat Folder", ID_FILE_SAVING_IN_SESSION, CHECKED
+        MENUITEM SEPARATOR
+        MENUITEM "Check Update Automatically",  ID_CHK_UPDATE, CHECKED
+        MENUITEM SEPARATOR
+        MENUITEM "E&xit",                       ID_APP_EXIT
+    END
+    POPUP "F&ormat "
+    BEGIN
+        MENUITEM "HTML",                        ID_FORMAT_HTML
+        MENUITEM "Text",                        ID_FORMAT_TEXT
+        MENUITEM SEPARATOR
+        MENUITEM "Load HTML Data Asynchronously", ID_FORMAT_ASYNC_LOADING, CHECKED
+    END
+    POPUP "&Help"
+    BEGIN
+        MENUITEM "&About WechatExporter",       ID_APP_ABOUT
+    END
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Icon
+//
+
+// Icon with lowest ID value placed first to ensure application icon
+// remains consistent on all systems.
+IDR_MAINFRAME           ICON                    "res\\idr_main.ico"
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+IDD_WECHATEXPORTER_FORM DIALOGEX 0, 0, 393, 196
+STYLE DS_SETFONT | WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS
+EXSTYLE WS_EX_CLIENTEDGE
+FONT 9, "Segoe UI", 0, 0, 0x1
+BEGIN
+    COMBOBOX        IDC_BACKUP,7,18,360,30,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    PUSHBUTTON      "...",IDC_CHOOSE_BKP,371,17,15,14
+    EDITTEXT        IDC_OUTPUT,7,44,359,14,ES_AUTOHSCROLL | ES_READONLY
+    LTEXT           "iTunes Backup Directory:",IDC_STATIC_BACKUP,7,7,379,8
+    LTEXT           "Output Directory:",IDC_STATIC,7,33,361,8
+    PUSHBUTTON      "...",IDC_CHOOSE_OUTPUT,371,44,15,14
+    PUSHBUTTON      "&Export",IDC_EXPORT,279,175,50,14
+    CONTROL         "",IDC_PROGRESS,"msctls_progress32",WS_BORDER,7,175,267,14
+    PUSHBUTTON      "&Cancel",IDC_CANCEL,336,175,50,14,NOT WS_VISIBLE | WS_DISABLED
+    PUSHBUTTON      "Close(&X)",IDC_CLOSE,336,175,50,14
+    GROUPBOX        "Logs:(CTRL+A/C Copy Logs)",IDC_GRP_LOGS,278,62,108,108,0,WS_EX_TRANSPARENT
+    LISTBOX         IDC_LOGS,284,73,95,92,LBS_NOINTEGRALHEIGHT | LBS_EXTENDEDSEL | WS_VSCROLL | WS_HSCROLL | WS_TABSTOP
+    GROUPBOX        "wechat Account and chat:",IDC_GRP_USR_CHAT,7,62,265,108,0,WS_EX_TRANSPARENT
+    COMBOBOX        IDC_USERS,14,73,252,30,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    CONTROL         "",IDC_SESSIONS,"SysListView32",LVS_REPORT | LVS_ALIGNLEFT | WS_BORDER | WS_TABSTOP,14,88,252,77
+END
+
+IDD_ABOUTBOX DIALOGEX 0, 0, 187, 102
+STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "About"
+FONT 9, "Segoe UI", 0, 0, 0x0
+BEGIN
+    DEFPUSHBUTTON   "OK",IDOK,130,81,50,14
+    CTEXT           "WechatExporter Application v1.0\n\n(c) Copyright 2020",IDC_VERSION,25,57,78,32
+    ICON            IDR_MAINFRAME,IDC_STATIC,55,26,20,20
+    GROUPBOX        "",IDC_STATIC,7,7,115,88
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// DESIGNINFO
+//
+
+#ifdef APSTUDIO_INVOKED
+GUIDELINES DESIGNINFO
+BEGIN
+    IDD_WECHATEXPORTER_FORM, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 386
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 189
+    END
+
+    IDD_ABOUTBOX, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 180
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 95
+    END
+END
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Version
+//
+
+VS_VERSION_INFO VERSIONINFO
+ FILEVERSION 1,7,16,1
+ PRODUCTVERSION 1,7,16,1
+ FILEFLAGSMASK 0x3fL
+#ifdef _DEBUG
+ FILEFLAGS 0x1L
+#else
+ FILEFLAGS 0x0L
+#endif
+ FILEOS 0x4L
+ FILETYPE 0x2L
+ FILESUBTYPE 0x0L
+BEGIN
+    BLOCK "StringFileInfo"
+    BEGIN
+        BLOCK "000904b0"
+        BEGIN
+            VALUE "FileDescription", "WechatExporter Module"
+            VALUE "FileVersion", "1.7.16.1"
+            VALUE "InternalName", "WechatExporter"
+            VALUE "LegalCopyright", "Copyright 2020"
+            VALUE "OriginalFilename", "WechatExporter.exe"
+            VALUE "ProductName", "WechatExporter Module"
+            VALUE "ProductVersion", "1.7.16.1"
+        END
+    END
+    BLOCK "VarFileInfo"
+    BEGIN
+        VALUE "Translation", 0x9, 1200
+    END
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// AFX_DIALOG_LAYOUT
+//
+
+IDD_WECHATEXPORTER_FORM AFX_DIALOG_LAYOUT
+BEGIN
+    0
+END
+
+IDD_ABOUTBOX AFX_DIALOG_LAYOUT
+BEGIN
+    0
+END
+
+#endif    // English resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+/////////////////////////////////////////////////////////////////////////////
 // English (United States) resources
 
 #if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
@@ -266,6 +423,47 @@ BEGIN
 END
 
 #endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// String Table
+//
+
+STRINGTABLE
+BEGIN
+    IDR_MAINFRAME           "Wechat Exporter"
+    IDS_SEL_BACKUP_DIR      "Please choose an iTunes backup directory."
+    IDS_SEL_OUTPUT_DIR      "Please choose an output directory."
+    IDS_CANCEL_PROMPT       "sure to cancel the exporting?"
+    IDS_STATIC_BACKUP       "iTunes Backup Directory:(i.e.:%s)"
+    IDS_SESSION_IDX         "No."
+    IDS_SESSION_NAME        "Name"
+    IDS_SESSION_COUNT       "Number of Msgs"
+    IDS_ALL_USERS           "All Wechat Accounts"
+    IDS_SESSION_USER        "Wechat Account"
+    IDS_ITUNES_VERSION      "iTunes Installed, Version:%s"
+    IDS_ITUNES_NOT_INSTALLED "iTunes NOT Installed"
+    IDS_ENC_BKP_NOT_SUPPORTED "Encrypted iTunes Backup is not supported."
+    IDS_FAILED_TO_LOAD_BKP  "Failed to load iTunes backup data."
+    IDS_INVALID_OUTPUT_DIR  "The output directory is invalid."
+    IDS_TOOLTIP_LOGS        "Ctrl+A/Ctrl+C Copy Logs"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_NEW_VERSION         "Find a new version:%s, Download it now?"
+END
+
+STRINGTABLE
+BEGIN
+    ATL_IDS_IDLEMESSAGE     "Ready"
+END
+
+STRINGTABLE
+BEGIN
+    ID_APP_EXIT             "Quit the application; prompts to save documents\nExit"
+END
 
 #endif    // English (United States) resources
 /////////////////////////////////////////////////////////////////////////////

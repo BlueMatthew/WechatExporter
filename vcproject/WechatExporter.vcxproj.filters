@@ -183,5 +183,8 @@
     <Image Include="res\WechatExporter.ico">
       <Filter>Resource Files</Filter>
     </Image>
+    <Image Include="res\idr_main.ico">
+      <Filter>Resource Files</Filter>
+    </Image>
   </ItemGroup>
 </Project>

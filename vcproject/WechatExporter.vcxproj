@@ -22,6 +22,7 @@
     <VCProjectVersion>15.0</VCProjectVersion>
     <ProjectGuid>{F57219E8-8B1F-41E3-B553-03C1884E8E4D}</ProjectGuid>
     <WindowsTargetPlatformVersion>10.0.17763.0</WindowsTargetPlatformVersion>
+    <ProjectName />
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
@@ -299,6 +300,7 @@ xcopy "$(ProjectDir)..\WechatExporter\res"  "$(OutDir)res"  /Y /S /E</Command>
     <ResourceCompile Include="WechatExporter.rc" />
   </ItemGroup>
   <ItemGroup>
+    <Image Include="res\idr_main.ico" />
     <Image Include="res\toolbar.bmp" />
     <Image Include="res\WechatExporter.ico" />
   </ItemGroup>
