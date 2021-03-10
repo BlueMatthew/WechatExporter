@@ -1,0 +1,22 @@
+/* 
+  Localizable.strings
+  WechatExporter
+
+  Created by Matthew on 2021/3/10.
+  Copyright © 2021 Matthew. All rights reserved.
+*/
+
+"btn-yes" = "Yes";
+"btn-no" = "NO";
+"btn-ok" = "OK";
+"btn-cancel" = "Cancel";
+"err-no-output-dir" = "Please choose a output directory.";
+"err-output-dir-doesnt-exist" = "Output directory doesn't exist.";
+"err-backup-dir-doesnt-exist" = "iTunes backup directory doesn't exist.";
+"err-no-backup-dir" = "Please choose an iTunes backup directory.";
+"err-encrypted-bkp-not-supported" = "Encrypted iTunes Backup is not supported.";
+"err-exp-is-running" = "Export is running.";
+"err-failed-to-parse-backup" = "Failed to parse iTunes Backup file.";
+"err-wrong-param" = "Wrong parameters.";
+"txt-all-wechat-users" = "All Wechat Accounts";
+"prompt-new-version-found" = "Found a new version: %@. Download it now?";

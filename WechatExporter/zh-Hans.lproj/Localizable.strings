@@ -1,0 +1,22 @@
+/* 
+  Localizable.strings
+  WechatExporter
+
+  Created by Matthew on 2021/3/10.
+  Copyright © 2021 Matthew. All rights reserved.
+*/
+
+"btn-yes" = "是";
+"btn-no" = "否";
+"btn-ok" = "确定";
+"btn-cancel" = "取消";
+"err-no-output-dir" = "请选择输出目录。";
+"err-output-dir-doesnt-exist" = "输出目录不存在。";
+"err-backup-dir-doesnt-exist" = "iTunes备份目录不存在。";
+"err-no-backup-dir" = "请选择iTunes备份目录。";
+"err-encrypted-bkp-not-supported" = "不支持加密的iTunes备份。";
+"err-exp-is-running" = "导出已经在执行。";
+"err-failed-to-parse-backup" = "解析iTunes Backup文件失败。";
+"err-wrong-param" = "参数错误。";
+"txt-all-wechat-users" = "所有微信账户";
+"prompt-new-version-found" = "发现新版本：%@，是否下载？";

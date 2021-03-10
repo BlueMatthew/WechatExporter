@@ -21,6 +21,7 @@
 		343F6122252322D600FFE085 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 343F6121252322D600FFE085 /* main.m */; };
 		343F612D25234BD300FFE085 /* ITunesParser.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 343F612C25234BD300FFE085 /* ITunesParser.cpp */; };
 		343F613025234BFC00FFE085 /* libsqlite3.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 343F612F25234BFC00FFE085 /* libsqlite3.tbd */; };
+		345CE65825F8A456003DDD0F /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = 345CE65A25F8A456003DDD0F /* Localizable.strings */; };
 		3471A77A25EB5A9A007D186B /* FileSystem.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 34AB9A1325B8908D006D3617 /* FileSystem.cpp */; };
 		347E601525C7E55100B33BAB /* SessionDataSource.mm in Sources */ = {isa = PBXBuildFile; fileRef = 347E601425C7E55100B33BAB /* SessionDataSource.mm */; };
 		3497342625F384D100CAC6CD /* Updater.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 3497342425F384D100CAC6CD /* Updater.cpp */; };
@@ -65,6 +66,10 @@
 		343F612F25234BFC00FFE085 /* libsqlite3.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libsqlite3.tbd; path = usr/lib/libsqlite3.tbd; sourceTree = SDKROOT; };
 		345C8D4D2543F5E30036368C /* ExportNotifier.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ExportNotifier.h; sourceTree = "<group>"; };
 		345C8D4E2543F5E30036368C /* semaphore.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = semaphore.h; sourceTree = "<group>"; };
+		345CE65925F8A456003DDD0F /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/Localizable.strings; sourceTree = "<group>"; };
+		345CE65C25F8A5CE003DDD0F /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/Main.strings; sourceTree = "<group>"; };
+		345CE66025F8A717003DDD0F /* zh-Hans */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "zh-Hans"; path = "zh-Hans.lproj/Main.strings"; sourceTree = "<group>"; };
+		345CE66125F8A717003DDD0F /* zh-Hans */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "zh-Hans"; path = "zh-Hans.lproj/Localizable.strings"; sourceTree = "<group>"; };
 		347E600D25C00A4100B33BAB /* MMKVReader.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MMKVReader.h; sourceTree = "<group>"; };
 		347E601325C7E53500B33BAB /* SessionDataSource.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SessionDataSource.h; sourceTree = "<group>"; };
 		347E601425C7E55100B33BAB /* SessionDataSource.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = SessionDataSource.mm; sourceTree = "<group>"; };
@@ -149,6 +154,7 @@
 				347E601425C7E55100B33BAB /* SessionDataSource.mm */,
 				3497342A25F75D4300CAC6CD /* HttpHelper.mm */,
 				3497342E25F75D5A00CAC6CD /* HttpHelper.h */,
+				345CE65A25F8A456003DDD0F /* Localizable.strings */,
 			);
 			path = WechatExporter;
 			sourceTree = "<group>";
@@ -251,6 +257,7 @@
 			knownRegions = (
 				en,
 				Base,
+				"zh-Hans",
 			);
 			mainGroup = 343F6109252322D500FFE085;
 			productRefGroup = 343F6113252322D500FFE085 /* Products */;
@@ -268,6 +275,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				341A5B2F253828F300914BE3 /* res in Resources */,
+				345CE65825F8A456003DDD0F /* Localizable.strings in Resources */,
 				343F611C252322D600FFE085 /* Assets.xcassets in Resources */,
 				343F611F252322D600FFE085 /* Main.storyboard in Resources */,
 			);
@@ -310,8 +318,19 @@
 			isa = PBXVariantGroup;
 			children = (
 				343F611E252322D600FFE085 /* Base */,
+				345CE65C25F8A5CE003DDD0F /* en */,
+				345CE66025F8A717003DDD0F /* zh-Hans */,
 			);
 			name = Main.storyboard;
+			sourceTree = "<group>";
+		};
+		345CE65A25F8A456003DDD0F /* Localizable.strings */ = {
+			isa = PBXVariantGroup;
+			children = (
+				345CE65925F8A456003DDD0F /* en */,
+				345CE66125F8A717003DDD0F /* zh-Hans */,
+			);
+			name = Localizable.strings;
 			sourceTree = "<group>";
 		};
 /* End PBXVariantGroup section */
@@ -321,6 +340,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_LOCALIZABILITY_NONLOCALIZED = YES;
 				CLANG_ANALYZER_NONNULL = YES;
 				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
 				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
@@ -370,7 +390,7 @@
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				HEADER_SEARCH_PATHS = /usr/local/include/;
 				LIBRARY_SEARCH_PATHS = /usr/local/lib;
-				MACOSX_DEPLOYMENT_TARGET = 10.14;
+				MACOSX_DEPLOYMENT_TARGET = 10.10;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;
@@ -382,6 +402,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_LOCALIZABILITY_NONLOCALIZED = YES;
 				CLANG_ANALYZER_NONNULL = YES;
 				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
 				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
@@ -425,7 +446,7 @@
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				HEADER_SEARCH_PATHS = /usr/local/include/;
 				LIBRARY_SEARCH_PATHS = /usr/local/lib;
-				MACOSX_DEPLOYMENT_TARGET = 10.14;
+				MACOSX_DEPLOYMENT_TARGET = 10.10;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
 				SDKROOT = macosx;
