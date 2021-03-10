@@ -78,6 +78,9 @@ public:
     void setSyncLoading(bool syncLoading = true);
     void setExtName(const std::string& extName);
     void setTemplatesName(const std::string& templatesName);
+    
+    static void initializeExporter();
+    static void uninitializeExporter();
 
 protected:
     bool runImpl();

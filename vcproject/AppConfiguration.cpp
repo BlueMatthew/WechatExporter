@@ -1,6 +1,7 @@
 #include "stdafx.h"
 #include "AppConfiguration.h"
 #include <Shlobj.h>
+#include "Utils.h"
 
 #define APP_ROOT_PATH TEXT("Software\\WechatExporter")
 
@@ -136,6 +137,34 @@ CString AppConfiguration::GetDefaultBackupDir(BOOL bCheckExistence/* = TRUE*/)
 	}
 
 	return backupDir;
+}
+
+DWORD AppConfiguration::GetLastCheckUpdateTime()
+{
+	DWORD dwValue = 0;
+	GetDwordProperty(TEXT("LastChkUpdateTime"), dwValue);
+	return dwValue;
+}
+
+void AppConfiguration::SetLastCheckUpdateTime(DWORD lastCheckUpdateTime/* = 0*/)
+{
+	if (0 == lastCheckUpdateTime)
+	{
+		lastCheckUpdateTime = (DWORD)getUnixTimeStamp();
+	}
+	SetDwordProperty(TEXT("LastChkUpdateTime"), lastCheckUpdateTime);
+}
+
+void AppConfiguration::SetCheckingUpdateDisabled(BOOL disabled)
+{
+	SetDwordProperty(TEXT("ChkUpdateDisabled"), disabled);
+}
+
+BOOL AppConfiguration::GetCheckingUpdateDisabled()
+{
+	DWORD dwValue = 0;
+	GetDwordProperty(TEXT("ChkUpdateDisabled"), dwValue);
+	return dwValue != 0;
 }
 
 BOOL AppConfiguration::GetStringProperty(LPCTSTR name, CString& value)

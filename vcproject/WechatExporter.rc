@@ -31,6 +31,8 @@ BEGIN
         MENUITEM "按消息时间倒序导出",                   ID_FILE_DESC_ORDER, CHECKED
         MENUITEM "头像和表情存放到聊天记录子目录",             ID_FILE_SAVING_IN_SESSION, CHECKED
         MENUITEM SEPARATOR
+        MENUITEM "自动检查新版本",                     ID_CHK_UPDATE, CHECKED
+        MENUITEM SEPARATOR
         MENUITEM "退出(&X)",                      ID_APP_EXIT
     END
     POPUP "格式 (&O)"
@@ -223,6 +225,11 @@ END
 STRINGTABLE
 BEGIN
     ATL_IDS_IDLEMESSAGE     "Ready"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_NEW_VERSION         "发现新版本：%s，是否去下载？"
 END
 
 #endif    // Chinese (Simplified, PRC) resources

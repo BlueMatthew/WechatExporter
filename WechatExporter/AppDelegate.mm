@@ -7,6 +7,7 @@
 //
 
 #import "AppDelegate.h"
+#include "Exporter.h"
 
 @interface AppDelegate ()
 
@@ -14,8 +15,14 @@
 
 @implementation AppDelegate
 
+- (void)applicationDidFinishLaunching:(NSNotification *)notification {
+    Exporter::initializeExporter();
+}
+
 - (void)applicationWillTerminate:(NSNotification *)aNotification {
     // Insert code here to tear down your application
+    Exporter::uninitializeExporter();
+    
 }
 
 - (BOOL)applicationShouldTerminateAfterLastWindowClosed:(NSApplication *)theApplication {

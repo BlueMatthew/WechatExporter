@@ -8,15 +8,16 @@
 
 #import "ViewController.h"
 #import "SessionDataSource.h"
-#include "ITunesParser.h"
+#import "HttpHelper.h"
 
+#include "ITunesParser.h"
 #include "LoggerImpl.h"
 #include "ExportNotifierImpl.h"
 #include "RawMessage.h"
 #include "Utils.h"
 #include "Exporter.h"
+#include "Updater.h"
 #include "FileSystem.h"
-
 #include <sqlite3.h>
 #include <fstream>
 #include <thread>
@@ -25,10 +26,8 @@
 void errorLogCallback(void *pArg, int iErrCode, const char *zMsg)
 {
     NSString *log = [NSString stringWithUTF8String:zMsg];
-    
     NSLog(@"SQLITE3: %@", log);
 }
-
 
 @interface ViewController() <NSTableViewDelegate>
 {
@@ -40,7 +39,6 @@ void errorLogCallback(void *pArg, int iErrCode, const char *zMsg)
     std::vector<std::pair<Friend, std::vector<Session>>> m_usersAndSessions;
     
     SessionDataSource   *m_dataSource;
-    
 }
 @end
 
@@ -125,7 +123,8 @@ void errorLogCallback(void *pArg, int iErrCode, const char *zMsg)
     [self.btnToggleAll setTarget:nil];
 }
 
-- (void)viewDidLoad {
+- (void)viewDidLoad
+{
     [super viewDidLoad];
     
     sqlite3_config(SQLITE_CONFIG_LOG, errorLogCallback, NULL);
@@ -239,6 +238,17 @@ void errorLogCallback(void *pArg, int iErrCode, const char *zMsg)
             NSString *previoudBackupDir = [[NSUserDefaults standardUserDefaults] objectForKey:@"BackupDir"];
             [self updateBackups:manifests withPreviousPath:previoudBackupDir];
         }
+    }
+    
+    BOOL checkUpdateDisabled = [[NSUserDefaults standardUserDefaults] boolForKey:@"ChkUpdateDisabled"];
+    NSInteger lastChkUpdateTime = [[NSUserDefaults standardUserDefaults] integerForKey:@"LastChkUpdateTime"];
+    if (!checkUpdateDisabled && ((getUnixTimeStamp() - (uint32_t)lastChkUpdateTime) > 86400))
+    {
+#ifndef NDEBUG
+        [self performSelector:@selector(checkUpdate) withObject:nil afterDelay:1];
+#else
+        [self performSelector:@selector(checkUpdate) withObject:nil afterDelay:5];
+#endif
     }
 }
 
@@ -745,6 +755,68 @@ void errorLogCallback(void *pArg, int iErrCode, const char *zMsg)
         }
         
     }
+}
+
+#define UIKitLocalizedString(key) [[NSBundle bundleWithIdentifier:@"com.apple.AppKit"] localizedStringForKey:key value:@"" table:nil]
+
+- (void)showNewVersion:(NSString *)version withUrl:(NSString *)url
+{
+    NSAlert *alert = [[NSAlert alloc] init];
+    NSString *message = [NSString stringWithFormat:@"发现新版本：%@，是否下载？", version];
+    __block NSString *title = [NSRunningApplication currentApplication].localizedName;
+    [alert addButtonWithTitle:UIKitLocalizedString(@"YES")];
+    [alert addButtonWithTitle:UIKitLocalizedString(@"NO")];
+    alert.messageText = message;
+    alert.window.title = title;
+    [alert beginSheetModalForWindow:self.view.window completionHandler:^(NSModalResponse returnCode) {
+        if (returnCode == NSModalResponseOK)
+        {
+            [[NSWorkspace sharedWorkspace] openURL:[NSURL URLWithString:url]];
+        }
+    }];
+    
+}
+    
+- (void)checkUpdate
+{
+    NSBundle *bundle = [NSBundle mainBundle];
+    NSDictionary *info = [bundle infoDictionary];
+    NSString *shortVersion = info[@"CFBundleShortVersionString"];
+    NSString *build = info[@"CFBundleVersion"];
+    
+    __block NSString *version = [NSString stringWithFormat:@"%@.%@", shortVersion, build];
+    __block typeof(self) __weak weakSelf = self;
+    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+        
+        NSString *userAgent = [HttpHelper standardUserAgent];
+        Updater updater([version UTF8String]);
+        updater.setUserAgent([userAgent UTF8String]);
+        bool hasNewVersion = updater.checkUpdate();
+        NSInteger lastChkUpdateTime = static_cast<NSInteger>(getUnixTimeStamp());
+        [[NSUserDefaults standardUserDefaults] setInteger:lastChkUpdateTime forKey:@"LastChkUpdateTime"];
+        
+        if (!hasNewVersion)
+        {
+            return;
+        }
+        __strong typeof(weakSelf) strongSelf = weakSelf;  // strong by default
+        if (nil == strongSelf)
+        {
+            return;
+        }
+
+        // update UI on the main thread
+        dispatch_async(dispatch_get_main_queue(), ^{
+            __strong typeof(weakSelf) strongSelf = weakSelf;  // strong by default
+            if (strongSelf) {
+                NSString *newVersion = [NSString stringWithUTF8String:updater.getNewVersion().c_str()];
+                NSString *url = [NSString stringWithUTF8String:updater.getUpdateUrl().c_str()];
+                
+                [strongSelf showNewVersion:newVersion withUrl:url];
+            }
+        });
+        
+    });
 }
 
 

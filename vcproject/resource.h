@@ -20,6 +20,7 @@
 #define IDS_FAILED_TO_LOAD_BKP          141
 #define IDS_INVALID_OUTPUT_DIR          142
 #define IDS_TOOLTIP_LOGS                143
+#define IDS_NEW_VERSION                 144
 #define IDC_BACKUP                      1000
 #define IDC_CHOOSE_BKP                  1001
 #define IDC_OUTPUT                      1002
@@ -42,13 +43,15 @@
 #define ID_FORMAT_HTML                  32777
 #define ID_FORMAT_TEXT                  32778
 #define ID_FORMAT_ASYNC_LOADING         32779
+#define ID_32780                        32780
+#define ID_CHK_UPDATE                   32781
 
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        204
-#define _APS_NEXT_COMMAND_VALUE         32780
+#define _APS_NEXT_COMMAND_VALUE         32782
 #define _APS_NEXT_CONTROL_VALUE         1017
 #define _APS_NEXT_SYMED_VALUE           101
 #endif

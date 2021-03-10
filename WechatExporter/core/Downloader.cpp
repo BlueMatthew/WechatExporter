@@ -20,8 +20,78 @@
 #endif
 
 // #define FAKE_DOWNLOAD
+size_t writeDataToBuffer(void *buffer, size_t size, size_t nmemb, void *user_p)
+{
+    std::vector<unsigned char>* body = reinterpret_cast<std::vector<unsigned char> *>(user_p);
+    if (NULL != body)
+    {
+        size_t bytes = size * nmemb;
 
-size_t writeData(void *buffer, size_t size, size_t nmemb, void *user_p)
+        unsigned char *ptr = reinterpret_cast<unsigned char *>(buffer);
+        std::copy(ptr, ptr + bytes, back_inserter(*body));
+        return bytes;
+    }
+    
+    return 0;
+}
+
+bool Downloader::httpGet(const std::string& url, const std::vector<std::pair<std::string, std::string>>& headers, long& httpStatus, std::vector<unsigned char>& body)
+{
+    httpStatus = 0;
+    CURLcode res = CURLE_OK;
+    CURL *curl = NULL;
+    
+    body.clear();
+    
+#ifndef FAKE_DOWNLOAD
+    // User-Agent: WeChat/7.0.15.33 CFNetwork/978.0.7 Darwin/18.6.0
+    curl = curl_easy_init();
+    curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
+    struct curl_slist *chunk = NULL;
+    
+    for (std::vector<std::pair<std::string, std::string>>::const_iterator it = headers.cbegin(); it != headers.cend(); ++it)
+    {
+        if (it->first == "User-Agent")
+        {
+            curl_easy_setopt(curl, CURLOPT_USERAGENT, it->second.c_str());
+        }
+        else
+        {
+            std::string header = it->first + ": " + it->second;
+            chunk = curl_slist_append(chunk, header.c_str());
+        }
+    }
+    
+    if (NULL != chunk)
+    {
+        curl_easy_setopt(curl, CURLOPT_HTTPHEADER, chunk);
+    }
+    // curl_easy_setopt(curl, CURLOPT_USERAGENT, userAgent.c_str());
+    curl_easy_setopt(curl, CURLOPT_FORBID_REUSE, 1L);
+    curl_easy_setopt(curl, CURLOPT_TIMEOUT, 60);
+    curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, &::writeDataToBuffer);
+    curl_easy_setopt(curl, CURLOPT_WRITEDATA, reinterpret_cast<void *>(&body));
+    curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, true);
+    curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 0);
+    curl_easy_setopt(curl, CURLOPT_SSL_VERIFYHOST, 0);
+
+    res = curl_easy_perform(curl);
+    if (res == CURLE_OK)
+    {
+        curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &httpStatus);
+        // m_error = curl_easy_strerror(res);
+    }
+    curl_easy_cleanup(curl);
+    if (NULL != chunk)
+    {
+        curl_slist_free_all(chunk);
+    }
+#endif // no FAKE_DOWNLOAD
+    
+    return res == CURLE_OK;
+}
+
+size_t writeTaskData(void *buffer, size_t size, size_t nmemb, void *user_p)
 {
     Task *task = reinterpret_cast<Task *>(user_p);
     if (NULL != task)
@@ -71,7 +141,7 @@ bool Task::downloadFile()
     curl_easy_setopt(curl, CURLOPT_USERAGENT, userAgent.c_str());
     curl_easy_setopt(curl, CURLOPT_FORBID_REUSE, 1L);
     curl_easy_setopt(curl, CURLOPT_TIMEOUT, 60);
-    curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, &::writeData);
+    curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, &::writeTaskData);
     curl_easy_setopt(curl, CURLOPT_WRITEDATA, this);
     curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, true);
 	curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 0);
@@ -134,11 +204,18 @@ Downloader::Downloader(Logger* logger) : m_logger(logger)
 {
     m_noMoreTask = false;
     m_downloadTaskSize = 0;
-    
-    curl_global_init(CURL_GLOBAL_ALL);
 }
 
 Downloader::~Downloader()
+{
+}
+
+void Downloader::initialize()
+{
+    curl_global_init(CURL_GLOBAL_ALL);
+}
+
+void Downloader::uninitialize()
 {
     curl_global_cleanup();
 }

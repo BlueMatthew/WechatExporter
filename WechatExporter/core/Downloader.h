@@ -116,6 +116,11 @@ public:
     void finishAndWaitForExit();
     int getCount() const;
     int getRunningCount() const;
+
+    static void initialize();
+    static void uninitialize();
+    
+    static bool httpGet(const std::string& url, const std::vector<std::pair<std::string, std::string>>& headers, long& httpStatus, std::vector<unsigned char>& body);
     
 #ifndef NDEBUG
     std::string getStats() const;
