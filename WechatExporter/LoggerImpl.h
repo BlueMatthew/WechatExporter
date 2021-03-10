@@ -32,7 +32,7 @@ public:
     void write(const std::string& log)
     {
 #if !defined(NDEBUG) || defined(DBG_PERF)
-        std::string timeString = getCurrentTimestamp(false, true) + ": ";
+        std::string timeString = getTimestampString(false, true) + ": ";
 #else
         std::string timeString = getCurrentTimestamp() + ": ";
 #endif

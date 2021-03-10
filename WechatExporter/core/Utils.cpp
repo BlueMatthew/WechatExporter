@@ -522,7 +522,7 @@ std::string utcToLocal(const std::string& utcTime)
     return std::string(buf);
 }
 
-std::string getCurrentTimestamp(bool includingYMD/* = false*/, bool includingMs/* = false*/)
+std::string getTimestampString(bool includingYMD/* = false*/, bool includingMs/* = false*/)
 {
     using std::chrono::system_clock;
     auto currentTime = std::chrono::system_clock::now();
