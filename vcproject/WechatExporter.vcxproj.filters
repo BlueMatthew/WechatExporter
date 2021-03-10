@@ -72,6 +72,12 @@
     <ClCompile Include="..\WechatExporter\core\FileSystem.cpp">
       <Filter>core</Filter>
     </ClCompile>
+    <ClCompile Include="..\WechatExporter\core\Updater.cpp">
+      <Filter>core</Filter>
+    </ClCompile>
+    <ClCompile Include="ViewHelper.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="stdafx.h">
@@ -157,6 +163,12 @@
     </ClInclude>
     <ClInclude Include="..\WechatExporter\core\FileSystem.h">
       <Filter>core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\WechatExporter\core\Updater.h">
+      <Filter>core</Filter>
+    </ClInclude>
+    <ClInclude Include="ViewHelper.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

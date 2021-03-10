@@ -111,7 +111,7 @@
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>Shell32.lib;Ws2_32.lib;Wldap32.lib;Version.lib;Crypt32.lib;libprotobufd.lib;libcrypto.lib;libcharset.lib;libiconv.lib;lzmad.lib;zlibd.lib;libssl.lib;libcurl-d.lib;libxml2.lib;sqlite3.lib;jsoncpp.lib;SKP_Silk_FIX.lib;libmp3lame-static.lib;libmpghip-static.lib;libplist.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>Shell32.lib;Ws2_32.lib;Wldap32.lib;Version.lib;Crypt32.lib;Urlmon.lib;libprotobufd.lib;libcrypto.lib;libcharset.lib;libiconv.lib;lzmad.lib;zlibd.lib;libssl.lib;libcurl-d.lib;libxml2.lib;sqlite3.lib;jsoncpp.lib;SKP_Silk_FIX.lib;libmp3lame-static.lib;libmpghip-static.lib;libplist.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <ResourceCompile>
       <Culture>0x0409</Culture>
@@ -148,7 +148,7 @@ xcopy "$(ProjectDir)..\WechatExporter\res"  "$(OutDir)res"  /Y /S /E</Command>
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>Shell32.lib;Ws2_32.lib;Wldap32.lib;Version.lib;Crypt32.lib;libprotobufd.lib;libcrypto.lib;libcharset.lib;libiconv.lib;lzmad.lib;zlibd.lib;libssl.lib;libcurl-d.lib;libxml2.lib;sqlite3.lib;jsoncpp.lib;SKP_Silk_FIX.lib;libmp3lame-static.lib;libmpghip-static.lib;libplist.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>Shell32.lib;Ws2_32.lib;Wldap32.lib;Version.lib;Crypt32.lib;Urlmon.lib;libprotobufd.lib;libcrypto.lib;libcharset.lib;libiconv.lib;lzmad.lib;zlibd.lib;libssl.lib;libcurl-d.lib;libxml2.lib;sqlite3.lib;jsoncpp.lib;SKP_Silk_FIX.lib;libmp3lame-static.lib;libmpghip-static.lib;libplist.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <ResourceCompile>
       <Culture>0x0409</Culture>
@@ -181,7 +181,7 @@ xcopy "$(ProjectDir)..\WechatExporter\res"  "$(OutDir)res"  /Y /S /E</Command>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
-      <AdditionalDependencies>Shell32.lib;Ws2_32.lib;Wldap32.lib;Version.lib;Crypt32.lib;libprotobuf.lib;libcrypto.lib;libcharset.lib;libiconv.lib;zlib.lib;lzma.lib;libssl.lib;libcurl.lib;libxml2.lib;sqlite3.lib;jsoncpp.lib;SKP_Silk_FIX.lib;libmp3lame-static.lib;libmpghip-static.lib;libplist.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>Shell32.lib;Ws2_32.lib;Wldap32.lib;Version.lib;Crypt32.lib;Urlmon.lib;libprotobuf.lib;libcrypto.lib;libcharset.lib;libiconv.lib;zlib.lib;lzma.lib;libssl.lib;libcurl.lib;libxml2.lib;sqlite3.lib;jsoncpp.lib;SKP_Silk_FIX.lib;libmp3lame-static.lib;libmpghip-static.lib;libplist.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <ResourceCompile>
       <Culture>0x0409</Culture>
@@ -214,7 +214,7 @@ xcopy "$(ProjectDir)..\WechatExporter\res"  "$(OutDir)res"  /Y /S /E</Command>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
-      <AdditionalDependencies>Shell32.lib;Ws2_32.lib;Wldap32.lib;Version.lib;Crypt32.lib;libprotobuf.lib;libcrypto.lib;libcharset.lib;libiconv.lib;zlib.lib;lzma.lib;libssl.lib;libcurl.lib;libxml2.lib;sqlite3.lib;jsoncpp.lib;SKP_Silk_FIX.lib;libmp3lame-static.lib;libmpghip-static.lib;libplist.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>Shell32.lib;Ws2_32.lib;Wldap32.lib;Version.lib;Crypt32.lib;Urlmon.lib;libprotobuf.lib;libcrypto.lib;libcharset.lib;libiconv.lib;zlib.lib;lzma.lib;libssl.lib;libcurl.lib;libxml2.lib;sqlite3.lib;jsoncpp.lib;SKP_Silk_FIX.lib;libmp3lame-static.lib;libmpghip-static.lib;libplist.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <ResourceCompile>
       <Culture>0x0409</Culture>
@@ -243,6 +243,7 @@ xcopy "$(ProjectDir)..\WechatExporter\res"  "$(OutDir)res"  /Y /S /E</Command>
     <ClCompile Include="..\WechatExporter\core\ITunesParser.cpp" />
     <ClCompile Include="..\WechatExporter\core\MessageParser.cpp" />
     <ClCompile Include="..\WechatExporter\core\RawMessage.cpp" />
+    <ClCompile Include="..\WechatExporter\core\Updater.cpp" />
     <ClCompile Include="..\WechatExporter\core\Utils.cpp" />
     <ClCompile Include="..\WechatExporter\core\Utils_audio.cpp" />
     <ClCompile Include="..\WechatExporter\core\Utils_md5.cpp" />
@@ -259,6 +260,7 @@ xcopy "$(ProjectDir)..\WechatExporter\res"  "$(OutDir)res"  /Y /S /E</Command>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="ViewHelper.cpp" />
     <ClCompile Include="WechatExporter.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -273,6 +275,7 @@ xcopy "$(ProjectDir)..\WechatExporter\res"  "$(OutDir)res"  /Y /S /E</Command>
     <ClInclude Include="..\WechatExporter\core\OSDef.h" />
     <ClInclude Include="..\WechatExporter\core\RawMessage.h" />
     <ClInclude Include="..\WechatExporter\core\semaphore.h" />
+    <ClInclude Include="..\WechatExporter\core\Updater.h" />
     <ClInclude Include="..\WechatExporter\core\Utils.h" />
     <ClInclude Include="..\WechatExporter\core\WechatObjects.h" />
     <ClInclude Include="..\WechatExporter\core\WechatParser.h" />
@@ -290,6 +293,7 @@ xcopy "$(ProjectDir)..\WechatExporter\res"  "$(OutDir)res"  /Y /S /E</Command>
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="VersionDetector.h" />
     <ClInclude Include="View.h" />
+    <ClInclude Include="ViewHelper.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="WechatExporter.rc" />

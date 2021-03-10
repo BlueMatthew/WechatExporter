@@ -34,6 +34,16 @@ Exporter::~Exporter()
     m_notifier = NULL;
 }
 
+void Exporter::initializeExporter()
+{
+    Downloader::initialize();
+}
+
+void Exporter::uninitializeExporter()
+{
+    Downloader::uninitialize();
+}
+
 void Exporter::setNotifier(ExportNotifier *notifier)
 {
     m_notifier = notifier;

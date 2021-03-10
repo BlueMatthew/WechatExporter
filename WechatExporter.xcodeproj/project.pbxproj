@@ -14,7 +14,7 @@
 		342EDB062524700A006A295A /* Exporter.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 342EDB042524700A006A295A /* Exporter.cpp */; };
 		342EDB0925247852006A295A /* Utils.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 342EDB0825247852006A295A /* Utils.cpp */; };
 		342EDB0B252495BD006A295A /* libxml2.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 342EDB0A252495BD006A295A /* libxml2.tbd */; };
-		343F6117252322D500FFE085 /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 343F6116252322D500FFE085 /* AppDelegate.m */; };
+		343F6117252322D500FFE085 /* AppDelegate.mm in Sources */ = {isa = PBXBuildFile; fileRef = 343F6116252322D500FFE085 /* AppDelegate.mm */; };
 		343F611A252322D500FFE085 /* ViewController.mm in Sources */ = {isa = PBXBuildFile; fileRef = 343F6119252322D500FFE085 /* ViewController.mm */; };
 		343F611C252322D600FFE085 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 343F611B252322D600FFE085 /* Assets.xcassets */; };
 		343F611F252322D600FFE085 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 343F611D252322D600FFE085 /* Main.storyboard */; };
@@ -23,6 +23,8 @@
 		343F613025234BFC00FFE085 /* libsqlite3.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 343F612F25234BFC00FFE085 /* libsqlite3.tbd */; };
 		3471A77A25EB5A9A007D186B /* FileSystem.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 34AB9A1325B8908D006D3617 /* FileSystem.cpp */; };
 		347E601525C7E55100B33BAB /* SessionDataSource.mm in Sources */ = {isa = PBXBuildFile; fileRef = 347E601425C7E55100B33BAB /* SessionDataSource.mm */; };
+		3497342625F384D100CAC6CD /* Updater.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 3497342425F384D100CAC6CD /* Updater.cpp */; };
+		3497342B25F75D4300CAC6CD /* HttpHelper.mm in Sources */ = {isa = PBXBuildFile; fileRef = 3497342A25F75D4300CAC6CD /* HttpHelper.mm */; };
 		349DAD2C255D3BB800BFE204 /* XmlParser.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 349DAD2A255D3BB800BFE204 /* XmlParser.cpp */; };
 		349DAD32255E6A0700BFE204 /* Utils_thread.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 349DAD31255E6A0600BFE204 /* Utils_thread.cpp */; };
 		34A0336125E34B0300E06CC5 /* MessageParser.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 34A0335F25E34B0300E06CC5 /* MessageParser.cpp */; };
@@ -50,7 +52,7 @@
 		342EDB0A252495BD006A295A /* libxml2.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libxml2.tbd; path = usr/lib/libxml2.tbd; sourceTree = SDKROOT; };
 		343F6112252322D500FFE085 /* WechatExporter.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = WechatExporter.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		343F6115252322D500FFE085 /* AppDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AppDelegate.h; sourceTree = "<group>"; };
-		343F6116252322D500FFE085 /* AppDelegate.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = AppDelegate.m; sourceTree = "<group>"; };
+		343F6116252322D500FFE085 /* AppDelegate.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = AppDelegate.mm; sourceTree = "<group>"; };
 		343F6118252322D500FFE085 /* ViewController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ViewController.h; sourceTree = "<group>"; };
 		343F6119252322D500FFE085 /* ViewController.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = ViewController.mm; sourceTree = "<group>"; };
 		343F611B252322D600FFE085 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
@@ -66,6 +68,10 @@
 		347E600D25C00A4100B33BAB /* MMKVReader.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MMKVReader.h; sourceTree = "<group>"; };
 		347E601325C7E53500B33BAB /* SessionDataSource.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SessionDataSource.h; sourceTree = "<group>"; };
 		347E601425C7E55100B33BAB /* SessionDataSource.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = SessionDataSource.mm; sourceTree = "<group>"; };
+		3497342425F384D100CAC6CD /* Updater.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = Updater.cpp; sourceTree = "<group>"; };
+		3497342525F384D100CAC6CD /* Updater.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Updater.h; sourceTree = "<group>"; };
+		3497342A25F75D4300CAC6CD /* HttpHelper.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = HttpHelper.mm; sourceTree = "<group>"; };
+		3497342E25F75D5A00CAC6CD /* HttpHelper.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = HttpHelper.h; sourceTree = "<group>"; };
 		349DAD2A255D3BB800BFE204 /* XmlParser.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = XmlParser.cpp; sourceTree = "<group>"; };
 		349DAD2B255D3BB800BFE204 /* XmlParser.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = XmlParser.h; sourceTree = "<group>"; };
 		349DAD31255E6A0600BFE204 /* Utils_thread.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Utils_thread.cpp; sourceTree = "<group>"; };
@@ -127,7 +133,7 @@
 			isa = PBXGroup;
 			children = (
 				343F6115252322D500FFE085 /* AppDelegate.h */,
-				343F6116252322D500FFE085 /* AppDelegate.m */,
+				343F6116252322D500FFE085 /* AppDelegate.mm */,
 				343F611B252322D600FFE085 /* Assets.xcassets */,
 				343F612A25234BBE00FFE085 /* core */,
 				34140A12254988C4003CE75A /* ExportNotifierImpl.h */,
@@ -141,6 +147,8 @@
 				343F6123252322D600FFE085 /* WechatExporter.entitlements */,
 				347E601325C7E53500B33BAB /* SessionDataSource.h */,
 				347E601425C7E55100B33BAB /* SessionDataSource.mm */,
+				3497342A25F75D4300CAC6CD /* HttpHelper.mm */,
+				3497342E25F75D5A00CAC6CD /* HttpHelper.h */,
 			);
 			path = WechatExporter;
 			sourceTree = "<group>";
@@ -178,6 +186,8 @@
 				342EDAFB25241D91006A295A /* WechatParser.h */,
 				349DAD2A255D3BB800BFE204 /* XmlParser.cpp */,
 				349DAD2B255D3BB800BFE204 /* XmlParser.h */,
+				3497342425F384D100CAC6CD /* Updater.cpp */,
+				3497342525F384D100CAC6CD /* Updater.h */,
 			);
 			path = core;
 			sourceTree = "<group>";
@@ -270,6 +280,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				3497342625F384D100CAC6CD /* Updater.cpp in Sources */,
 				3471A77A25EB5A9A007D186B /* FileSystem.cpp in Sources */,
 				34E3E9242535555F0093042D /* RawMessage.cpp in Sources */,
 				34E3E90C2531BE200093042D /* Utils_protobuf.cpp in Sources */,
@@ -280,9 +291,10 @@
 				34E3E90A2531BD8E0093042D /* Utils_md5.cpp in Sources */,
 				343F6122252322D600FFE085 /* main.m in Sources */,
 				342EDAFC25241D91006A295A /* WechatParser.cpp in Sources */,
+				3497342B25F75D4300CAC6CD /* HttpHelper.mm in Sources */,
 				342EDB0925247852006A295A /* Utils.cpp in Sources */,
 				349DAD32255E6A0700BFE204 /* Utils_thread.cpp in Sources */,
-				343F6117252322D500FFE085 /* AppDelegate.m in Sources */,
+				343F6117252322D500FFE085 /* AppDelegate.mm in Sources */,
 				349DAD2C255D3BB800BFE204 /* XmlParser.cpp in Sources */,
 				342EDB062524700A006A295A /* Exporter.cpp in Sources */,
 				347E601525C7E55100B33BAB /* SessionDataSource.mm in Sources */,
@@ -444,7 +456,7 @@
 				MARKETING_VERSION = 1.7.16;
 				OTHER_LDFLAGS = (
 					"-L/usr/local/lib",
-					"-lprotobuf",
+					"-lprotobufd",
 					"-ljsoncpp",
 					"-lmp3lame",
 					"-lSKP_SILK_SDK",
@@ -480,7 +492,7 @@
 				MARKETING_VERSION = 1.7.16;
 				OTHER_LDFLAGS = (
 					"-L/usr/local/lib",
-					"-lprotobuf",
+					"-lprotobufd",
 					"-ljsoncpp",
 					"-lmp3lame",
 					"-lSKP_SILK_SDK",
