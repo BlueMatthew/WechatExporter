@@ -51,22 +51,12 @@ END
 
 /////////////////////////////////////////////////////////////////////////////
 //
-// Icon
-//
-
-// Icon with lowest ID value placed first to ensure application icon
-// remains consistent on all systems.
-IDR_MAINFRAME           ICON                    "res\\WechatExporter.ico"
-
-
-/////////////////////////////////////////////////////////////////////////////
-//
 // Dialog
 //
 
 IDD_ABOUTBOX DIALOGEX 0, 0, 187, 102
 STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "About"
+CAPTION "关于"
 FONT 9, "Segoe UI", 0, 0, 0x0
 BEGIN
     DEFPUSHBUTTON   "确定",IDOK,130,81,50,14
@@ -123,44 +113,6 @@ BEGIN
     END
 END
 #endif    // APSTUDIO_INVOKED
-
-
-/////////////////////////////////////////////////////////////////////////////
-//
-// Version
-//
-
-VS_VERSION_INFO VERSIONINFO
- FILEVERSION 1,7,17,1
- PRODUCTVERSION 1,7,17,1
- FILEFLAGSMASK 0x3fL
-#ifdef _DEBUG
- FILEFLAGS 0x1L
-#else
- FILEFLAGS 0x0L
-#endif
- FILEOS 0x4L
- FILETYPE 0x2L
- FILESUBTYPE 0x0L
-BEGIN
-    BLOCK "StringFileInfo"
-    BEGIN
-        BLOCK "080404b0"
-        BEGIN
-            VALUE "FileDescription", "WechatExporter Module"
-            VALUE "FileVersion", "1.7.17.1"
-            VALUE "InternalName", "WechatExporter"
-            VALUE "LegalCopyright", "Copyright 2020"
-            VALUE "OriginalFilename", "WechatExporter.exe"
-            VALUE "ProductName", "WechatExporter Module"
-            VALUE "ProductVersion", "1.7.17.1"
-        END
-    END
-    BLOCK "VarFileInfo"
-    BEGIN
-        VALUE "Translation", 0x804, 1200
-    END
-END
 
 
 /////////////////////////////////////////////////////////////////////////////
@@ -262,16 +214,6 @@ END
 
 /////////////////////////////////////////////////////////////////////////////
 //
-// Icon
-//
-
-// Icon with lowest ID value placed first to ensure application icon
-// remains consistent on all systems.
-IDR_MAINFRAME           ICON                    "res\\idr_main.ico"
-
-
-/////////////////////////////////////////////////////////////////////////////
-//
 // Dialog
 //
 
@@ -292,7 +234,7 @@ BEGIN
     PUSHBUTTON      "Close",IDC_CLOSE,336,175,50,14
     GROUPBOX        "Logs:(CTRL+A/C Copy Logs)",IDC_GRP_LOGS,278,62,108,108,0,WS_EX_TRANSPARENT
     LISTBOX         IDC_LOGS,284,73,95,92,LBS_NOINTEGRALHEIGHT | LBS_EXTENDEDSEL | WS_VSCROLL | WS_HSCROLL | WS_TABSTOP
-    GROUPBOX        "Wechat Account and chat:",IDC_GRP_USR_CHAT,7,62,265,108,0,WS_EX_TRANSPARENT
+    GROUPBOX        "Wechat Accounts and Chats:",IDC_GRP_USR_CHAT,7,62,265,108,0,WS_EX_TRANSPARENT
     COMBOBOX        IDC_USERS,14,73,252,30,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
     CONTROL         "",IDC_SESSIONS,"SysListView32",LVS_REPORT | LVS_ALIGNLEFT | WS_BORDER | WS_TABSTOP,14,88,252,77
 END
@@ -338,6 +280,32 @@ END
 
 /////////////////////////////////////////////////////////////////////////////
 //
+// AFX_DIALOG_LAYOUT
+//
+
+IDD_WECHATEXPORTER_FORM AFX_DIALOG_LAYOUT
+BEGIN
+    0
+END
+
+IDD_ABOUTBOX AFX_DIALOG_LAYOUT
+BEGIN
+    0
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Icon
+//
+
+// Icon with lowest ID value placed first to ensure application icon
+// remains consistent on all systems.
+IDR_MAINFRAME           ICON                    "res\\idr_main.ico"
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
 // Version
 //
 
@@ -371,22 +339,6 @@ BEGIN
     BEGIN
         VALUE "Translation", 0x9, 1200
     END
-END
-
-
-/////////////////////////////////////////////////////////////////////////////
-//
-// AFX_DIALOG_LAYOUT
-//
-
-IDD_WECHATEXPORTER_FORM AFX_DIALOG_LAYOUT
-BEGIN
-    0
-END
-
-IDD_ABOUTBOX AFX_DIALOG_LAYOUT
-BEGIN
-    0
 END
 
 #endif    // English resources
