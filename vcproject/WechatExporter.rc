@@ -292,7 +292,7 @@ BEGIN
     PUSHBUTTON      "Close(&X)",IDC_CLOSE,336,175,50,14
     GROUPBOX        "Logs:(CTRL+A/C Copy Logs)",IDC_GRP_LOGS,278,62,108,108,0,WS_EX_TRANSPARENT
     LISTBOX         IDC_LOGS,284,73,95,92,LBS_NOINTEGRALHEIGHT | LBS_EXTENDEDSEL | WS_VSCROLL | WS_HSCROLL | WS_TABSTOP
-    GROUPBOX        "wechat Account and chat:",IDC_GRP_USR_CHAT,7,62,265,108,0,WS_EX_TRANSPARENT
+    GROUPBOX        "Wechat Account and chat:",IDC_GRP_USR_CHAT,7,62,265,108,0,WS_EX_TRANSPARENT
     COMBOBOX        IDC_USERS,14,73,252,30,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
     CONTROL         "",IDC_SESSIONS,"SysListView32",LVS_REPORT | LVS_ALIGNLEFT | WS_BORDER | WS_TABSTOP,14,88,252,77
 END
@@ -436,7 +436,7 @@ BEGIN
     IDS_SEL_BACKUP_DIR      "Please choose an iTunes backup directory."
     IDS_SEL_OUTPUT_DIR      "Please choose an output directory."
     IDS_CANCEL_PROMPT       "sure to cancel the exporting?"
-    IDS_STATIC_BACKUP       "iTunes Backup Directory:(i.e.:%s)"
+    IDS_STATIC_BACKUP       "iTunes Backup Directory:(%s)"
     IDS_SESSION_IDX         "No."
     IDS_SESSION_NAME        "Name"
     IDS_SESSION_COUNT       "Number of Msgs"
