@@ -16,7 +16,11 @@
           innerHtml += window.moreWechatMsgs.shift();
         }
         div.innerHTML = innerHtml;
-        document.body.appendChild(fragment);
+        var containerDiv = document.getElementById('msgs-div');
+        if (null != containerDiv)
+        {
+          containerDiv.appendChild(fragment);
+        }
 
         loadMoreMsgs();
       });
