@@ -293,7 +293,7 @@ public:
 
 		return 0;
 	}
-
+	
 	LRESULT OnCheckUpdate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 	{
 		if (0 == wParam)
