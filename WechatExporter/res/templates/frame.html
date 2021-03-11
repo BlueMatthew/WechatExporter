@@ -8,19 +8,62 @@
 		<style type=text/css>
 		body
 		{
-			background-color: white;
+			background-color: #c4c4c4;
 			font-family: "-apple-system", "Helvetica Neue", "Roboto", "Segoe UI", sans-serif;
   			font-size: 10.5pt;
       		margin: 0px;
-      		padding-bottom: 16px;
+		}
+		.main
+		{
+			max-width:720px;
+			margin: 0 auto;
+			height: 100%;
+			padding-top: 48px; /* header */
+			padding-bottom: 20px; /* footer */
+			background-color: #ebebeb;
+		}
+		.header
+		{
+			position: fixed;
+			top:0;
+			max-width:720px;
+			width: 100%;
+			height: 48px;
+			background-color: #f6f6f6;
+			z-index: 99999999;
+		}
+		.sname
+		{
+			display: table-cell;
+			padding-left: 12px;
+			vertical-align: middle;
+			height: 48px;
+			font-weight: bold;
+		}
+		.msgfilter
+		{
+			float:right;
+		}
+		.footer
+		{
+			position: fixed;
+			bottom: 0;
+			max-width:720px;
+			width: 100%;
+			height: 20px;
+			z-index: 99999999;
+		}
+		
+		.msgs
+		{
+			width: 100%;
+			height: 100%;
 		}
 	  	.chat-left, .media-left
 	  	{
 			clear:both;
 			overflow: auto;
-			max-width:720px;
 			margin:0 auto;
-			background-color: #ebebeb;
 			padding: 8px 8px;
 	  	}
 		.chat-left div.avatar-box,
@@ -64,7 +107,7 @@
 	    }
 		.chat-left.channels .content-box, .chat-right.channels .content-box
 		{
-			width:320px;
+			width:240px;
 		}
 		.refermsg
 		{
@@ -150,9 +193,7 @@
 			text-align: center;
 			margin-top: 15px;
 			margin-bottom: 15px;
-			max-width:720px;
 			margin:0 auto;
-			background-color: #ebebeb;
 			padding: 0px 8px;
     	}
     	.chat-notice .content-box
@@ -174,7 +215,7 @@
 		}
 		video
 		{
-			max-width: 320px;
+			max-width: 240px;
 			border-radius: 8px;
 		}
 		.image
@@ -205,8 +246,8 @@
 		img.channel-poster
 		{
 			object-fit: cover;
-			width: 320px;
-			height: 320px;
+			width: 240px;
+			height: 240px;
 		}
 		.image:hover, .channel-poster:hover
 		{
@@ -266,7 +307,7 @@
 		}
 		.app-name
 		{
-			/* padding-left: 10px; */
+			padding-left: 4px;
 			color: #999;
 			font-size: 80%;
 		}
@@ -288,8 +329,20 @@
 		</style>
 		<title>%%DISPLAYNAME%% - 微信聊天记录</title>
 	</head>
-	<body>
+	<body uid="%%USRNAME%%" sid="%%SESSION_USRNAME%%">
+		<div class="main">
+			<div class="header">
+				<div class="sname">%%DISPLAYNAME%%</div>
+				<div class="msgfilter"></div>
+			</div>
+			<div class="msgs" id="msgs-div">
 %%BODY%%
+			</div>
+			<div class="footer">
+	
+			</div>
+		</div>
+
   </body>
   %%LOADING_SCRIPTS%%
 </html>
