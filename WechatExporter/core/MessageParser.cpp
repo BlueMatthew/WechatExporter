@@ -790,7 +790,7 @@ void MessageParser::parseAppMsgChannelCard(const WXAPPMSG& appMsg, const XmlPars
     
     std::string portraitDir = ((m_options & SPO_ICON_IN_SESSION) == SPO_ICON_IN_SESSION) ? session.getOutputFileName() + "_files/Portrait" : "Portrait";
     
-    parseChannelCard(m_outputPath, portraitDir, nodes["username"], nodes["avatar"], nodes["nickname"], tv);
+    parseChannelCard(portraitDir, nodes["username"], nodes["avatar"], nodes["nickname"], tv);
 }
 
 void MessageParser::parseAppMsgChannels(const WXAPPMSG& appMsg, const XmlParser& xmlParser, const Session& session, TemplateValues& tv) const
@@ -1043,7 +1043,7 @@ void MessageParser::MessageParser::parseFwdMsgChannelCard(const WXFWDMSG& fwdMsg
     }
     
     std::string portraitDir = ((m_options & SPO_ICON_IN_SESSION) == SPO_ICON_IN_SESSION) ? session.getOutputFileName() + "_files/Portrait" : "Portrait";
-    parseChannelCard(m_outputPath, portraitDir, usrName, avatar, nickName, tv);
+    parseChannelCard(portraitDir, usrName, avatar, nickName, tv);
 }
 
 ///////////////////////////////
@@ -1170,7 +1170,7 @@ void MessageParser::parseCard(const std::string& sessionPath, const std::string&
             templateValues["%%CARDNAME%%"] = attrs["nickname"];
             templateValues["%%CARDIMGPATH%%"] = portraitDir + "/" + attrs["username"] + ".jpg";
             std::string localfile = combinePath(portraitDir, attrs["username"] + ".jpg");
-            ensureDirectoryExisted(portraitDir);
+            ensureDirectoryExisted(combinePath(sessionPath, portraitDir));
             m_downloader.addTask(portraitUrl, combinePath(sessionPath, localfile), 0, "card");
         }
         else if (!attrs["nickname"].empty())
@@ -1189,7 +1189,7 @@ void MessageParser::parseCard(const std::string& sessionPath, const std::string&
     templateValues["%%EXTRA_CLS%%"] = "contact-card";
 }
 
-void MessageParser::parseChannelCard(const std::string& sessionPath, const std::string& portraitDir, const std::string& usrName, const std::string& avatar, const std::string& name, TemplateValues& templateValues) const
+void MessageParser::parseChannelCard(const std::string& portraitDir, const std::string& usrName, const std::string& avatar, const std::string& name, TemplateValues& templateValues) const
 {
     bool hasImg = false;
     if ((m_options & SPO_IGNORE_SHARING) == 0)
@@ -1205,8 +1205,8 @@ void MessageParser::parseChannelCard(const std::string& sessionPath, const std::
             templateValues["%%CARDNAME%%"] = name;
             templateValues["%%CARDIMGPATH%%"] = portraitDir + "/" + usrName + ".jpg";
             std::string localfile = combinePath(portraitDir, usrName + ".jpg");
-            ensureDirectoryExisted(portraitDir);
-            m_downloader.addTask(avatar, combinePath(sessionPath, localfile), 0, "card");
+            ensureDirectoryExisted(combinePath(m_outputPath, portraitDir));
+            m_downloader.addTask(avatar, combinePath(m_outputPath, localfile), 0, "card");
         }
         else
         {
@@ -1266,7 +1266,7 @@ void MessageParser::parseChannels(const std::string& msgId, const XmlParser& xml
         {
             tv["%%CARDIMGPATH%%"] = portraitDir + "/" + nodes["username"] + ".jpg";
             std::string localFile = combinePath(portraitDir, nodes["username"] + ".jpg");
-            ensureDirectoryExisted(portraitDir);
+            ensureDirectoryExisted(combinePath(m_outputPath, portraitDir));
             m_downloader.addTask(nodes["avatar"], combinePath(m_outputPath, localFile), 0, "card");
         }
 
