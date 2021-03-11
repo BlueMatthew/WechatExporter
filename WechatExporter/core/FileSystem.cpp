@@ -126,7 +126,7 @@ bool makeDirectory(const std::string& path)
         status = makePathImpl(&copypath[0], mode);
     }
     
-    return status;
+    return status == 0;
 #endif
 }
 
