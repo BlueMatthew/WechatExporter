@@ -30,6 +30,9 @@ bool pcmToMp3(const std::string& pcmPath, const std::string& mp3Path)
 
 bool pcmToMp3(const std::vector<unsigned char>& pcmData, const std::string& mp3Path)
 {
+#ifndef NDEBUG
+    assert(!pcmData.empty());
+#endif
 #ifdef ENABLE_AUDIO_CONVERTION
     const int MP3_SIZE = 4096;
     const int num_of_channels = 1;
