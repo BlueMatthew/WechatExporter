@@ -94,6 +94,15 @@ int makePathImpl(const std::string::value_type *path, mode_t mode)
 
 bool makeDirectory(const std::string& path)
 {
+#ifndef NDEBUG
+    // The path must be full/absolute path
+#ifdef _WIN32
+    assert(path.find(":\\") != std::string::npos);
+#else
+    assert(startsWith(path, "/"));
+#endif
+#endif
+    
 #ifdef _WIN32
 	CW2T pszT(CA2W(path.c_str(), CP_UTF8));
 
