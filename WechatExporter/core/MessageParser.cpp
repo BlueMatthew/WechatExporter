@@ -29,6 +29,7 @@ bool MessageParser::parse(WXMSG& msg, const Session& session, std::vector<Templa
     tv["%%MSGID%%"] = msg.msgId;
     tv["%%NAME%%"] = "";
     tv["%%TIME%%"] = fromUnixTime(msg.createTime);
+    tv["%%MSGTYPE%%"] = std::to_string(msg.type);
     tv["%%MESSAGE%%"] = "";
     
     std::string forwardedMsg;
@@ -261,28 +262,29 @@ void MessageParser::parseVoice(const WXMSG& msg, const Session& session, Templat
             audioSrc = m_iTunesDb.getRealPath(*audioSrcFile);
         }
     }
-    if (audioSrc.empty())
-    {
-        tv.setName("msg");
-        tv["%%MESSAGE%%"] = voiceLen == -1 ? getLocaleString("[Audio]") : formatString(getLocaleString("[Audio %s]"), getDisplayTime(voiceLen).c_str());
-    }
-    else
+    
+    bool result = false;
+    if (!audioSrc.empty())
     {
         m_pcmData.clear();
-        std::string assetsDir = combinePath(m_outputPath, session.getOutputFileName() + "_files");
-        std::string mp3Path = combinePath(assetsDir, msg.msgId + ".mp3");
-
-        silkToPcm(audioSrc, m_pcmData);
-        
-        ensureDirectoryExisted(assetsDir);
-        pcmToMp3(m_pcmData, mp3Path);
-        if (audioSrcFile != NULL)
+        if (silkToPcm(audioSrc, m_pcmData) && !m_pcmData.empty())
         {
-            updateFileTime(mp3Path, ITunesDb::parseModifiedTime(audioSrcFile->blob));
+            std::string assetsDir = combinePath(m_outputPath, session.getOutputFileName() + "_files");
+            std::string mp3Path = combinePath(assetsDir, msg.msgId + ".mp3");
+            ensureDirectoryExisted(assetsDir);
+            if (pcmToMp3(m_pcmData, mp3Path))
+            {
+                updateFileTime(mp3Path, ITunesDb::parseModifiedTime(audioSrcFile->blob));
+                tv.setName("audio");
+                tv["%%AUDIOPATH%%"] = session.getOutputFileName() + "_files/" + msg.msgId + ".mp3";
+                result = true;
+            }
         }
-
-        tv.setName("audio");
-        tv["%%AUDIOPATH%%"] = session.getOutputFileName() + "_files/" + msg.msgId + ".mp3";
+        if (!result)
+        {
+            tv.setName("msg");
+            tv["%%MESSAGE%%"] = voiceLen == -1 ? getLocaleString("[Audio]") : formatString(getLocaleString("[Audio %s]"), getDisplayTime(voiceLen).c_str());
+        }
     }
 }
 
@@ -1167,10 +1169,13 @@ void MessageParser::parseCard(const std::string& sessionPath, const std::string&
         if (!attrs["username"].empty() && !portraitUrl.empty())
         {
             templateValues.setName("card");
+            // Some username is too long to be created on windows, have to use its md5 string
+			std::string imgFileName = startsWith(attrs["username"], "wxid_") ? attrs["username"] : md5(attrs["username"]);
             templateValues["%%CARDNAME%%"] = attrs["nickname"];
-            templateValues["%%CARDIMGPATH%%"] = portraitDir + "/" + attrs["username"] + ".jpg";
-            std::string localfile = combinePath(portraitDir, attrs["username"] + ".jpg");
+            templateValues["%%CARDIMGPATH%%"] = portraitDir + "/" + imgFileName + ".jpg";
+            std::string localfile = combinePath(portraitDir, imgFileName + ".jpg");
             ensureDirectoryExisted(combinePath(sessionPath, portraitDir));
+			std::string output = combinePath(sessionPath, localfile);
             m_downloader.addTask(portraitUrl, combinePath(sessionPath, localfile), 0, "card");
         }
         else if (!attrs["nickname"].empty())
