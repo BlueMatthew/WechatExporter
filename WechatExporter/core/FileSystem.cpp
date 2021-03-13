@@ -305,10 +305,14 @@ bool copyFile(const std::string& src, const std::string& dest, bool overwrite)
 	CW2T pszSrc(CA2W(src.c_str(), CP_UTF8));
 	CW2T pszDest(CA2W(dest.c_str(), CP_UTF8));
 
-	BOOL bRet = ::CopyFile((LPCTSTR)pszSrc, (LPCTSTR)pszDest, (overwrite ? FALSE : TRUE));
+	BOOL bRet = FALSE;
+	if (::PathFileExists((LPCTSTR)pszSrc))
+	{
+		bRet = ::CopyFile((LPCTSTR)pszSrc, (LPCTSTR)pszDest, (overwrite ? FALSE : TRUE));
 #ifndef NDEBUG
-    assert(bRet);
+		assert(bRet);
 #endif
+	}
 	return (bRet == TRUE);
 #else
     if (existsFile(dest) && !overwrite)
@@ -344,17 +348,35 @@ bool copyFile(const std::string& src, const std::string& dest, bool overwrite)
 
 bool moveFile(const std::string& src, const std::string& dest, bool overwrite/* = true*/)
 {
+#ifndef NDEBUG
+	if (src.empty())
+	{
+		assert(!"src is empty");
+	}
+	if (dest.empty())
+	{
+		assert(!"dest is empty");
+	}
+#endif
 #ifdef _WIN32
 	CW2T pszSrc(CA2W(src.c_str(), CP_UTF8));
 	CW2T pszDest(CA2W(dest.c_str(), CP_UTF8));
-	if (overwrite)
+	if (overwrite && ::PathFileExists((LPCTSTR)pszDest))
 	{
 		::DeleteFile((LPCTSTR)pszDest);
 	}
-	BOOL bRet = ::MoveFile((LPCTSTR)pszSrc, (LPCTSTR)pszDest) == TRUE;
+	bool bRet = false;
+	if (::PathFileExists((LPCTSTR)pszSrc))
+	{
+		bRet = ::MoveFile((LPCTSTR)pszSrc, (LPCTSTR)pszDest) == TRUE;
 #ifndef NDEBUG
-    assert(bRet);
+		if (!bRet)
+		{
+			// MessageBox(NULL, (LPCTSTR)pszSrc, (LPCTSTR)pszDest, MB_OK);
+			assert(!((LPCTSTR)pszDest));
+		}
 #endif
+	}
     return bRet;
 #else
     if (overwrite)
