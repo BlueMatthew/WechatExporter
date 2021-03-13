@@ -36,9 +36,7 @@ public:
     {
     }
     
-    Task(const std::string &url, const std::string& output, time_t mtime, bool localCopy = false) : m_url(url), m_output(output), m_mtime(mtime), m_localCopy(localCopy), m_retries(0)
-    {
-    }
+    Task(const std::string &url, const std::string& output, time_t mtime, bool localCopy = false);
     
     void setUserAgent(const std::string& userAgent)
     {
