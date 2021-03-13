@@ -17,6 +17,9 @@
 #include "FileSystem.h"
 #ifdef _WIN32
 #include <atlstr.h>
+#ifndef NDEBUG
+#include <cassert>
+#endif
 #endif
 
 // #define FAKE_DOWNLOAD
@@ -102,6 +105,16 @@ size_t writeTaskData(void *buffer, size_t size, size_t nmemb, void *user_p)
     return 0;
 }
 
+Task::Task(const std::string &url, const std::string& output, time_t mtime, bool localCopy/* = false*/) : m_url(url), m_output(output), m_mtime(mtime), m_localCopy(localCopy), m_retries(0)
+{
+#ifndef NDEBUG
+    if (m_output.empty())
+    {
+        assert(false);
+    }
+#endif
+}
+
 unsigned int Task::getRetries() const
 {
     return m_retries;
@@ -151,6 +164,7 @@ bool Task::downloadFile()
     curl_easy_setopt(curl, CURLOPT_STDERR, logFile);
 #endif
 
+	long httpStatus = 0;
     res = curl_easy_perform(curl);
 	if (res != CURLE_OK)
 	{
@@ -159,6 +173,10 @@ bool Task::downloadFile()
         {
             fprintf(stderr, "%s: %s\n", m_error.c_str(), m_url.c_str());
         }
+	}
+	else
+	{
+		curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &httpStatus);
 	}
     curl_easy_cleanup(curl);
 #endif // no FAKE_DOWNLOAD
@@ -170,7 +188,7 @@ bool Task::downloadFile()
     }
 #endif
     
-    if (res == CURLE_OK)
+    if (res == CURLE_OK && httpStatus == 200)
     {
         ::moveFile(m_outputTmp, m_output);
         if (m_mtime > 0)
@@ -228,9 +246,14 @@ void Downloader::setUserAgent(const std::string& userAgent)
 void Downloader::addTask(const std::string &url, const std::string& output, time_t mtime, std::string type/* = ""*/)
 {
 #ifndef NDEBUG
-    if (url == "/0" || url.empty())
+    if (url == "/0" || url.empty() || output.empty())
     {
         int aa = 0;
+    }
+    
+    if (!startsWith(url, "http://") && !startsWith(url, "https://") && !startsWith(url, "file://"))
+    {
+        assert(false);
     }
 #endif
     m_mtx.lock();

@@ -22,6 +22,9 @@
 #include <atlstr.h>
 #include <sys/utime.h>
 #include "Shlwapi.h"
+#ifndef NDEBUG
+#include <cassert>
+#endif
 #else
 #include <utime.h>
 #endif
@@ -145,8 +148,10 @@ std::string combinePath(const std::string& p1, const std::string& p2)
 	CW2T pszT1(CA2W(p1.c_str(), CP_UTF8));
 	CW2T pszT2(CA2W(p2.c_str(), CP_UTF8));
 
-	::PathCombine(buffer, pszT1, pszT2);
-
+	LPTSTR psz = ::PathCombine(buffer, pszT1, pszT2);
+#ifndef NDEBUG
+    assert(psz != NULL);
+#endif
 	CW2A pszU8(CT2W(buffer), CP_UTF8);
 	path = pszU8;
 #else
@@ -165,6 +170,12 @@ std::string combinePath(const std::string& p1, const std::string& p2)
     {
         path = p2;
     }
+#endif
+#ifndef NDEBUG
+	if (path.empty())
+	{
+		assert(false);
+	}
 #endif
     return path;
 }
