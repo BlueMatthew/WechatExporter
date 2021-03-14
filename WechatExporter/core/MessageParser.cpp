@@ -1069,7 +1069,7 @@ void MessageParser::parseVideo(const std::string& sessionPath, const std::string
         templateValues.setName("video");
         templateValues["%%THUMBPATH%%"] = hasThumb ? (sessionAssertsPath + "/" + destThumb) : "";
         templateValues["%%VIDEOPATH%%"] = sessionAssertsPath + "/" + destVideo;
-        
+        templateValues["%%MSGTYPE%%"] = "video";
     }
     else if (hasThumb)
     {
@@ -1111,12 +1111,14 @@ void MessageParser::parseImage(const std::string& sessionPath, const std::string
         templateValues.setName("image");
         templateValues["%%IMGPATH%%"] = sessionAssertsPath + "/" + dest;
         templateValues["%%IMGTHUMBPATH%%"] = hasThumb ? (sessionAssertsPath + "/" + destThumb) : (sessionAssertsPath + "/" + dest);
+        templateValues["%%MSGTYPE%%"] = "image";
     }
     else if (hasThumb)
     {
         templateValues.setName("thumb");
         templateValues["%%IMGTHUMBPATH%%"] = sessionAssertsPath + "/" + destThumb;
         templateValues["%%MESSAGE%%"] = "";
+        templateValues["%%MSGTYPE%%"] = "image";
     }
     else
     {
@@ -1139,6 +1141,7 @@ void MessageParser::parseFile(const std::string& sessionPath, const std::string&
         templateValues["%%SHARINGURL%%"] = sessionAssertsPath + "/" + dest;
         templateValues["%%SHARINGTITLE%%"] = fileName;
         templateValues["%%MESSAGE%%"] = "";
+        templateValues["%%MSGTYPE%%"] = "file";
     }
     else
     {
@@ -1261,7 +1264,7 @@ void MessageParser::parseChannels(const std::string& msgId, const XmlParser& xml
     if (!thumbUrl.empty())
     {
         tv.setName("channels");
-        
+        tv["%%MSGTYPE%%"] = "channels";
         std::string thumbFile = session.getOutputFileName() + "_files/" + msgId + ".jpg";
         tv["%%CHANNELTHUMBPATH%%"] = thumbFile;
         ensureDirectoryExisted(combinePath(m_outputPath, session.getOutputFileName() + "_files"));
