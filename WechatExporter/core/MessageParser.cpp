@@ -1051,7 +1051,7 @@ void MessageParser::MessageParser::parseFwdMsgChannelCard(const WXFWDMSG& fwdMsg
 ///////////////////////////////
 // Implementation
 
-void MessageParser::parseVideo(const std::string& sessionPath, const std::string& sessionAssertsPath, const std::string& srcVideo, const std::string& destVideo, const std::string& srcThumb, const std::string& destThumb, const std::string& width, const std::string& height, TemplateValues& templateValues) const
+void MessageParser::parseVideo(const std::string& sessionPath, const std::string& sessionAssertsPath, const std::string& srcVideo, const std::string& destVideo, const std::string& srcThumb, const std::string& destThumb, const std::string& width, const std::string& height, TemplateValues& tv) const
 {
     bool hasThumb = false;
     bool hasVideo = false;
@@ -1066,29 +1066,29 @@ void MessageParser::parseVideo(const std::string& sessionPath, const std::string
 
     if (hasVideo)
     {
-        templateValues.setName("video");
-        templateValues["%%THUMBPATH%%"] = hasThumb ? (sessionAssertsPath + "/" + destThumb) : "";
-        templateValues["%%VIDEOPATH%%"] = sessionAssertsPath + "/" + destVideo;
-        templateValues["%%MSGTYPE%%"] = "video";
+        tv.setName("video");
+        tv["%%THUMBPATH%%"] = hasThumb ? (sessionAssertsPath + "/" + destThumb) : "";
+        tv["%%VIDEOPATH%%"] = sessionAssertsPath + "/" + destVideo;
+        tv["%%MSGTYPE%%"] = "video";
     }
     else if (hasThumb)
     {
-        templateValues.setName("thumb");
-        templateValues["%%IMGTHUMBPATH%%"] = sessionAssertsPath + "/" + destThumb;
-        templateValues["%%MESSAGE%%"] = getLocaleString("(Video Missed)");
+        tv.setName("thumb");
+        tv["%%IMGTHUMBPATH%%"] = sessionAssertsPath + "/" + destThumb;
+        tv["%%MESSAGE%%"] = getLocaleString("(Video Missed)");
     }
     else
     {
-        templateValues.setName("msg");
-        templateValues["%%MESSAGE%%"] = getLocaleString("[Video]");
+        tv.setName("msg");
+        tv["%%MESSAGE%%"] = getLocaleString("[Video]");
     }
     
-    templateValues["%%VIDEOWIDTH%%"] = width;
-    templateValues["%%VIDEOHEIGHT%%"] = height;
+    tv["%%VIDEOWIDTH%%"] = width;
+    tv["%%VIDEOHEIGHT%%"] = height;
 }
 
 
-void MessageParser::parseImage(const std::string& sessionPath, const std::string& sessionAssertsPath, const std::string& src, const std::string& srcPre, const std::string& dest, const std::string& srcThumb, const std::string& destThumb, TemplateValues& templateValues) const
+void MessageParser::parseImage(const std::string& sessionPath, const std::string& sessionAssertsPath, const std::string& src, const std::string& srcPre, const std::string& dest, const std::string& srcThumb, const std::string& destThumb, TemplateValues& tv) const
 {
     bool hasThumb = false;
     bool hasImage = false;
@@ -1108,26 +1108,26 @@ void MessageParser::parseImage(const std::string& sessionPath, const std::string
 
     if (hasImage)
     {
-        templateValues.setName("image");
-        templateValues["%%IMGPATH%%"] = sessionAssertsPath + "/" + dest;
-        templateValues["%%IMGTHUMBPATH%%"] = hasThumb ? (sessionAssertsPath + "/" + destThumb) : (sessionAssertsPath + "/" + dest);
-        templateValues["%%MSGTYPE%%"] = "image";
+        tv.setName("image");
+        tv["%%IMGPATH%%"] = sessionAssertsPath + "/" + dest;
+        tv["%%IMGTHUMBPATH%%"] = hasThumb ? (sessionAssertsPath + "/" + destThumb) : (sessionAssertsPath + "/" + dest);
+        tv["%%MSGTYPE%%"] = "image";
     }
     else if (hasThumb)
     {
-        templateValues.setName("thumb");
-        templateValues["%%IMGTHUMBPATH%%"] = sessionAssertsPath + "/" + destThumb;
-        templateValues["%%MESSAGE%%"] = "";
-        templateValues["%%MSGTYPE%%"] = "image";
+        tv.setName("thumb");
+        tv["%%IMGTHUMBPATH%%"] = sessionAssertsPath + "/" + destThumb;
+        tv["%%MESSAGE%%"] = "";
+        tv["%%MSGTYPE%%"] = "image";
     }
     else
     {
-        templateValues.setName("msg");
-        templateValues["%%MESSAGE%%"] = getLocaleString("[Photo]");
+        tv.setName("msg");
+        tv["%%MESSAGE%%"] = getLocaleString("[Photo]");
     }
 }
 
-void MessageParser::parseFile(const std::string& sessionPath, const std::string& sessionAssertsPath, const std::string& src, const std::string& dest, const std::string& fileName, TemplateValues& templateValues) const
+void MessageParser::parseFile(const std::string& sessionPath, const std::string& sessionAssertsPath, const std::string& src, const std::string& dest, const std::string& fileName, TemplateValues& tv) const
 {
     bool hasFile = false;
     if ((m_options & SPO_IGNORE_FILE) == 0)
@@ -1137,20 +1137,20 @@ void MessageParser::parseFile(const std::string& sessionPath, const std::string&
 
     if (hasFile)
     {
-        templateValues.setName("plainshare");
-        templateValues["%%SHARINGURL%%"] = sessionAssertsPath + "/" + dest;
-        templateValues["%%SHARINGTITLE%%"] = fileName;
-        templateValues["%%MESSAGE%%"] = "";
-        templateValues["%%MSGTYPE%%"] = "file";
+        tv.setName("plainshare");
+        tv["%%SHARINGURL%%"] = sessionAssertsPath + "/" + dest;
+        tv["%%SHARINGTITLE%%"] = fileName;
+        tv["%%MESSAGE%%"] = "";
+        tv["%%MSGTYPE%%"] = "file";
     }
     else
     {
-        templateValues.setName("msg");
-        templateValues["%%MESSAGE%%"] = formatString(getLocaleString("[File: %s]"), fileName.c_str());
+        tv.setName("msg");
+        tv["%%MESSAGE%%"] = formatString(getLocaleString("[File: %s]"), fileName.c_str());
     }
 }
 
-void MessageParser::parseCard(const std::string& sessionPath, const std::string& portraitDir, const std::string& cardMessage, TemplateValues& templateValues) const
+void MessageParser::parseCard(const std::string& sessionPath, const std::string& portraitDir, const std::string& cardMessage, TemplateValues& tv) const
 {
     // static std::regex pattern42_1("nickname ?= ?\"(.+?)\"");
     // static std::regex pattern42_2("smallheadimgurl ?= ?\"(.+?)\"");
@@ -1164,18 +1164,18 @@ void MessageParser::parseCard(const std::string& sessionPath, const std::string&
         attrs = { {"nickname", ""}, {"username", ""} };
     }
 
-    templateValues["%%CARDTYPE%%"] = getLocaleString("[Contact Card]");
+    tv["%%CARDTYPE%%"] = getLocaleString("[Contact Card]");
     XmlParser xmlParser(cardMessage, true);
     if (xmlParser.parseAttributesValue("/msg", attrs) && !attrs["nickname"].empty())
     {
         std::string portraitUrl = attrs["bigheadimgurl"].empty() ? attrs["smallheadimgurl"] : attrs["bigheadimgurl"];
         if (!attrs["username"].empty() && !portraitUrl.empty())
         {
-            templateValues.setName("card");
+            tv.setName("card");
             // Some username is too long to be created on windows, have to use its md5 string
 			std::string imgFileName = startsWith(attrs["username"], "wxid_") ? attrs["username"] : md5(attrs["username"]);
-            templateValues["%%CARDNAME%%"] = attrs["nickname"];
-            templateValues["%%CARDIMGPATH%%"] = portraitDir + "/" + imgFileName + ".jpg";
+            tv["%%CARDNAME%%"] = attrs["nickname"];
+            tv["%%CARDIMGPATH%%"] = portraitDir + "/" + imgFileName + ".jpg";
             std::string localfile = combinePath(portraitDir, imgFileName + ".jpg");
             ensureDirectoryExisted(combinePath(sessionPath, portraitDir));
 			std::string output = combinePath(sessionPath, localfile);
@@ -1183,50 +1183,50 @@ void MessageParser::parseCard(const std::string& sessionPath, const std::string&
         }
         else if (!attrs["nickname"].empty())
         {
-            templateValues["%%MESSAGE%%"] = formatString(getLocaleString("[Contact Card] %s"), attrs["nickname"].c_str());
+            tv["%%MESSAGE%%"] = formatString(getLocaleString("[Contact Card] %s"), attrs["nickname"].c_str());
         }
         else
         {
-            templateValues["%%MESSAGE%%"] = getLocaleString("[Contact Card]");
+            tv["%%MESSAGE%%"] = getLocaleString("[Contact Card]");
         }
     }
     else
     {
-        templateValues["%%MESSAGE%%"] = getLocaleString("[Contact Card]");
+        tv["%%MESSAGE%%"] = getLocaleString("[Contact Card]");
     }
-    templateValues["%%EXTRA_CLS%%"] = "contact-card";
+    tv["%%EXTRA_CLS%%"] = "contact-card";
 }
 
-void MessageParser::parseChannelCard(const std::string& portraitDir, const std::string& usrName, const std::string& avatar, const std::string& name, TemplateValues& templateValues) const
+void MessageParser::parseChannelCard(const std::string& portraitDir, const std::string& usrName, const std::string& avatar, const std::string& name, TemplateValues& tv) const
 {
     bool hasImg = false;
     if ((m_options & SPO_IGNORE_SHARING) == 0)
     {
         hasImg = (!usrName.empty() && !avatar.empty());
     }
-    templateValues["%%CARDTYPE%%"] = getLocaleString("[Channel Card]");
+    tv["%%CARDTYPE%%"] = getLocaleString("[Channel Card]");
     if (!name.empty())
     {
         if (hasImg)
         {
-            templateValues.setName("card");
-            templateValues["%%CARDNAME%%"] = name;
-            templateValues["%%CARDIMGPATH%%"] = portraitDir + "/" + usrName + ".jpg";
+            tv.setName("card");
+            tv["%%CARDNAME%%"] = name;
+            tv["%%CARDIMGPATH%%"] = portraitDir + "/" + usrName + ".jpg";
             std::string localfile = combinePath(portraitDir, usrName + ".jpg");
             ensureDirectoryExisted(combinePath(m_outputPath, portraitDir));
             m_downloader.addTask(avatar, combinePath(m_outputPath, localfile), 0, "card");
         }
         else
         {
-            templateValues.setName("msg");
-            templateValues["%%MESSAGE%%"] = formatString(getLocaleString("[Channel Card] %s"), name.c_str());
+            tv.setName("msg");
+            tv["%%MESSAGE%%"] = formatString(getLocaleString("[Channel Card] %s"), name.c_str());
         }
     }
     else
     {
-        templateValues["%%MESSAGE%%"] = getLocaleString("[Channel Card]");
+        tv["%%MESSAGE%%"] = getLocaleString("[Channel Card]");
     }
-    templateValues["%%EXTRA_CLS%%"] = "channel-card";
+    tv["%%EXTRA_CLS%%"] = "channel-card";
 }
 
 void MessageParser::parseChannels(const std::string& msgId, const XmlParser& xmlParser, xmlNodePtr parentNode, const std::string& finderFeedXPath, const Session& session, TemplateValues& tv) const
