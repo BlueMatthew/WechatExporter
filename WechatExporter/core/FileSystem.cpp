@@ -310,7 +310,12 @@ bool copyFile(const std::string& src, const std::string& dest, bool overwrite)
 	{
 		bRet = ::CopyFile((LPCTSTR)pszSrc, (LPCTSTR)pszDest, (overwrite ? FALSE : TRUE));
 #ifndef NDEBUG
-		assert(bRet);
+		DWORD err = ::GetLastError();
+		TCHAR buffer[256] = { 0 };
+		_itot((int)err, buffer, 10);
+		_tcscat(buffer, TEXT(" "));
+		_tcscat(buffer, pszDest);
+		assert(buffer);
 #endif
 	}
 	return (bRet == TRUE);
