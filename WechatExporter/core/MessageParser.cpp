@@ -150,6 +150,10 @@ bool MessageParser::parse(WXMSG& msg, const Session& session, std::vector<Templa
                 {
                     protraitUser = f;
                 }
+                if (NULL == f)
+                {
+                    ensureDefaultPortraitIconExisted(portraitPath);
+                }
                 tv["%%AVATAR%%"] = portraitPath + ((NULL != f) ? f->getLocalPortrait() : "DefaultProfileHead@2x.png");
             }
             else
@@ -177,6 +181,10 @@ bool MessageParser::parse(WXMSG& msg, const Session& session, std::vector<Templa
             if (NULL == f)
             {
                 tv["%%NAME%%"] = session.getDisplayName();
+                if (session.isPortraitEmpty())
+                {
+                    ensureDefaultPortraitIconExisted(portraitPath);
+                }
                 localPortrait = portraitPath + (session.isPortraitEmpty() ? "DefaultProfileHead@2x.png" : session.getLocalPortrait());
                 // remotePortrait = session.getPortrait();
                 tv["%%AVATAR%%"] = localPortrait;
@@ -1112,6 +1120,7 @@ void MessageParser::parseImage(const std::string& sessionPath, const std::string
         tv["%%IMGPATH%%"] = sessionAssertsPath + "/" + dest;
         tv["%%IMGTHUMBPATH%%"] = hasThumb ? (sessionAssertsPath + "/" + destThumb) : (sessionAssertsPath + "/" + dest);
         tv["%%MSGTYPE%%"] = "image";
+        tv["%%EXTRA_CLS%%"] = "raw-img";
     }
     else if (hasThumb)
     {
@@ -1385,7 +1394,7 @@ bool MessageParser::parseForwardedMsgs(const Session& session, const WXMSG& msg,
             else
             {
                 ensureDefaultPortraitIconExisted(portraitPath);
-                tv["%%AVATAR%%"] = portraitPath + "/DefaultProfileHead@2x.png";
+                tv["%%AVATAR%%"] = portraitPath + "DefaultProfileHead@2x.png";
             }
 
             if ((dataType == FWDMSG_DATATYPE_NESTED_FWD_MSG) && !nestedFwdMsg.empty())
@@ -1458,7 +1467,7 @@ void MessageParser::ensureDefaultPortraitIconExisted(const std::string& portrait
 {
     std::string dest = combinePath(m_outputPath, portraitPath);
     ensureDirectoryExisted(dest);
-    dest = combinePath(m_outputPath, "DefaultProfileHead@2x.png");
+    dest = combinePath(dest, "DefaultProfileHead@2x.png");
     if (!existsFile(dest))
     {
         copyFile(combinePath(m_resPath, "res", "DefaultProfileHead@2x.png"), dest, false);
