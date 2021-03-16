@@ -77,6 +77,7 @@ public:
     void setOrder(bool asc = true);
     void saveFilesInSessionFolder(bool flags = true);
     void setSyncLoading(bool syncLoading = true);
+    void setLoadingDataOnScroll(bool loadingDataOnScroll = true);
     void setExtName(const std::string& extName);
     void setTemplatesName(const std::string& templatesName);
     

@@ -30,6 +30,9 @@ public:
 	static void SetCheckingUpdateDisabled(BOOL disabled);
 	static BOOL GetCheckingUpdateDisabled();
 
+	static void SetLoadingDataOnScroll(BOOL loadingDataOnScroll = TRUE);
+	static BOOL GetLoadingDataOnScroll();
+
 protected:
 	static BOOL GetStringProperty(LPCTSTR name, CString& value);
 	static BOOL SetStringProperty(LPCTSTR name, LPCTSTR value);

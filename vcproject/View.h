@@ -624,6 +624,7 @@ public:
 		bool descOrder = AppConfiguration::GetDescOrder();
 		bool saveFilesInSessionFolder = AppConfiguration::GetSavingInSession();
 		bool asyncLoading = AppConfiguration::GetAsyncLoading();
+		bool loadingDataOnScroll = AppConfiguration::GetLoadingDataOnScroll();
 		UINT outputFormat = AppConfiguration::GetOutputFormat();
 
 		CListBox lstboxLogs = GetDlgItem(IDC_LOGS);
@@ -658,6 +659,7 @@ public:
 		m_exporter->setNotifier(m_notifier);
 		m_exporter->setOrder(!descOrder);
 		m_exporter->setSyncLoading(!asyncLoading);
+		m_exporter->setLoadingDataOnScroll(loadingDataOnScroll);
 		if (saveFilesInSessionFolder)
 		{
 			m_exporter->saveFilesInSessionFolder();
@@ -717,7 +719,7 @@ protected:
 
 	void EnableInteractiveCtrls(BOOL enabled, BOOL cancellable = TRUE)
 	{
-		UINT ids[] = { IDC_BACKUP, IDC_CHOOSE_BKP, IDC_CHOOSE_BKP, IDC_CHOOSE_OUTPUT, IDC_DESC_ORDER, IDC_FILES_IN_SESSION, IDC_EXPORT, IDC_USERS };
+		UINT ids[] = { IDC_EXPORT, IDC_BACKUP, IDC_CHOOSE_BKP, IDC_CHOOSE_BKP, IDC_CHOOSE_OUTPUT, IDC_DESC_ORDER, IDC_FILES_IN_SESSION, IDC_USERS };
 		for (int idx = 0; idx < sizeof(ids) / sizeof(UINT); ++idx)
 		{
 			::EnableWindow(GetDlgItem(ids[idx]), enabled);

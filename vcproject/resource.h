@@ -43,7 +43,7 @@
 #define ID_FORMAT_HTML                  32777
 #define ID_FORMAT_TEXT                  32778
 #define ID_FORMAT_ASYNC_LOADING         32779
-#define ID_32780                        32780
+#define ID_FORMAT_LM_ONSCROLL           32780
 #define ID_CHK_UPDATE                   32781
 
 // Next default values for new objects

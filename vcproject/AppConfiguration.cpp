@@ -167,6 +167,19 @@ BOOL AppConfiguration::GetCheckingUpdateDisabled()
 	return dwValue != 0;
 }
 
+
+void AppConfiguration::SetLoadingDataOnScroll(BOOL loadingDataOnScroll)
+{
+	SetDwordProperty(TEXT("LoadingDataOnScroll"), loadingDataOnScroll);
+}
+
+BOOL AppConfiguration::GetLoadingDataOnScroll()
+{
+	DWORD dwValue = 1;	// TRUE
+	GetDwordProperty(TEXT("LoadingDataOnScroll"), dwValue);
+	return dwValue != 0;
+}
+
 BOOL AppConfiguration::GetStringProperty(LPCTSTR name, CString& value)
 {
 	CRegKey rk;
