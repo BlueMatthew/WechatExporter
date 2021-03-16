@@ -41,6 +41,7 @@ BEGIN
         MENUITEM "文本",                          ID_FORMAT_TEXT
         MENUITEM SEPARATOR
         MENUITEM "聊天记录数据异步加载(HTML)",            ID_FORMAT_ASYNC_LOADING, CHECKED
+        MENUITEM "上滑加载更多聊天记录",                  ID_FORMAT_LM_ONSCROLL, CHECKED
     END
     POPUP "帮助(&H)"
     BEGIN
@@ -204,6 +205,7 @@ BEGIN
         MENUITEM "Text",                        ID_FORMAT_TEXT
         MENUITEM SEPARATOR
         MENUITEM "Load HTML Data Asynchronously", ID_FORMAT_ASYNC_LOADING, CHECKED
+        MENUITEM "Load Data On Scrolling",      ID_FORMAT_LM_ONSCROLL, CHECKED
     END
     POPUP "&Help"
     BEGIN
