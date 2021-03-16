@@ -23,6 +23,7 @@ Exporter::Exporter(const std::string& workDir, const std::string& backup, const 
     m_notifier = NULL;
     m_cancelled = false;
     m_options = 0;
+    m_loadingDataOnScroll = true;
     m_extName = "html";
     m_templatesName = "templates";
 }
@@ -539,7 +540,11 @@ int Exporter::exportSession(const Friend& user, const MessageParser& msgParser, 
 
     if (numberOfMsgs > 0 && !messages.empty())
     {
+#ifndef NDEBUG
+        const size_t pageSize = 500;
+#else
         const size_t pageSize = 1000;
+#endif
         auto b = messages.cbegin();
         // No page for text mode
         auto e = (((m_options & (SPO_TEXT_MODE | SPO_SYNC_LOADING)) != 0) || (messages.size() <= pageSize)) ? messages.cend() : (b + pageSize);
@@ -557,6 +562,7 @@ int Exporter::exportSession(const Friend& user, const MessageParser& msgParser, 
         
         std::string scripts = (m_options & SPO_SYNC_LOADING) || (messages.size() <= pageSize) ? "" : getTemplate("scripts");
         replaceAll(scripts, "%%JSONDATA%%", moreMsgs);
+        replaceAll(scripts, "%%ASYNCLOADINGTYPE%%", m_loadingDataOnScroll ? "onscroll" : "initial");
 
         std::string html = getTemplate("frame");
 #ifndef NDEBUG
