@@ -50,6 +50,7 @@ protected:
     
     std::atomic<bool> m_cancelled;
     int m_options;
+    bool m_loadingDataOnScroll;
     std::string m_extName;
     std::string m_templatesName;
     
