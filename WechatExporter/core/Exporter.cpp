@@ -101,6 +101,11 @@ void Exporter::setSyncLoading(bool syncLoading/* = true*/)
         m_options &= ~SPO_SYNC_LOADING;
 }
 
+void Exporter::setLoadingDataOnScroll(bool loadingDataOnScroll/* = true*/)
+{
+    m_loadingDataOnScroll = loadingDataOnScroll;
+}
+
 void Exporter::setExtName(const std::string& extName)
 {
     m_extName = extName;
