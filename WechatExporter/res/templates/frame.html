@@ -370,7 +370,7 @@
 			<div class="header">
 				<span class="sname">%%DISPLAYNAME%%</span>
 				<div class="msgfilter">
-					<input onchange="javascript:searchElements(this.value);" />
+					<input onkeypress="javascript:searchElements(event);" placeholder="输入关键词后回车搜索" />
 					&nbsp; &nbsp;
 					<img width="24" border="0" alt="显示所有消息" id="filter-none" class="filter-btn" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAMAAADXqc3KAAAAjVBMVEUAAABNyzpRwzJRwzJT0zNRwzJRxDJRwzFSxDZRxDJRwjJRwzJRwzFRwzFRxDJQwzJQxDFRwDJVyTBRwzJQwzFRwzJRwzJRxDJRwzFRwzFQwzFSxTFRwzJSwzJRwzJRwzFSxDJQwjJPwzNRwzJSwzJRwjFRwzJW0TVVzTRSxzNY1DZUyzRTyTNa2Dde4jquq4L8AAAAJnRSTlMABPn8BuSnyw/fIe3Dsn5WTBkK9LmsmpBvYzszvKKHdmhdKNNRP0nRLroAAAEmSURBVCjPbdLZcoMwDAVQWQIDYSf7vrSVvKX//3kNtKEp0zujF52xrbENP1FRFCmYRj1bE4oA2mZz3u7UX1Jw07kXEZud1Yso2LJzFgmNc2+zUSK4is2PcaBwWJDJ0lFaZKPhIowAc74vR6gEQ7xJAvFaO8zjcbNSkK14RiPLXfcydWGQCYkkSeHjpPW6jr7lKMjMaBawy4w8YuJ6kLoHCjHUznuP6I2RzSDFQ9BdU2vpVNmwrpDDvj+ozfycMa0ckgK0HeQsq2GENBM3By0YksTapLBoigH2vFglauWQveG+UEro8970N9MIEhHzo9BtXx9keUek3uh+ePaHUlokWOuZy25o/WpTxogxfV4ggknS2azb67idtJ/rb7N/voUCNdlnsvILSCAaBAI8PN8AAAAASUVORK5CYII=" />
 					&nbsp;
@@ -389,9 +389,10 @@
 
   	</body>
   	<script language="javascript">
-		function showImagePopup(src)
+		function showImagePopup(e)
 		{
-			var imgUrl = src.getAttribute("rawUrl");
+			var srcElement = e.target;
+			var imgUrl = srcElement.getAttribute("rawUrl");
 			if (imgUrl == null)
 			{
 				return false;
@@ -400,7 +401,7 @@
 			var fragment = document.createDocumentFragment();
 			var div = document.createElement('div');
 			div.className = "img-popup";
-			div.onclick = function(e) {
+			div.onclick = function(event) {
 				document.body.removeChild(div);
 			};
 			fragment.appendChild(div);
@@ -425,43 +426,40 @@
 			}
 		}
 
-		function searchElements(keyword)
+		function searchElements(e)
 		{
+			if(e.keyCode !== 13)
+			{
+				return false;
+            }
+
 			var msgElements = document.querySelectorAll('div.msg');
 			if (null == msgElements || msgElements.length == 0)
 			{
-				return;
+				return false;;
 			}
 
+			var keyword = e.target.value == null ? "" : e.target.value.toLowerCase();
+			var elementClasses = ['span.dspname', 'span.msg-text'];
 			for (idx = 0; idx < msgElements.length; idx++)
 			{
 				var matched = false;
-				if (null != keyword && keyword.length > 0)
+				if (keyword.length > 0)
 				{
-					var lowerKeyword = keyword.toLowerCase();
-					var nameElements = msgElements[idx].querySelectorAll('span.dspname');
-					if (null != nameElements && nameElements.length > 0)
+					for (idx1 = 0; idx1 < elementClasses.length; idx1++)
 					{
-						for (idx = 0; idx < nameElements.length; idx++)
+						var elements = msgElements[idx].querySelectorAll(elementClasses[idx1]);
+						if (null == elements || elements.length == 0) continue;
+						
+						for (idx2 = 0; idx2 < elements.length; idx2++)
 						{
-							if (null != nameElements[idx].innerText && nameElements[idx].innerText.toLowerCase().indexOf(lowerKeyword) != -1)
+							if (null != elements[idx2].innerText && elements[idx2].innerText.toLowerCase().indexOf(keyword) != -1)
 							{
 								matched = true;
 								break;
 							}
 						}
-					}
-					if (!matched)
-					{
-						var msgTextElements = msgElements[idx].querySelectorAll('span.msg-text');
-						for (idx = 0; idx < msgTextElements.length; idx++)
-						{
-							if (null != msgTextElements[idx].innerText && msgTextElements[idx].innerText.toLowerCase().indexOf(lowerKeyword) != -1)
-							{
-								matched = true;
-								break;
-							}
-						}
+						if (matched) break;
 					}
 				}
 				else
@@ -470,6 +468,8 @@
 				}
 				msgElements[idx].style.display = matched ? "block" : "none";
 			}
+
+			return false;
 		}
 
 		document.getElementById("filter-none").addEventListener("click", function() {
