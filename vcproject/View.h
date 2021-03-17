@@ -33,13 +33,20 @@ private:
 
 	int m_itemClicked;
 
-	class CLoadingHandler : public CIdleHandler
+	class CLoadingHandler
 	{
 	protected:
 		HWND m_hWnd;
 		std::future<bool> m_task;
 		Exporter m_exp;
 		CWaitCursor m_waitCursor;
+
+		bool runTask()
+		{
+			bool ret = m_exp.loadUsersAndSessions();
+			::PostMessage(m_hWnd, WM_LOADDATA, 0, reinterpret_cast<LPARAM>(this));
+			return ret;
+		}
 	public:
 
 		CLoadingHandler(HWND hWnd, const std::string& resDir, const std::string& backupDir, Logger* logger) : m_hWnd(hWnd), m_exp(resDir, backupDir, "", logger)
@@ -52,26 +59,18 @@ private:
 
 		void startTask()
 		{
-			m_task = std::async(std::launch::async, &Exporter::loadUsersAndSessions, &m_exp);
+			m_task = std::async(std::launch::async, &CLoadingHandler::runTask, this);
 		}
 
-		virtual BOOL OnIdle()
+		void waitForCompletion()
 		{
-			std::future_status status = m_task.wait_for(std::chrono::seconds(0));
-			if (status == std::future_status::ready)
-			{
-				::PostMessage(m_hWnd, WM_LOADDATA, 0, reinterpret_cast<LPARAM>(this));
-				return TRUE;
-			}
-
-			return FALSE;
+			m_task.wait();
 		}
 
 		void getUsersAndSessions(std::vector<std::pair<Friend, std::vector<Session>>>& usersAndSessions)
 		{
 			m_exp.swapUsersAndSessions(usersAndSessions);
 		}
-
 	};
 
 	class CUpdateHandler : public CIdleHandler
@@ -80,7 +79,6 @@ private:
 		HWND m_hWnd;
 		std::future<bool> m_task;
 		Updater m_updater;
-		CWaitCursor m_waitCursor;
 	public:
 
 		CUpdateHandler(HWND hWnd, const std::string& currentVersion, const std::string& userAgent) : m_hWnd(hWnd), m_updater(currentVersion)
@@ -103,10 +101,10 @@ private:
 			if (status == std::future_status::ready)
 			{
 				::PostMessage(m_hWnd, WM_CHKUPDATE, 1, reinterpret_cast<LPARAM>(this));
-				return TRUE;
+				return FALSE;
 			}
 
-			return FALSE;
+			return TRUE;
 		}
 
 		bool hasNewVersion()
@@ -278,17 +276,13 @@ public:
 		CLoadingHandler *handler = reinterpret_cast<CLoadingHandler *>(lParam);
 		if (NULL != handler)
 		{
-			if (_Module.GetMessageLoop()->RemoveIdleHandler(handler))
-			{
-				// exp.loadUsersAndSessions();
-				handler->getUsersAndSessions(m_usersAndSessions);
+			handler->waitForCompletion();
+			handler->getUsersAndSessions(m_usersAndSessions);
 
-				LoadUsers();
-				EnableInteractiveCtrls(TRUE, FALSE);
+			LoadUsers();
+			EnableInteractiveCtrls(TRUE, FALSE);
 
-				delete handler;
-			}
-			// If the handler is not in array, throw it away
+			delete handler;
 		}
 
 		return 0;
@@ -420,7 +414,7 @@ public:
 		
 		std::string backup = manifest.getPath();
 		CLoadingHandler *handler = new CLoadingHandler(m_hWnd, (LPCSTR)resDir, backup, m_logger);
-		_Module.GetMessageLoop()->AddIdleHandler(handler);
+		// _Module.GetMessageLoop()->AddIdleHandler(handler);
 		handler->startTask();
 
 		return 0;
