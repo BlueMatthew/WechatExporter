@@ -51,6 +51,14 @@
 		{
 			vertical-align: middle;
 		}
+		span.filter-btn
+		{
+			cursor: hand;
+		}
+		span.filter-btn:hover
+		{
+			color: blue;
+		}
 		.footer
 		{
 			position: fixed;
@@ -370,13 +378,11 @@
 			<div class="header">
 				<span class="sname">%%DISPLAYNAME%%</span>
 				<div class="msgfilter">
-					<input onkeypress="javascript:searchElements(event);" placeholder="输入关键词后回车搜索" />
-					&nbsp; &nbsp;
-					<img width="24" border="0" alt="显示所有消息" id="filter-none" class="filter-btn" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAMAAADXqc3KAAAAjVBMVEUAAABNyzpRwzJRwzJT0zNRwzJRxDJRwzFSxDZRxDJRwjJRwzJRwzFRwzFRxDJQwzJQxDFRwDJVyTBRwzJQwzFRwzJRwzJRxDJRwzFRwzFQwzFSxTFRwzJSwzJRwzJRwzFSxDJQwjJPwzNRwzJSwzJRwjFRwzJW0TVVzTRSxzNY1DZUyzRTyTNa2Dde4jquq4L8AAAAJnRSTlMABPn8BuSnyw/fIe3Dsn5WTBkK9LmsmpBvYzszvKKHdmhdKNNRP0nRLroAAAEmSURBVCjPbdLZcoMwDAVQWQIDYSf7vrSVvKX//3kNtKEp0zujF52xrbENP1FRFCmYRj1bE4oA2mZz3u7UX1Jw07kXEZud1Yso2LJzFgmNc2+zUSK4is2PcaBwWJDJ0lFaZKPhIowAc74vR6gEQ7xJAvFaO8zjcbNSkK14RiPLXfcydWGQCYkkSeHjpPW6jr7lKMjMaBawy4w8YuJ6kLoHCjHUznuP6I2RzSDFQ9BdU2vpVNmwrpDDvj+ozfycMa0ckgK0HeQsq2GENBM3By0YksTapLBoigH2vFglauWQveG+UEro8970N9MIEhHzo9BtXx9keUek3uh+ePaHUlokWOuZy25o/WpTxogxfV4ggknS2azb67idtJ/rb7N/voUCNdlnsvILSCAaBAI8PN8AAAAASUVORK5CYII=" />
-					&nbsp;
-					<img width="24" border="0" alt="只显示照片" id="filter-image" class="filter-btn" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAMAAADXqc3KAAAAkFBMVEX////8/v79//7///3J6f2+5v3j8/3H6f204f3M6v71/P6z4/7y+v3s+f3W7v275P2/5vu25P/3/P655v7L7Pz1+v7v+v245P624v6x4v6+6f275f/h8v235f3O7PzC6PzY8fz5/f7j9P7p9v3E6P295v/l8/7X8f6u4f3m9f3R7f285/3e8f7b8f3T7v7T7/lYv97kAAABWElEQVQoz13R2W7DIBBA0YFhibdiTGxwvcfZm7T//3cdO6mi9MrCEkcDD4Dc/MssBQlmiCIRvRLSN8bZHGRVZdk8z9mjOR6TxjQuhyEbat/3XeJt54Ov2/s58aaT8FkNdYs4m+bgnGs26qTvsvEL5HvGGO+t3Ub2UKuTQuHdCnLiDK/BxGmgiVExbV1OsD/fGDvK5IS894GA6/CAxAjtus+YY+boqCPXl6NZIBx222AVMo7X824kmNJ1or4hEwMDoBECOqpM18uHiWGRIpKAvo3tE7JhBgYIfAG8tCf1Bwpe4ZR+H5mOCb5SzgCRPwP4udDEAiUiAcBjIWiRIAf3ff94a8jYCjLUst21Su3WT7UVMLHCwfbsvXhflDl8db7RWm9f9eLKqwUab8/XqYzjsijipZJjKkF2jp5onAqK9tclLS45dMFSdZ0s0W8tbAz0IhIiisRbWve/BvAiZfLgy6oAAAAASUVORK5CYII=" />
-					&nbsp;
-					<img width="24" border="0" alt="只显示视频" id="filter-video" class="filter-btn" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAMAAADXqc3KAAAAZlBMVEW45f+65f/0+/214/7E6P215f+75f2z4v7L6/3T7v695v285v/y+v7G6f7B6P6+5v7J6v2x4v/1/P7P7f72+/32/Pv3/f6/5/7v+v7Z8P78/v6z5P+55fvW7/3e8v7i8/3q9v2r4P7/hAFWAAABUElEQVQoz1WQh47sIAxFjU0JkISWMOmZ/f+ffA6j2ac9oghdl4sBDjAuxtj9Ep05QIMAuGvf43+m+To4XOg3diEE/cE5HQq+DwBz46GEAKUUPAfvXdQ1gcZCXgSu+QDAt09rTyCzJN1iicOb4lU3OZCzVBTGxotYEWSowyaka0LM84R1keBNZyk+GVOQtchhiHEYljeR3bZB5gCyetunXRGR+jmR1mr7MiILc7D9Y6m5WeRWEhbJpcbZWTb3IFiI2R25yNY8/BGq1rllyOx/S5mTS53mEbgHeospGYZ+zmxKvfqPML/kdhXLFIu3MTFvcmg9hnRi38Bbg6ZX9/05KBLQxkR8akUsBLYr+fVBCPgO0QOgNaF5El98uhYCs9bREO1724aYJDdrwMO7rjw/Xo0Y47rdBOA1nEtGnPAhZ5xxseQVaAc7udeH8cERaSH+Ae9rFrU/VkySAAAAAElFTkSuQmCC" />
+					<input placeholder="输入关键词后回车搜索" id="filter-keyword" class="filter-btn" onkeypress="javascript:searchElements(event);" />
+					&nbsp; 
+					<a title="只显示照片" id="filter-image" class="filter-btn" href="javascript:showImageMsgs(event);">照片</a>
+					<a title="只显示视频" id="filter-video" class="filter-btn" href="javascript:showVideoMsgs();">视频</a>
+					<a title="显示所有消息" id="filter-none" class="filter-btn" href="javascript:showAllMsgs();">所有</a>
 				</div>
 			</div>
 			<div class="msgs" id="msgs-div">
@@ -414,6 +420,9 @@
 
 		function showElements(msgType)
 		{
+			var kwElement = document.getElementById("filter-keyword");
+			if (null != kwElement) kwElement.value = "";
+
 			var msgElements = document.querySelectorAll('div.msg');
 			if (null == msgElements || msgElements.length == 0)
 			{
@@ -428,7 +437,8 @@
 
 		function searchElements(e)
 		{
-			if(e.keyCode !== 13)
+			var keyCode = e.keyCode || e.which || 0;
+			if(keyCode !== 13)
 			{
 				return false;
             }
@@ -472,17 +482,18 @@
 			return false;
 		}
 
-		document.getElementById("filter-none").addEventListener("click", function() {
+		function showAllMsgs(e)
+		{
 			showElements(null);
-		});
-
-		document.getElementById("filter-image").addEventListener("click", function() {
+		}
+		function showImageMsgs(e)
+		{
 			showElements("image");
-		});
-
-		document.getElementById("filter-video").addEventListener("click", function() {
+		}
+		function showVideoMsgs(e)
+		{
 			showElements("video");
-		});
+		}
 
 	</script>
   
