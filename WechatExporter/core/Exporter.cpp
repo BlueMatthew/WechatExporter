@@ -23,7 +23,7 @@ Exporter::Exporter(const std::string& workDir, const std::string& backup, const 
     m_notifier = NULL;
     m_cancelled = false;
     m_options = 0;
-    m_loadingDataOnScroll = true;
+    m_loadingDataOnScroll = false; // disabled by default
     m_extName = "html";
     m_templatesName = "templates";
 }
@@ -104,6 +104,14 @@ void Exporter::setSyncLoading(bool syncLoading/* = true*/)
 void Exporter::setLoadingDataOnScroll(bool loadingDataOnScroll/* = true*/)
 {
     m_loadingDataOnScroll = loadingDataOnScroll;
+}
+
+void Exporter::supportsFilter(bool supportsFilter/* = true*/)
+{
+    if (supportsFilter)
+        m_options |= SPO_SUPPORT_FILTER;
+    else
+        m_options &= ~SPO_SUPPORT_FILTER;
 }
 
 void Exporter::setExtName(const std::string& extName)
@@ -564,7 +572,7 @@ int Exporter::exportSession(const Friend& user, const MessageParser& msgParser, 
             Json::FastWriter writer;
             moreMsgs = writer.write(jsonMsgs);
         }
-        
+
         std::string scripts = (m_options & SPO_SYNC_LOADING) || (messages.size() <= pageSize) ? "" : getTemplate("scripts");
         replaceAll(scripts, "%%JSONDATA%%", moreMsgs);
         replaceAll(scripts, "%%ASYNCLOADINGTYPE%%", m_loadingDataOnScroll ? "onscroll" : "initial");
@@ -580,6 +588,8 @@ int Exporter::exportSession(const Friend& user, const MessageParser& msgParser, 
         replaceAll(html, "%%DISPLAYNAME%%", session.getDisplayName());
         replaceAll(html, "%%BODY%%", join(b, e, ""));
         replaceAll(html, "%%LOADING_SCRIPTS%%", scripts);
+        
+        replaceAll(html, "%%HEADER_FILTER%%", (m_options & SPO_SUPPORT_FILTER) ? getTemplate("filter") : "");
         
         std::string fileName = combinePath(outputBase, session.getOutputFileName() + "." + m_extName);
         writeFile(fileName, html);
@@ -687,7 +697,7 @@ bool Exporter::loadITunes(bool detailedInfo/* = true*/)
 
 bool Exporter::loadTemplates()
 {
-    const char* names[] = {"frame", "msg", "video", "notice", "system", "audio", "image", "card", "emoji", "plainshare", "share", "thumb", "listframe", "listitem", "scripts", "refermsg", "channels"};
+    const char* names[] = {"frame", "msg", "video", "notice", "system", "audio", "image", "card", "emoji", "plainshare", "share", "thumb", "listframe", "listitem", "scripts", "filter", "refermsg", "channels"};
     for (int idx = 0; idx < sizeof(names) / sizeof(const char*); idx++)
     {
         std::string name = names[idx];

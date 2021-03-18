@@ -34,7 +34,8 @@ enum SessionParsingOption
     SPO_TEXT_MODE = 0xFFFF,
     SPO_DESC = 1 << 16,
     SPO_ICON_IN_SESSION = 1 << 17,     // Put Head Icon and Emoji files in the folder of session
-    SPO_SYNC_LOADING = 1 << 18
+    SPO_SYNC_LOADING = 1 << 18,
+    SPO_SUPPORT_FILTER = 1 << 19
 };
 
 struct WXMSG

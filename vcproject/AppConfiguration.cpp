@@ -175,8 +175,20 @@ void AppConfiguration::SetLoadingDataOnScroll(BOOL loadingDataOnScroll)
 
 BOOL AppConfiguration::GetLoadingDataOnScroll()
 {
-	DWORD dwValue = 1;	// TRUE
+	DWORD dwValue = 0;	// FALSE
 	GetDwordProperty(TEXT("LoadingDataOnScroll"), dwValue);
+	return dwValue != 0;
+}
+
+void AppConfiguration::SetSupportingFilter(BOOL supportingFilter)
+{
+	SetDwordProperty(TEXT("Filter"), supportingFilter);
+}
+
+BOOL AppConfiguration::GetSupportingFilter()
+{
+	DWORD dwValue = 0;	// FALSE
+	GetDwordProperty(TEXT("Filter"), dwValue);
 	return dwValue != 0;
 }
 

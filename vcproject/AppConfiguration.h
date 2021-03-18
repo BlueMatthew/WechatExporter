@@ -33,6 +33,9 @@ public:
 	static void SetLoadingDataOnScroll(BOOL loadingDataOnScroll = TRUE);
 	static BOOL GetLoadingDataOnScroll();
 
+	static void SetSupportingFilter(BOOL supportingFilter);
+	static BOOL GetSupportingFilter();
+
 protected:
 	static BOOL GetStringProperty(LPCTSTR name, CString& value);
 	static BOOL SetStringProperty(LPCTSTR name, LPCTSTR value);
