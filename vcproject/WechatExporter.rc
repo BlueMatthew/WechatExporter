@@ -193,7 +193,7 @@ IDR_MAINFRAME MENU
 BEGIN
     POPUP "&File"
     BEGIN
-        MENUITEM "Earlier To Newer",            ID_FILE_DESC_ORDER, CHECKED
+        MENUITEM "From Earlier To Newer",       ID_FILE_DESC_ORDER, CHECKED
         MENUITEM "Save Avatar/Emoji in Chat Folder", ID_FILE_SAVING_IN_SESSION, CHECKED
         MENUITEM "Show Message Filter",         ID_FILE_FILTER
         MENUITEM SEPARATOR
@@ -206,8 +206,8 @@ BEGIN
         MENUITEM "HTML",                        ID_FORMAT_HTML
         MENUITEM "Text",                        ID_FORMAT_TEXT
         MENUITEM SEPARATOR
-        MENUITEM "Load HTML Data Asynchronously", ID_FORMAT_ASYNC_LOADING, CHECKED
-        MENUITEM "Load Data On Scrolling",      ID_FORMAT_LM_ONSCROLL
+        MENUITEM "Load Messages Asynchronously(HTML Mode)", ID_FORMAT_ASYNC_LOADING, CHECKED
+        MENUITEM "Load Messages On Scrolling",  ID_FORMAT_LM_ONSCROLL
     END
     POPUP "&Help"
     BEGIN
