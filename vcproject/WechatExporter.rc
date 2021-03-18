@@ -30,7 +30,7 @@ BEGIN
     BEGIN
         MENUITEM "按消息时间倒序导出",                   ID_FILE_DESC_ORDER, CHECKED
         MENUITEM "头像和表情存放到聊天记录子目录",             ID_FILE_SAVING_IN_SESSION, CHECKED
-        MENUITEM "支持消息过滤",                      ID_FILE_FILTER
+        MENUITEM "显示消息过滤",                      ID_FILE_FILTER
         MENUITEM SEPARATOR
         MENUITEM "自动检查新版本",                     ID_FILE_CHK_UPDATE, CHECKED
         MENUITEM SEPARATOR
@@ -195,7 +195,7 @@ BEGIN
     BEGIN
         MENUITEM "Earlier To Newer",            ID_FILE_DESC_ORDER, CHECKED
         MENUITEM "Save Avatar/Emoji in Chat Folder", ID_FILE_SAVING_IN_SESSION, CHECKED
-        MENUITEM "Support Message Filter",      ID_FILE_FILTER
+        MENUITEM "Show Message Filter",         ID_FILE_FILTER
         MENUITEM SEPARATOR
         MENUITEM "Check Update Automatically",  ID_FILE_CHK_UPDATE, CHECKED
         MENUITEM SEPARATOR
