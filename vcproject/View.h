@@ -619,6 +619,7 @@ public:
 		bool saveFilesInSessionFolder = AppConfiguration::GetSavingInSession();
 		bool asyncLoading = AppConfiguration::GetAsyncLoading();
 		bool loadingDataOnScroll = AppConfiguration::GetLoadingDataOnScroll();
+		bool supportingFilter = AppConfiguration::GetSupportingFilter();
 		UINT outputFormat = AppConfiguration::GetOutputFormat();
 
 		CListBox lstboxLogs = GetDlgItem(IDC_LOGS);
@@ -654,6 +655,7 @@ public:
 		m_exporter->setOrder(!descOrder);
 		m_exporter->setSyncLoading(!asyncLoading);
 		m_exporter->setLoadingDataOnScroll(loadingDataOnScroll);
+		m_exporter->supportsFilter(supportingFilter);
 		if (saveFilesInSessionFolder)
 		{
 			m_exporter->saveFilesInSessionFolder();
