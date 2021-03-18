@@ -195,7 +195,7 @@ BEGIN
     BEGIN
         MENUITEM "Earlier To Newer",            ID_FILE_DESC_ORDER, CHECKED
         MENUITEM "Save Avatar/Emoji in Chat Folder", ID_FILE_SAVING_IN_SESSION, CHECKED
-        MENUITEM "Support Filter",              ID_FILE_FILTER
+        MENUITEM "Support Message Filter",      ID_FILE_FILTER
         MENUITEM SEPARATOR
         MENUITEM "Check Update Automatically",  ID_FILE_CHK_UPDATE, CHECKED
         MENUITEM SEPARATOR
