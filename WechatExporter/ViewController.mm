@@ -472,10 +472,10 @@
         return;
     }
 
-    BOOL descOrder = (self.chkboxDesc.state == NSOnState);
-    BOOL textMode = (self.chkboxTextMode.state == NSOnState);
-    BOOL syncLoading = (self.chkboxAsyncLoading.state != NSOnState);
-    BOOL saveFilesInSessionFolder = (self.chkboxSaveFilesInSessionFolder.state == NSOnState);
+    BOOL descOrder = [AppConfiguration getDescOrder];
+    BOOL textMode = [AppConfiguration isTextMode];
+    BOOL syncLoading = ![AppConfiguration getAsyncLoading];
+    BOOL saveFilesInSessionFolder = [AppConfiguration getSavingInSession];
     
     self.txtViewLogs.string = @"";
     [self onStart];
