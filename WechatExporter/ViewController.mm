@@ -9,25 +9,13 @@
 #import "ViewController.h"
 #import "SessionDataSource.h"
 #import "HttpHelper.h"
+#import "AppConfiguration.h"
 
-#include "ITunesParser.h"
 #include "LoggerImpl.h"
 #include "ExportNotifierImpl.h"
-#include "RawMessage.h"
 #include "Utils.h"
 #include "Exporter.h"
 #include "Updater.h"
-#include "FileSystem.h"
-#include <sqlite3.h>
-#include <fstream>
-#include <thread>
-#include <future>
-
-void errorLogCallback(void *pArg, int iErrCode, const char *zMsg)
-{
-    NSString *log = [NSString stringWithUTF8String:zMsg];
-    NSLog(@"SQLITE3: %@", log);
-}
 
 @interface ViewController() <NSTableViewDelegate>
 {
@@ -127,8 +115,6 @@ void errorLogCallback(void *pArg, int iErrCode, const char *zMsg)
 {
     [super viewDidLoad];
     
-    sqlite3_config(SQLITE_CONFIG_LOG, errorLogCallback, NULL);
-
     self.popupBackup.autoresizingMask = NSViewMinYMargin | NSViewWidthSizable;
     self.btnBackup.autoresizingMask = NSViewMinXMargin | NSViewMinYMargin;
     
@@ -190,58 +176,30 @@ void errorLogCallback(void *pArg, int iErrCode, const char *zMsg)
     
     self.tblSessions.dataSource = m_dataSource;
     self.tblSessions.delegate = self;
-    
-    BOOL descOrder = [[NSUserDefaults standardUserDefaults] boolForKey:@"Desc"];
-    self.chkboxDesc.state = descOrder ? NSOnState : NSOffState;
-    
-    BOOL textMode = [[NSUserDefaults standardUserDefaults] boolForKey:@"TextMode"];
+
+    self.chkboxDesc.state = [AppConfiguration getDescOrder] ? NSOnState : NSOffState;
+    BOOL textMode = [AppConfiguration isTextMode];
     self.chkboxTextMode.state = textMode ? NSOnState : NSOffState;
-    
-    BOOL syncLoading = [[NSUserDefaults standardUserDefaults] boolForKey:@"SyncLoading"];
-    self.chkboxAsyncLoading.state = syncLoading ? NSOffState : NSOnState;
+
+    self.chkboxAsyncLoading.state = [AppConfiguration getAsyncLoading] ? NSOnState : NSOffState;
     self.chkboxAsyncLoading.enabled = !textMode;
 
-    NSString *outputDir = [[NSUserDefaults standardUserDefaults] objectForKey:@"OutputDir"];
-    if (nil == outputDir || [outputDir isEqualToString:@""])
-    {
-        NSMutableArray *components = [NSMutableArray array];
-        NSArray *paths = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES);
-        if (nil == paths && paths.count > 0)
-        {
-            [components addObject:[paths objectAtIndex:0]];
-        }
-        else
-        {
-            [components addObject:NSHomeDirectory()];
-            [components addObject:@"Documents"];
-        }
-        [components addObject:@"WechatHistory"];
-        
-        outputDir = [NSString pathWithComponents:components];
-    }
-    self.txtboxOutput.stringValue = outputDir;
-    
-    NSFileManager *fileManager = [NSFileManager defaultManager];
-    NSURL *appSupport = [fileManager URLForDirectory:NSApplicationSupportDirectory inDomain:NSUserDomainMask appropriateForURL:nil create:NO error:nil];
-    
-    NSArray *components = @[[appSupport path], @"MobileSync", @"Backup"];
-    NSString *backupDir = [NSString pathWithComponents:components];
-    BOOL isDir = NO;
-    if ([fileManager fileExistsAtPath:backupDir isDirectory:&isDir] && isDir)
-    {
-        NSString *backupDir = [NSString pathWithComponents:components];
+    self.txtboxOutput.stringValue = [AppConfiguration getLastOrDefaultOutputDir];
 
+    NSString *backupDir = [AppConfiguration getDefaultBackupDir:YES];
+    if (nil != backupDir)
+    {
         ManifestParser parser([backupDir UTF8String]);
         std::vector<BackupManifest> manifests;
         if (parser.parse(manifests))
         {
-            NSString *previoudBackupDir = [[NSUserDefaults standardUserDefaults] objectForKey:@"BackupDir"];
+            NSString *previoudBackupDir = [AppConfiguration getLastBackupDir];
             [self updateBackups:manifests withPreviousPath:previoudBackupDir];
         }
     }
     
-    BOOL checkUpdateDisabled = [[NSUserDefaults standardUserDefaults] boolForKey:@"ChkUpdateDisabled"];
-    NSInteger lastChkUpdateTime = [[NSUserDefaults standardUserDefaults] integerForKey:@"LastChkUpdateTime"];
+    BOOL checkUpdateDisabled = [AppConfiguration isCheckingUpdateDisabled];
+    NSInteger lastChkUpdateTime = [AppConfiguration getLastCheckUpdateTime];
 #ifndef NDEBUG
     lastChkUpdateTime = 0;
 #endif
