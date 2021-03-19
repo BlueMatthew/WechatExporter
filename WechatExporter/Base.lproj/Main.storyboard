@@ -47,23 +47,44 @@
                                 <modifierMask key="keyEquivalentModifierMask"/>
                                 <menu key="submenu" title="File" id="yFn-8R-v2s">
                                     <items>
-                                        <menuItem title="按消息时间倒序导出" id="GbO-lL-BLb" userLabel="DescOrder">
-                                            <modifierMask key="keyEquivalentModifierMask"/>
-                                        </menuItem>
-                                        <menuItem title="头像和表情存放到聊天记录子目录" state="on" id="tGU-e5-isp" userLabel="SavingInSession">
+                                        <menuItem title="Check Update Automatically" state="on" id="Pyu-qm-bT0" userLabel="Update">
                                             <modifierMask key="keyEquivalentModifierMask"/>
                                         </menuItem>
                                     </items>
                                 </menu>
                             </menuItem>
-                            <menuItem title="格式" hidden="YES" id="v5F-yk-5ct" userLabel="Format">
+                            <menuItem title="Format" id="v5F-yk-5ct" userLabel="Format">
                                 <modifierMask key="keyEquivalentModifierMask"/>
-                                <menu key="submenu" title="格式" id="or1-Xl-Us0">
+                                <menu key="submenu" title="Format" id="or1-Xl-Us0">
                                     <items>
-                                        <menuItem title="HTML" id="cWo-5k-XRR" userLabel="HTML">
+                                        <menuItem title="HTML Mode" id="cWo-5k-XRR" userLabel="HTML">
                                             <modifierMask key="keyEquivalentModifierMask"/>
                                         </menuItem>
-                                        <menuItem title="Text" id="GeM-zb-UkW" userLabel="TEXT">
+                                        <menuItem title="Text Mode" id="GeM-zb-UkW" userLabel="TEXT">
+                                            <modifierMask key="keyEquivalentModifierMask"/>
+                                        </menuItem>
+                                    </items>
+                                </menu>
+                            </menuItem>
+                            <menuItem title="Options" id="fod-ax-X6A" userLabel="Options">
+                                <modifierMask key="keyEquivalentModifierMask"/>
+                                <menu key="submenu" title="Options" id="uG2-8c-wjP">
+                                    <items>
+                                        <menuItem title="From Earlier To Newer" id="GbO-lL-BLb" userLabel="DescOrder">
+                                            <modifierMask key="keyEquivalentModifierMask"/>
+                                        </menuItem>
+                                        <menuItem title="Save Avatar/Emoji in Chat Folder" state="on" id="tGU-e5-isp" userLabel="SavingInSession">
+                                            <modifierMask key="keyEquivalentModifierMask"/>
+                                        </menuItem>
+                                        <menuItem isSeparatorItem="YES" id="qwf-hH-tEU"/>
+                                        <menuItem title="Load Messages Asynchronously(HTML Mode)" id="WOF-ft-ZWq" userLabel="AsyncLoading">
+                                            <modifierMask key="keyEquivalentModifierMask"/>
+                                        </menuItem>
+                                        <menuItem title="Load Messages On Scrolling" id="c4Q-qP-ppM" userLabel="LoadOnScroll">
+                                            <modifierMask key="keyEquivalentModifierMask"/>
+                                        </menuItem>
+                                        <menuItem isSeparatorItem="YES" id="bTu-p0-ZCF"/>
+                                        <menuItem title="Load Messages On Scrolling" id="HWn-ip-mii" userLabel="Filter">
                                             <modifierMask key="keyEquivalentModifierMask"/>
                                         </menuItem>
                                     </items>
