@@ -26,6 +26,7 @@
 		347E601525C7E55100B33BAB /* SessionDataSource.mm in Sources */ = {isa = PBXBuildFile; fileRef = 347E601425C7E55100B33BAB /* SessionDataSource.mm */; };
 		3497342625F384D100CAC6CD /* Updater.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 3497342425F384D100CAC6CD /* Updater.cpp */; };
 		3497342B25F75D4300CAC6CD /* HttpHelper.mm in Sources */ = {isa = PBXBuildFile; fileRef = 3497342A25F75D4300CAC6CD /* HttpHelper.mm */; };
+		3497891B26037783001D1F8F /* AppConfiguration.mm in Sources */ = {isa = PBXBuildFile; fileRef = 3497891A26037783001D1F8F /* AppConfiguration.mm */; };
 		349DAD2C255D3BB800BFE204 /* XmlParser.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 349DAD2A255D3BB800BFE204 /* XmlParser.cpp */; };
 		349DAD32255E6A0700BFE204 /* Utils_thread.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 349DAD31255E6A0600BFE204 /* Utils_thread.cpp */; };
 		34A0336125E34B0300E06CC5 /* MessageParser.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 34A0335F25E34B0300E06CC5 /* MessageParser.cpp */; };
@@ -77,6 +78,8 @@
 		3497342525F384D100CAC6CD /* Updater.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Updater.h; sourceTree = "<group>"; };
 		3497342A25F75D4300CAC6CD /* HttpHelper.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = HttpHelper.mm; sourceTree = "<group>"; };
 		3497342E25F75D5A00CAC6CD /* HttpHelper.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = HttpHelper.h; sourceTree = "<group>"; };
+		3497891926037783001D1F8F /* AppConfiguration.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = AppConfiguration.h; path = WechatExporter/AppConfiguration.h; sourceTree = "<group>"; };
+		3497891A26037783001D1F8F /* AppConfiguration.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = AppConfiguration.mm; path = WechatExporter/AppConfiguration.mm; sourceTree = "<group>"; };
 		349DAD2A255D3BB800BFE204 /* XmlParser.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = XmlParser.cpp; sourceTree = "<group>"; };
 		349DAD2B255D3BB800BFE204 /* XmlParser.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = XmlParser.h; sourceTree = "<group>"; };
 		349DAD31255E6A0600BFE204 /* Utils_thread.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Utils_thread.cpp; sourceTree = "<group>"; };
@@ -120,6 +123,8 @@
 		343F6109252322D500FFE085 = {
 			isa = PBXGroup;
 			children = (
+				3497891926037783001D1F8F /* AppConfiguration.h */,
+				3497891A26037783001D1F8F /* AppConfiguration.mm */,
 				343F6114252322D500FFE085 /* WechatExporter */,
 				343F6113252322D500FFE085 /* Products */,
 				343F612E25234BFC00FFE085 /* Frameworks */,
@@ -294,6 +299,7 @@
 				34E3E90C2531BE200093042D /* Utils_protobuf.cpp in Sources */,
 				34A0336125E34B0300E06CC5 /* MessageParser.cpp in Sources */,
 				343F611A252322D500FFE085 /* ViewController.mm in Sources */,
+				3497891B26037783001D1F8F /* AppConfiguration.mm in Sources */,
 				34ED31E825528A1800C42698 /* Utils_audio.cpp in Sources */,
 				342EDB0325245206006A295A /* Downloader.cpp in Sources */,
 				34E3E90A2531BD8E0093042D /* Utils_md5.cpp in Sources */,
