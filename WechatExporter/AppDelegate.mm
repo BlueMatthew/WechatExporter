@@ -29,4 +29,9 @@
     return YES;
 }
 
+- (IBAction)formatMenuItemClick:(NSMenuItem *)sender {
+}
+
+- (IBAction)fileMenuItemClick:(NSMenuItem *)sender {
+}
 @end
