@@ -78,8 +78,8 @@
 		3497342525F384D100CAC6CD /* Updater.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Updater.h; sourceTree = "<group>"; };
 		3497342A25F75D4300CAC6CD /* HttpHelper.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = HttpHelper.mm; sourceTree = "<group>"; };
 		3497342E25F75D5A00CAC6CD /* HttpHelper.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = HttpHelper.h; sourceTree = "<group>"; };
-		3497891926037783001D1F8F /* AppConfiguration.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = AppConfiguration.h; path = WechatExporter/AppConfiguration.h; sourceTree = "<group>"; };
-		3497891A26037783001D1F8F /* AppConfiguration.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = AppConfiguration.mm; path = WechatExporter/AppConfiguration.mm; sourceTree = "<group>"; };
+		3497891926037783001D1F8F /* AppConfiguration.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AppConfiguration.h; sourceTree = "<group>"; };
+		3497891A26037783001D1F8F /* AppConfiguration.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = AppConfiguration.mm; sourceTree = "<group>"; };
 		349DAD2A255D3BB800BFE204 /* XmlParser.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = XmlParser.cpp; sourceTree = "<group>"; };
 		349DAD2B255D3BB800BFE204 /* XmlParser.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = XmlParser.h; sourceTree = "<group>"; };
 		349DAD31255E6A0600BFE204 /* Utils_thread.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Utils_thread.cpp; sourceTree = "<group>"; };
@@ -123,8 +123,6 @@
 		343F6109252322D500FFE085 = {
 			isa = PBXGroup;
 			children = (
-				3497891926037783001D1F8F /* AppConfiguration.h */,
-				3497891A26037783001D1F8F /* AppConfiguration.mm */,
 				343F6114252322D500FFE085 /* WechatExporter */,
 				343F6113252322D500FFE085 /* Products */,
 				343F612E25234BFC00FFE085 /* Frameworks */,
@@ -142,6 +140,8 @@
 		343F6114252322D500FFE085 /* WechatExporter */ = {
 			isa = PBXGroup;
 			children = (
+				3497891926037783001D1F8F /* AppConfiguration.h */,
+				3497891A26037783001D1F8F /* AppConfiguration.mm */,
 				343F6115252322D500FFE085 /* AppDelegate.h */,
 				343F6116252322D500FFE085 /* AppDelegate.mm */,
 				343F611B252322D600FFE085 /* Assets.xcassets */,
@@ -489,7 +489,7 @@
 					"-lSKP_SILK_SDK",
 					"-lplist-2.0",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = org.wakin.WechatExporter;
+				PRODUCT_BUNDLE_IDENTIFIER = org.wakin.WechatExporter2;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = Debug;
@@ -525,7 +525,7 @@
 					"-lSKP_SILK_SDK",
 					"-lplist-2.0",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = org.wakin.WechatExporter;
+				PRODUCT_BUNDLE_IDENTIFIER = org.wakin.WechatExporter2;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = Release;

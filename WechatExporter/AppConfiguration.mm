@@ -162,12 +162,12 @@
 
 + (void)setLoadingDataOnScroll:(BOOL)loadingDataOnScroll
 {
-    [[NSUserDefaults standardUserDefaults] setBool:(!loadingDataOnScroll) forKey:@"LoadingDataOnce"];
+    [[NSUserDefaults standardUserDefaults] setBool:loadingDataOnScroll forKey:@"LoadingOnScroll"];
 }
 
 + (BOOL)getLoadingDataOnScroll
 {
-    return ![[NSUserDefaults standardUserDefaults] boolForKey:@"LoadingDataOnce"];
+    return [[NSUserDefaults standardUserDefaults] boolForKey:@"LoadingOnScroll"];
 }
 
 + (void)setSupportingFilter:(BOOL)supportingFilter

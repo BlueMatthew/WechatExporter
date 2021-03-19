@@ -11,6 +11,7 @@
 @interface AppDelegate : NSObject <NSApplicationDelegate>
 - (IBAction)fileMenuItemClick:(NSMenuItem *)sender;
 - (IBAction)formatMenuItemClick:(NSMenuItem *)sender;
+- (IBAction)optionsMenuItemClick:(NSMenuItem *)sender;
 
 @end
 
