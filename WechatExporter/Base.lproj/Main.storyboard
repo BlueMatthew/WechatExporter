@@ -45,54 +45,78 @@
                             </menuItem>
                             <menuItem title="File" id="UCE-Dj-bc1">
                                 <modifierMask key="keyEquivalentModifierMask"/>
-                                <menu key="submenu" title="File" id="yFn-8R-v2s">
+                                <menu key="submenu" title="File" autoenablesItems="NO" id="yFn-8R-v2s">
                                     <items>
-                                        <menuItem title="Check Update Automatically" state="on" id="Pyu-qm-bT0" userLabel="Update">
+                                        <menuItem title="Check Update Automatically" state="on" identifier="updater" id="Pyu-qm-bT0" userLabel="Update">
                                             <modifierMask key="keyEquivalentModifierMask"/>
+                                            <connections>
+                                                <action selector="fileMenuItemClick:" target="Voe-Tx-rLC" id="JLp-9y-Hr3"/>
+                                            </connections>
                                         </menuItem>
                                     </items>
                                 </menu>
                             </menuItem>
                             <menuItem title="Format" id="v5F-yk-5ct" userLabel="Format">
                                 <modifierMask key="keyEquivalentModifierMask"/>
-                                <menu key="submenu" title="Format" id="or1-Xl-Us0">
+                                <menu key="submenu" title="Format" autoenablesItems="NO" id="or1-Xl-Us0">
                                     <items>
-                                        <menuItem title="HTML Mode" id="cWo-5k-XRR" userLabel="HTML">
+                                        <menuItem title="HTML Mode" state="on" identifier="htmlMode" id="cWo-5k-XRR" userLabel="HTML">
                                             <modifierMask key="keyEquivalentModifierMask"/>
+                                            <connections>
+                                                <action selector="formatMenuItemClick:" target="Voe-Tx-rLC" id="NHl-5W-ye0"/>
+                                            </connections>
                                         </menuItem>
-                                        <menuItem title="Text Mode" id="GeM-zb-UkW" userLabel="TEXT">
+                                        <menuItem title="Text Mode" identifier="textMode" id="GeM-zb-UkW" userLabel="TEXT">
                                             <modifierMask key="keyEquivalentModifierMask"/>
+                                            <connections>
+                                                <action selector="formatMenuItemClick:" target="Voe-Tx-rLC" id="5kY-da-x9v"/>
+                                            </connections>
                                         </menuItem>
                                     </items>
                                 </menu>
                             </menuItem>
                             <menuItem title="Options" id="fod-ax-X6A" userLabel="Options">
                                 <modifierMask key="keyEquivalentModifierMask"/>
-                                <menu key="submenu" title="Options" id="uG2-8c-wjP">
+                                <menu key="submenu" title="Options" autoenablesItems="NO" id="uG2-8c-wjP">
                                     <items>
-                                        <menuItem title="From Earlier To Newer" id="GbO-lL-BLb" userLabel="DescOrder">
+                                        <menuItem title="From Earlier To Newer" identifier="descOrder" id="GbO-lL-BLb" userLabel="DescOrder">
                                             <modifierMask key="keyEquivalentModifierMask"/>
+                                            <connections>
+                                                <action selector="optionsMenuItemClick:" target="Voe-Tx-rLC" id="MEP-ZQ-Zdq"/>
+                                            </connections>
                                         </menuItem>
-                                        <menuItem title="Save Avatar/Emoji in Chat Folder" state="on" id="tGU-e5-isp" userLabel="SavingInSession">
+                                        <menuItem title="Save Avatar/Emoji in Chat Folder" state="on" identifier="savingInSessionFolder" id="tGU-e5-isp" userLabel="SavingInSession">
                                             <modifierMask key="keyEquivalentModifierMask"/>
+                                            <connections>
+                                                <action selector="optionsMenuItemClick:" target="Voe-Tx-rLC" id="Ak2-Wp-Nxc"/>
+                                            </connections>
                                         </menuItem>
                                         <menuItem isSeparatorItem="YES" id="qwf-hH-tEU"/>
-                                        <menuItem title="Load Messages Asynchronously(HTML Mode)" id="WOF-ft-ZWq" userLabel="AsyncLoading">
+                                        <menuItem title="Load Messages Asynchronously(HTML Mode)" state="on" identifier="asyncLoading" id="WOF-ft-ZWq" userLabel="AsyncLoading">
                                             <modifierMask key="keyEquivalentModifierMask"/>
+                                            <connections>
+                                                <action selector="optionsMenuItemClick:" target="Voe-Tx-rLC" id="2yw-ca-llR"/>
+                                            </connections>
                                         </menuItem>
-                                        <menuItem title="Load Messages On Scrolling" id="c4Q-qP-ppM" userLabel="LoadOnScroll">
+                                        <menuItem title="Load Messages On Scrolling" identifier="loadingOnScroll" id="c4Q-qP-ppM" userLabel="LoadOnScroll">
                                             <modifierMask key="keyEquivalentModifierMask"/>
+                                            <connections>
+                                                <action selector="optionsMenuItemClick:" target="Voe-Tx-rLC" id="zuW-td-SIh"/>
+                                            </connections>
                                         </menuItem>
                                         <menuItem isSeparatorItem="YES" id="bTu-p0-ZCF"/>
-                                        <menuItem title="Load Messages On Scrolling" id="HWn-ip-mii" userLabel="Filter">
+                                        <menuItem title="Show Message Filter" identifier="filter" id="HWn-ip-mii" userLabel="Filter">
                                             <modifierMask key="keyEquivalentModifierMask"/>
+                                            <connections>
+                                                <action selector="optionsMenuItemClick:" target="Voe-Tx-rLC" id="0Pi-LY-fNC"/>
+                                            </connections>
                                         </menuItem>
                                     </items>
                                 </menu>
                             </menuItem>
-                            <menuItem title="帮助" id="k5c-yf-BQl">
+                            <menuItem title="Help" id="k5c-yf-BQl">
                                 <modifierMask key="keyEquivalentModifierMask"/>
-                                <menu key="submenu" title="帮助" systemMenu="help" id="pOf-8G-Ji8">
+                                <menu key="submenu" title="Help" systemMenu="help" id="pOf-8G-Ji8">
                                     <items>
                                         <menuItem title="WechatExporter Help" keyEquivalent="?" id="vp6-q8-ljb">
                                             <connections>

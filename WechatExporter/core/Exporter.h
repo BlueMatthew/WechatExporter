@@ -6,18 +6,14 @@
 //  Copyright © 2020 Matthew. All rights reserved.
 //
 
-#include <cstdio>
 #include <set>
-#include <ctime>
 #include <string>
-#include <atomic>
 #include <thread>
 #include <atomic>
 
 #include "Logger.h"
 #include "WechatObjects.h"
 #include "ITunesParser.h"
-#include "semaphore.h"
 #include "ExportNotifier.h"
 
 #ifndef Exporter_h
