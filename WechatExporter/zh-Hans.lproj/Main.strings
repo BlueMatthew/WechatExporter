@@ -1,7 +1,4 @@
 
-/* Class = "NSButton"; ibShadowedToolTip = "通过Javascript异步加载聊天记录"; ObjectID = "0yy-i1-mEE"; */
-"0yy-i1-mEE.ibShadowedToolTip" = "通过Javascript异步加载聊天记录";
-
 /* Class = "NSButtonCell"; title = "..."; ObjectID = "1GT-FK-TVG"; */
 "1GT-FK-TVG.title" = "...";
 
@@ -20,65 +17,71 @@
 /* Class = "NSMenuItem"; title = "About WechatExporter"; ObjectID = "5kV-Vb-QxS"; */
 "5kV-Vb-QxS.title" = "关于微信聊天记录导出程序";
 
-/* Class = "NSTableColumn"; headerCell.title = "名称"; ObjectID = "8FB-hv-fkB"; */
+/* Class = "NSTableColumn"; headerCell.title = "Name"; ObjectID = "8FB-hv-fkB"; */
 "8FB-hv-fkB.headerCell.title" = "名称";
 
 /* Class = "NSMenu"; title = "Main Menu"; ObjectID = "AYu-sK-qS6"; */
 "AYu-sK-qS6.title" = "Main Menu";
 
-/* Class = "NSTextFieldCell"; title = "iTunes备份目录："; ObjectID = "BqF-Du-vMt"; */
+/* Class = "NSTextFieldCell"; title = "iTunes Backup Directory:"; ObjectID = "BqF-Du-vMt"; */
 "BqF-Du-vMt.title" = "iTunes备份目录：";
 
-/* Class = "NSButtonCell"; title = "取消"; ObjectID = "CHb-bh-1kG"; */
+/* Class = "NSButtonCell"; title = "Cancel"; ObjectID = "CHb-bh-1kG"; */
 "CHb-bh-1kG.title" = "取消";
 
-/* Class = "NSMenuItem"; title = "按消息时间倒序导出"; ObjectID = "GbO-lL-BLb"; */
+/* Class = "NSMenuItem"; title = "From Earlier To Newer"; ObjectID = "GbO-lL-BLb"; */
 "GbO-lL-BLb.title" = "按消息时间倒序导出";
 
-/* Class = "NSMenuItem"; title = "Text"; ObjectID = "GeM-zb-UkW"; */
-"GeM-zb-UkW.title" = "Text";
+/* Class = "NSMenuItem"; title = "Text Mode"; ObjectID = "GeM-zb-UkW"; */
+"GeM-zb-UkW.title" = "文本模式";
+
+/* Class = "NSMenuItem"; title = "Show Message Filter"; ObjectID = "HWn-ip-mii"; */
+"HWn-ip-mii.title" = "显示聊天记录过滤";
 
 /* Class = "NSWindow"; title = "Wechat Exporter"; ObjectID = "IQv-IB-iLA"; */
-"IQv-IB-iLA.title" = "微信聊天记录导出程序";
+"IQv-IB-iLA.title" = "Wechat Exporter";
 
 /* Class = "NSButtonCell"; title = "..."; ObjectID = "LFI-6K-mnE"; */
 "LFI-6K-mnE.title" = "...";
-
-/* Class = "NSButton"; ibShadowedToolTip = "相同的文件会在不同的聊天记录子目录下重复保存，占用更多磁盘空间。"; ObjectID = "MHp-Fl-sSj"; */
-"MHp-Fl-sSj.ibShadowedToolTip" = "相同的文件会在不同的聊天记录子目录下重复保存，占用更多磁盘空间。";
 
 /* Class = "NSTextFieldCell"; title = "Text Cell"; ObjectID = "O0i-cF-8Ix"; */
 "O0i-cF-8Ix.title" = "Text Cell";
 
 /* Class = "NSMenuItem"; title = "Hide WechatExporter"; ObjectID = "Olw-nP-bQN"; */
-"Olw-nP-bQN.title" = "隐藏 WechatExporter";
+"Olw-nP-bQN.title" = "隐藏WechatExporter";
+
+/* Class = "NSMenuItem"; title = "Check Update Automatically"; ObjectID = "Pyu-qm-bT0"; */
+"Pyu-qm-bT0.title" = "自动检查更新";
 
 /* Class = "NSTextFieldCell"; title = "Text Cell"; ObjectID = "Q3f-RG-97F"; */
 "Q3f-RG-97F.title" = "Text Cell";
-
-/* Class = "NSButtonCell"; title = "按消息时间倒序导出"; ObjectID = "U0Z-kO-i9H"; */
-"U0Z-kO-i9H.title" = "按消息时间倒序导出";
 
 /* Class = "NSMenuItem"; title = "File"; ObjectID = "UCE-Dj-bc1"; */
 "UCE-Dj-bc1.title" = "文件";
 
 /* Class = "NSMenuItem"; title = "Hide Others"; ObjectID = "Vdr-fp-XzO"; */
-"Vdr-fp-XzO.title" = "隐藏其它应用";
+"Vdr-fp-XzO.title" = "隐藏其他";
+
+/* Class = "NSMenuItem"; title = "Load Messages Asynchronously(HTML Mode)"; ObjectID = "WOF-ft-ZWq"; */
+"WOF-ft-ZWq.title" = "异步加载聊天记录";
 
 /* Class = "NSTextFieldCell"; title = "Text Cell"; ObjectID = "X6v-WO-gkU"; */
 "X6v-WO-gkU.title" = "Text Cell";
 
-/* Class = "NSButtonCell"; title = "仅导出文本"; ObjectID = "Xrw-Jp-zhh"; */
-"Xrw-Jp-zhh.title" = "仅导出文本";
-
-/* Class = "NSTableColumn"; headerCell.title = "聊天记录数"; ObjectID = "bsY-Rr-JHi"; */
+/* Class = "NSTableColumn"; headerCell.title = "Number of Msgs"; ObjectID = "bsY-Rr-JHi"; */
 "bsY-Rr-JHi.headerCell.title" = "聊天记录数";
 
-/* Class = "NSMenuItem"; title = "HTML"; ObjectID = "cWo-5k-XRR"; */
-"cWo-5k-XRR.title" = "HTML";
+/* Class = "NSMenuItem"; title = "Load Messages On Scrolling"; ObjectID = "c4Q-qP-ppM"; */
+"c4Q-qP-ppM.title" = "上滑滚动时加载更多聊天记录";
+
+/* Class = "NSMenuItem"; title = "HTML Mode"; ObjectID = "cWo-5k-XRR"; */
+"cWo-5k-XRR.title" = "HTML模式";
 
 /* Class = "NSButtonCell"; title = "关闭"; ObjectID = "dkl-Nk-ye1"; */
 "dkl-Nk-ye1.title" = "关闭";
+
+/* Class = "NSMenuItem"; title = "Options"; ObjectID = "fod-ax-X6A"; */
+"fod-ax-X6A.title" = "选项";
 
 /* Class = "NSTextFieldCell"; title = "Table View Cell"; ObjectID = "fos-aD-v3q"; */
 "fos-aD-v3q.title" = "Table View Cell";
@@ -86,37 +89,34 @@
 /* Class = "NSTextFieldCell"; title = "Text Cell"; ObjectID = "gtr-oV-Pno"; */
 "gtr-oV-Pno.title" = "Text Cell";
 
-/* Class = "NSButtonCell"; title = "HTML数据异步加载"; ObjectID = "jf9-as-hdU"; */
-"jf9-as-hdU.title" = "HTML数据异步加载";
-
-/* Class = "NSMenuItem"; title = "帮助"; ObjectID = "k5c-yf-BQl"; */
+/* Class = "NSMenuItem"; title = "Help"; ObjectID = "k5c-yf-BQl"; */
 "k5c-yf-BQl.title" = "帮助";
 
-/* Class = "NSTableColumn"; headerCell.title = "微信账号"; ObjectID = "mqg-xB-lDI"; */
+/* Class = "NSTableColumn"; headerCell.title = "Wechat Account"; ObjectID = "mqg-xB-lDI"; */
 "mqg-xB-lDI.headerCell.title" = "微信账号";
 
-/* Class = "NSButtonCell"; title = "头像和表情文件存放到聊天记录子目录"; ObjectID = "n8p-ki-ape"; */
-"n8p-ki-ape.title" = "头像和表情文件存放到聊天记录子目录";
-
-/* Class = "NSMenu"; title = "格式"; ObjectID = "or1-Xl-Us0"; */
+/* Class = "NSMenu"; title = "Format"; ObjectID = "or1-Xl-Us0"; */
 "or1-Xl-Us0.title" = "格式";
 
-/* Class = "NSMenu"; title = "帮助"; ObjectID = "pOf-8G-Ji8"; */
+/* Class = "NSMenu"; title = "Help"; ObjectID = "pOf-8G-Ji8"; */
 "pOf-8G-Ji8.title" = "帮助";
 
 /* Class = "NSTextFieldCell"; title = "Table View Cell"; ObjectID = "qJ3-t0-qJh"; */
 "qJ3-t0-qJh.title" = "Table View Cell";
 
-/* Class = "NSMenuItem"; title = "头像和表情存放到聊天记录子目录"; ObjectID = "tGU-e5-isp"; */
+/* Class = "NSMenuItem"; title = "Save Avatar/Emoji in Chat Folder"; ObjectID = "tGU-e5-isp"; */
 "tGU-e5-isp.title" = "头像和表情存放到聊天记录子目录";
+
+/* Class = "NSMenu"; title = "Options"; ObjectID = "uG2-8c-wjP"; */
+"uG2-8c-wjP.title" = "选项";
 
 /* Class = "NSMenu"; title = "WechatExporter"; ObjectID = "uQy-DD-JDr"; */
 "uQy-DD-JDr.title" = "WechatExporter";
 
-/* Class = "NSTextFieldCell"; title = "导出目录："; ObjectID = "uh4-ix-NCq"; */
-"uh4-ix-NCq.title" = "导出目录：";
+/* Class = "NSTextFieldCell"; title = "Output Directory:"; ObjectID = "uh4-ix-NCq"; */
+"uh4-ix-NCq.title" = "输出目录：";
 
-/* Class = "NSMenuItem"; title = "格式"; ObjectID = "v5F-yk-5ct"; */
+/* Class = "NSMenuItem"; title = "Format"; ObjectID = "v5F-yk-5ct"; */
 "v5F-yk-5ct.title" = "格式";
 
 /* Class = "NSMenuItem"; title = "WechatExporter Help"; ObjectID = "vp6-q8-ljb"; */
