@@ -6,7 +6,7 @@
 "1Xt-HY-uBw.title" = "微信聊天记录导出程序";
 
 /* Class = "NSMenuItem"; title = "Quit WechatExporter"; ObjectID = "4sb-4s-VLi"; */
-"4sb-4s-VLi.title" = "退出";
+"4sb-4s-VLi.title" = "退出WechatExporter";
 
 /* Class = "NSButtonCell"; title = "Check"; ObjectID = "58n-zQ-LqF"; */
 "58n-zQ-LqF.title" = "Check";
@@ -15,7 +15,7 @@
 "5Mi-xr-dCf.title" = "Table View Cell";
 
 /* Class = "NSMenuItem"; title = "About WechatExporter"; ObjectID = "5kV-Vb-QxS"; */
-"5kV-Vb-QxS.title" = "关于微信聊天记录导出程序";
+"5kV-Vb-QxS.title" = "关于WechatExporter";
 
 /* Class = "NSTableColumn"; headerCell.title = "Name"; ObjectID = "8FB-hv-fkB"; */
 "8FB-hv-fkB.headerCell.title" = "名称";
