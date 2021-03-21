@@ -26,8 +26,8 @@
 /* Class = "NSTextFieldCell"; title = "iTunes Backup Directory:"; ObjectID = "BqF-Du-vMt"; */
 "BqF-Du-vMt.title" = "iTunes Backup Directory:";
 
-/* Class = "NSButtonCell"; title = "取消"; ObjectID = "CHb-bh-1kG"; */
-"CHb-bh-1kG.title" = "取消";
+/* Class = "NSButtonCell"; title = "Cancel"; ObjectID = "CHb-bh-1kG"; */
+"CHb-bh-1kG.title" = "Cancel";
 
 /* Class = "NSMenuItem"; title = "From Earlier To Newer"; ObjectID = "GbO-lL-BLb"; */
 "GbO-lL-BLb.title" = "From Earlier To Newer";
@@ -77,8 +77,8 @@
 /* Class = "NSMenuItem"; title = "HTML Mode"; ObjectID = "cWo-5k-XRR"; */
 "cWo-5k-XRR.title" = "HTML Mode";
 
-/* Class = "NSButtonCell"; title = "关闭"; ObjectID = "dkl-Nk-ye1"; */
-"dkl-Nk-ye1.title" = "关闭";
+/* Class = "NSButtonCell"; title = "Close"; ObjectID = "dkl-Nk-ye1"; */
+"dkl-Nk-ye1.title" = "Close";
 
 /* Class = "NSMenuItem"; title = "Options"; ObjectID = "fod-ax-X6A"; */
 "fod-ax-X6A.title" = "Options";
@@ -122,8 +122,8 @@
 /* Class = "NSMenuItem"; title = "WechatExporter Help"; ObjectID = "vp6-q8-ljb"; */
 "vp6-q8-ljb.title" = "WechatExporter Help";
 
-/* Class = "NSButtonCell"; title = "导出"; ObjectID = "wX7-rb-1cu"; */
-"wX7-rb-1cu.title" = "导出";
+/* Class = "NSButtonCell"; title = "Export"; ObjectID = "wX7-rb-1cu"; */
+"wX7-rb-1cu.title" = "Export";
 
 /* Class = "NSMenu"; title = "File"; ObjectID = "yFn-8R-v2s"; */
 "yFn-8R-v2s.title" = "File";
