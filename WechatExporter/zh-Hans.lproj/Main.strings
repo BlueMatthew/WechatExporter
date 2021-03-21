@@ -32,7 +32,7 @@
 /* Class = "NSMenuItem"; title = "From Earlier To Newer"; ObjectID = "GbO-lL-BLb"; */
 "GbO-lL-BLb.title" = "按消息时间倒序导出";
 
-/* Class = "NSMenuItem"; title = "Text Mode"; ObjectID = "GeM-zb-UkW"; */
+/* Class = "NSMenuItem"; title = "Text"; ObjectID = "GeM-zb-UkW"; */
 "GeM-zb-UkW.title" = "文本模式";
 
 /* Class = "NSMenuItem"; title = "Show Message Filter"; ObjectID = "HWn-ip-mii"; */
@@ -74,8 +74,8 @@
 /* Class = "NSMenuItem"; title = "Load Messages On Scrolling"; ObjectID = "c4Q-qP-ppM"; */
 "c4Q-qP-ppM.title" = "上滑滚动时加载更多聊天记录";
 
-/* Class = "NSMenuItem"; title = "HTML Mode"; ObjectID = "cWo-5k-XRR"; */
-"cWo-5k-XRR.title" = "HTML模式";
+/* Class = "NSMenuItem"; title = "HTML"; ObjectID = "cWo-5k-XRR"; */
+"cWo-5k-XRR.title" = "HTML";
 
 /* Class = "NSButtonCell"; title = "Close"; ObjectID = "dkl-Nk-ye1"; */
 "dkl-Nk-ye1.title" = "关闭";
