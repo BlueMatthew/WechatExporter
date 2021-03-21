@@ -68,8 +68,6 @@
 		345C8D4D2543F5E30036368C /* ExportNotifier.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ExportNotifier.h; sourceTree = "<group>"; };
 		345C8D4E2543F5E30036368C /* semaphore.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = semaphore.h; sourceTree = "<group>"; };
 		345CE65925F8A456003DDD0F /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/Localizable.strings; sourceTree = "<group>"; };
-		345CE65C25F8A5CE003DDD0F /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/Main.strings; sourceTree = "<group>"; };
-		345CE66025F8A717003DDD0F /* zh-Hans */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "zh-Hans"; path = "zh-Hans.lproj/Main.strings"; sourceTree = "<group>"; };
 		345CE66125F8A717003DDD0F /* zh-Hans */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "zh-Hans"; path = "zh-Hans.lproj/Localizable.strings"; sourceTree = "<group>"; };
 		347E600D25C00A4100B33BAB /* MMKVReader.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MMKVReader.h; sourceTree = "<group>"; };
 		347E601325C7E53500B33BAB /* SessionDataSource.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SessionDataSource.h; sourceTree = "<group>"; };
@@ -87,6 +85,8 @@
 		34A0336025E34B0300E06CC5 /* MessageParser.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MessageParser.h; sourceTree = "<group>"; };
 		34AB9A1225B89075006D3617 /* FileSystem.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = FileSystem.h; sourceTree = "<group>"; };
 		34AB9A1325B8908D006D3617 /* FileSystem.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = FileSystem.cpp; sourceTree = "<group>"; };
+		34C051D726070F2500035AF4 /* zh-Hans */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "zh-Hans"; path = "zh-Hans.lproj/Main.strings"; sourceTree = "<group>"; };
+		34C051D92607118800035AF4 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/Main.strings; sourceTree = "<group>"; };
 		34CC0787253D98CA00AC8860 /* ByteArrayLocater.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ByteArrayLocater.h; sourceTree = "<group>"; };
 		34E3E9032525C2640093042D /* LoggerImpl.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = LoggerImpl.h; sourceTree = "<group>"; };
 		34E3E9092531BD8E0093042D /* Utils_md5.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Utils_md5.cpp; sourceTree = "<group>"; };
@@ -324,8 +324,8 @@
 			isa = PBXVariantGroup;
 			children = (
 				343F611E252322D600FFE085 /* Base */,
-				345CE65C25F8A5CE003DDD0F /* en */,
-				345CE66025F8A717003DDD0F /* zh-Hans */,
+				34C051D726070F2500035AF4 /* zh-Hans */,
+				34C051D92607118800035AF4 /* en */,
 			);
 			name = Main.storyboard;
 			sourceTree = "<group>";
