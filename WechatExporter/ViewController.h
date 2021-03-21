@@ -28,10 +28,6 @@
 @property (weak) IBOutlet NSProgressIndicator *progressBar;
 @property (weak) IBOutlet NSScrollView *sclViewLogs;
 @property (unsafe_unretained) IBOutlet NSTextView *txtViewLogs;
-@property (weak) IBOutlet NSButton *chkboxDesc;
-@property (weak) IBOutlet NSButton *chkboxSaveFilesInSessionFolder;
-@property (weak) IBOutlet NSButton *chkboxTextMode;
-@property (weak) IBOutlet NSButton *chkboxAsyncLoading;
 
 - (void)writeLog:(NSString *)log;
 - (void)onStart;

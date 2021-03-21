@@ -124,6 +124,13 @@
     else if ([sender.identifier isEqualToString:@"asyncLoading"])
     {
         [AppConfiguration setAsyncLoading:newValue];
+
+        NSMenuItem *menuItem = nil;
+        NSMenu *mainMenu = [[NSApplication sharedApplication] mainMenu];
+        NSMenuItem *optionsMenu = [mainMenu itemAtIndex:3];
+        
+        menuItem = [optionsMenu.submenu itemAtIndex:4];
+        menuItem.enabled = [AppConfiguration isHtmlMode] && [AppConfiguration getAsyncLoading];
     }
     else if ([sender.identifier isEqualToString:@"loadingOnScroll"])
     {
