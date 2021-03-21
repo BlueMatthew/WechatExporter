@@ -60,13 +60,13 @@
                                 <modifierMask key="keyEquivalentModifierMask"/>
                                 <menu key="submenu" title="Format" autoenablesItems="NO" id="or1-Xl-Us0">
                                     <items>
-                                        <menuItem title="HTML Mode" state="on" identifier="htmlMode" id="cWo-5k-XRR" userLabel="HTML">
+                                        <menuItem title="HTML" state="on" identifier="htmlMode" id="cWo-5k-XRR" userLabel="HTML">
                                             <modifierMask key="keyEquivalentModifierMask"/>
                                             <connections>
                                                 <action selector="formatMenuItemClick:" target="Voe-Tx-rLC" id="NHl-5W-ye0"/>
                                             </connections>
                                         </menuItem>
-                                        <menuItem title="Text Mode" identifier="textMode" id="GeM-zb-UkW" userLabel="TEXT">
+                                        <menuItem title="Text" identifier="textMode" id="GeM-zb-UkW" userLabel="TEXT">
                                             <modifierMask key="keyEquivalentModifierMask"/>
                                             <connections>
                                                 <action selector="formatMenuItemClick:" target="Voe-Tx-rLC" id="5kY-da-x9v"/>

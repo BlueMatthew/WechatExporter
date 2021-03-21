@@ -32,8 +32,8 @@
 /* Class = "NSMenuItem"; title = "From Earlier To Newer"; ObjectID = "GbO-lL-BLb"; */
 "GbO-lL-BLb.title" = "From Earlier To Newer";
 
-/* Class = "NSMenuItem"; title = "Text Mode"; ObjectID = "GeM-zb-UkW"; */
-"GeM-zb-UkW.title" = "Text Mode";
+/* Class = "NSMenuItem"; title = "Text"; ObjectID = "GeM-zb-UkW"; */
+"GeM-zb-UkW.title" = "Text";
 
 /* Class = "NSMenuItem"; title = "Show Message Filter"; ObjectID = "HWn-ip-mii"; */
 "HWn-ip-mii.title" = "Show Message Filter";
@@ -74,8 +74,8 @@
 /* Class = "NSMenuItem"; title = "Load Messages On Scrolling"; ObjectID = "c4Q-qP-ppM"; */
 "c4Q-qP-ppM.title" = "Load Messages On Scrolling";
 
-/* Class = "NSMenuItem"; title = "HTML Mode"; ObjectID = "cWo-5k-XRR"; */
-"cWo-5k-XRR.title" = "HTML Mode";
+/* Class = "NSMenuItem"; title = "HTML"; ObjectID = "cWo-5k-XRR"; */
+"cWo-5k-XRR.title" = "HTML";
 
 /* Class = "NSButtonCell"; title = "Close"; ObjectID = "dkl-Nk-ye1"; */
 "dkl-Nk-ye1.title" = "Close";
