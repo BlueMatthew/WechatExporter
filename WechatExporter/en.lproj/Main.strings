@@ -29,11 +29,11 @@
 /* Class = "NSTextFieldCell"; title = "iTunes备份目录："; ObjectID = "BqF-Du-vMt"; */
 "BqF-Du-vMt.title" = "iTunes Backup Directory:";
 
-/* Class = "NSButtonCell"; title = "取消"; ObjectID = "CHb-bh-1kG"; */
+/* Class = "NSButtonCell"; title = "Cancel"; ObjectID = "CHb-bh-1kG"; */
 "CHb-bh-1kG.title" = "Cancel";
 
-/* Class = "NSMenuItem"; title = "按消息时间倒序导出"; ObjectID = "GbO-lL-BLb"; */
-"GbO-lL-BLb.title" = "Order By Message Time";
+/* Class = "NSMenuItem"; title = "From Earlier To Newer"; ObjectID = "GbO-lL-BLb"; */
+"GbO-lL-BLb.title" = "From Earlier To Newer";
 
 /* Class = "NSMenuItem"; title = "Text"; ObjectID = "GeM-zb-UkW"; */
 "GeM-zb-UkW.title" = "Text";
@@ -44,8 +44,8 @@
 /* Class = "NSButtonCell"; title = "..."; ObjectID = "LFI-6K-mnE"; */
 "LFI-6K-mnE.title" = "...";
 
-/* Class = "NSButton"; ibShadowedToolTip = "相同的文件会在不同的聊天记录子目录下重复保存，占用更多磁盘空间。"; ObjectID = "MHp-Fl-sSj"; */
-"MHp-Fl-sSj.ibShadowedToolTip" = "Same files will be saved on seperate folder for each chat with more disk spaces";
+/* Class = "NSMenuItem"; title = "Load HTML Data Asynchronously"; ObjectID = "Nci-1H-BS1"; */
+"Nci-1H-BS1.title" = "Load HTML Data Asynchronously";
 
 /* Class = "NSTextFieldCell"; title = "Text Cell"; ObjectID = "O0i-cF-8Ix"; */
 "O0i-cF-8Ix.title" = "Text Cell";
@@ -56,8 +56,8 @@
 /* Class = "NSTextFieldCell"; title = "Text Cell"; ObjectID = "Q3f-RG-97F"; */
 "Q3f-RG-97F.title" = "Text Cell";
 
-/* Class = "NSButtonCell"; title = "按消息时间倒序导出"; ObjectID = "U0Z-kO-i9H"; */
-"U0Z-kO-i9H.title" = "Earlier to Newer";
+/* Class = "NSButtonCell"; title = "From Earlier To Newer"; ObjectID = "U0Z-kO-i9H"; */
+"U0Z-kO-i9H.title" = "From Earlier To Newer";
 
 /* Class = "NSMenuItem"; title = "File"; ObjectID = "UCE-Dj-bc1"; */
 "UCE-Dj-bc1.title" = "File";
@@ -68,16 +68,16 @@
 /* Class = "NSTextFieldCell"; title = "Text Cell"; ObjectID = "X6v-WO-gkU"; */
 "X6v-WO-gkU.title" = "Text Cell";
 
-/* Class = "NSButtonCell"; title = "仅导出文本"; ObjectID = "Xrw-Jp-zhh"; */
+/* Class = "NSButtonCell"; title = "Text Only"; ObjectID = "Xrw-Jp-zhh"; */
 "Xrw-Jp-zhh.title" = "Text Only";
 
-/* Class = "NSTableColumn"; headerCell.title = "聊天记录数"; ObjectID = "bsY-Rr-JHi"; */
+/* Class = "NSTableColumn"; headerCell.title = "Number of Msgs"; ObjectID = "bsY-Rr-JHi"; */
 "bsY-Rr-JHi.headerCell.title" = "Number of Msgs";
 
 /* Class = "NSMenuItem"; title = "HTML"; ObjectID = "cWo-5k-XRR"; */
 "cWo-5k-XRR.title" = "HTML";
 
-/* Class = "NSButtonCell"; title = "关闭"; ObjectID = "dkl-Nk-ye1"; */
+/* Class = "NSButtonCell"; title = "Close"; ObjectID = "dkl-Nk-ye1"; */
 "dkl-Nk-ye1.title" = "Close";
 
 /* Class = "NSTextFieldCell"; title = "Table View Cell"; ObjectID = "fos-aD-v3q"; */
@@ -86,43 +86,52 @@
 /* Class = "NSTextFieldCell"; title = "Text Cell"; ObjectID = "gtr-oV-Pno"; */
 "gtr-oV-Pno.title" = "Text Cell";
 
-/* Class = "NSButtonCell"; title = "HTML数据异步加载"; ObjectID = "jf9-as-hdU"; */
-"jf9-as-hdU.title" = "Loading HTML Data Asynchronously";
+/* Class = "NSButtonCell"; title = "Load Messages Asynchronously"; ObjectID = "jf9-as-hdU"; */
+"jf9-as-hdU.title" = "Load Messages Asynchronously";
 
-/* Class = "NSMenuItem"; title = "帮助"; ObjectID = "k5c-yf-BQl"; */
+/* Class = "NSMenuItem"; title = "Help"; ObjectID = "k5c-yf-BQl"; */
 "k5c-yf-BQl.title" = "Help";
 
-/* Class = "NSTableColumn"; headerCell.title = "微信账号"; ObjectID = "mqg-xB-lDI"; */
+/* Class = "NSMenuItem"; title = "Load Messages On Scrolling"; ObjectID = "kBr-3m-zSU"; */
+"kBr-3m-zSU.title" = "Load Messages On Scrolling";
+
+/* Class = "NSTableColumn"; headerCell.title = "Wechat Account"; ObjectID = "mqg-xB-lDI"; */
 "mqg-xB-lDI.headerCell.title" = "Wechat Account";
 
-/* Class = "NSButtonCell"; title = "头像和表情文件存放到聊天记录子目录"; ObjectID = "n8p-ki-ape"; */
+/* Class = "NSButtonCell"; title = "Save Avatar/Emoji in Chat Folder"; ObjectID = "n8p-ki-ape"; */
 "n8p-ki-ape.title" = "Save Avatar/Emoji in Chat Folder";
 
-/* Class = "NSMenu"; title = "格式"; ObjectID = "or1-Xl-Us0"; */
+/* Class = "NSMenuItem"; title = "Check Update Automatically"; ObjectID = "oIQ-EN-ldY"; */
+"oIQ-EN-ldY.title" = "Check Update Automatically";
+
+/* Class = "NSMenu"; title = "Format"; ObjectID = "or1-Xl-Us0"; */
 "or1-Xl-Us0.title" = "Format";
 
-/* Class = "NSMenu"; title = "帮助"; ObjectID = "pOf-8G-Ji8"; */
+/* Class = "NSMenu"; title = "Help"; ObjectID = "pOf-8G-Ji8"; */
 "pOf-8G-Ji8.title" = "Help";
 
 /* Class = "NSTextFieldCell"; title = "Table View Cell"; ObjectID = "qJ3-t0-qJh"; */
 "qJ3-t0-qJh.title" = "Table View Cell";
 
-/* Class = "NSMenuItem"; title = "头像和表情存放到聊天记录子目录"; ObjectID = "tGU-e5-isp"; */
+/* Class = "NSMenuItem"; title = "Show Message Filter"; ObjectID = "sTl-dK-TnJ"; */
+"sTl-dK-TnJ.title" = "Show Message Filter";
+
+/* Class = "NSMenuItem"; title = "Save Avatar/Emoji in Chat Folder"; ObjectID = "tGU-e5-isp"; */
 "tGU-e5-isp.title" = "Save Avatar/Emoji in Chat Folder";
 
 /* Class = "NSMenu"; title = "WechatExporter"; ObjectID = "uQy-DD-JDr"; */
-"uQy-DD-JDr.title" = "Wechat Exporter";
+"uQy-DD-JDr.title" = "WechatExporter";
 
-/* Class = "NSTextFieldCell"; title = "导出目录："; ObjectID = "uh4-ix-NCq"; */
-"uh4-ix-NCq.title" = "Output Directory：";
+/* Class = "NSTextFieldCell"; title = "Output Directory:"; ObjectID = "uh4-ix-NCq"; */
+"uh4-ix-NCq.title" = "Output Directory:";
 
-/* Class = "NSMenuItem"; title = "格式"; ObjectID = "v5F-yk-5ct"; */
+/* Class = "NSMenuItem"; title = "Format"; ObjectID = "v5F-yk-5ct"; */
 "v5F-yk-5ct.title" = "Format";
 
 /* Class = "NSMenuItem"; title = "WechatExporter Help"; ObjectID = "vp6-q8-ljb"; */
 "vp6-q8-ljb.title" = "WechatExporter Help";
 
-/* Class = "NSButtonCell"; title = "导出"; ObjectID = "wX7-rb-1cu"; */
+/* Class = "NSButtonCell"; title = "Export"; ObjectID = "wX7-rb-1cu"; */
 "wX7-rb-1cu.title" = "Export";
 
 /* Class = "NSMenu"; title = "File"; ObjectID = "yFn-8R-v2s"; */

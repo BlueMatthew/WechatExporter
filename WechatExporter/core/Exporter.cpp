@@ -488,14 +488,17 @@ bool Exporter::loadUserFriendsAndSessions(const Friend& user, Friends& friends, 
     std::string uidMd5 = user.getHash();
     std::string userBase = combinePath("Documents", uidMd5);
     
-    std::string wcdbPath = m_iTunesDb->findRealPath(combinePath(userBase, "DB", "WCDB_Contact.sqlite"));
-    FriendsParser friendsParser(detailedInfo);
+    if (detailedInfo)
+    {
+        std::string wcdbPath = m_iTunesDb->findRealPath(combinePath(userBase, "DB", "WCDB_Contact.sqlite"));
+        FriendsParser friendsParser(detailedInfo);
 #ifndef NDEBUG
-    friendsParser.setOutputPath(m_output);
+        friendsParser.setOutputPath(m_output);
 #endif
-    friendsParser.parseWcdb(wcdbPath, friends);
+        friendsParser.parseWcdb(wcdbPath, friends);
 
-    m_logger->debug("Wechat Friends(" + std::to_string(friends.friends.size()) + ") for: " + user.getDisplayName() + " loaded.");
+        m_logger->debug("Wechat Friends(" + std::to_string(friends.friends.size()) + ") for: " + user.getDisplayName() + " loaded.");
+    }
 
     SessionsParser sessionsParser(m_iTunesDb, m_iTunesDbShare, m_wechatInfo.getCellDataVersion(), detailedInfo);
     
