@@ -1,7 +1,4 @@
 
-/* Class = "NSButton"; ibShadowedToolTip = "通过Javascript异步加载聊天记录"; ObjectID = "0yy-i1-mEE"; */
-"0yy-i1-mEE.ibShadowedToolTip" = "Load Data Via Javascript";
-
 /* Class = "NSButtonCell"; title = "..."; ObjectID = "1GT-FK-TVG"; */
 "1GT-FK-TVG.title" = "...";
 
@@ -20,23 +17,26 @@
 /* Class = "NSMenuItem"; title = "About WechatExporter"; ObjectID = "5kV-Vb-QxS"; */
 "5kV-Vb-QxS.title" = "About WechatExporter";
 
-/* Class = "NSTableColumn"; headerCell.title = "名称"; ObjectID = "8FB-hv-fkB"; */
+/* Class = "NSTableColumn"; headerCell.title = "Name"; ObjectID = "8FB-hv-fkB"; */
 "8FB-hv-fkB.headerCell.title" = "Name";
 
 /* Class = "NSMenu"; title = "Main Menu"; ObjectID = "AYu-sK-qS6"; */
 "AYu-sK-qS6.title" = "Main Menu";
 
-/* Class = "NSTextFieldCell"; title = "iTunes备份目录："; ObjectID = "BqF-Du-vMt"; */
+/* Class = "NSTextFieldCell"; title = "iTunes Backup Directory:"; ObjectID = "BqF-Du-vMt"; */
 "BqF-Du-vMt.title" = "iTunes Backup Directory:";
 
-/* Class = "NSButtonCell"; title = "Cancel"; ObjectID = "CHb-bh-1kG"; */
-"CHb-bh-1kG.title" = "Cancel";
+/* Class = "NSButtonCell"; title = "取消"; ObjectID = "CHb-bh-1kG"; */
+"CHb-bh-1kG.title" = "取消";
 
 /* Class = "NSMenuItem"; title = "From Earlier To Newer"; ObjectID = "GbO-lL-BLb"; */
 "GbO-lL-BLb.title" = "From Earlier To Newer";
 
-/* Class = "NSMenuItem"; title = "Text"; ObjectID = "GeM-zb-UkW"; */
-"GeM-zb-UkW.title" = "Text";
+/* Class = "NSMenuItem"; title = "Text Mode"; ObjectID = "GeM-zb-UkW"; */
+"GeM-zb-UkW.title" = "Text Mode";
+
+/* Class = "NSMenuItem"; title = "Show Message Filter"; ObjectID = "HWn-ip-mii"; */
+"HWn-ip-mii.title" = "Show Message Filter";
 
 /* Class = "NSWindow"; title = "Wechat Exporter"; ObjectID = "IQv-IB-iLA"; */
 "IQv-IB-iLA.title" = "Wechat Exporter";
@@ -44,20 +44,17 @@
 /* Class = "NSButtonCell"; title = "..."; ObjectID = "LFI-6K-mnE"; */
 "LFI-6K-mnE.title" = "...";
 
-/* Class = "NSMenuItem"; title = "Load HTML Data Asynchronously"; ObjectID = "Nci-1H-BS1"; */
-"Nci-1H-BS1.title" = "Load HTML Data Asynchronously";
-
 /* Class = "NSTextFieldCell"; title = "Text Cell"; ObjectID = "O0i-cF-8Ix"; */
 "O0i-cF-8Ix.title" = "Text Cell";
 
 /* Class = "NSMenuItem"; title = "Hide WechatExporter"; ObjectID = "Olw-nP-bQN"; */
 "Olw-nP-bQN.title" = "Hide WechatExporter";
 
+/* Class = "NSMenuItem"; title = "Check Update Automatically"; ObjectID = "Pyu-qm-bT0"; */
+"Pyu-qm-bT0.title" = "Check Update Automatically";
+
 /* Class = "NSTextFieldCell"; title = "Text Cell"; ObjectID = "Q3f-RG-97F"; */
 "Q3f-RG-97F.title" = "Text Cell";
-
-/* Class = "NSButtonCell"; title = "From Earlier To Newer"; ObjectID = "U0Z-kO-i9H"; */
-"U0Z-kO-i9H.title" = "From Earlier To Newer";
 
 /* Class = "NSMenuItem"; title = "File"; ObjectID = "UCE-Dj-bc1"; */
 "UCE-Dj-bc1.title" = "File";
@@ -65,20 +62,26 @@
 /* Class = "NSMenuItem"; title = "Hide Others"; ObjectID = "Vdr-fp-XzO"; */
 "Vdr-fp-XzO.title" = "Hide Others";
 
+/* Class = "NSMenuItem"; title = "Load Messages Asynchronously(HTML Mode)"; ObjectID = "WOF-ft-ZWq"; */
+"WOF-ft-ZWq.title" = "Load Messages Asynchronously(HTML Mode)";
+
 /* Class = "NSTextFieldCell"; title = "Text Cell"; ObjectID = "X6v-WO-gkU"; */
 "X6v-WO-gkU.title" = "Text Cell";
-
-/* Class = "NSButtonCell"; title = "Text Only"; ObjectID = "Xrw-Jp-zhh"; */
-"Xrw-Jp-zhh.title" = "Text Only";
 
 /* Class = "NSTableColumn"; headerCell.title = "Number of Msgs"; ObjectID = "bsY-Rr-JHi"; */
 "bsY-Rr-JHi.headerCell.title" = "Number of Msgs";
 
-/* Class = "NSMenuItem"; title = "HTML"; ObjectID = "cWo-5k-XRR"; */
-"cWo-5k-XRR.title" = "HTML";
+/* Class = "NSMenuItem"; title = "Load Messages On Scrolling"; ObjectID = "c4Q-qP-ppM"; */
+"c4Q-qP-ppM.title" = "Load Messages On Scrolling";
 
-/* Class = "NSButtonCell"; title = "Close"; ObjectID = "dkl-Nk-ye1"; */
-"dkl-Nk-ye1.title" = "Close";
+/* Class = "NSMenuItem"; title = "HTML Mode"; ObjectID = "cWo-5k-XRR"; */
+"cWo-5k-XRR.title" = "HTML Mode";
+
+/* Class = "NSButtonCell"; title = "关闭"; ObjectID = "dkl-Nk-ye1"; */
+"dkl-Nk-ye1.title" = "关闭";
+
+/* Class = "NSMenuItem"; title = "Options"; ObjectID = "fod-ax-X6A"; */
+"fod-ax-X6A.title" = "Options";
 
 /* Class = "NSTextFieldCell"; title = "Table View Cell"; ObjectID = "fos-aD-v3q"; */
 "fos-aD-v3q.title" = "Table View Cell";
@@ -86,23 +89,11 @@
 /* Class = "NSTextFieldCell"; title = "Text Cell"; ObjectID = "gtr-oV-Pno"; */
 "gtr-oV-Pno.title" = "Text Cell";
 
-/* Class = "NSButtonCell"; title = "Load Messages Asynchronously"; ObjectID = "jf9-as-hdU"; */
-"jf9-as-hdU.title" = "Load Messages Asynchronously";
-
 /* Class = "NSMenuItem"; title = "Help"; ObjectID = "k5c-yf-BQl"; */
 "k5c-yf-BQl.title" = "Help";
 
-/* Class = "NSMenuItem"; title = "Load Messages On Scrolling"; ObjectID = "kBr-3m-zSU"; */
-"kBr-3m-zSU.title" = "Load Messages On Scrolling";
-
 /* Class = "NSTableColumn"; headerCell.title = "Wechat Account"; ObjectID = "mqg-xB-lDI"; */
 "mqg-xB-lDI.headerCell.title" = "Wechat Account";
-
-/* Class = "NSButtonCell"; title = "Save Avatar/Emoji in Chat Folder"; ObjectID = "n8p-ki-ape"; */
-"n8p-ki-ape.title" = "Save Avatar/Emoji in Chat Folder";
-
-/* Class = "NSMenuItem"; title = "Check Update Automatically"; ObjectID = "oIQ-EN-ldY"; */
-"oIQ-EN-ldY.title" = "Check Update Automatically";
 
 /* Class = "NSMenu"; title = "Format"; ObjectID = "or1-Xl-Us0"; */
 "or1-Xl-Us0.title" = "Format";
@@ -113,11 +104,11 @@
 /* Class = "NSTextFieldCell"; title = "Table View Cell"; ObjectID = "qJ3-t0-qJh"; */
 "qJ3-t0-qJh.title" = "Table View Cell";
 
-/* Class = "NSMenuItem"; title = "Show Message Filter"; ObjectID = "sTl-dK-TnJ"; */
-"sTl-dK-TnJ.title" = "Show Message Filter";
-
 /* Class = "NSMenuItem"; title = "Save Avatar/Emoji in Chat Folder"; ObjectID = "tGU-e5-isp"; */
 "tGU-e5-isp.title" = "Save Avatar/Emoji in Chat Folder";
+
+/* Class = "NSMenu"; title = "Options"; ObjectID = "uG2-8c-wjP"; */
+"uG2-8c-wjP.title" = "Options";
 
 /* Class = "NSMenu"; title = "WechatExporter"; ObjectID = "uQy-DD-JDr"; */
 "uQy-DD-JDr.title" = "WechatExporter";
@@ -131,8 +122,8 @@
 /* Class = "NSMenuItem"; title = "WechatExporter Help"; ObjectID = "vp6-q8-ljb"; */
 "vp6-q8-ljb.title" = "WechatExporter Help";
 
-/* Class = "NSButtonCell"; title = "Export"; ObjectID = "wX7-rb-1cu"; */
-"wX7-rb-1cu.title" = "Export";
+/* Class = "NSButtonCell"; title = "导出"; ObjectID = "wX7-rb-1cu"; */
+"wX7-rb-1cu.title" = "导出";
 
 /* Class = "NSMenu"; title = "File"; ObjectID = "yFn-8R-v2s"; */
 "yFn-8R-v2s.title" = "File";
