@@ -97,12 +97,6 @@
     [self.btnCancel setTarget:nil];
     [self.btnQuit setAction:nil];
     [self.btnQuit setTarget:nil];
-    [self.chkboxDesc setAction:nil];
-    [self.chkboxDesc setTarget:nil];
-    [self.chkboxTextMode setAction:nil];
-    [self.chkboxTextMode setTarget:nil];
-    [self.chkboxAsyncLoading setAction:nil];
-    [self.chkboxAsyncLoading setTarget:nil];
     [self.popupBackup setAction:nil];
     [self.popupBackup setTarget:nil];
     [self.popupUsers setAction:nil];
@@ -146,12 +140,6 @@
     [self.btnCancel setAction:@selector(btnCancelClicked:)];
     [self.btnQuit setTarget:self];
     [self.btnQuit setAction:@selector(btnQuitClicked:)];
-    [self.chkboxDesc setTarget:self];
-    [self.chkboxDesc setAction:@selector(btnDescClicked:)];
-    [self.chkboxTextMode setTarget:self];
-    [self.chkboxTextMode setAction:@selector(btnTextModeClicked:)];
-    [self.chkboxAsyncLoading setTarget:self];
-    [self.chkboxAsyncLoading setAction:@selector(btnAsyncLoadingClicked:)];
     [self.popupBackup setTarget:self];
     [self.popupBackup setAction:@selector(handlePopupButton:)];
     [self.popupUsers setTarget:self];
@@ -176,13 +164,6 @@
     
     self.tblSessions.dataSource = m_dataSource;
     self.tblSessions.delegate = self;
-
-    self.chkboxDesc.state = [AppConfiguration getDescOrder] ? NSOnState : NSOffState;
-    BOOL textMode = [AppConfiguration isTextMode];
-    self.chkboxTextMode.state = textMode ? NSOnState : NSOffState;
-
-    self.chkboxAsyncLoading.state = [AppConfiguration getAsyncLoading] ? NSOnState : NSOffState;
-    self.chkboxAsyncLoading.enabled = !textMode;
 
     self.txtboxOutput.stringValue = [AppConfiguration getLastOrDefaultOutputDir];
 
@@ -500,24 +481,6 @@
     [self.view.window.windowController close];
 }
 
-- (void)btnDescClicked:(id)sender
-{
-    BOOL descOrder = (self.chkboxDesc.state == NSOnState);
-    [[NSUserDefaults standardUserDefaults] setBool:descOrder forKey:@"Desc"];
-}
-
-- (void)btnTextModeClicked:(id)sender
-{
-    BOOL textMode = (self.chkboxTextMode.state == NSOnState);
-    [[NSUserDefaults standardUserDefaults] setBool:textMode forKey:@"TextMode"];
-    self.chkboxAsyncLoading.enabled = !textMode;
-}
-
-- (void)btnAsyncLoadingClicked:(id)sender
-{
-    BOOL syncLoading = (self.chkboxAsyncLoading.state != NSOnState);
-    [[NSUserDefaults standardUserDefaults] setBool:syncLoading forKey:@"SyncLoading"];
-}
 
 - (void)run:(NSDictionary *)dict
 {
@@ -556,6 +519,10 @@
     {
         m_exporter->setSyncLoading();
     }
+    else
+    {
+        m_exporter->setLoadingDataOnScroll([AppConfiguration getLoadingDataOnScroll]);
+    }
 
     if (nil != textMode && textMode.boolValue)
     {
@@ -563,6 +530,7 @@
         m_exporter->setExtName("txt");
         m_exporter->setTemplatesName("templates_txt");
     }
+    m_exporter->supportsFilter([AppConfiguration getSupportingFilter]);
     
     m_exporter->setNotifier(m_notifier);
     
@@ -629,9 +597,9 @@
     [self.btnCancel setEnabled:!enabled && cancellable];
     [self.btnCancel setHidden:enabled];
     [self.btnQuit setHidden:!enabled];
-    [self.chkboxDesc setEnabled:enabled];
-    [self.chkboxTextMode setEnabled:enabled];
-    [self.chkboxSaveFilesInSessionFolder setEnabled:enabled];
+    // [self.chkboxDesc setEnabled:enabled];
+    // [self.chkboxTextMode setEnabled:enabled];
+    // [self.chkboxSaveFilesInSessionFolder setEnabled:enabled];
 }
 
 - (void)onStart

@@ -120,10 +120,10 @@
 "v5F-yk-5ct.title" = "格式";
 
 /* Class = "NSMenuItem"; title = "WechatExporter Help"; ObjectID = "vp6-q8-ljb"; */
-"vp6-q8-ljb.title" = "WechatExporter Help";
+"vp6-q8-ljb.title" = "WechatExporter帮助";
 
 /* Class = "NSButtonCell"; title = "导出"; ObjectID = "wX7-rb-1cu"; */
 "wX7-rb-1cu.title" = "导出";
 
 /* Class = "NSMenu"; title = "File"; ObjectID = "yFn-8R-v2s"; */
-"yFn-8R-v2s.title" = "File";
+"yFn-8R-v2s.title" = "文件";
