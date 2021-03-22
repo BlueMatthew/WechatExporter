@@ -390,7 +390,7 @@ bool Exporter::exportUser(Friend& user, std::string& userOutputPath)
 #ifndef NDEBUG
         m_logger->debug("Download avatar: *" + user.getPortrait() + "* => " + combinePath(outputBase, "Portrait", user.getLocalPortrait()));
 #endif
-        msgParser.copyPortraitIcon(user.getUsrName(), user.getHash(), combinePath(outputBase, "Portrait"));
+        msgParser.copyPortraitIcon(user.getUsrName(), user.getHash(), user.getPortrait(), combinePath(outputBase, "Portrait"));
         // downloader.addTask(user.getPortrait(), combinePath(outputBase, "Portrait", user.getLocalPortrait()), 0);
     }
     
