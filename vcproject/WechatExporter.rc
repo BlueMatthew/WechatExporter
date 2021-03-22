@@ -28,10 +28,6 @@ IDR_MAINFRAME MENU
 BEGIN
     POPUP "文件(&F)"
     BEGIN
-        MENUITEM "按消息时间倒序导出",                   ID_FILE_DESC_ORDER, CHECKED
-        MENUITEM "头像和表情存放到聊天记录子目录",             ID_FILE_SAVING_IN_SESSION, CHECKED
-        MENUITEM "显示消息过滤",                      ID_FILE_FILTER
-        MENUITEM SEPARATOR
         MENUITEM "自动检查新版本",                     ID_FILE_CHK_UPDATE, CHECKED
         MENUITEM SEPARATOR
         MENUITEM "退出(&X)",                      ID_APP_EXIT
@@ -40,9 +36,16 @@ BEGIN
     BEGIN
         MENUITEM "HTML",                        ID_FORMAT_HTML
         MENUITEM "文本",                          ID_FORMAT_TEXT
+    END
+    POPUP "选项"
+    BEGIN
+        MENUITEM "按消息时间倒序导出",                   ID_OPT_DESC_ORDER, CHECKED
+        MENUITEM "头像和表情存放到聊天记录子目录",             ID_OPT_SAVING_IN_SESSION, CHECKED
         MENUITEM SEPARATOR
-        MENUITEM "聊天记录数据异步加载(HTML)",            ID_FORMAT_ASYNC_LOADING, CHECKED
-        MENUITEM "上滑加载更多聊天记录",                  ID_FORMAT_LM_ONSCROLL
+        MENUITEM "聊天记录数据异步加载(HTML)",            ID_OPT_ASYNC_LOADING, CHECKED
+        MENUITEM "上滑加载更多聊天记录",                  ID_OPT_LM_ONSCROLL
+        MENUITEM SEPARATOR
+        MENUITEM "显示消息过滤",                      ID_OPT_FILTER
     END
     POPUP "帮助(&H)"
     BEGIN
@@ -193,10 +196,6 @@ IDR_MAINFRAME MENU
 BEGIN
     POPUP "&File"
     BEGIN
-        MENUITEM "From Earlier To Newer",       ID_FILE_DESC_ORDER, CHECKED
-        MENUITEM "Save Avatar/Emoji in Chat Folder", ID_FILE_SAVING_IN_SESSION, CHECKED
-        MENUITEM "Show Message Filter",         ID_FILE_FILTER
-        MENUITEM SEPARATOR
         MENUITEM "Check Update Automatically",  ID_FILE_CHK_UPDATE, CHECKED
         MENUITEM SEPARATOR
         MENUITEM "E&xit",                       ID_APP_EXIT
@@ -205,9 +204,16 @@ BEGIN
     BEGIN
         MENUITEM "HTML",                        ID_FORMAT_HTML
         MENUITEM "Text",                        ID_FORMAT_TEXT
+    END
+    POPUP "Options"
+    BEGIN
+        MENUITEM "From Earlier To Newer",       ID_OPT_DESC_ORDER, CHECKED
+        MENUITEM "Save Avatar/Emoji in Chat Folder", ID_OPT_SAVING_IN_SESSION, CHECKED
         MENUITEM SEPARATOR
-        MENUITEM "Load Messages Asynchronously(HTML Mode)", ID_FORMAT_ASYNC_LOADING, CHECKED
-        MENUITEM "Load Messages On Scrolling",  ID_FORMAT_LM_ONSCROLL
+        MENUITEM "Load Messages Asynchronously(HTML Mode)", ID_OPT_ASYNC_LOADING, CHECKED
+        MENUITEM "Load Messages On Scrolling",  ID_OPT_LM_ONSCROLL
+        MENUITEM SEPARATOR
+        MENUITEM "Show Message Filter",         ID_OPT_FILTER
     END
     POPUP "&Help"
     BEGIN
