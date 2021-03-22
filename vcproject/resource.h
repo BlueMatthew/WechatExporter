@@ -38,14 +38,14 @@
 #define IDC_SESSIONS                    1014
 #define IDC_GRP_LOGS                    1015
 #define IDC_GRP_USR_CHAT                1016
-#define ID_FILE_DESC_ORDER              32775
-#define ID_FILE_SAVING_IN_SESSION       32776
-#define ID_FORMAT_HTML                  32777
-#define ID_FORMAT_TEXT                  32778
-#define ID_FORMAT_ASYNC_LOADING         32779
-#define ID_FORMAT_LM_ONSCROLL           32780
-#define ID_FILE_CHK_UPDATE              32781
-#define ID_FILE_FILTER                  32782
+#define ID_FILE_CHK_UPDATE              32775
+#define ID_FORMAT_HTML                  32776
+#define ID_FORMAT_TEXT                  32777
+#define ID_OPT_DESC_ORDER               32778
+#define ID_OPT_SAVING_IN_SESSION        32779
+#define ID_OPT_ASYNC_LOADING            32780
+#define ID_OPT_LM_ONSCROLL              32781
+#define ID_OPT_FILTER                   32782
 
 // Next default values for new objects
 // 
