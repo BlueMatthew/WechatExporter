@@ -267,7 +267,7 @@
         
         NSString *backupPath = [NSString stringWithUTF8String:manifest.getPath().c_str()];
 #ifndef NDEBUG
-        [[NSUserDefaults standardUserDefaults] setObject:backupPath forKey:@"BackupDir"];
+        [AppConfiguration setLastBackupDir:backupPath];
 #endif
         [self performSelector:@selector(loadDataForBackup:) withObject:backupPath afterDelay:0.016];
     }
@@ -402,7 +402,7 @@
         if (result == NSOKButton)
         {
             NSURL *url = panel.directoryURL;
-            [[NSUserDefaults standardUserDefaults] setObject:url.path forKey:@"OutputDir"];
+            [AppConfiguration setLastOutputDir:url.path];
             
             self.txtboxOutput.stringValue = url.path;
         }
@@ -722,7 +722,7 @@
         updater.setUserAgent([userAgent UTF8String]);
         bool hasNewVersion = updater.checkUpdate();
         NSInteger lastChkUpdateTime = static_cast<NSInteger>(getUnixTimeStamp());
-        [[NSUserDefaults standardUserDefaults] setInteger:lastChkUpdateTime forKey:@"LastChkUpdateTime"];
+        [AppConfiguration setLastCheckUpdateTime:lastChkUpdateTime];
         
         if (!hasNewVersion)
         {
