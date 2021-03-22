@@ -47,7 +47,7 @@ bool Updater::checkUpdate()
     
     std::string url = "https://src.wakin.org/github/wxexp/update.conf?v=" + encodeUrl(m_currentVersion);
 #ifndef NDEBUG
-    headers.push_back(std::pair<std::string, std::string>("Host", "127.0.0.1"));
+    headers.push_back(std::pair<std::string, std::string>("RESOLVE", "src.wakin.org:443:127.0.0.1"));
     url += "&dbg=1";
 #endif
     long httpStatus = 0;
