@@ -49,7 +49,11 @@ bool Downloader::httpGet(const std::string& url, const std::vector<std::pair<std
 #ifndef FAKE_DOWNLOAD
     // User-Agent: WeChat/7.0.15.33 CFNetwork/978.0.7 Darwin/18.6.0
     curl = curl_easy_init();
-    curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
+    
+#ifndef NDEBUG
+    struct curl_slist *host = NULL;
+#endif
+
     struct curl_slist *chunk = NULL;
     
     for (std::vector<std::pair<std::string, std::string>>::const_iterator it = headers.cbegin(); it != headers.cend(); ++it)
@@ -58,12 +62,26 @@ bool Downloader::httpGet(const std::string& url, const std::vector<std::pair<std
         {
             curl_easy_setopt(curl, CURLOPT_USERAGENT, it->second.c_str());
         }
+#ifndef NDEBUG
+        else if (it->first == "RESOLVE")
+        {
+            host = curl_slist_append(host, it->second.c_str());
+        }
+#endif
         else
         {
             std::string header = it->first + ": " + it->second;
             chunk = curl_slist_append(chunk, header.c_str());
         }
     }
+    
+#ifndef NDEBUG
+    if (NULL != host)
+    {
+        curl_easy_setopt(curl, CURLOPT_RESOLVE, host);
+    }
+#endif
+    curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
     
     if (NULL != chunk)
     {
@@ -85,6 +103,12 @@ bool Downloader::httpGet(const std::string& url, const std::vector<std::pair<std
         // m_error = curl_easy_strerror(res);
     }
     curl_easy_cleanup(curl);
+#ifndef NDEBUG
+    if (NULL != host)
+    {
+        curl_slist_free_all(host);
+    }
+#endif
     if (NULL != chunk)
     {
         curl_slist_free_all(chunk);
