@@ -372,6 +372,216 @@
   
 		</style>
 		<title>%%DISPLAYNAME%% - 微信聊天记录</title>
+		<script language="javascript">
+			function showImagePopup(e)
+			{
+				var srcElement = e.target;
+				var imgUrl = srcElement.getAttribute("rawUrl");
+				if (imgUrl == null)
+				{
+					return false;
+				}
+	
+				var fragment = document.createDocumentFragment();
+				var div = document.createElement('div');
+				div.className = "img-popup";
+				div.onclick = function(event) {
+					document.body.removeChild(div);
+				};
+				fragment.appendChild(div);
+				var img = document.createElement('img');
+				img.className = "img";
+				img.src = imgUrl;
+				div.appendChild(img);
+				document.body.appendChild(fragment);
+			}
+	
+			function showElements(msgType)
+			{
+				var kwElement = document.getElementById("filter-keyword");
+				if (null != kwElement) kwElement.value = "";
+	
+				window.msgFilter = {'filterType': 'msgType', 'msgType': msgType};
+	
+				var msgElements = document.querySelectorAll('div.msg');
+				if (null == msgElements || msgElements.length == 0)
+				{
+					return;
+				}
+	
+				document.body.style.cursor = 'wait';
+				var visibleMsgs = 0;
+				for (idx = 0; idx < msgElements.length; idx++)
+				{
+					if (filterMsg(msgElements[idx]))
+					{
+						visibleMsgs++;
+					}
+				}
+	
+				if (visibleMsgs < 1000 && (typeof window.moreWechatMsgs !== 'undefined') && (window.moreWechatMsgs.length > 0))
+				{
+					loadMsgsForNextPage(1000 - visibleMsgs);
+				}
+				document.body.style.cursor = 'default';
+			}
+	
+			function filterMsg(divMsg)
+			{
+				if ((typeof window.msgFilter === 'undefined') || (window.msgFilter == null) || (typeof window.msgFilter.filterType === 'undefined'))
+				{
+					divMsg.style.display = "block";
+					return true;
+				}
+				if (window.msgFilter.filterType == 'search')
+				{
+					if ((typeof window.msgFilter.keyword === 'undefined') || (window.msgFilter.keyword == null) || (window.msgFilter.keyword.length == 0))
+					{
+						divMsg.style.display = "block";
+						return true;
+					}
+					var elementClasses = ['span.dspname', 'span.msg-text'];
+					var matched = false;
+					for (idx1 = 0; idx1 < elementClasses.length; idx1++)
+					{
+						var elements = divMsg.querySelectorAll(elementClasses[idx1]);
+						if (null == elements || elements.length == 0) continue;
+						
+						for (idx2 = 0; idx2 < elements.length; idx2++)
+						{
+							if (null != elements[idx2].innerText && elements[idx2].innerText.toLowerCase().indexOf(window.msgFilter.keyword) != -1)
+							{
+								matched = true;
+								break;
+							}
+						}
+						if (matched) break;
+					}
+					divMsg.style.display = matched ? "block" : "none";
+					return matched;
+				}
+				else if (window.msgFilter.filterType == 'msgType')
+				{
+					var matched = (typeof window.msgFilter.msgType === 'undefined') || (window.msgFilter.msgType == null) || (divMsg.getAttribute("msgType") == window.msgFilter.msgType);
+					divMsg.style.display = matched ? "block" : "none";
+					return matched;
+				}
+	
+				divMsg.style.display = "block";
+				return true;
+			}
+	
+			function searchElements(e)
+			{
+				var keyCode = e.keyCode || e.which || 0;
+				if(keyCode !== 13)
+				{
+					return false;
+				}
+	
+				var msgElements = document.querySelectorAll('div.msg');
+				if (null == msgElements || msgElements.length == 0)
+				{
+					return false;;
+				}
+	
+				var keyword = e.target.value == null ? "" : e.target.value.toLowerCase();
+				window.msgFilter = {'filterType': 'search', 'keyword': keyword};
+				var elementClasses = ['span.dspname', 'span.msg-text'];
+				var visibleMsgs = 0;
+				document.body.style.cursor = 'wait';
+				for (idx = 0; idx < msgElements.length; idx++)
+				{
+					if (filterMsg(msgElements[idx]))
+					{
+						visibleMsgs++;
+					}
+				}
+				if (visibleMsgs < 1000 && (typeof window.moreWechatMsgs !== 'undefined') && (window.moreWechatMsgs.length > 0))
+				{
+					loadMsgsForNextPage(1000 - visibleMsgs);
+				}
+				document.body.style.cursor = 'default';
+				
+				return false;
+			}
+	
+			function showAllMsgs(e)
+			{
+				showElements(null);
+			}
+			function showImageMsgs(e)
+			{
+				showElements("image");
+			}
+			function showVideoMsgs(e)
+			{
+				showElements("video");
+			}
+	
+			function loadMsgsForNextPage(numberOfMsgsToLoad)
+			{
+				if ((typeof window.moreWechatMsgs === 'undefined') || (window.moreWechatMsgs.length == 0))
+				{
+					return 0;
+				}
+	
+				if (typeof numberOfMsgsToLoad === 'undefined')
+				{
+					numberOfMsgsToLoad = 1000;
+				}
+				var fragment = document.createDocumentFragment();
+				var div = document.createElement('div');
+				fragment.appendChild(div);
+				var visibleMsgs = 0; 
+				for (var idx = 0; idx < window.moreWechatMsgs.length; idx++)
+				{
+					div.innerHTML = window.moreWechatMsgs.shift();
+					if (div.children.length > 0)
+					{
+						var msgDiv = div.children[0];
+						fragment.appendChild(msgDiv);
+						
+						if (filterMsg(msgDiv))
+						{
+							visibleMsgs++;
+						}
+					}
+					
+					if (visibleMsgs >= numberOfMsgsToLoad)
+					{
+						break;
+					}
+				}
+				fragment.removeChild(div);
+				var containerDiv = document.getElementById('msgs-div');
+				if (null != containerDiv)
+				{
+					containerDiv.appendChild(fragment);
+				}
+	
+				return true;
+			}
+			function loadMoreMsgs()
+			{
+				window.requestAnimationFrame(function() {
+					if (loadMsgsForNextPage())
+					{
+						loadMoreMsgs();
+					}
+				});
+			}
+	
+			function checkScrollDirectionIsUp(e)
+			{
+				if (e.wheelDelta)
+				{
+					return e.wheelDelta > 0;
+				}
+				return e.deltaY < 0;
+			}
+
+		</script>
 	</head>
 	<body uid="%%USRNAME%%" sid="%%SESSION_USRNAME%%">
 		<div class="main">
@@ -392,107 +602,36 @@
 
   	</body>
   	<script language="javascript">
-		function showImagePopup(e)
-		{
-			var srcElement = e.target;
-			var imgUrl = srcElement.getAttribute("rawUrl");
-			if (imgUrl == null)
+		addEventListener('load', function (e)
 			{
-				return false;
-			}
-
-			var fragment = document.createDocumentFragment();
-			var div = document.createElement('div');
-			div.className = "img-popup";
-			div.onclick = function(event) {
-				document.body.removeChild(div);
-			};
-			fragment.appendChild(div);
-			var img = document.createElement('img');
-			img.className = "img";
-			img.src = imgUrl;
-			div.appendChild(img);
-			document.body.appendChild(fragment);
-		}
-
-		function showElements(msgType)
-		{
-			var kwElement = document.getElementById("filter-keyword");
-			if (null != kwElement) kwElement.value = "";
-
-			var msgElements = document.querySelectorAll('div.msg');
-			if (null == msgElements || msgElements.length == 0)
-			{
-				return;
-			}
-
-			for (idx = 0; idx < msgElements.length; idx++)
-			{
-				msgElements[idx].style.display = ((msgType == null) || msgElements[idx].getAttribute("msgtype") == msgType) ? "block" : "none";
-			}
-		}
-
-		function searchElements(e)
-		{
-			var keyCode = e.keyCode || e.which || 0;
-			if(keyCode !== 13)
-			{
-				return false;
-            }
-
-			var msgElements = document.querySelectorAll('div.msg');
-			if (null == msgElements || msgElements.length == 0)
-			{
-				return false;;
-			}
-
-			var keyword = e.target.value == null ? "" : e.target.value.toLowerCase();
-			var elementClasses = ['span.dspname', 'span.msg-text'];
-			for (idx = 0; idx < msgElements.length; idx++)
-			{
-				var matched = false;
-				if (keyword.length > 0)
+				window.moreWechatMsgs = %%JSONDATA%%;
+				window.currentIndex = 0;
+				var asyncLoadingType = "%%ASYNCLOADINGTYPE%%";
+				if (asyncLoadingType == "initial")
 				{
-					for (idx1 = 0; idx1 < elementClasses.length; idx1++)
+					window.setTimeout(loadMoreMsgs, 1000);
+				}
+				else if (asyncLoadingType == "onscroll")
+				{
+					document.addEventListener('scroll', function(e)
 					{
-						var elements = msgElements[idx].querySelectorAll(elementClasses[idx1]);
-						if (null == elements || elements.length == 0) continue;
-						
-						for (idx2 = 0; idx2 < elements.length; idx2++)
+						if (!checkScrollDirectionIsUp(e))
 						{
-							if (null != elements[idx2].innerText && elements[idx2].innerText.toLowerCase().indexOf(keyword) != -1)
+							var lastDiv = document.querySelector("#msgs-div > div:last-child");
+							var lastDivOffset = lastDiv.offsetTop + lastDiv.clientHeight;
+							var pageOffset = window.pageYOffset + window.innerHeight;
+	
+							if(pageOffset > lastDivOffset - 20)
 							{
-								matched = true;
-								break;
+								loadMsgsForNextPage();
 							}
 						}
-						if (matched) break;
-					}
+					}, false);
+				
 				}
-				else
-				{
-					matched = true;
-				}
-				msgElements[idx].style.display = matched ? "block" : "none";
-			}
+			}, false);
 
-			return false;
-		}
-
-		function showAllMsgs(e)
-		{
-			showElements(null);
-		}
-		function showImageMsgs(e)
-		{
-			showElements("image");
-		}
-		function showVideoMsgs(e)
-		{
-			showElements("video");
-		}
-
-	</script>
+	  </script>
   <!-- scripts.html -->
   %%LOADING_SCRIPTS%%
 
