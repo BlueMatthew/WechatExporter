@@ -467,7 +467,7 @@
 				CODE_SIGN_IDENTITY = "-";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 2;
+				CURRENT_PROJECT_VERSION = 3;
 				DEVELOPMENT_TEAM = L848BW5698;
 				ENABLE_HARDENED_RUNTIME = YES;
 				HEADER_SEARCH_PATHS = (
@@ -489,7 +489,7 @@
 					"-lSKP_SILK_SDK",
 					"-lplist-2.0",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = org.wakin.WechatExporter2;
+				PRODUCT_BUNDLE_IDENTIFIER = org.wakin.WechatExporter;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = Debug;
@@ -502,7 +502,7 @@
 				CODE_SIGN_IDENTITY = "-";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 2;
+				CURRENT_PROJECT_VERSION = 3;
 				DEVELOPMENT_TEAM = L848BW5698;
 				ENABLE_HARDENED_RUNTIME = YES;
 				GCC_PREPROCESSOR_DEFINITIONS = "NDEBUG=1";
@@ -525,7 +525,7 @@
 					"-lSKP_SILK_SDK",
 					"-lplist-2.0",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = org.wakin.WechatExporter2;
+				PRODUCT_BUNDLE_IDENTIFIER = org.wakin.WechatExporter;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = Release;
