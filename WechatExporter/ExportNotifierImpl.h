@@ -52,6 +52,20 @@ public:
         });
 	}
 
+    void onSessionStart(const std::string& sessionUsrName) const
+    {
+        
+    }
+    
+    void onSessionProgress(const std::string& sessionUsrName, uint32_t numberOfMessages, uint32_t numberOfTotalMessages) const
+    {
+        
+    }
+    
+    void onSessionComplete(const std::string& sessionUsrName, bool cancelled) const
+    {
+        
+    }
 	
 };
 

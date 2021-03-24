@@ -517,6 +517,8 @@ int Exporter::exportSession(const Friend& user, const MessageParser& msgParser, 
         return false;
     }
     
+    notifySessionStart(session.getUsrName());
+    
     std::string sessionBasePath = combinePath(outputBase, session.getOutputFileName() + "_files");
     if ((m_options & SPO_IGNORE_AVATAR) == 0)
     {
@@ -548,6 +550,7 @@ int Exporter::exportSession(const Friend& user, const MessageParser& msgParser, 
         exportMessage(session, tvs, messages);
         ++numberOfMsgs;
         
+        notifySessionProgress(session.getUsrName(), numberOfMsgs, session.getRecordCount());
         if (m_cancelled)
         {
             break;
@@ -600,6 +603,9 @@ int Exporter::exportSession(const Friend& user, const MessageParser& msgParser, 
         std::string fileName = combinePath(outputBase, session.getOutputFileName() + "." + m_extName);
         writeFile(fileName, html);
     }
+    
+    notifySessionComplete(session.getUsrName(), m_cancelled);
+    
     
     return numberOfMsgs;
 }
@@ -800,6 +806,30 @@ void Exporter::notifyProgress(uint32_t numberOfMessages, uint32_t numberOfTotalM
     if (m_notifier)
     {
         m_notifier->onProgress(numberOfMessages, numberOfTotalMessages);
+    }
+}
+
+void Exporter::notifySessionStart(const std::string& sessionUsrName)
+{
+    if (m_notifier)
+    {
+        m_notifier->onSessionStart(sessionUsrName);
+    }
+}
+
+void Exporter::notifySessionComplete(const std::string& sessionUsrName, bool cancelled/* = false*/)
+{
+    if (m_notifier)
+    {
+        m_notifier->onSessionComplete(sessionUsrName, cancelled);
+    }
+}
+
+void Exporter::notifySessionProgress(const std::string& sessionUsrName, uint32_t numberOfMessages, uint32_t numberOfTotalMessages)
+{
+    if (m_notifier)
+    {
+        m_notifier->onSessionProgress(sessionUsrName, numberOfMessages, numberOfTotalMessages);
     }
 }
 

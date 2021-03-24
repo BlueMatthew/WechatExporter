@@ -101,6 +101,9 @@ protected:
     void notifyStart();
     void notifyComplete(bool cancelled = false);
     void notifyProgress(uint32_t numberOfMessages, uint32_t numberOfTotalMessages);
+    void notifySessionStart(const std::string& sessionUsrName);
+    void notifySessionComplete(const std::string& sessionUsrName, bool cancelled = false);
+    void notifySessionProgress(const std::string& sessionUsrName, uint32_t numberOfMessages, uint32_t numberOfTotalMessages);
     bool buildFileNameForUser(Friend& user, std::set<std::string>& existingFileNames);
     std::string buildContentFromTemplateValues(const TemplateValues& values) const;
     
