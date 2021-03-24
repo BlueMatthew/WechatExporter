@@ -564,7 +564,7 @@ int Exporter::exportSession(const Friend& user, const MessageParser& msgParser, 
         auto b = messages.cbegin();
         // No page for text mode
         auto e = (((m_options & (SPO_TEXT_MODE | SPO_SYNC_LOADING)) != 0) || (messages.size() <= pageSize)) ? messages.cend() : (b + pageSize);
-        std::string moreMsgs = ((m_options & (SPO_TEXT_MODE | SPO_SYNC_LOADING)) != 0) ? "" : "[]"; // [] = empty json array
+        std::string moreMsgs = ((m_options & (SPO_TEXT_MODE | SPO_SYNC_LOADING)) != 0) ? "[]" : "[]"; // [] = empty json array
         if (e != messages.cend())
         {
             Json::Value jsonMsgs(Json::arrayValue);
@@ -577,8 +577,7 @@ int Exporter::exportSession(const Friend& user, const MessageParser& msgParser, 
         }
 
         std::string scripts = (m_options & SPO_SYNC_LOADING) || (messages.size() <= pageSize) ? "" : getTemplate("scripts");
-        replaceAll(scripts, "%%JSONDATA%%", moreMsgs);
-        replaceAll(scripts, "%%ASYNCLOADINGTYPE%%", m_loadingDataOnScroll ? "onscroll" : "initial");
+        
 
         std::string html = getTemplate("frame");
 #ifndef NDEBUG
@@ -589,7 +588,11 @@ int Exporter::exportSession(const Friend& user, const MessageParser& msgParser, 
         replaceAll(html, "%%SESSION_USRNAME%%", "");
 #endif
         replaceAll(html, "%%DISPLAYNAME%%", session.getDisplayName());
+        replaceAll(html, "%%JSONDATA%%", moreMsgs);
+        replaceAll(html, "%%ASYNCLOADINGTYPE%%", m_loadingDataOnScroll ? "onscroll" : "initial");
+        
         replaceAll(html, "%%BODY%%", join(b, e, ""));
+        
         replaceAll(html, "%%LOADING_SCRIPTS%%", scripts);
         
         replaceAll(html, "%%HEADER_FILTER%%", (m_options & SPO_SUPPORT_FILTER) ? getTemplate("filter") : "");
