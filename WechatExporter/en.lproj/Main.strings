@@ -30,7 +30,7 @@
 "CHb-bh-1kG.title" = "Cancel";
 
 /* Class = "NSMenuItem"; title = "From Earlier To Newer"; ObjectID = "GbO-lL-BLb"; */
-"GbO-lL-BLb.title" = "From Earlier To Newer";
+"GbO-lL-BLb.title" = "From Newer To Earlier";
 
 /* Class = "NSMenuItem"; title = "Text"; ObjectID = "GeM-zb-UkW"; */
 "GeM-zb-UkW.title" = "Text";

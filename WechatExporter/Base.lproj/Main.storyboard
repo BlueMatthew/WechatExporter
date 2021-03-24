@@ -79,7 +79,7 @@
                                 <modifierMask key="keyEquivalentModifierMask"/>
                                 <menu key="submenu" title="Options" autoenablesItems="NO" id="uG2-8c-wjP">
                                     <items>
-                                        <menuItem title="From Earlier To Newer" identifier="descOrder" id="GbO-lL-BLb" userLabel="DescOrder">
+                                        <menuItem title="From Newer To Earlier" identifier="descOrder" id="GbO-lL-BLb" userLabel="DescOrder">
                                             <modifierMask key="keyEquivalentModifierMask"/>
                                             <connections>
                                                 <action selector="optionsMenuItemClick:" target="Voe-Tx-rLC" id="MEP-ZQ-Zdq"/>
