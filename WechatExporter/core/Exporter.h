@@ -50,7 +50,7 @@ protected:
     std::string m_extName;
     std::string m_templatesName;
     
-    std::map<std::string, std::set<std::string>> m_usersAndSessionsFilter;
+    std::map<std::string, std::map<std::string, void *>> m_usersAndSessionsFilter;
     
     std::vector<std::pair<Friend, std::vector<Session>>> m_usersAndSessions;
     
@@ -68,7 +68,7 @@ public:
     void cancel();
     void waitForComplition();
     
-    void filterUsersAndSessions(const std::map<std::string, std::set<std::string>>& usersAndSessions);
+    void filterUsersAndSessions(const std::map<std::string, std::map<std::string, void *>>& usersAndSessions);
     void setTextMode(bool textMode = true);
     void setOrder(bool asc = true);
     void saveFilesInSessionFolder(bool flags = true);
@@ -101,9 +101,9 @@ protected:
     void notifyStart();
     void notifyComplete(bool cancelled = false);
     void notifyProgress(uint32_t numberOfMessages, uint32_t numberOfTotalMessages);
-    void notifySessionStart(const std::string& sessionUsrName);
-    void notifySessionComplete(const std::string& sessionUsrName, bool cancelled = false);
-    void notifySessionProgress(const std::string& sessionUsrName, uint32_t numberOfMessages, uint32_t numberOfTotalMessages);
+    void notifySessionStart(const std::string& sessionUsrName, void * sessionData, uint32_t numberOfTotalMessages);
+    void notifySessionComplete(const std::string& sessionUsrName, void * sessionData, bool cancelled = false);
+    void notifySessionProgress(const std::string& sessionUsrName, void * sessionData, uint32_t numberOfMessages, uint32_t numberOfTotalMessages);
     bool buildFileNameForUser(Friend& user, std::set<std::string>& existingFileNames);
     std::string buildContentFromTemplateValues(const TemplateValues& values) const;
     

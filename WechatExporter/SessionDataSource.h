@@ -40,7 +40,7 @@
 @interface SessionDataSource : NSObject<NSTableViewDataSource>
 
 - (void)loadData:(const std::vector<std::pair<Friend, std::vector<Session>>> *)usersAndSessions withAllUsers:(BOOL)allUsers indexOfSelectedUser:(NSInteger)indexOfSelectedUser;
-- (void)getSelectedUserAndSessions:(std::map<std::string, std::set<std::string>>&)usersAndSessions;
+- (void)getSelectedUserAndSessions:(std::map<std::string, std::map<std::string, void *>>&)usersAndSessions;
 
 - (void)bindCellView:(NSTableCellView *)cellView atRow:(NSInteger)row andColumnId:(NSString *)identifier;
 - (NSControlStateValue)updateCheckStateAtRow:(NSInteger)row;

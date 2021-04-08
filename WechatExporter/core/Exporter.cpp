@@ -124,7 +124,7 @@ void Exporter::setTemplatesName(const std::string& templatesName)
     m_templatesName = templatesName;
 }
 
-void Exporter::filterUsersAndSessions(const std::map<std::string, std::set<std::string>>& usersAndSessions)
+void Exporter::filterUsersAndSessions(const std::map<std::string, std::map<std::string, void *>>& usersAndSessions)
 {
     m_usersAndSessionsFilter = usersAndSessions;
 }
@@ -370,7 +370,7 @@ bool Exporter::exportUser(Friend& user, std::string& userOutputPath)
     
     std::string userBody;
     
-    std::map<std::string, std::set<std::string>>::const_iterator itUser = m_usersAndSessionsFilter.cend();
+    std::map<std::string, std::map<std::string, void *>>::const_iterator itUser = m_usersAndSessionsFilter.cend();
     if (!m_usersAndSessionsFilter.empty())
     {
         itUser = m_usersAndSessionsFilter.find(user.getUsrName());
@@ -404,15 +404,21 @@ bool Exporter::exportUser(Friend& user, std::string& userOutputPath)
         
         if (!m_usersAndSessionsFilter.empty())
         {
-            if (itUser == m_usersAndSessionsFilter.cend() || itUser->second.find(it->getUsrName()) == itUser->second.cend())
+            std::map<std::string, void *>::const_iterator itSession = itUser->second.cend();
+            if (itUser == m_usersAndSessionsFilter.cend() || (itSession = itUser->second.find(it->getUsrName())) == itUser->second.cend())
             {
                 continue;
             }
+            
+            it->setData(itSession->second);
         }
+
+		notifySessionStart(it->getUsrName(), it->getData(), it->getRecordCount());
         
         if (!buildFileNameForUser(*it, sessionFileNames))
         {
             m_logger->write(formatString(getLocaleString("Can't build directory name for chat: %s. Skip it."), it->getDisplayName().c_str()));
+			notifySessionComplete(it->getUsrName(), it->getData(), m_cancelled);
             continue;
         }
         
@@ -425,6 +431,7 @@ bool Exporter::exportUser(Friend& user, std::string& userOutputPath)
         if (it->isSubscription())
         {
             m_logger->write(formatString(getLocaleString("Skip subscription: %s"), sessionDisplayName.c_str()));
+			notifySessionComplete(it->getUsrName(), it->getData(), m_cancelled);
             continue;
         }
         if ((m_options & SPO_IGNORE_AVATAR) == 0)
@@ -452,6 +459,8 @@ bool Exporter::exportUser(Friend& user, std::string& userOutputPath)
             
             userBody += userItem;
         }
+
+		notifySessionComplete(it->getUsrName(), it->getData(), m_cancelled);
     }
 
     std::string html = getTemplate("listframe");
@@ -514,10 +523,8 @@ int Exporter::exportSession(const Friend& user, const MessageParser& msgParser, 
 {
     if (session.isDbFileEmpty())
     {
-        return false;
+        return 0;
     }
-    
-    notifySessionStart(session.getUsrName());
     
     std::string sessionBasePath = combinePath(outputBase, session.getOutputFileName() + "_files");
     if ((m_options & SPO_IGNORE_AVATAR) == 0)
@@ -550,7 +557,7 @@ int Exporter::exportSession(const Friend& user, const MessageParser& msgParser, 
         exportMessage(session, tvs, messages);
         ++numberOfMsgs;
         
-        notifySessionProgress(session.getUsrName(), numberOfMsgs, session.getRecordCount());
+        notifySessionProgress(session.getUsrName(), session.getData(), numberOfMsgs, session.getRecordCount());
         if (m_cancelled)
         {
             break;
@@ -603,9 +610,6 @@ int Exporter::exportSession(const Friend& user, const MessageParser& msgParser, 
         std::string fileName = combinePath(outputBase, session.getOutputFileName() + "." + m_extName);
         writeFile(fileName, html);
     }
-    
-    notifySessionComplete(session.getUsrName(), m_cancelled);
-    
     
     return numberOfMsgs;
 }
@@ -809,32 +813,43 @@ void Exporter::notifyProgress(uint32_t numberOfMessages, uint32_t numberOfTotalM
     }
 }
 
-void Exporter::notifySessionStart(const std::string& sessionUsrName)
+void Exporter::notifySessionStart(const std::string& sessionUsrName, void * sessionData, uint32_t numberOfTotalMessages)
 {
     if (m_notifier)
     {
-        m_notifier->onSessionStart(sessionUsrName);
+        m_notifier->onSessionStart(sessionUsrName, sessionData, numberOfTotalMessages);
     }
 }
 
-void Exporter::notifySessionComplete(const std::string& sessionUsrName, bool cancelled/* = false*/)
+void Exporter::notifySessionComplete(const std::string& sessionUsrName, void * sessionData, bool cancelled/* = false*/)
 {
     if (m_notifier)
     {
-        m_notifier->onSessionComplete(sessionUsrName, cancelled);
+        m_notifier->onSessionComplete(sessionUsrName, sessionData, cancelled);
     }
 }
 
-void Exporter::notifySessionProgress(const std::string& sessionUsrName, uint32_t numberOfMessages, uint32_t numberOfTotalMessages)
+void Exporter::notifySessionProgress(const std::string& sessionUsrName, void * sessionData, uint32_t numberOfMessages, uint32_t numberOfTotalMessages)
 {
     if (m_notifier)
     {
-        m_notifier->onSessionProgress(sessionUsrName, numberOfMessages, numberOfTotalMessages);
+        m_notifier->onSessionProgress(sessionUsrName, sessionData, numberOfMessages, numberOfTotalMessages);
     }
 }
 
 bool Exporter::filterITunesFile(const char *file, int flags) const
 {
+    if (startsWith(file, "Documents/MMappedKV/"))
+    {
+        return startsWith(file, "mmsetting", 20);
+    }
+    
+    if (std::strncmp(file, "Documents/MapDocument/", 22) == 0 ||
+        std::strncmp(file, "Library/WebKit/", 15) == 0)
+    {
+        return false;
+    }
+    
     const char *str = std::strchr(file, '/');
     if (str != NULL)
     {
@@ -844,7 +859,12 @@ bool Exporter::filterITunesFile(const char *file, int flags) const
             if (std::strncmp(str, "/Audio/", 7) == 0 ||
                 std::strncmp(str, "/Img/", 5) == 0 ||
                 std::strncmp(str, "/OpenData/", 10) == 0 ||
-                std::strncmp(str, "/Video/", 7) == 0)
+                std::strncmp(str, "/Video/", 7) == 0 ||
+                std::strncmp(str, "/appicon/", 9) == 0 ||
+                std::strncmp(str, "/translate/", 11) == 0 ||
+                std::strncmp(str, "/Brand/", 7) == 0 ||
+                std::strncmp(str, "/Pattern_v3/", 12) == 0 ||
+                std::strncmp(str, "/WCPay/", 7) == 0)
             {
                 return false;
             }

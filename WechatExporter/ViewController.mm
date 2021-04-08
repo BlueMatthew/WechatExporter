@@ -503,7 +503,7 @@
     
     workDir = [[NSBundle mainBundle] resourcePath];
     
-    std::map<std::string, std::set<std::string>> usersAndSessions;
+    std::map<std::string, std::map<std::string, void *>> usersAndSessions;
     [m_dataSource getSelectedUserAndSessions:usersAndSessions];
     
     m_exporter = new Exporter([workDir UTF8String], [backup UTF8String], [output UTF8String], m_logger);

@@ -83,9 +83,9 @@ bool endsWith(const std::string& str, std::string::value_type ch)
     return !str.empty() && str[str.size() - 1] == ch;
 }
 
-bool startsWith(const std::string& str, const std::string& prefix)
+bool startsWith(const std::string& str, const std::string& prefix, int pos/* = 0*/)
 {
-    return str.size() >= prefix.size() && 0 == str.compare(0, prefix.size(), prefix);
+    return str.size() >= prefix.size() && 0 == str.compare(pos, prefix.size(), prefix);
 }
 
 bool startsWith(const std::string& str, std::string::value_type ch)

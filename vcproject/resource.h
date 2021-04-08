@@ -21,6 +21,13 @@
 #define IDS_INVALID_OUTPUT_DIR          142
 #define IDS_TOOLTIP_LOGS                143
 #define IDS_NEW_VERSION                 144
+#define IDS_SESSION_NUMBER              145
+#define IDS_SESSION_STATUS              146
+#define IDS_SESSION_DONE                147
+#define IDS_SESSION_PROGRESS            148
+#define IDS_SESSION_CANCELLED           149
+#define IDS_SHOW_LOGS                   150
+#define IDS_HIDE_LOGS                   151
 #define IDC_BACKUP                      1000
 #define IDC_CHOOSE_BKP                  1001
 #define IDC_OUTPUT                      1002
@@ -29,8 +36,6 @@
 #define IDC_EXPORT                      1005
 #define IDC_PROGRESS                    1006
 #define IDC_CANCEL                      1007
-#define IDC_DESC_ORDER                  1008
-#define IDC_FILES_IN_SESSION            1009
 #define IDC_STATIC_BACKUP               1010
 #define IDC_VERSION                     1011
 #define IDC_USERS                       1012
@@ -38,6 +43,9 @@
 #define IDC_SESSIONS                    1014
 #define IDC_GRP_LOGS                    1015
 #define IDC_GRP_USR_CHAT                1016
+#define IDC_SESS_PROGRESS               1017
+#define IDC_CHECK1                      1018
+#define IDC_SHOW_LOGS                   1018
 #define ID_FILE_CHK_UPDATE              32775
 #define ID_FORMAT_HTML                  32776
 #define ID_FORMAT_TEXT                  32777
@@ -53,7 +61,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        204
 #define _APS_NEXT_COMMAND_VALUE         32783
-#define _APS_NEXT_CONTROL_VALUE         1017
+#define _APS_NEXT_CONTROL_VALUE         1019
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif
