@@ -28,6 +28,8 @@ private:
 		VS_EXPORTING
 	};
 
+	static const int SUBITEM_PROGRESS = 4;
+
 	// CColoredComboBoxCtrl	m_cbmBoxBackups;
 	// CColoredComboBoxCtrl	m_cbmBoxUsers;
 	CLogListBox				m_logListBox;
@@ -308,7 +310,7 @@ public:
 
 			LoadUsers();
 			m_viewState = VS_IDLE;
-			EnableInteractiveCtrls(TRUE, FALSE);
+			UpdateUI();
 
 			delete handler;
 		}
@@ -437,7 +439,7 @@ public:
 		}
 		CW2A resDir(CT2W(buffer), CP_UTF8);
 
-		EnableInteractiveCtrls(FALSE, FALSE);
+		UpdateUI();
 		
 		std::string backup = manifest.getPath();
 		m_viewState = VS_LOADING;
@@ -536,7 +538,7 @@ public:
 		text.LoadString(showLogs ? IDS_HIDE_LOGS : IDS_SHOW_LOGS);
 		btn.SetWindowText(text);
 
-		EnableInteractiveCtrls(m_viewState == VS_IDLE, m_viewState == VS_EXPORTING);
+		UpdateUI();
 
 		return 0;
 	}
@@ -578,7 +580,7 @@ public:
 
 		if (pnmlv->uChanged & LVIF_STATE)
 		{
-			return IsUIEnabled() ? FALSE : TRUE;
+			return IsIdle();
 		}
 
 		return 0; // FALSE
@@ -678,30 +680,6 @@ public:
 		std::map<std::string, std::map<std::string, void *>> usersAndSessions;
 		GetCheckedSessionsAndCopyItems(usersAndSessions);
 
-		/*
-		CListViewCtrl listViewCtrl = GetDlgItem(IDC_SESSIONS);
-		for (int nItem = 0; nItem < listViewCtrl.GetItemCount(); nItem++)
-		{
-			if (!listViewCtrl.GetCheckState(nItem))
-			{
-				continue;
-			}
-
-			const Session* session = reinterpret_cast<const Session*>(listViewCtrl.GetItemData(nItem));
-			if (NULL != session)
-			{
-				std::string usrName = session->getOwner()->getUsrName();
-				std::map<std::string, std::set<std::string>>::iterator it = usersAndSessions.find(usrName);
-				if (it == usersAndSessions.end())
-				{
-					it = usersAndSessions.insert(usersAndSessions.end(), std::pair<std::string, std::set<std::string>>(usrName, std::set<std::string>()));
-				}
-
-				it->second.insert(session->getUsrName());
-			}
-		}
-		*/
-
 		m_exporter = new Exporter((LPCSTR)resDir, backup, (LPCSTR)output, m_logger);
 		m_exporter->setNotifier(m_notifier);
 		m_exporter->setOrder(!descOrder);
@@ -722,7 +700,7 @@ public:
 		m_viewState = VS_EXPORTING;
 		if (m_exporter->run())
 		{
-			EnableInteractiveCtrls(FALSE, TRUE);
+			UpdateUI();
 		}
 
 		return 0;
@@ -730,8 +708,8 @@ public:
 	
 	LRESULT OnStart(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 	{
-		BOOL cancellable = static_cast<BOOL>(lParam);
-		EnableInteractiveCtrls(FALSE, cancellable);
+		// BOOL cancellable = static_cast<BOOL>(lParam);
+		UpdateUI();
 		CProgressBarCtrl progressCtrl = GetDlgItem(IDC_PROGRESS);
 		progressCtrl.ModifyStyle(0, PBS_MARQUEE);
 		progressCtrl.SetMarquee(TRUE, 0);
@@ -752,7 +730,7 @@ public:
 		progressCtrl.SetPos(0);
 
 		m_viewState = VS_IDLE;
-		EnableInteractiveCtrls(TRUE);
+		UpdateUI();
 		return 0;
 	}
 
@@ -814,14 +792,14 @@ public:
 		return 0;
 	}
 
-	BOOL IsUIEnabled() const
+	BOOL IsIdle() const
 	{
-		return ::IsWindowEnabled(GetDlgItem(IDC_EXPORT));
+		return m_viewState == VS_IDLE;
 	}
 
 protected:
 
-	void EnableInteractiveCtrls(BOOL enabled, BOOL cancellable = TRUE)
+	void UpdateUI()
 	{
 		CButton btn = GetDlgItem(IDC_SHOW_LOGS);
 		BOOL showLogs = btn.GetCheck() == BST_CHECKED;
@@ -842,7 +820,7 @@ protected:
 		UINT ids[] = { IDC_BACKUP, IDC_CHOOSE_BKP, IDC_CHOOSE_OUTPUT, IDC_USERS, IDC_CLOSE, IDC_EXPORT };
 		for (int idx = 0; idx < sizeof(ids) / sizeof(UINT); ++idx)
 		{
-			::EnableWindow(GetDlgItem(ids[idx]), enabled);
+			::EnableWindow(GetDlgItem(ids[idx]), m_viewState == VS_IDLE);
 		}
 		// ::EnableWindow(GetDlgItem(IDC_CANCEL), !enabled && cancellable);
 		

@@ -101,7 +101,7 @@ public:
 
 	LRESULT OnInitMenu(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& bHandled)
 	{
-		BOOL enabled = m_view.IsUIEnabled();
+		BOOL enabled = !(m_view.IsIdle());
 		
 		CMenuHandle menu = GetMenu();
 		CMenuHandle subMenuFile = menu.GetSubMenu(0);
