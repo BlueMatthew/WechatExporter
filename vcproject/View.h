@@ -288,7 +288,7 @@ public:
 		DLGRESIZE_CONTROL(IDC_SESS_PROGRESS, DLSZ_SIZE_X | DLSZ_SIZE_Y)
 		DLGRESIZE_CONTROL(IDC_GRP_LOGS, DLSZ_SIZE_X | DLSZ_SIZE_Y)
 		DLGRESIZE_CONTROL(IDC_LOGS, DLSZ_SIZE_X | DLSZ_SIZE_Y)
-		DLGRESIZE_CONTROL(IDC_SHOW_LOGS, DLSZ_MOVE_X | DLSZ_MOVE_Y)
+		DLGRESIZE_CONTROL(IDC_SHOW_LOGS, DLSZ_MOVE_Y)
 		DLGRESIZE_CONTROL(IDC_CANCEL, DLSZ_MOVE_X | DLSZ_MOVE_Y)
 		DLGRESIZE_CONTROL(IDC_CLOSE, DLSZ_MOVE_X | DLSZ_MOVE_Y)
 		DLGRESIZE_CONTROL(IDC_EXPORT, DLSZ_MOVE_X | DLSZ_MOVE_Y)
@@ -574,13 +574,11 @@ public:
 
 	LRESULT OnListItemChanging(int idCtrl, LPNMHDR pnmh, BOOL& /*bHandled*/)
 	{
-		ATLASSERT(idCtrl != IDC_SESS_PROGRESS);
-
 		LPNMLISTVIEW pnmlv = (LPNMLISTVIEW)pnmh;
 
 		if (pnmlv->uChanged & LVIF_STATE)
 		{
-			return IsIdle();
+			return !IsViewIdle();
 		}
 
 		return 0; // FALSE
@@ -588,8 +586,6 @@ public:
 
 	LRESULT OnListItemChanged(int idCtrl, LPNMHDR pnmh, BOOL& /*bHandled*/)
 	{
-		ATLASSERT(idCtrl != IDC_SESS_PROGRESS);
-
 		LPNMLISTVIEW pnmlv = (LPNMLISTVIEW)pnmh;
 
 		if (pnmlv->uChanged & LVIF_STATE)
@@ -792,7 +788,7 @@ public:
 		return 0;
 	}
 
-	BOOL IsIdle() const
+	BOOL IsViewIdle() const
 	{
 		return m_viewState == VS_IDLE;
 	}
@@ -822,10 +818,9 @@ protected:
 		{
 			::EnableWindow(GetDlgItem(ids[idx]), m_viewState == VS_IDLE);
 		}
-		// ::EnableWindow(GetDlgItem(IDC_CANCEL), !enabled && cancellable);
-		
+
 		UINT state = (m_viewState == VS_IDLE) ? MF_ENABLED : (MF_DISABLED | MF_GRAYED);
-		EnableMenuItem(::GetSystemMenu(::GetParent(m_hWnd), FALSE), SC_CLOSE, MF_BYCOMMAND | state);
+		::EnableMenuItem(::GetSystemMenu(::GetParent(m_hWnd), FALSE), SC_CLOSE, MF_BYCOMMAND | state);
 	}
 
 	void UpdateBackups(const std::vector<BackupManifest>& manifests, BOOL onLaunch = FALSE)
