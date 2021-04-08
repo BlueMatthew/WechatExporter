@@ -82,7 +82,7 @@
     return self;
 }
 
-- (void)getSelectedUserAndSessions:(std::map<std::string, std::set<std::string>>&)usersAndSessions
+- (void)getSelectedUserAndSessions:(std::map<std::string, std::map<std::string, void *>>&)usersAndSessions
 {
     for (SessionItem *sessionItem in m_sessions)
     {
@@ -91,13 +91,13 @@
             std::string usrName = [sessionItem.usrName UTF8String];
             std::string sessionUsrName = [sessionItem.sessionUsrName UTF8String];
             
-            std::map<std::string, std::set<std::string>>::iterator it = usersAndSessions.find(usrName);
+            std::map<std::string, std::map<std::string, void *>>::iterator it = usersAndSessions.find(usrName);
             if (it == usersAndSessions.end())
             {
-                it = usersAndSessions.insert(usersAndSessions.end(), std::pair<std::string, std::set<std::string>>(usrName, std::set<std::string>()));
+                it = usersAndSessions.insert(usersAndSessions.end(), std::pair<std::string, std::map<std::string, void *>>(usrName, std::map<std::string, void *>()));
             }
             
-            it->second.insert(sessionUsrName);
+            it->second.insert(std::pair<std::string, void *>(sessionUsrName, NULL));
         }
     }
 }

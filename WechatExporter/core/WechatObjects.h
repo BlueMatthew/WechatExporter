@@ -491,11 +491,12 @@ protected:
     unsigned int m_lastMessageTime;
     std::string m_extFileName;
     std::string m_dbFile;
+    void *m_data;
     
     const Friend* m_owner;
     
 public:
-    Session(const Friend* owner) : Friend(), m_unreadCount(0), m_recordCount(0), m_createTime(0), m_lastMessageTime(0), m_owner(owner)
+    Session(const Friend* owner) : Friend(), m_unreadCount(0), m_recordCount(0), m_createTime(0), m_lastMessageTime(0), m_data(NULL), m_owner(owner)
     {
     }
     
@@ -567,6 +568,16 @@ public:
     inline void setDbFile(const std::string& dbFile)
     {
         m_dbFile = dbFile;
+    }
+    
+    void *getData() const
+    {
+        return m_data;
+    }
+    
+    void setData(void *data)
+    {
+        m_data = data;
     }
 
     bool update(const Friend& f)

@@ -285,6 +285,7 @@ xcopy "$(ProjectDir)..\WechatExporter\res"  "$(OutDir)res"  /Y /S /E</Command>
     <ClInclude Include="ColoredControls.h" />
     <ClInclude Include="Core.h" />
     <ClInclude Include="AppConfiguration.h" />
+    <ClInclude Include="ProgressListViewCtrl.h" />
     <ClInclude Include="ExportNotifierImpl.h" />
     <ClInclude Include="ITunesDetector.h" />
     <ClInclude Include="LoggerImpl.h" />

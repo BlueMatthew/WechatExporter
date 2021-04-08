@@ -30,7 +30,7 @@ std::string replaceAll(const std::string& input, const std::vector<std::pair<std
 
 bool endsWith(const std::string& str, const std::string& suffix);
 bool endsWith(const std::string& str, std::string::value_type ch);
-bool startsWith(const std::string& str, const std::string& prefix);
+bool startsWith(const std::string& str, const std::string& prefix, int pos = 0);
 bool startsWith(const std::string& str, const std::string::value_type ch);
 
 std::vector<std::string> split(const std::string& str, const std::string& delim);
