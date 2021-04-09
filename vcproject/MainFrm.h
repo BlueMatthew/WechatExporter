@@ -105,8 +105,7 @@ public:
 		
 		CMenuHandle menu = GetMenu();
 		CMenuHandle subMenuFile = menu.GetSubMenu(0);
-		
-		
+
 		CMenuHandle subMenuFormat = menu.GetSubMenu(1);
 		subMenuFormat.EnableMenuItem(ID_FORMAT_HTML, MF_BYCOMMAND | (enabled ? MF_ENABLED : MF_DISABLED));
 		subMenuFormat.EnableMenuItem(ID_FORMAT_TEXT, MF_BYCOMMAND | (enabled ? MF_ENABLED : MF_DISABLED));

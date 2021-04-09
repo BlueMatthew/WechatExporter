@@ -29,14 +29,15 @@ private:
 	};
 
 	static const int SUBITEM_PROGRESS = 4;
+	static const UINT_PTR EVENT_ID_PROGRESS = 1;
 
 	// CColoredComboBoxCtrl	m_cbmBoxBackups;
 	// CColoredComboBoxCtrl	m_cbmBoxUsers;
 	CLogListBox				m_logListBox;
 	CSortListViewCtrl		m_sessionsListCtrl;
 	CProgressListViewCtrl	m_progressListCtrl;
-	CProgressBarCtrl		m_sessionProgressBar;
-
+	CStatic					m_progressTextCtrl;
+	
 	LoggerImpl*			m_logger;
 	ExportNotifierImpl* m_notifier;
 	Exporter*			m_exporter;
@@ -47,6 +48,7 @@ private:
 	int m_itemClicked;
 
 	VIEW_STATE m_viewState;
+	UINT_PTR m_eventIdProgress;
 
 	class CLoadingHandler
 	{
@@ -147,26 +149,30 @@ public:
 	static const UINT WM_START = ExportNotifierImpl::WM_START;
 	static const UINT WM_COMPLETE = ExportNotifierImpl::WM_COMPLETE;
 	static const UINT WM_PROGRESS = ExportNotifierImpl::WM_PROGRESS;
+	static const UINT WM_USR_SESS_START = ExportNotifierImpl::WM_USR_SESS_START;
+	static const UINT WM_USR_SESS_COMPLETE = ExportNotifierImpl::WM_USR_SESS_COMPLETE;
 	static const UINT WM_SESSION_START = ExportNotifierImpl::WM_SESSION_START;
 	static const UINT WM_SESSION_COMPLETE = ExportNotifierImpl::WM_SESSION_COMPLETE;
 	static const UINT WM_SESSION_PROGRESS = ExportNotifierImpl::WM_SESSION_PROGRESS;
 	static const UINT WM_MSG_START = ExportNotifierImpl::WM_EN_END;
-	static const UINT WM_LOADDATA = WM_MSG_START + 1;
-	static const UINT WM_CHKUPDATE = WM_MSG_START + 2;
+	static const UINT WM_UPD_VIEWSTATE = WM_MSG_START + 1;
+	static const UINT WM_LOADDATA = WM_MSG_START + 2;
+	static const UINT WM_CHKUPDATE = WM_MSG_START + 3;
 
-	CView() : CDialogImpl<CView>(), CDialogResize<CView>(), m_viewState(VS_IDLE)
+	CView() : CDialogImpl<CView>(), CDialogResize<CView>(), m_viewState(VS_IDLE), m_eventIdProgress(0)
 	{
 	}
 
 	LRESULT OnInitDialog(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 	{
+		m_progressTextCtrl = GetDlgItem(IDC_PROGRESS_TEXT);
 		m_logListBox.SubclassWindow(GetDlgItem(IDC_LOGS));
 		// m_cbmBoxBackups.SubclassWindow(GetDlgItem(IDC_BACKUP));
 		// m_cbmBoxUsers.SubclassWindow(GetDlgItem(IDC_USERS));
 
 		// m_cbmBoxBackups.SetEditColors(CLR_INVALID, ::GetSysColor(COLOR_WINDOWTEXT));
 		// m_cbmBoxUsers.SetEditColors(CLR_INVALID, ::GetSysColor(COLOR_WINDOWTEXT));
-
+		
 		m_logger = NULL;
 		m_notifier = NULL;
 		m_exporter = NULL;
@@ -194,8 +200,13 @@ public:
 #ifndef NDEBUG
 		CString lastBackupDir = AppConfiguration::GetLastBackupDir();
 #endif
-
 		std::vector<BackupManifest> manifests;
+		if (!backupDir.IsEmpty())
+		{
+			CW2A backupDir(CT2W(backupDir), CP_UTF8);
+			ManifestParser parser((LPCSTR)backupDir);
+			parser.parse(manifests);
+		}
 #ifndef NDEBUG
 		if (!lastBackupDir.IsEmpty() && lastBackupDir != backupDir)
 		{
@@ -204,13 +215,6 @@ public:
 			parser.parse(manifests);
 		}
 #endif
-		if (!backupDir.IsEmpty())
-		{
-			CW2A backupDir(CT2W(backupDir), CP_UTF8);
-			ManifestParser parser((LPCSTR)backupDir);
-			parser.parse(manifests);
-		}
-
 		if (!manifests.empty())
 		{
 			UpdateBackups(manifests);
@@ -254,6 +258,7 @@ public:
 	BEGIN_MSG_MAP(CView)
 		MESSAGE_HANDLER(WM_INITDIALOG, OnInitDialog)
 		CHAIN_MSG_MAP(CDialogResize<CView>)
+		MESSAGE_HANDLER(WM_TIMER, OnTimer)
 		COMMAND_HANDLER(IDC_BACKUP, CBN_SELCHANGE, OnBackupSelChange)
 		COMMAND_HANDLER(IDC_CHOOSE_BKP, BN_CLICKED, OnBnClickedChooseBkp)
 		COMMAND_HANDLER(IDC_CHOOSE_OUTPUT, BN_CLICKED, OnBnClickedChooseOutput)
@@ -265,12 +270,14 @@ public:
 		MESSAGE_HANDLER(WM_START, OnStart)
 		MESSAGE_HANDLER(WM_COMPLETE, OnComplete)
 		MESSAGE_HANDLER(WM_PROGRESS, OnProgress)
+		MESSAGE_HANDLER(WM_USR_SESS_START, OnUserSessionStart)
+		MESSAGE_HANDLER(WM_USR_SESS_COMPLETE, OnUserSessionComplete)
 		MESSAGE_HANDLER(WM_SESSION_START, OnSessionStart)
 		MESSAGE_HANDLER(WM_SESSION_COMPLETE, OnSessionComplete)
 		MESSAGE_HANDLER(WM_SESSION_PROGRESS, OnSessionProgress)
+		MESSAGE_HANDLER(WM_UPD_VIEWSTATE, OnUpdateViewState)
 		MESSAGE_HANDLER(WM_LOADDATA, OnLoadData)
 		MESSAGE_HANDLER(WM_CHKUPDATE, OnCheckUpdate)
-		NOTIFY_HANDLER(IDC_SESSIONS, LVN_ITEMCHANGING, OnListItemChanging)
 		NOTIFY_HANDLER(IDC_SESSIONS, LVN_ITEMCHANGED, OnListItemChanged)
 		NOTIFY_CODE_HANDLER(HDN_ITEMSTATEICONCLICK, OnHeaderItemStateIconClick)
 		NOTIFY_HANDLER(IDC_SESSIONS, NM_CLICK, OnListClick)
@@ -284,6 +291,7 @@ public:
 		DLGRESIZE_CONTROL(IDC_OUTPUT, DLSZ_SIZE_X)
 		DLGRESIZE_CONTROL(IDC_GRP_USR_CHAT, DLSZ_SIZE_X | DLSZ_SIZE_Y)
 		DLGRESIZE_CONTROL(IDC_PROGRESS, DLSZ_SIZE_X)
+		DLGRESIZE_CONTROL(IDC_PROGRESS_TEXT, DLSZ_MOVE_X)
 		DLGRESIZE_CONTROL(IDC_SESSIONS, DLSZ_SIZE_X | DLSZ_SIZE_Y)
 		DLGRESIZE_CONTROL(IDC_SESS_PROGRESS, DLSZ_SIZE_X | DLSZ_SIZE_Y)
 		DLGRESIZE_CONTROL(IDC_GRP_LOGS, DLSZ_SIZE_X | DLSZ_SIZE_Y)
@@ -299,6 +307,28 @@ public:
 //	LRESULT MessageHandler(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/)
 //	LRESULT CommandHandler(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/)
 //	LRESULT NotifyHandler(int /*idCtrl*/, LPNMHDR /*pnmh*/, BOOL& /*bHandled*/)
+	
+	LRESULT OnTimer(UINT /*uMsg*/, WPARAM wParam, LPARAM /*lParam*/, BOOL& /*bHandled*/)
+	{
+		UINT_PTR nIDEvent = static_cast<UINT_PTR>(wParam);
+		if (nIDEvent == m_eventIdProgress)
+		{
+			UpdateProgressBar(TRUE);
+		}
+
+		return 0;
+	}
+
+	LRESULT OnUpdateViewState(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+	{
+		m_viewState = static_cast<VIEW_STATE>(wParam);
+		if (lParam != 0)
+		{
+			UpdateUI();
+		}
+
+		return 0;
+	}
 
 	LRESULT OnLoadData(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 	{
@@ -309,9 +339,8 @@ public:
 			handler->getUsersAndSessions(m_usersAndSessions);
 
 			LoadUsers();
-			m_viewState = VS_IDLE;
-			UpdateUI();
-
+			PostMessage(WM_UPD_VIEWSTATE, VS_IDLE, 1);
+			
 			delete handler;
 		}
 
@@ -439,10 +468,9 @@ public:
 		}
 		CW2A resDir(CT2W(buffer), CP_UTF8);
 
-		UpdateUI();
+		PostMessage(WM_UPD_VIEWSTATE, VS_LOADING, 1);
 		
 		std::string backup = manifest.getPath();
-		m_viewState = VS_LOADING;
 		CLoadingHandler *handler = new CLoadingHandler(m_hWnd, (LPCSTR)resDir, backup, m_logger);
 		// _Module.GetMessageLoop()->AddIdleHandler(handler);
 		handler->startTask();
@@ -551,37 +579,19 @@ public:
 
 	LRESULT OnHeaderItemStateIconClick(int idCtrl, LPNMHDR pnmh, BOOL& /*bHandled*/)
 	{
-		if (idCtrl == IDC_SESSIONS)
+		CHeaderCtrl header = m_sessionsListCtrl.GetHeader();
+		if (pnmh->hwndFrom == header.m_hWnd)
 		{
-			CListViewCtrl listViewCtrl = GetDlgItem(IDC_SESSIONS);
-			HWND header = ListView_GetHeader(listViewCtrl);
-
-			// Store the ID of the header control so we can handle its notification by ID
-			if (idCtrl == ::GetDlgCtrlID(header))
+			LPNMHEADER pnmHeader = (LPNMHEADER)pnmh;
+			if (pnmHeader->pitem->mask & HDI_FORMAT && pnmHeader->pitem->fmt & HDF_CHECKBOX)
 			{
-				LPNMHEADER pnmHeader = (LPNMHEADER)pnmh;
-				if (pnmHeader->pitem->mask & HDI_FORMAT && pnmHeader->pitem->fmt & HDF_CHECKBOX)
-				{
-					CheckAllItems(listViewCtrl, !(pnmHeader->pitem->fmt & HDF_CHECKED));
-					SyncHeaderCheckbox();
-					return 1;
-				}
+				CheckAllItems(m_sessionsListCtrl, !(pnmHeader->pitem->fmt & HDF_CHECKED));
+				SyncHeaderCheckbox();
+				return 1;
 			}
 		}
-		
+
 		return 0;
-	}
-
-	LRESULT OnListItemChanging(int idCtrl, LPNMHDR pnmh, BOOL& /*bHandled*/)
-	{
-		LPNMLISTVIEW pnmlv = (LPNMLISTVIEW)pnmh;
-
-		if (pnmlv->uChanged & LVIF_STATE)
-		{
-			return !IsViewIdle();
-		}
-
-		return 0; // FALSE
 	}
 
 	LRESULT OnListItemChanged(int idCtrl, LPNMHDR pnmh, BOOL& /*bHandled*/)
@@ -674,7 +684,21 @@ public:
 		CW2A resDir(CT2W(buffer), CP_UTF8);
 
 		std::map<std::string, std::map<std::string, void *>> usersAndSessions;
-		GetCheckedSessionsAndCopyItems(usersAndSessions);
+		int numberOfSessions = 0;
+		int numberOfRecords = 0;
+		GetCheckedSessionsAndCopyItems(usersAndSessions, numberOfSessions, numberOfRecords);
+		
+		CProgressBarCtrl progressCtrl = GetDlgItem(IDC_PROGRESS);
+		progressCtrl.SetWindowText(TEXT(""));
+		progressCtrl.ModifyStyle(PBS_MARQUEE, 0);
+		progressCtrl.SetRange(1, ((numberOfRecords > 0) ? numberOfRecords : 1));
+		progressCtrl.SetStep(1);
+		progressCtrl.SetPos(0);
+
+#if !defined(NDEBUG) || defined(DBG_PERF)
+		std::string log = "Record Count:" + std::to_string(numberOfRecords);
+		m_logger->debug(log);
+#endif
 
 		m_exporter = new Exporter((LPCSTR)resDir, backup, (LPCSTR)output, m_logger);
 		m_exporter->setNotifier(m_notifier);
@@ -693,10 +717,9 @@ public:
 			m_exporter->setTemplatesName("templates_txt");
 		}
 		m_exporter->filterUsersAndSessions(usersAndSessions);
-		m_viewState = VS_EXPORTING;
 		if (m_exporter->run())
 		{
-			UpdateUI();
+			PostMessage(WM_UPD_VIEWSTATE, VS_EXPORTING, 1);
 		}
 
 		return 0;
@@ -704,11 +727,11 @@ public:
 	
 	LRESULT OnStart(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 	{
-		// BOOL cancellable = static_cast<BOOL>(lParam);
-		UpdateUI();
-		CProgressBarCtrl progressCtrl = GetDlgItem(IDC_PROGRESS);
-		progressCtrl.ModifyStyle(0, PBS_MARQUEE);
-		progressCtrl.SetMarquee(TRUE, 0);
+		if (0 == m_eventIdProgress)
+		{
+			m_eventIdProgress = SetTimer(EVENT_ID_PROGRESS, 100, NULL);
+		}
+		
 		return 0;
 	}
 
@@ -720,13 +743,14 @@ public:
 			delete m_exporter;
 			m_exporter = NULL;
 		}
-		CProgressBarCtrl progressCtrl = GetDlgItem(IDC_PROGRESS);
-		progressCtrl.ModifyStyle(PBS_MARQUEE, 0);
-		progressCtrl.SetMarquee(FALSE, 0);
-		progressCtrl.SetPos(0);
 
-		m_viewState = VS_IDLE;
-		UpdateUI();
+		if (0 != m_eventIdProgress)
+		{
+			KillTimer(m_eventIdProgress);
+			m_eventIdProgress = 0;
+		}
+		
+		PostMessage(WM_UPD_VIEWSTATE, VS_IDLE, 1);
 		return 0;
 	}
 
@@ -735,21 +759,38 @@ public:
 		return 0;
 	}
 
+	LRESULT OnUserSessionStart(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+	{
+		if (m_eventIdProgress != 0)
+		{
+			KillTimer(m_eventIdProgress);
+			m_eventIdProgress = 0;
+		}
+		return 0;
+	}
+
+	LRESULT OnUserSessionComplete(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+	{
+		if (0 == m_eventIdProgress)
+		{
+			m_eventIdProgress = SetTimer(EVENT_ID_PROGRESS, 100, NULL);
+		}
+		return 0;
+	}
+
 	LRESULT OnSessionStart(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 	{
 		// wParam: nItem
 		// lParam: NumberOfMessages
 		int nItem = wParam;
-		int nSubItem = 4;
 		uint32_t numberOfMessages = static_cast<uint32_t>(lParam);
-		ATLTRACE(TEXT("OnSessionStart: %d\tnumberOfMessages=%u\r\n"), nItem, numberOfMessages);
-
+		
 		m_progressListCtrl.EnsureVisible(nItem, FALSE);
-		m_progressListCtrl.SetProgressBarInfo(nItem, nSubItem, numberOfMessages, 0);
+		m_progressListCtrl.SetProgressBarInfo(nItem, SUBITEM_PROGRESS, numberOfMessages, 0);
 		
 		CString text;
 		text.Format(IDS_SESSION_PROGRESS, 0u, numberOfMessages);
-		m_progressListCtrl.SetItemText(nItem, nSubItem, text);
+		m_progressListCtrl.SetItemText(nItem, SUBITEM_PROGRESS, text);
 
 		return 0;
 	}
@@ -759,31 +800,27 @@ public:
 		m_progressListCtrl.ClearProgressBar();
 
 		int nItem = wParam;
-		int nSubItem = 4;
-
+		
 		CString text;
 		text.LoadString((lParam != 0) ? IDS_SESSION_CANCELLED : IDS_SESSION_DONE);
-		m_progressListCtrl.SetItemText(nItem, nSubItem, text);
+		m_progressListCtrl.SetItemText(nItem, SUBITEM_PROGRESS, text);
 
-		ATLTRACE(TEXT("OnSessionComplete: %d\r\n"), nItem);
 		return 0;
 	}
 
 	LRESULT OnSessionProgress(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 	{
 		int nItem = wParam;
-		int nSubItem = 4;
-		
 		uint32_t numberOfMessages = static_cast<uint32_t>(lParam);
 
 		const Session *session = reinterpret_cast<const Session *>(m_progressListCtrl.GetItemData(nItem));
 		
-		ATLTRACE(TEXT("OnSessionProgress: %d\tnumberOfMessages=%d\r\n"), nItem, numberOfMessages);
-
 		m_progressListCtrl.SetProgressPos(static_cast<int>(lParam));
 		CString text;
 		text.Format(IDS_SESSION_PROGRESS, numberOfMessages, static_cast<uint32_t>(session->getRecordCount()));
-		m_progressListCtrl.SetItemText(nItem, nSubItem, text);
+		m_progressListCtrl.SetItemText(nItem, SUBITEM_PROGRESS, text);
+
+		UpdateProgressBar();
 
 		return 0;
 	}
@@ -808,6 +845,7 @@ protected:
 		::ShowWindow(GetDlgItem(IDC_SESSIONS), showLogs || m_viewState == VS_EXPORTING ? SW_HIDE : SW_SHOW);
 
 		::ShowWindow(GetDlgItem(IDC_PROGRESS), showLogs || m_viewState != VS_EXPORTING ? SW_HIDE : SW_SHOW);
+		::ShowWindow(GetDlgItem(IDC_PROGRESS_TEXT), showLogs || m_viewState != VS_EXPORTING ? SW_HIDE : SW_SHOW);
 		::ShowWindow(GetDlgItem(IDC_SESS_PROGRESS), showLogs || m_viewState != VS_EXPORTING ? SW_HIDE : SW_SHOW);
 
 		::ShowWindow(GetDlgItem(IDC_CANCEL), m_viewState == VS_EXPORTING ? SW_SHOW : SW_HIDE);
@@ -821,6 +859,33 @@ protected:
 
 		UINT state = (m_viewState == VS_IDLE) ? MF_ENABLED : (MF_DISABLED | MF_GRAYED);
 		::EnableMenuItem(::GetSystemMenu(::GetParent(m_hWnd), FALSE), SC_CLOSE, MF_BYCOMMAND | state);
+	}
+
+	void UpdateProgressBar(BOOL increaseUpper = FALSE)
+	{
+		CProgressBarCtrl progressCtrl = GetDlgItem(IDC_PROGRESS);
+		PBRANGE range;
+		progressCtrl.GetRange(&range);
+		if (increaseUpper)
+		{
+			range.iHigh += progressCtrl.GetStep();
+			progressCtrl.SetRange(range.iLow, range.iHigh);
+		}
+		progressCtrl.StepIt();
+		int pos = progressCtrl.GetPos();
+		int percent = (pos - range.iLow) * 100 / (range.iHigh - range.iLow);
+		if (percent >= 100)
+		{
+			percent = (pos < range.iHigh) ? 99 : 100;
+		}
+
+		CString text;
+		text.Format(TEXT("%d%%"), percent);
+		progressCtrl.SetWindowText(text);
+
+		// CStatic label = GetDlgItem(IDC_PROGRESS_TEXT);
+		// label.BringWindowToTop();
+		m_progressTextCtrl.SetWindowText(text);
 	}
 
 	void UpdateBackups(const std::vector<BackupManifest>& manifests, BOOL onLaunch = FALSE)
@@ -852,7 +917,7 @@ protected:
 			}
 		}
 
-		// update
+		// Update
 		CComboBox cmb = GetDlgItem(IDC_BACKUP);
 		cmb.SetRedraw(FALSE);
 		cmb.ResetContent();
@@ -977,8 +1042,10 @@ protected:
 		
 	}
 
-	void GetCheckedSessionsAndCopyItems(std::map<std::string, std::map<std::string, void *>>& usersAndSessions)
+	void GetCheckedSessionsAndCopyItems(std::map<std::string, std::map<std::string, void *>>& usersAndSessions, int& numberOfSessions, int& numberOfRecords)
 	{
+		numberOfSessions = 0;
+		numberOfRecords = 0;
 		m_progressListCtrl.SetRedraw(FALSE);
 		if (m_progressListCtrl.GetItemCount() > 0)
 		{
@@ -1001,7 +1068,7 @@ protected:
 				continue;
 			}
 
-			// listViewCtrl.GetItemText()
+			++numberOfSessions;
 			_itot(m_progressListCtrl.GetItemCount() + 1, numberString, 10);
 			LVITEM lvItem = {};
 			lvItem.mask = LVIF_TEXT | LVIF_PARAM;
@@ -1021,6 +1088,8 @@ protected:
 			Session* session = reinterpret_cast<Session*>(listViewCtrl.GetItemData(nItem));
 			if (NULL != session)
 			{
+				numberOfRecords += session->getRecordCount();
+				
 				session->setData(reinterpret_cast<void *>(newItem));
 				std::string usrName = session->getOwner()->getUsrName();
 				std::map<std::string, std::map<std::string, void *>>::iterator it = usersAndSessions.find(usrName);
@@ -1033,6 +1102,7 @@ protected:
 			}
 		}
 
+		ListView_SetColumnWidth(m_progressListCtrl, 0, LVSCW_AUTOSIZE_USEHEADER);
 		m_progressListCtrl.SetRedraw(TRUE);
 	}
 	
@@ -1130,6 +1200,5 @@ protected:
 
 		SetHeaderCheckState(listViewCtrl, fChecked);
 	}
-
 
 };
