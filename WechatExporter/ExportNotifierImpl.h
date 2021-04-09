@@ -51,6 +51,16 @@ public:
             }
         });
 	}
+    
+    void onUserSessionStart(const std::string& usrName, uint32_t numberOfSessions) const
+    {
+        
+    }
+    
+    void onUserSessionComplete(const std::string& usrName) const
+    {
+        
+    }
 
     void onSessionStart(const std::string& sessionUsrName, void * sessionData, uint32_t numberOfTotalMessages) const
     {

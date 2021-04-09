@@ -46,6 +46,7 @@
 #define IDC_SESS_PROGRESS               1017
 #define IDC_CHECK1                      1018
 #define IDC_SHOW_LOGS                   1018
+#define IDC_PROGRESS_TEXT               1019
 #define ID_FILE_CHK_UPDATE              32775
 #define ID_FORMAT_HTML                  32776
 #define ID_FORMAT_TEXT                  32777
@@ -61,7 +62,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        204
 #define _APS_NEXT_COMMAND_VALUE         32783
-#define _APS_NEXT_CONTROL_VALUE         1019
+#define _APS_NEXT_CONTROL_VALUE         1020
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif

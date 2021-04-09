@@ -12,9 +12,11 @@ public:
 	static const UINT WM_START = WM_USER + 10;
 	static const UINT WM_COMPLETE = WM_USER + 11;
 	static const UINT WM_PROGRESS = WM_USER + 12;
-	static const UINT WM_SESSION_START = WM_USER + 13;
-	static const UINT WM_SESSION_COMPLETE = WM_USER + 14;
-	static const UINT WM_SESSION_PROGRESS = WM_USER + 15;
+	static const UINT WM_USR_SESS_START = WM_USER + 13;
+	static const UINT WM_USR_SESS_COMPLETE = WM_USER + 14;
+	static const UINT WM_SESSION_START = WM_USER + 16;
+	static const UINT WM_SESSION_COMPLETE = WM_USER + 17;
+	static const UINT WM_SESSION_PROGRESS = WM_USER + 18;
 	static const UINT WM_EN_END = WM_SESSION_PROGRESS;
 
 public:
@@ -40,6 +42,16 @@ public:
 	void onComplete(bool cancelled) const
 	{
 		::PostMessage(m_hWnd, WM_COMPLETE, (WPARAM)0, (LPARAM)(cancelled ? 1 : 0));
+	}
+
+	void onUserSessionStart(const std::string& usrName, uint32_t numberOfSessions) const
+	{
+
+	}
+
+	void onUserSessionComplete(const std::string& usrName) const
+	{
+
 	}
 
 	void onSessionStart(const std::string& sessionUsrName, void * sessionData, uint32_t numberOfTotalMessages) const
