@@ -39,7 +39,7 @@ BEGIN
     END
     POPUP "选项"
     BEGIN
-        MENUITEM "按消息时间倒序导出",                   ID_OPT_DESC_ORDER, CHECKED
+        MENUITEM "按消息时间倒序导出",                   ID_OPT_DESC_ORDER
         MENUITEM "头像和表情存放到聊天记录子目录",             ID_OPT_SAVING_IN_SESSION, CHECKED
         MENUITEM SEPARATOR
         MENUITEM "聊天记录数据异步加载(HTML)",            ID_OPT_ASYNC_LOADING, CHECKED
@@ -221,7 +221,7 @@ BEGIN
     END
     POPUP "Options"
     BEGIN
-        MENUITEM "From Earlier To Newer",       ID_OPT_DESC_ORDER, CHECKED
+        MENUITEM "From Newer To Earlier",       ID_OPT_DESC_ORDER
         MENUITEM "Save Avatar/Emoji in Chat Folder", ID_OPT_SAVING_IN_SESSION, CHECKED
         MENUITEM SEPARATOR
         MENUITEM "Load Messages Asynchronously(HTML Mode)", ID_OPT_ASYNC_LOADING, CHECKED
