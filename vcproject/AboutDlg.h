@@ -24,17 +24,20 @@ public:
 
 	LRESULT OnInitDialog(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/)
 	{
+		m_homePageLinkCtrl.SubclassWindow(GetDlgItem(IDC_VERSION));
 		// Replace to current version
 		// If the version is set in aboud dlg resource directly,
 		// The code below won't bring error.
-		CStatic lblVersion = GetDlgItem(IDC_VERSION);
+		// CStatic lblVersion = GetDlgItem(IDC_VERSION);
 		CString version;
-		lblVersion.GetWindowText(version);
+		m_homePageLinkCtrl.GetWindowText(version);
 		VersionDetector vd;
 		CString newVersion = vd.GetProductVersion();
 		newVersion = TEXT("v") + newVersion;
 		version.Replace(TEXT("v1.0"), newVersion);
-		lblVersion.SetWindowTextW(version);
+		m_homePageLinkCtrl.SetWindowTextW(version);
+
+		m_homePageLinkCtrl.SetHyperLink(TEXT("https://github.com/BlueMatthew/WechatExporter"));
 
 		CenterWindow(GetParent());
 		return TRUE;
@@ -46,4 +49,6 @@ public:
 		return 0;
 	}
 
+protected:
+	CHyperLink m_homePageLinkCtrl;
 };
