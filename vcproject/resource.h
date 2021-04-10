@@ -28,6 +28,8 @@
 #define IDS_SESSION_CANCELLED           149
 #define IDS_SHOW_LOGS                   150
 #define IDS_HIDE_LOGS                   151
+#define IDS_STRING152                   152
+#define IDS_VERSIONS                    152
 #define IDC_BACKUP                      1000
 #define IDC_CHOOSE_BKP                  1001
 #define IDC_OUTPUT                      1002
@@ -47,6 +49,7 @@
 #define IDC_CHECK1                      1018
 #define IDC_SHOW_LOGS                   1018
 #define IDC_PROGRESS_TEXT               1019
+#define IDC_VERSIONS                    1020
 #define ID_FILE_CHK_UPDATE              32775
 #define ID_FORMAT_HTML                  32776
 #define ID_FORMAT_TEXT                  32777
@@ -55,14 +58,15 @@
 #define ID_OPT_ASYNC_LOADING            32780
 #define ID_OPT_LM_ONSCROLL              32781
 #define ID_OPT_FILTER                   32782
+#define ID_HELP_HOMEPAGE                32783
 
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        204
-#define _APS_NEXT_COMMAND_VALUE         32783
-#define _APS_NEXT_CONTROL_VALUE         1020
+#define _APS_NEXT_COMMAND_VALUE         32784
+#define _APS_NEXT_CONTROL_VALUE         1021
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif

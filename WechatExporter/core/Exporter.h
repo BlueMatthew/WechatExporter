@@ -53,7 +53,7 @@ protected:
     std::map<std::string, std::map<std::string, void *>> m_usersAndSessionsFilter;
     
     std::vector<std::pair<Friend, std::vector<Session>>> m_usersAndSessions;
-    
+
 public:
     Exporter(const std::string& workDir, const std::string& backup, const std::string& output, Logger* logger);
     ~Exporter();
@@ -77,6 +77,10 @@ public:
     void supportsFilter(bool supportsFilter = true);
     void setExtName(const std::string& extName);
     void setTemplatesName(const std::string& templatesName);
+    
+    std::string getITunesVersion() const;
+    std::string getIOSVersion() const;
+    std::string getWechatVersion() const;
     
     static void initializeExporter();
     static void uninitializeExporter();
