@@ -88,6 +88,18 @@ private:
 		{
 			m_exp.swapUsersAndSessions(usersAndSessions);
 		}
+
+		CString getVersions() const
+		{
+			CW2T pszV1(CA2W(m_exp.getITunesVersion().c_str(), CP_UTF8));
+			CW2T pszV2(CA2W(m_exp.getIOSVersion().c_str(), CP_UTF8));
+			CW2T pszV3(CA2W(m_exp.getWechatVersion().c_str(), CP_UTF8));
+
+			CString versions;
+			versions.Format(IDS_VERSIONS, (LPCTSTR)pszV1, (LPCTSTR)pszV2, (LPCTSTR)pszV3);
+
+			return versions;
+		}
 	};
 
 	class CUpdateHandler : public CIdleHandler
@@ -290,6 +302,7 @@ public:
 		DLGRESIZE_CONTROL(IDC_CHOOSE_OUTPUT, DLSZ_MOVE_X)
 		DLGRESIZE_CONTROL(IDC_OUTPUT, DLSZ_SIZE_X)
 		DLGRESIZE_CONTROL(IDC_GRP_USR_CHAT, DLSZ_SIZE_X | DLSZ_SIZE_Y)
+		DLGRESIZE_CONTROL(IDC_VERSIONS, DLSZ_SIZE_X)
 		DLGRESIZE_CONTROL(IDC_PROGRESS, DLSZ_SIZE_X)
 		DLGRESIZE_CONTROL(IDC_PROGRESS_TEXT, DLSZ_MOVE_X)
 		DLGRESIZE_CONTROL(IDC_SESSIONS, DLSZ_SIZE_X | DLSZ_SIZE_Y)
@@ -338,7 +351,7 @@ public:
 			handler->waitForCompletion();
 			handler->getUsersAndSessions(m_usersAndSessions);
 
-			LoadUsers();
+			LoadUsers(handler->getVersions());
 			PostMessage(WM_UPD_VIEWSTATE, VS_IDLE, 1);
 			
 			delete handler;
@@ -842,6 +855,7 @@ protected:
 
 		::ShowWindow(GetDlgItem(IDC_GRP_USR_CHAT), showLogs ? SW_HIDE : SW_SHOW);
 		::ShowWindow(GetDlgItem(IDC_USERS), showLogs || m_viewState == VS_EXPORTING ? SW_HIDE : SW_SHOW);
+		::ShowWindow(GetDlgItem(IDC_VERSIONS), showLogs || m_viewState == VS_EXPORTING ? SW_HIDE : SW_SHOW);
 		::ShowWindow(GetDlgItem(IDC_SESSIONS), showLogs || m_viewState == VS_EXPORTING ? SW_HIDE : SW_SHOW);
 
 		::ShowWindow(GetDlgItem(IDC_PROGRESS), showLogs || m_viewState != VS_EXPORTING ? SW_HIDE : SW_SHOW);
@@ -1106,8 +1120,11 @@ protected:
 		m_progressListCtrl.SetRedraw(TRUE);
 	}
 	
-	void LoadUsers()
+	void LoadUsers(const CString& versions)
 	{
+		CEdit edtVersions = GetDlgItem(IDC_VERSIONS);
+		edtVersions.SetWindowText(versions);
+
 		CComboBox cbmBox = GetDlgItem(IDC_USERS);
 		
 		if (!m_usersAndSessions.empty())

@@ -711,6 +711,21 @@ bool Exporter::loadITunes(bool detailedInfo/* = true*/)
     return true;
 }
 
+std::string Exporter::getITunesVersion() const
+{
+    return NULL != m_iTunesDb ? m_iTunesDb->getVersion() : "";
+}
+
+std::string Exporter::getIOSVersion() const
+{
+    return NULL != m_iTunesDb ? m_iTunesDb->getIOSVersion() : "";
+}
+
+std::string Exporter::getWechatVersion() const
+{
+    return m_wechatInfo.getVersion();
+}
+
 bool Exporter::loadTemplates()
 {
     const char* names[] = {"frame", "msg", "video", "notice", "system", "audio", "image", "card", "emoji", "plainshare", "share", "thumb", "listframe", "listitem", "scripts", "filter", "refermsg", "channels"};
