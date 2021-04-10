@@ -36,6 +36,7 @@ public:
 		MESSAGE_HANDLER(WM_INITMENU, OnInitMenu)
 		COMMAND_ID_HANDLER(ID_APP_EXIT, OnFileExit)
 		COMMAND_ID_HANDLER(ID_APP_ABOUT, OnAppAbout)
+		COMMAND_ID_HANDLER(ID_HELP_HOMEPAGE, OnHelpHomePage)
 		COMMAND_ID_HANDLER(ID_FILE_CHK_UPDATE, OnCheckUpdate)
 		COMMAND_RANGE_HANDLER(ID_FORMAT_HTML, ID_FORMAT_TEXT, OnOutputFormat)
 		COMMAND_ID_HANDLER(ID_OPT_SAVING_IN_SESSION, OnSavingInSession)
@@ -211,6 +212,13 @@ public:
 		BOOL autoChkUpdate = (menuState != 0xFFFFFFFF) && ((menuState & MF_CHECKED) == MF_CHECKED) ? TRUE : FALSE;
 		subMenu.CheckMenuItem(ID_FILE_CHK_UPDATE, MF_BYCOMMAND | (autoChkUpdate ? MF_UNCHECKED : MF_CHECKED));
 		AppConfiguration::SetCheckingUpdateDisabled(autoChkUpdate);
+
+		return 0;
+	}
+
+	LRESULT OnHelpHomePage(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/)
+	{
+		DWORD_PTR dwRet = (DWORD_PTR)::ShellExecute(0, _T("open"), TEXT("https://github.com/BlueMatthew/WechatExporter"), 0, 0, SW_SHOWNORMAL);
 
 		return 0;
 	}
