@@ -1118,7 +1118,7 @@ void MessageParser::parseImage(const std::string& sessionPath, const std::string
     {
         tv.setName("image");
         tv["%%IMGPATH%%"] = sessionAssertsPath + "/" + dest;
-        tv["%%IMGTHUMBPATH%%"] = hasThumb ? (sessionAssertsPath + "/" + destThumb) : (sessionAssertsPath + "/" + dest);
+        tv["%%IMGTHUMBPATH%%"] = sessionAssertsPath + "/" + dest;
         tv["%%MSGTYPE%%"] = "image";
         tv["%%EXTRA_CLS%%"] = "raw-img";
     }
