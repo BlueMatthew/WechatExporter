@@ -6,6 +6,8 @@
 		<meta name="apple-mobile-web-app-capable" content="yes">
 		<meta content="yes" name="apple-touch-fullscreen">
 		<style type=text/css>
+
+		
 		body
 		{
 			background-color: #c4c4c4;
@@ -69,6 +71,12 @@
 			z-index: 2147483600;
 		}
 		
+		div.msg
+		{
+			page-break-inside: avoid;
+			break-inside: avoid-page;
+		}
+
 		.msgs
 		{
 			width: 100%;
@@ -369,7 +377,17 @@
 			top: 0;
 			bottom: 0;
 		}
-  
+		@media print
+		{
+			body
+			{
+				background-color: white;
+			}
+			.header
+			{
+				position: absolute;
+			}
+		}
 		</style>
 		<title>%%DISPLAYNAME%% - 微信聊天记录</title>
 		<script language="javascript">
