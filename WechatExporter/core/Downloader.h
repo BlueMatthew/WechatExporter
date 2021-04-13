@@ -94,7 +94,7 @@ protected:
     std::map<std::string, std::string> m_urls;  // url => local file path for first download
     mutable std::mutex m_mtx;
     bool m_noMoreTask;
-    unsigned m_downloadTaskSize;    // +1 when task is added, -1 when download is completed
+    size_t m_downloadTaskSize;    // +1 when task is added, -1 when download is completed
     std::vector<std::thread> m_threads;
     std::string m_userAgent;
     

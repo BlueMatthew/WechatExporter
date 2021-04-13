@@ -432,6 +432,11 @@ void Downloader::run(int idx)
                     std::string log = "Failed Download(" + std::to_string(task.getRetries()) + "): " + task.getUrl() + " => " + task.getOutput() + " ERR:" + task.getError();
                     m_logger->write(log);
                 }
+                else if (task.getRetries() > 1) // succeeded but ever failed
+                {
+                    std::string log = "Succeeded Download(" + std::to_string(task.getRetries()) + "): " + task.getUrl() + " => " + task.getOutput();
+                    m_logger->write(log);
+                }
             }
             
             continue;
