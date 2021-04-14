@@ -11,7 +11,7 @@
 #include "Downloader.h"
 #include "WechatParser.h"
 
-Exporter::Exporter(const std::string& workDir, const std::string& backup, const std::string& output, Logger* logger)
+Exporter::Exporter(const std::string& workDir, const std::string& backup, const std::string& output, Logger* logger, PdfConverter* pdfConverter)
 {
     m_running = false;
     m_iTunesDb = NULL;
@@ -20,6 +20,7 @@ Exporter::Exporter(const std::string& workDir, const std::string& backup, const 
     m_backup = backup;
     m_output = output;
     m_logger = logger;
+    m_pdfConverter = pdfConverter;
     m_notifier = NULL;
     m_cancelled = false;
     m_options = 0;
@@ -49,6 +50,7 @@ void Exporter::setNotifier(ExportNotifier *notifier)
 {
     m_notifier = notifier;
 }
+
 bool Exporter::isRunning() const
 {
     return m_running;

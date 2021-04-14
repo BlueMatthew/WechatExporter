@@ -36,6 +36,7 @@ BEGIN
     BEGIN
         MENUITEM "HTML",                        ID_FORMAT_HTML
         MENUITEM "文本",                          ID_FORMAT_TEXT
+        MENUITEM "PDF",                         ID_FORMAT_PDF
     END
     POPUP "选项"
     BEGIN
@@ -218,6 +219,7 @@ BEGIN
     BEGIN
         MENUITEM "HTML",                        ID_FORMAT_HTML
         MENUITEM "Text",                        ID_FORMAT_TEXT
+        MENUITEM "PDF",                         ID_FORMAT_PDF
     END
     POPUP "Options"
     BEGIN

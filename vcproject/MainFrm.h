@@ -12,6 +12,7 @@ class CMainFrame :
 public:
 	DECLARE_FRAME_WND_CLASS(NULL, IDR_MAINFRAME)
 
+	BOOL m_pdfSupported;
 	CView m_view;
 
 	virtual BOOL PreTranslateMessage(MSG* pMsg)
@@ -38,7 +39,7 @@ public:
 		COMMAND_ID_HANDLER(ID_APP_ABOUT, OnAppAbout)
 		COMMAND_ID_HANDLER(ID_HELP_HOMEPAGE, OnHelpHomePage)
 		COMMAND_ID_HANDLER(ID_FILE_CHK_UPDATE, OnCheckUpdate)
-		COMMAND_RANGE_HANDLER(ID_FORMAT_HTML, ID_FORMAT_TEXT, OnOutputFormat)
+		COMMAND_RANGE_HANDLER(ID_FORMAT_HTML, ID_FORMAT_PDF, OnOutputFormat)
 		COMMAND_ID_HANDLER(ID_OPT_SAVING_IN_SESSION, OnSavingInSession)
 		COMMAND_ID_HANDLER(ID_OPT_DESC_ORDER, OnDescOrder)
 		COMMAND_ID_HANDLER(ID_OPT_FILTER, OnFilter)
@@ -56,6 +57,7 @@ public:
 
 	LRESULT OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/)
 	{
+		m_pdfSupported = AppConfiguration::IsPdfSupported();
 		CenterWindow(m_hWnd);
 		m_hWndClient = m_view.Create(m_hWnd);
 
@@ -71,7 +73,7 @@ public:
 
 		CMenuHandle subMenuFormat = menu.GetSubMenu(1);
 		UINT outputFormat = AppConfiguration::GetOutputFormat();
-		subMenuFormat.CheckMenuRadioItem(ID_FORMAT_HTML, ID_FORMAT_TEXT, ID_FORMAT_HTML + outputFormat, MF_BYCOMMAND | MFT_RADIOCHECK);
+		subMenuFormat.CheckMenuRadioItem(ID_FORMAT_HTML, ID_FORMAT_PDF, ID_FORMAT_HTML + outputFormat, MF_BYCOMMAND | MFT_RADIOCHECK);
 		
 		CMenuHandle subMenuOptions = menu.GetSubMenu(2);
 		subMenuOptions.CheckMenuItem(ID_OPT_DESC_ORDER, MF_BYCOMMAND | (AppConfiguration::GetDescOrder() ? MF_CHECKED : MF_UNCHECKED));
@@ -110,6 +112,7 @@ public:
 		CMenuHandle subMenuFormat = menu.GetSubMenu(1);
 		subMenuFormat.EnableMenuItem(ID_FORMAT_HTML, MF_BYCOMMAND | (enabled ? MF_ENABLED : MF_DISABLED));
 		subMenuFormat.EnableMenuItem(ID_FORMAT_TEXT, MF_BYCOMMAND | (enabled ? MF_ENABLED : MF_DISABLED));
+		subMenuFormat.EnableMenuItem(ID_FORMAT_PDF, MF_BYCOMMAND | ((enabled && m_pdfSupported) ? MF_ENABLED : MF_DISABLED));
 
 		CMenuHandle subMenuOptions = menu.GetSubMenu(2);
 		subMenuOptions.EnableMenuItem(ID_OPT_DESC_ORDER, MF_BYCOMMAND | (enabled ? MF_ENABLED : MF_DISABLED));
@@ -169,7 +172,7 @@ public:
 	{
 		CMenuHandle menu = GetMenu();
 		CMenuHandle subMenuFormat = menu.GetSubMenu(1);
-		subMenuFormat.CheckMenuRadioItem(ID_FORMAT_HTML, ID_FORMAT_TEXT, wID, MF_BYCOMMAND | MFT_RADIOCHECK);
+		subMenuFormat.CheckMenuRadioItem(ID_FORMAT_HTML, ID_FORMAT_PDF, wID, MF_BYCOMMAND | MFT_RADIOCHECK);
 		UINT outputFormat = wID - ID_FORMAT_HTML;
 		AppConfiguration::SetOutputFormat(outputFormat);
 
