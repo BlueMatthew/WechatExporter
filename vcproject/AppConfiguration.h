@@ -4,7 +4,7 @@ class AppConfiguration
 {
 public:
 
-	enum { OUTPUT_FORMAT_HTML = 0, OUTPUT_FORMAT_TEXT, OUTPUT_FORMAT_LAST };
+	enum { OUTPUT_FORMAT_HTML = 0, OUTPUT_FORMAT_TEXT, OUTPUT_FORMAT_PDF, OUTPUT_FORMAT_LAST };
 
 	static void SetDescOrder(BOOL descOrder);
 	static BOOL GetDescOrder();
@@ -36,10 +36,15 @@ public:
 	static void SetSupportingFilter(BOOL supportingFilter);
 	static BOOL GetSupportingFilter();
 
+	static BOOL IsPdfSupported();
+
 protected:
 	static BOOL GetStringProperty(LPCTSTR name, CString& value);
 	static BOOL SetStringProperty(LPCTSTR name, LPCTSTR value);
 
 	static BOOL GetDwordProperty(LPCTSTR name, DWORD& value);
 	static BOOL SetDwordProperty(LPCTSTR name, DWORD value);
+
+	static BOOL IsAppInstalled(LPCTSTR name, BOOL lmOrCU);
+
 };

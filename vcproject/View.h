@@ -66,7 +66,7 @@ private:
 		}
 	public:
 
-		CLoadingHandler(HWND hWnd, const std::string& resDir, const std::string& backupDir, Logger* logger) : m_hWnd(hWnd), m_exp(resDir, backupDir, "", logger)
+		CLoadingHandler(HWND hWnd, const std::string& resDir, const std::string& backupDir, Logger* logger) : m_hWnd(hWnd), m_exp(resDir, backupDir, "", logger, NULL)
 		{
 		}
 
@@ -713,7 +713,7 @@ public:
 		m_logger->debug(log);
 #endif
 
-		m_exporter = new Exporter((LPCSTR)resDir, backup, (LPCSTR)output, m_logger);
+		m_exporter = new Exporter((LPCSTR)resDir, backup, (LPCSTR)output, m_logger, NULL);
 		m_exporter->setNotifier(m_notifier);
 		m_exporter->setOrder(!descOrder);
 		m_exporter->setSyncLoading(!asyncLoading);

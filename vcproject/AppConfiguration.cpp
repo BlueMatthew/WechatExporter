@@ -167,7 +167,6 @@ BOOL AppConfiguration::GetCheckingUpdateDisabled()
 	return dwValue != 0;
 }
 
-
 void AppConfiguration::SetLoadingDataOnScroll(BOOL loadingDataOnScroll)
 {
 	SetDwordProperty(TEXT("LoadingDataOnScroll"), loadingDataOnScroll);
@@ -190,6 +189,11 @@ BOOL AppConfiguration::GetSupportingFilter()
 	DWORD dwValue = 0;	// FALSE
 	GetDwordProperty(TEXT("Filter"), dwValue);
 	return dwValue != 0;
+}
+
+BOOL AppConfiguration::IsPdfSupported()
+{
+	return IsAppInstalled(TEXT("chrome.exe"), TRUE) || IsAppInstalled(TEXT("chrome.exe"), FALSE) || IsAppInstalled(TEXT("msedge.exe"), TRUE) || IsAppInstalled(TEXT("msedge.exe"), FALSE);
 }
 
 BOOL AppConfiguration::GetStringProperty(LPCTSTR name, CString& value)
@@ -251,3 +255,29 @@ BOOL AppConfiguration::SetDwordProperty(LPCTSTR name, DWORD value)
 	return FALSE;
 }
 
+BOOL AppConfiguration::IsAppInstalled(LPCTSTR name, BOOL lmOrCU)
+{
+	BOOL installed = FALSE;
+	CRegKey rk;
+	CString path = lmOrCU ? TEXT("SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\App Paths\\") : TEXT("SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\App Paths\\");
+	path += name;
+	if (rk.Open(lmOrCU ? HKEY_LOCAL_MACHINE : HKEY_CURRENT_USER, (LPCTSTR)path, KEY_READ) == ERROR_SUCCESS)
+	{
+		ULONG chars = 0;
+		HRESULT hr = rk.QueryStringValue(NULL, NULL, &chars);
+		if (SUCCEEDED(hr))
+		{
+			CString appPath;
+			hr = rk.QueryStringValue(NULL, appPath.GetBufferSetLength(chars), &chars);
+			appPath.ReleaseBuffer();
+
+			if (PathFileExists(appPath))
+			{
+				installed = TRUE;
+			}
+		}
+		rk.Close();
+	}
+
+	return installed;
+}

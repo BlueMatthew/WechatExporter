@@ -53,19 +53,21 @@
 #define ID_FILE_CHK_UPDATE              32775
 #define ID_FORMAT_HTML                  32776
 #define ID_FORMAT_TEXT                  32777
-#define ID_OPT_DESC_ORDER               32778
-#define ID_OPT_SAVING_IN_SESSION        32779
-#define ID_OPT_ASYNC_LOADING            32780
-#define ID_OPT_LM_ONSCROLL              32781
-#define ID_OPT_FILTER                   32782
-#define ID_HELP_HOMEPAGE                32783
+#define ID_FORMAT_PDF                   32778
+#define ID_OPT_DESC_ORDER               32779
+#define ID_OPT_SAVING_IN_SESSION        32780
+#define ID_OPT_ASYNC_LOADING            32781
+#define ID_OPT_LM_ONSCROLL              32782
+#define ID_OPT_FILTER                   32783
+#define ID_HELP_HOMEPAGE                32784
+
 
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        204
-#define _APS_NEXT_COMMAND_VALUE         32784
+#define _APS_NEXT_COMMAND_VALUE         32785
 #define _APS_NEXT_CONTROL_VALUE         1021
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
