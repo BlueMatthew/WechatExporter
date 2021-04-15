@@ -508,11 +508,15 @@ bool Exporter::exportUser(Friend& user, std::string& userOutputPath)
         for (std::vector<Session *>::const_iterator it = pdfSessions.cbegin(); it != pdfSessions.cend(); ++it)
         {
             std::string fileName = combinePath(outputBase, (*it)->getOutputFileName() + "." + m_extName);
-            std::string pdfFileName = combinePath(outputBase, (*it)->getOutputFileName() + ".pdf");
-            m_pdfConverter->convert(fileName, pdfFileName);
+            if (existsFile(fileName))
+            {
+                std::string pdfFileName = combinePath(outputBase, (*it)->getOutputFileName() + ".pdf");
+                deleteFile(pdfFileName);
+                m_pdfConverter->convert(fileName, pdfFileName);
 
-            deleteFile(fileName);
-            deleteDirectory(combinePath(outputBase, (*it)->getOutputFileName() + "_files"));
+                deleteFile(fileName);
+                deleteDirectory(combinePath(outputBase, (*it)->getOutputFileName() + "_files"));
+            }
         }
     }
     
