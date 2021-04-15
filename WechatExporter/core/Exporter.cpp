@@ -405,6 +405,8 @@ bool Exporter::exportUser(Friend& user, std::string& userOutputPath)
         // downloader.addTask(user.getPortrait(), combinePath(outputBase, "Portrait", user.getLocalPortrait()), 0);
     }
     
+    std::vector<Session *> pdfSessions;
+    
     std::set<std::string> sessionFileNames;
     for (std::vector<Session>::iterator it = sessions.begin(); it != sessions.end(); ++it)
     {
@@ -472,6 +474,11 @@ bool Exporter::exportUser(Friend& user, std::string& userOutputPath)
         }
 
 		notifySessionComplete(it->getUsrName(), it->getData(), m_cancelled);
+        
+        if (m_options & SPO_PDF_MODE && NULL != m_pdfConverter)
+        {
+            pdfSessions.push_back(&(*it));
+        }
     }
 
     std::string html = getTemplate("listframe");
@@ -494,6 +501,20 @@ bool Exporter::exportUser(Friend& user, std::string& userOutputPath)
         }
     }
     downloader.finishAndWaitForExit();
+    
+    if (!m_cancelled && !pdfSessions.empty())
+    {
+        m_logger->write(getLocaleString("Convert to PDF..."));
+        for (std::vector<Session *>::const_iterator it = pdfSessions.cbegin(); it != pdfSessions.cend(); ++it)
+        {
+            std::string fileName = combinePath(outputBase, (*it)->getOutputFileName() + "." + m_extName);
+            std::string pdfFileName = combinePath(outputBase, (*it)->getOutputFileName() + ".pdf");
+            m_pdfConverter->convert(fileName, pdfFileName);
+
+            deleteFile(fileName);
+            deleteDirectory(combinePath(outputBase, (*it)->getOutputFileName() + "_files"));
+        }
+    }
     
 #ifndef NDEBUG
     m_logger->debug(formatString("Total Downloads: %d", downloader.getCount()));
@@ -621,19 +642,6 @@ int Exporter::exportSession(const Friend& user, const MessageParser& msgParser, 
         
         std::string fileName = combinePath(outputBase, session.getOutputFileName() + "." + m_extName);
         writeFile(fileName, html);
-
-
-		
-		if (m_options & SPO_PDF_MODE && NULL != m_pdfConverter)
-		{
-			//
-			std::string pdfFileName = combinePath(outputBase, session.getOutputFileName() + ".pdf");
-			m_pdfConverter->convert(fileName, pdfFileName);
-
-			deleteFile(fileName);
-			deleteDirectory(combinePath(outputBase, session.getOutputFileName() + "_files"));
-		}
-		
     }
     
     return numberOfMsgs;
