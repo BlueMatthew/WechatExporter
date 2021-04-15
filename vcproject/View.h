@@ -710,7 +710,7 @@ public:
 		CProgressBarCtrl progressCtrl = GetDlgItem(IDC_PROGRESS);
 		progressCtrl.SetWindowText(TEXT(""));
 		progressCtrl.ModifyStyle(PBS_MARQUEE, 0);
-		progressCtrl.SetRange(1, ((numberOfRecords > 0) ? numberOfRecords : 1));
+		progressCtrl.SetRange32(1, ((numberOfRecords > 0) ? numberOfRecords : 1));
 		progressCtrl.SetStep(1);
 		progressCtrl.SetPos(0);
 
@@ -893,15 +893,17 @@ protected:
 	void UpdateProgressBar(BOOL increaseUpper = FALSE)
 	{
 		CProgressBarCtrl progressCtrl = GetDlgItem(IDC_PROGRESS);
+		progressCtrl.SetRedraw(FALSE);
 		PBRANGE range;
 		progressCtrl.GetRange(&range);
 		int pos = progressCtrl.GetPos();
 		if (increaseUpper || pos == range.iHigh)
 		{
 			range.iHigh += progressCtrl.GetStep();
-			progressCtrl.SetRange(range.iLow, range.iHigh);
+			progressCtrl.SetRange32(range.iLow, range.iHigh);
 		}
 		int prevPos = progressCtrl.StepIt();
+		progressCtrl.SetRedraw(TRUE);
 		pos = progressCtrl.GetPos();
 #ifndef NDEBUG
 		if (pos != prevPos + 1)
@@ -917,10 +919,6 @@ protected:
 
 		CString text;
 		text.Format(TEXT("%d%%"), percent);
-		progressCtrl.SetWindowText(text);
-
-		// CStatic label = GetDlgItem(IDC_PROGRESS_TEXT);
-		// label.BringWindowToTop();
 		m_progressTextCtrl.SetWindowText(text);
 	}
 
