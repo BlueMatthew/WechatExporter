@@ -74,9 +74,18 @@ void Exporter::waitForComplition()
 void Exporter::setTextMode(bool textMode/* = true*/)
 {
     if (textMode)
-        m_options |=     SPO_TEXT_MODE;
+        m_options |= SPO_TEXT_MODE;
     else
-        m_options &= ~    SPO_TEXT_MODE;
+        m_options &= ~SPO_TEXT_MODE;
+}
+
+void Exporter::setPdfMode(bool pdfMode/* = true*/)
+{
+    setTextMode(!pdfMode);  // html mode
+    if (pdfMode)
+        m_options |= SPO_PDF_MODE;
+    else
+        m_options &= ~SPO_PDF_MODE;
 }
 
 void Exporter::setOrder(bool asc/* = true*/)
@@ -450,7 +459,7 @@ bool Exporter::exportUser(Friend& user, std::string& userOutputPath)
             replaceAll(userItem, "%%ITEMPICPATH%%", "Portrait/" + it->getLocalPortrait());
             if ((m_options & SPO_IGNORE_HTML_ENC) == 0)
             {
-                replaceAll(userItem, "%%ITEMLINK%%", encodeUrl(it->getOutputFileName()) + "." + m_extName);
+                replaceAll(userItem, "%%ITEMLINK%%", encodeUrl(it->getOutputFileName()) + "." + ((m_options & SPO_PDF_MODE && NULL != m_pdfConverter) ? "pdf" : m_extName));
                 replaceAll(userItem, "%%ITEMTEXT%%", safeHTML(sessionDisplayName));
             }
             else
@@ -490,6 +499,7 @@ bool Exporter::exportUser(Friend& user, std::string& userOutputPath)
     m_logger->debug(formatString("Total Downloads: %d", downloader.getCount()));
     m_logger->debug("Download Stats: " + downloader.getStats());
 #endif
+    
 
     return true;
 }
@@ -611,6 +621,19 @@ int Exporter::exportSession(const Friend& user, const MessageParser& msgParser, 
         
         std::string fileName = combinePath(outputBase, session.getOutputFileName() + "." + m_extName);
         writeFile(fileName, html);
+
+
+		
+		if (m_options & SPO_PDF_MODE && NULL != m_pdfConverter)
+		{
+			//
+			std::string pdfFileName = combinePath(outputBase, session.getOutputFileName() + ".pdf");
+			m_pdfConverter->convert(fileName, pdfFileName);
+
+			deleteFile(fileName);
+			deleteDirectory(combinePath(outputBase, session.getOutputFileName() + "_files"));
+		}
+		
     }
     
     return numberOfMsgs;
