@@ -902,12 +902,15 @@ protected:
 			range.iHigh += progressCtrl.GetStep();
 			progressCtrl.SetRange32(range.iLow, range.iHigh);
 		}
-		int prevPos = progressCtrl.StepIt();
+		int prevPos = progressCtrl.OffsetPos(1);
 		progressCtrl.SetRedraw(TRUE);
 		pos = progressCtrl.GetPos();
 #ifndef NDEBUG
 		if (pos != prevPos + 1)
 		{
+			CString text;
+			text.Format(TEXT("pos=%d, prevPos=%d"), pos, prevPos);
+			MsgBox(m_hWnd, text);
 			ATLASSERT(false);
 		}
 #endif
