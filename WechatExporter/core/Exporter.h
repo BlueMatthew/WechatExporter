@@ -72,6 +72,7 @@ public:
     
     void filterUsersAndSessions(const std::map<std::string, std::map<std::string, void *>>& usersAndSessions);
     void setTextMode(bool textMode = true);
+    void setPdfMode(bool pdfMode = true);
     void setOrder(bool asc = true);
     void saveFilesInSessionFolder(bool flags = true);
     void setSyncLoading(bool syncLoading = true);
