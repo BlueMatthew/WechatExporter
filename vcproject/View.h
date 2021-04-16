@@ -714,6 +714,8 @@ public:
 		progressCtrl.SetStep(1);
 		progressCtrl.SetPos(0);
 
+		UpdateProgressBarText(0, true);
+
 #if !defined(NDEBUG) || defined(DBG_PERF)
 		std::string log = "Record Count:" + std::to_string(numberOfRecords);
 		m_logger->debug(log);
@@ -893,7 +895,6 @@ protected:
 	void UpdateProgressBar(BOOL increaseUpper = FALSE)
 	{
 		CProgressBarCtrl progressCtrl = GetDlgItem(IDC_PROGRESS);
-		// progressCtrl.SetRedraw(FALSE);
 		PBRANGE range;
 		progressCtrl.GetRange(&range);
 		int pos = progressCtrl.GetPos();
@@ -903,7 +904,6 @@ protected:
 			progressCtrl.SetRange32(range.iLow, range.iHigh);
 		}
 		int prevPos = progressCtrl.OffsetPos(1);
-		// progressCtrl.SetRedraw(TRUE);
 		pos = progressCtrl.GetPos();
 #ifndef NDEBUG
 		if (pos != prevPos + 1)
@@ -920,9 +920,19 @@ protected:
 			percent = (pos < range.iHigh) ? 99 : 100;
 		}
 
-		CString text;
-		text.Format(TEXT("%d%%"), percent);
-		m_progressTextCtrl.SetWindowText(text);
+		UpdateProgressBarText(percent);
+	}
+
+	void UpdateProgressBarText(int percent, bool forceUpdate = false)
+	{
+		if (forceUpdate || percent != m_progressTextCtrl.GetWindowLongPtr(GWLP_USERDATA))
+		{
+			// Avoid flashing
+			CString text;
+			text.Format(TEXT("%d%%"), percent);
+			m_progressTextCtrl.SetWindowLongPtr(GWLP_USERDATA, percent);
+			m_progressTextCtrl.SetWindowText(text);
+		}
 	}
 
 	void UpdateBackups(const std::vector<BackupManifest>& manifests, BOOL onLaunch = FALSE)
