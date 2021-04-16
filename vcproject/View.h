@@ -893,7 +893,7 @@ protected:
 	void UpdateProgressBar(BOOL increaseUpper = FALSE)
 	{
 		CProgressBarCtrl progressCtrl = GetDlgItem(IDC_PROGRESS);
-		progressCtrl.SetRedraw(FALSE);
+		// progressCtrl.SetRedraw(FALSE);
 		PBRANGE range;
 		progressCtrl.GetRange(&range);
 		int pos = progressCtrl.GetPos();
@@ -903,7 +903,7 @@ protected:
 			progressCtrl.SetRange32(range.iLow, range.iHigh);
 		}
 		int prevPos = progressCtrl.OffsetPos(1);
-		progressCtrl.SetRedraw(TRUE);
+		// progressCtrl.SetRedraw(TRUE);
 		pos = progressCtrl.GetPos();
 #ifndef NDEBUG
 		if (pos != prevPos + 1)
