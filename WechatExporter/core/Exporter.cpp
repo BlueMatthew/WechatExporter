@@ -516,6 +516,12 @@ bool Exporter::exportUser(Friend& user, std::string& userOutputPath)
 
                 deleteFile(fileName);
                 deleteDirectory(combinePath(outputBase, (*it)->getOutputFileName() + "_files"));
+                m_logger->write((*it)->getDisplayName() + " PDF completes");
+            }
+            
+            if (m_cancelled)
+            {
+                break;
             }
         }
     }
