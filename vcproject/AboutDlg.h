@@ -35,7 +35,7 @@ public:
 		CString newVersion = vd.GetProductVersion();
 		newVersion = TEXT("v") + newVersion;
 		version.Replace(TEXT("v1.0"), newVersion);
-		m_homePageLinkCtrl.SetWindowTextW(version);
+		m_homePageLinkCtrl.SetLabel(version);
 
 		m_homePageLinkCtrl.SetHyperLink(TEXT("https://github.com/BlueMatthew/WechatExporter"));
 
