@@ -129,7 +129,7 @@ size_t writeTaskData(void *buffer, size_t size, size_t nmemb, void *user_p)
     return 0;
 }
 
-Task::Task(const std::string &url, const std::string& output, time_t mtime, bool localCopy/* = false*/) : m_url(url), m_output(output), m_mtime(mtime), m_localCopy(localCopy), m_retries(0)
+Task::Task(uint32_t taskId, const std::string &url, const std::string& output, time_t mtime, bool localCopy/* = false*/) : m_taskId(taskId), m_url(url), m_output(output), m_mtime(mtime), m_localCopy(localCopy), m_retries(0)
 {
 #ifndef NDEBUG
     if (m_output.empty())
@@ -242,6 +242,8 @@ size_t Task::writeData(void *buffer, size_t size, size_t nmemb)
 	return 0;
 }
 
+std::atomic_uint32_t Downloader::m_nextTaskId(1u);
+
 Downloader::Downloader(Logger* logger) : m_logger(logger)
 {
     m_noMoreTask = false;
@@ -267,8 +269,10 @@ void Downloader::setUserAgent(const std::string& userAgent)
     m_userAgent = userAgent;
 }
 
-void Downloader::addTask(const std::string &url, const std::string& output, time_t mtime, std::string type/* = ""*/)
+uint32_t Downloader::addTask(const std::string &url, const std::string& output, time_t mtime, std::string type/* = ""*/)
 {
+    uint32_t taskId = m_nextTaskId.fetch_add(1);
+    
 #ifndef NDEBUG
     if (url == "/0" || url.empty() || output.empty())
     {
@@ -298,7 +302,7 @@ void Downloader::addTask(const std::string &url, const std::string& output, time
     m_mtx.lock();
     if (startsWith(url, "file://"))
     {
-        Task task(url.substr(7), formatedPath, mtime, true);
+        Task task(taskId, url.substr(7), formatedPath, mtime, true);
         m_copyQueue.push(task);
     }
     else
@@ -309,7 +313,7 @@ void Downloader::addTask(const std::string &url, const std::string& output, time
         if (!existed)
         {
             m_urls[url] = output;
-            Task task(url, formatedPath, mtime);
+            Task task(taskId, url, formatedPath, mtime);
             task.setUserAgent(m_userAgent);
             m_queue.push(task);
             m_downloadTaskSize++;
@@ -328,7 +332,7 @@ void Downloader::addTask(const std::string &url, const std::string& output, time
         }
         else if (output != it->second)
         {
-            Task task(it->second, formatedPath, mtime, true);
+            Task task(taskId, it->second, formatedPath, mtime, true);
             m_copyQueue.push(task);
         }
     }
@@ -341,6 +345,8 @@ void Downloader::addTask(const std::string &url, const std::string& output, time
         // printf("URL Existed: %s\r\n", url.c_str());
 #endif
     }
+    
+    return taskId;
 }
 
 #ifndef NDEBUG
