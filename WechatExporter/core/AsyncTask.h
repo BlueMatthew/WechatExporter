@@ -30,15 +30,22 @@ private:
     time_t m_mtime;
     unsigned int m_retries;
     
+    std::string m_name;
+    
 public:
     static const unsigned int DEFAULT_RETRIES = 3;
     
-    DownloadTask(const std::string &url, const std::string& output, const std::string& defaultFile, time_t mtime);
+    DownloadTask(const std::string &url, const std::string& output, const std::string& defaultFile, time_t mtime, const std::string& name = "");
     virtual ~DownloadTask() {}
     
     virtual int getType() const
     {
         return TASK_TYPE_DOWNLOAD;
+    }
+    
+    virtual std::string getName() const
+    {
+        return m_name;
     }
     
     void setUserAgent(const std::string& userAgent)
@@ -76,12 +83,16 @@ protected:
 class CopyTask : public AsyncExecutor::Task
 {
 public:
-    CopyTask(const std::string &src, const std::string& dest);
+    CopyTask(const std::string &src, const std::string& dest, const std::string& name);
     virtual ~CopyTask() {}
     
     virtual int getType() const
     {
         return TASK_TYPE_COPY;
+    }
+    virtual std::string getName() const
+    {
+        return m_name;
     }
     
     bool run();
@@ -89,6 +100,7 @@ public:
 private:
     std::string m_src;
     std::string m_dest;
+    std::string m_name;
 };
 
 class Mp3Task : public AsyncExecutor::Task
@@ -100,6 +112,10 @@ public:
     virtual int getType() const
     {
         return TASK_TYPE_MP3;
+    }
+    virtual std::string getName() const
+    {
+        return "Mp3: " + m_mp3;
     }
     
     bool run();
@@ -113,12 +129,16 @@ private:
 class PdfTask : public AsyncExecutor::Task
 {
 public:
-    PdfTask(PdfConverter* pdfConveter, const std::string &src, const std::string& dest);
+    PdfTask(PdfConverter* pdfConveter, const std::string &src, const std::string& dest, const std::string& name);
     virtual ~PdfTask() {}
     
     virtual int getType() const
     {
         return TASK_TYPE_PDF;
+    }
+    virtual std::string getName() const
+    {
+        return "PDF: " + m_src + " => " + m_dest;
     }
     
     bool run();
@@ -127,7 +147,7 @@ private:
     PdfConverter   *m_pdfConverter;
     std::string m_src;
     std::string m_dest;
-    
+    std::string m_name;
 };
 
 #endif /* AsyncTask_h */

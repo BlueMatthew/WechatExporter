@@ -396,7 +396,7 @@ bool Exporter::exportUser(Friend& user, std::string& userOutputPath)
 #ifdef USING_DOWNLOADER
     Downloader downloader(m_logger);
 #else
-    TaskManager taskManager(pdfOutput);
+    TaskManager taskManager(pdfOutput, m_logger);
 #endif
 #ifndef NDEBUG
     m_logger->debug("UA: " + m_wechatInfo.buildUserAgent());

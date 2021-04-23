@@ -15,6 +15,7 @@
 #include "WechatObjects.h"
 #include "AsyncExecutor.h"
 #include "PdfConverter.h"
+#include "Logger.h"
 
 class TaskManager : public AsyncExecutor::Callback
 {
@@ -23,6 +24,8 @@ private:
     AsyncExecutor   *m_mp3Executor;
     AsyncExecutor   *m_pdfExecutor;
     std::map<std::string, std::string> m_downloadTasks;
+    
+    Logger* m_logger;
 
     std::string m_userAgent;
     
@@ -36,7 +39,7 @@ private:
     
 public:
     
-    TaskManager(bool needPdfExecutor);
+    TaskManager(bool needPdfExecutor, Logger* logger);
     ~TaskManager();
     
     virtual void onTaskStart(const AsyncExecutor* executor, const AsyncExecutor::Task *task);

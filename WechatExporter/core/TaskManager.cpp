@@ -9,7 +9,7 @@
 #include "TaskManager.h"
 #include "AsyncTask.h"
 
-TaskManager::TaskManager(bool needPdfExecutor) : m_downloadExecutor(NULL), m_mp3Executor(NULL), m_pdfExecutor(NULL)
+TaskManager::TaskManager(bool needPdfExecutor, Logger* logger) : m_downloadExecutor(NULL), m_mp3Executor(NULL), m_pdfExecutor(NULL), m_logger(logger)
 {
     m_downloadExecutor = new AsyncExecutor(4, 8, this);
     m_mp3Executor = new AsyncExecutor(2, 4, this);
@@ -31,6 +31,7 @@ TaskManager::TaskManager(bool needPdfExecutor) : m_downloadExecutor(NULL), m_mp3
 
 TaskManager::~TaskManager()
 {
+    m_logger = NULL;
     if (NULL != m_pdfExecutor)
     {
         delete m_pdfExecutor;
@@ -55,10 +56,38 @@ void TaskManager::setUserAgent(const std::string& userAgent)
 
 void TaskManager::onTaskStart(const AsyncExecutor* executor, const AsyncExecutor::Task *task)
 {
+    if (NULL != m_logger && task->getType() != TASK_TYPE_MP3)
+    {
+        if (task->getType() == TASK_TYPE_PDF)
+        {
+            m_logger->write("Task Starts: " + task->getName());
+        }
+    }
 }
 
 void TaskManager::onTaskComplete(const AsyncExecutor* executor, const AsyncExecutor::Task *task, bool succeeded)
 {
+    if (NULL != m_logger)
+    {
+        if (!succeeded)
+        {
+            m_logger->write("Failed: " + task->getName());
+        }
+#ifndef NDEBUG
+        else
+        {
+            if (task->getType() == TASK_TYPE_DOWNLOAD)
+            {
+                // m_logger->write("Task Ends: " + task->getName());
+            }
+            if (task->getType() == TASK_TYPE_PDF)
+            {
+                // m_logger->write("Task Ends: " + task->getName());
+            }
+        }
+#endif
+    }
+    
     const Session* session = task->getUserData() == NULL ? NULL : reinterpret_cast<const Session *>(task->getUserData());
     if (executor == m_downloadExecutor && task->getType() == TASK_TYPE_DOWNLOAD)
     {
@@ -129,11 +158,11 @@ void TaskManager::download(const Session* session, const std::string &url, const
     if (it != m_downloadTasks.end())
     {
         // Existed and different output path, copy it
-        task = new CopyTask(it->second, output);
+        task = new CopyTask(it->second, output, "CP: " + url + " => " + output + " <= " + it->second);
     }
     else
     {
-        DownloadTask* downloadTask = new DownloadTask(url, output, defaultFile, mtime);
+        DownloadTask* downloadTask = new DownloadTask(url, output, defaultFile, mtime, "DL: " + url + " => " + output);
         downloadTask->setUserAgent(m_userAgent);
         task = downloadTask;
         downloadFile = true;
@@ -217,7 +246,7 @@ void TaskManager::convertPdf(const Session* session, const std::string& htmlPath
         return;
     }
     
-    PdfTask *task = new PdfTask(pdfConverter, htmlPath, pdfPath);
+    PdfTask *task = new PdfTask(pdfConverter, htmlPath, pdfPath, "PDF: " + htmlPath + " => " + pdfPath);
     task->setTaskId(AsyncExecutor::genNextTaskId());
     task->setUserData(reinterpret_cast<const void *>(session));
     
