@@ -19,9 +19,9 @@
 class TaskManager : public AsyncExecutor::Callback
 {
 private:
-    AsyncExecutor   m_downloadExecutor;
-    AsyncExecutor   m_mp3Executor;
-    AsyncExecutor   m_pdfExecutor;
+    AsyncExecutor   *m_downloadExecutor;
+    AsyncExecutor   *m_mp3Executor;
+    AsyncExecutor   *m_pdfExecutor;
     std::map<std::string, std::string> m_downloadTasks;
 
     std::string m_userAgent;
@@ -36,7 +36,7 @@ private:
     
 public:
     
-    TaskManager();
+    TaskManager(bool needPdfExecutor);
     ~TaskManager();
     
     virtual void onTaskStart(const AsyncExecutor* executor, const AsyncExecutor::Task *task);
@@ -51,7 +51,6 @@ public:
     
     void finishAndWaitForExit()
     {
-        
     }
     
     void download(const Session* session, const std::string &url, const std::string& output, time_t mtime, const std::string& defaultFile = "", std::string type = "");

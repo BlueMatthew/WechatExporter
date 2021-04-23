@@ -9,17 +9,43 @@
 #include "TaskManager.h"
 #include "AsyncTask.h"
 
-TaskManager::TaskManager() : m_downloadExecutor(4, 8, this), m_mp3Executor(2, 4, this), m_pdfExecutor(4, 4, this)
+TaskManager::TaskManager(bool needPdfExecutor) : m_downloadExecutor(NULL), m_mp3Executor(NULL), m_pdfExecutor(NULL)
 {
+    m_downloadExecutor = new AsyncExecutor(4, 8, this);
+    m_mp3Executor = new AsyncExecutor(2, 4, this);
+    if (needPdfExecutor)
+    {
+        m_pdfExecutor = new AsyncExecutor(4, 4, this);
+    }
+    
 #ifndef NDEBUG
-    m_downloadExecutor.setTag("dl");
-    m_mp3Executor.setTag("mp3");
-    m_pdfExecutor.setTag("pdf");
+    m_downloadExecutor->setTag("dl");
+    m_mp3Executor->setTag("mp3");
+    if (m_pdfExecutor)
+    {
+        m_pdfExecutor->setTag("pdf");
+    }
+    
 #endif
 }
 
 TaskManager::~TaskManager()
 {
+    if (NULL != m_pdfExecutor)
+    {
+        delete m_pdfExecutor;
+        m_pdfExecutor = NULL;
+    }
+    if (NULL != m_mp3Executor)
+    {
+        delete m_mp3Executor;
+        m_mp3Executor = NULL;
+    }
+    if (NULL != m_downloadExecutor)
+    {
+        delete m_downloadExecutor;
+        m_downloadExecutor = NULL;
+    }
 }
 
 void TaskManager::setUserAgent(const std::string& userAgent)
@@ -34,7 +60,7 @@ void TaskManager::onTaskStart(const AsyncExecutor* executor, const AsyncExecutor
 void TaskManager::onTaskComplete(const AsyncExecutor* executor, const AsyncExecutor::Task *task, bool succeeded)
 {
     const Session* session = task->getUserData() == NULL ? NULL : reinterpret_cast<const Session *>(task->getUserData());
-    if (executor == &m_downloadExecutor && task->getType() == TASK_TYPE_DOWNLOAD)
+    if (executor == m_downloadExecutor && task->getType() == TASK_TYPE_DOWNLOAD)
     {
         const DownloadTask* downloadTask = dynamic_cast<const DownloadTask *>(task);
         
@@ -58,14 +84,14 @@ void TaskManager::onTaskComplete(const AsyncExecutor* executor, const AsyncExecu
         lock.unlock();
         for (std::set<AsyncExecutor::Task *>::iterator it = copyTasks.begin(); it != copyTasks.end(); ++it)
         {
-            m_downloadExecutor.addTask(*it);
+            m_downloadExecutor->addTask(*it);
         }
         if (NULL != pdfTask)
         {
-            m_pdfExecutor.addTask(pdfTask);
+            m_pdfExecutor->addTask(pdfTask);
         }
     }
-    else if (((executor == &m_downloadExecutor) && (task->getType() == TASK_TYPE_COPY)) || executor == &m_mp3Executor)
+    else if (((executor == m_downloadExecutor) && (task->getType() == TASK_TYPE_COPY)) || executor == m_mp3Executor)
     {
         // check copy task
         AsyncExecutor::Task *pdfTask = NULL;
@@ -79,10 +105,10 @@ void TaskManager::onTaskComplete(const AsyncExecutor* executor, const AsyncExecu
         lock.unlock();
         if (NULL != pdfTask)
         {
-            m_pdfExecutor.addTask(pdfTask);
+            m_pdfExecutor->addTask(pdfTask);
         }
     }
-    else if (executor == &m_pdfExecutor)
+    else if (executor == m_pdfExecutor)
     {
         
     }
@@ -153,7 +179,7 @@ void TaskManager::download(const Session* session, const std::string &url, const
     lock.unlock();
     if (NULL != task)
     {
-        m_downloadExecutor.addTask(task);
+        m_downloadExecutor->addTask(task);
     }
 }
 
@@ -181,7 +207,7 @@ void TaskManager::convertMp3(const Session* session, const std::string& pcmPath,
     
     lock.unlock();
     
-    m_mp3Executor.addTask(task);
+    m_mp3Executor->addTask(task);
 }
 
 void TaskManager::convertPdf(const Session* session, const std::string& htmlPath, const std::string& pdfPath, PdfConverter* pdfConverter)
@@ -204,7 +230,7 @@ void TaskManager::convertPdf(const Session* session, const std::string& htmlPath
     else
     {
         lock.unlock();
-        m_pdfExecutor.addTask(task);
+        m_pdfExecutor->addTask(task);
     }
     
     

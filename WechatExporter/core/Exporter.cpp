@@ -391,10 +391,12 @@ bool Exporter::exportUser(Friend& user, std::string& userOutputPath)
         itUser = m_usersAndSessionsFilter.find(user.getUsrName());
     }
     
+    bool pdfOutput = (m_options & SPO_PDF_MODE && NULL != m_pdfConverter);
+    
 #ifdef USING_DOWNLOADER
     Downloader downloader(m_logger);
 #else
-    TaskManager taskManager;
+    TaskManager taskManager(pdfOutput);
 #endif
 #ifndef NDEBUG
     m_logger->debug("UA: " + m_wechatInfo.buildUserAgent());
@@ -488,7 +490,7 @@ bool Exporter::exportUser(Friend& user, std::string& userOutputPath)
 
 		notifySessionComplete(it->getUsrName(), it->getData(), m_cancelled);
         
-        if (m_options & SPO_PDF_MODE && NULL != m_pdfConverter)
+        if (pdfOutput)
         {
             std::string htmlFileName = combinePath(outputBase, it->getOutputFileName() + "." + m_extName);
             if (existsFile(htmlFileName))
