@@ -25,6 +25,10 @@ public:
     public:
         virtual bool run() = 0;
         virtual int getType() const = 0;
+        virtual std::string getName() const
+        {
+            return "";
+        }
 
         Task() : m_taskId(0u), m_userData(NULL)
         {

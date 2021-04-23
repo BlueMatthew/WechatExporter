@@ -126,7 +126,7 @@ size_t writeTaskHttpData(void *buffer, size_t size, size_t nmemb, void *user_p)
     return 0;
 }
 
-DownloadTask::DownloadTask(const std::string &url, const std::string& output, const std::string& defaultFile, time_t mtime) : m_url(url), m_output(output), m_default(defaultFile), m_mtime(mtime), m_retries(0)
+DownloadTask::DownloadTask(const std::string &url, const std::string& output, const std::string& defaultFile, time_t mtime, const std::string& name/* = ""*/) : m_url(url), m_output(output), m_default(defaultFile), m_mtime(mtime), m_retries(0), m_name(name)
 {
 #ifndef NDEBUG
     if (m_output.empty())
@@ -151,6 +151,14 @@ bool DownloadTask::run()
         {
             break;
         }
+    }
+    
+    if (!result && startsWith(m_url, "http://"))
+    {
+        std::string url = m_url;
+        m_url.replace(0, 7, "https://");
+        result = downloadFile();
+        m_url.replace(0, 8, "http://");
     }
     
     if (!result && !m_default.empty())
@@ -249,7 +257,7 @@ size_t DownloadTask::writeData(void *buffer, size_t size, size_t nmemb)
     return 0;
 }
 
-CopyTask::CopyTask(const std::string &src, const std::string& dest) : m_src(src), m_dest(dest)
+CopyTask::CopyTask(const std::string &src, const std::string& dest, const std::string& name) : m_src(src), m_dest(dest), m_name(name)
 {
 }
 
@@ -276,7 +284,7 @@ bool Mp3Task::run()
     return false;
 }
 
-PdfTask::PdfTask(PdfConverter* pdfConveter, const std::string &src, const std::string& dest) : m_pdfConverter(pdfConveter), m_src(src), m_dest(dest)
+PdfTask::PdfTask(PdfConverter* pdfConveter, const std::string &src, const std::string& dest, const std::string& name) : m_pdfConverter(pdfConveter), m_src(src), m_dest(dest), m_name(name)
 {
 }
 
