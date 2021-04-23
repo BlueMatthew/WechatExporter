@@ -274,6 +274,16 @@ void MessageParser::parseVoice(const WXMSG& msg, const Session& session, Templat
     bool result = false;
     if (!audioSrc.empty())
     {
+#ifdef USING_ASYNC_TASK_FOR_MP3
+        std::string assetsDir = combinePath(m_outputPath, session.getOutputFileName() + "_files");
+        ensureDirectoryExisted(assetsDir);
+        std::string mp3Path = combinePath(assetsDir, msg.msgId + ".mp3");
+        m_taskManager.convertMp3(&session, audioSrc, mp3Path, ITunesDb::parseModifiedTime(audioSrcFile->blob));
+        
+        tv.setName("audio");
+        tv["%%AUDIOPATH%%"] = session.getOutputFileName() + "_files/" + msg.msgId + ".mp3";
+        result = true;
+#else
         m_pcmData.clear();
         if (silkToPcm(audioSrc, m_pcmData) && !m_pcmData.empty())
         {
@@ -288,11 +298,13 @@ void MessageParser::parseVoice(const WXMSG& msg, const Session& session, Templat
                 result = true;
             }
         }
-        if (!result)
-        {
-            tv.setName("msg");
-            tv["%%MESSAGE%%"] = voiceLen == -1 ? getLocaleString("[Audio]") : formatString(getLocaleString("[Audio %s]"), getDisplayTime(voiceLen).c_str());
-        }
+#endif
+    }
+    
+    if (!result)
+    {
+        tv.setName("msg");
+        tv["%%MESSAGE%%"] = voiceLen == -1 ? getLocaleString("[Audio]") : formatString(getLocaleString("[Audio %s]"), getDisplayTime(voiceLen).c_str());
     }
 }
 

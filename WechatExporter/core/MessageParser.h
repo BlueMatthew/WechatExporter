@@ -394,7 +394,9 @@ protected:
     std::function<std::string(const std::string&)> m_localFunction;
     
 protected:
+#ifndef USING_ASYNC_TASK_FOR_MP3
     mutable std::vector<unsigned char> m_pcmData;  // buffer
+#endif
 };
 
 #endif /* MessageParser_h */
