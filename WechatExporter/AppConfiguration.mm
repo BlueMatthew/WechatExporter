@@ -36,6 +36,11 @@
     return [self getOutputFormat] == OUTPUT_FORMAT_TEXT;
 }
 
++ (BOOL)isPdfMode
+{
+    return [self getOutputFormat] == OUTPUT_FORMAT_PDF;
+}
+
 + (void)setOutputFormat:(NSInteger)outputFormat
 {
     [[NSUserDefaults standardUserDefaults] setInteger:outputFormat forKey:@"OutputFormat"];

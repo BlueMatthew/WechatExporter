@@ -78,6 +78,15 @@
     <ClCompile Include="ViewHelper.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\WechatExporter\core\AsyncExecutor.cpp">
+      <Filter>core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\WechatExporter\core\AsyncTask.cpp">
+      <Filter>core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\WechatExporter\core\TaskManager.cpp">
+      <Filter>core</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="stdafx.h">
@@ -175,6 +184,15 @@
     </ClInclude>
     <ClInclude Include="PdfConverterImpl.h">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\WechatExporter\core\AsyncExecutor.h">
+      <Filter>core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\WechatExporter\core\AsyncTask.h">
+      <Filter>core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\WechatExporter\core\TaskManager.h">
+      <Filter>core</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
