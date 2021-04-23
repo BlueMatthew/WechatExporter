@@ -33,7 +33,7 @@
 #include <time.h>
 #include <sqlite3.h>
 #include <curl/curl.h>
-#include "OSDef.h"
+#include "FileSystem.h"
 
 void replaceAll(std::string& input, const std::string& search, const std::string& replace)
 {
@@ -364,16 +364,30 @@ std::string utf8ToLocalAnsi(const std::string& utf8Str)
 
 void updateFileTime(const std::string& path, time_t mtime)
 {
-    const std::string& p = utf8ToLocalAnsi(path);
     
-    struct stat st;
-    struct utimbuf new_times;
 
-    stat(p.c_str(), &st);
-    
-    new_times.actime = st.st_atime; /* keep atime unchanged */
-    new_times.modtime = mtime;
-    utime(p.c_str(), &new_times);
+#ifdef _WIN32
+    CW2T pszT(CA2W(path.c_str(), CP_UTF8));
+	struct _stat st;
+	struct _utimbuf new_times;
+
+    _tstat((LPCTSTR)pszT, &st);
+
+	new_times.actime = st.st_atime; /* keep atime unchanged */
+	new_times.modtime = mtime;
+
+	_tutime((LPCTSTR)pszT, &new_times);
+#else
+	struct stat st;
+	struct utimbuf new_times;
+
+    stat(path.c_str(), &st);
+
+	new_times.actime = st.st_atime; /* keep atime unchanged */
+	new_times.modtime = mtime;
+
+	utime(path.c_str(), &new_times);
+#endif
 }
 
 /*

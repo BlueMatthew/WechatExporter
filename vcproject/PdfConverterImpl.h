@@ -11,12 +11,12 @@ public:
 		if (isChromeInstalled(m_assemblyPath))
 		{
 			m_pdfSupported = true;
-			m_param = TEXT("--headless --disable-gpu --print-to-pdf=\"%%DEST%%\" --print-to-pdf-no-header \"file://%%SRC%%\"");
+			m_param = TEXT("--headless --disable-extensions --disable-gpu --print-to-pdf=\"%%DEST%%\" --print-to-pdf-no-header \"file://%%SRC%%\"");
 		}
 		else if (isEdgeInstalled(m_assemblyPath))
 		{
 			m_pdfSupported = true;
-			m_param = TEXT("--headless --disable-gpu --print-to-pdf=\"%%DEST%%\" --print-to-pdf-no-header \"file://%%SRC%%\"");
+			m_param = TEXT("--headless --disable-extensions --disable-gpu --print-to-pdf=\"%%DEST%%\" --print-to-pdf-no-header \"file://%%SRC%%\"");
 		}
 	}
 	
