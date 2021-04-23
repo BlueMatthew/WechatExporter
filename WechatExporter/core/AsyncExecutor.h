@@ -24,11 +24,8 @@ public:
     {
     public:
         virtual bool run() = 0;
-        virtual std::string getType()
-        {
-            return std::string();
-        }
-        
+        virtual int getType() const = 0;
+
         Task() : m_taskId(0u), m_userData(NULL)
         {
         }

@@ -9,11 +9,10 @@
 #include "TaskManager.h"
 #include "AsyncTask.h"
 
-TaskManager::TaskManager() : m_downloadExecutor(4, 8, this), m_copyExecutor(1, 1, this), m_mp3Executor(2, 4, this), m_pdfExecutor(4, 4, this)
+TaskManager::TaskManager() : m_downloadExecutor(4, 8, this), m_mp3Executor(2, 4, this), m_pdfExecutor(4, 4, this)
 {
 #ifndef NDEBUG
     m_downloadExecutor.setTag("dl");
-    m_copyExecutor.setTag("cp");
     m_mp3Executor.setTag("mp3");
     m_pdfExecutor.setTag("pdf");
 #endif
@@ -35,7 +34,7 @@ void TaskManager::onTaskStart(const AsyncExecutor* executor, const AsyncExecutor
 void TaskManager::onTaskComplete(const AsyncExecutor* executor, const AsyncExecutor::Task *task, bool succeeded)
 {
     const Session* session = task->getUserData() == NULL ? NULL : reinterpret_cast<const Session *>(task->getUserData());
-    if (executor == &m_downloadExecutor)
+    if (executor == &m_downloadExecutor && task->getType() == TASK_TYPE_DOWNLOAD)
     {
         const DownloadTask* downloadTask = dynamic_cast<const DownloadTask *>(task);
         
@@ -59,14 +58,14 @@ void TaskManager::onTaskComplete(const AsyncExecutor* executor, const AsyncExecu
         lock.unlock();
         for (std::set<AsyncExecutor::Task *>::iterator it = copyTasks.begin(); it != copyTasks.end(); ++it)
         {
-            m_copyExecutor.addTask(*it);
+            m_downloadExecutor.addTask(*it);
         }
         if (NULL != pdfTask)
         {
             m_pdfExecutor.addTask(pdfTask);
         }
     }
-    else if (executor == &m_copyExecutor || executor == &m_mp3Executor)
+    else if (((executor == &m_downloadExecutor) && (task->getType() == TASK_TYPE_COPY)) || executor == &m_mp3Executor)
     {
         // check copy task
         AsyncExecutor::Task *pdfTask = NULL;
@@ -154,15 +153,7 @@ void TaskManager::download(const Session* session, const std::string &url, const
     lock.unlock();
     if (NULL != task)
     {
-        if (downloadFile)
-        {
-            m_downloadExecutor.addTask(task);
-        }
-        else
-        {
-            m_copyExecutor.addTask(task);
-        }
-        
+        m_downloadExecutor.addTask(task);
     }
 }
 
