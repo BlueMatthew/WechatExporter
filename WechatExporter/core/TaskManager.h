@@ -20,7 +20,6 @@ class TaskManager : public AsyncExecutor::Callback
 {
 private:
     AsyncExecutor   m_downloadExecutor;
-    AsyncExecutor   m_copyExecutor;
     AsyncExecutor   m_mp3Executor;
     AsyncExecutor   m_pdfExecutor;
     std::map<std::string, std::string> m_downloadTasks;

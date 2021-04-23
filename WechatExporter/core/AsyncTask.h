@@ -13,6 +13,11 @@
 #include "AsyncExecutor.h"
 #include "PdfConverter.h"
 
+#define TASK_TYPE_DOWNLOAD  1
+#define TASK_TYPE_COPY      2
+#define TASK_TYPE_MP3       3
+#define TASK_TYPE_PDF       4
+
 class DownloadTask : public AsyncExecutor::Task
 {
 private:
@@ -30,6 +35,11 @@ public:
     
     DownloadTask(const std::string &url, const std::string& output, const std::string& defaultFile, time_t mtime);
     virtual ~DownloadTask() {}
+    
+    virtual int getType() const
+    {
+        return TASK_TYPE_DOWNLOAD;
+    }
     
     void setUserAgent(const std::string& userAgent)
     {
@@ -68,6 +78,12 @@ class CopyTask : public AsyncExecutor::Task
 public:
     CopyTask(const std::string &src, const std::string& dest);
     virtual ~CopyTask() {}
+    
+    virtual int getType() const
+    {
+        return TASK_TYPE_COPY;
+    }
+    
     bool run();
     
 private:
@@ -80,6 +96,12 @@ class Mp3Task : public AsyncExecutor::Task
 public:
     Mp3Task(const std::string &pcm, const std::string& mp3, unsigned int mtime);
     virtual ~Mp3Task() {}
+    
+    virtual int getType() const
+    {
+        return TASK_TYPE_MP3;
+    }
+    
     bool run();
     
 private:
@@ -93,6 +115,12 @@ class PdfTask : public AsyncExecutor::Task
 public:
     PdfTask(PdfConverter* pdfConveter, const std::string &src, const std::string& dest);
     virtual ~PdfTask() {}
+    
+    virtual int getType() const
+    {
+        return TASK_TYPE_PDF;
+    }
+    
     bool run();
     
 private:
