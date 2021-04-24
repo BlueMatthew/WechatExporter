@@ -87,6 +87,10 @@ public:
     static uint32_t genNextTaskId();
     void addTask(Task *task);
     
+    size_t getNumberOfQueue() const;
+    
+    void cancel();
+    
 #ifndef NDEBUG
     void setTag(const std::string& tag)
     {
@@ -102,7 +106,7 @@ private:
     uint32_t m_tid;
 #endif
     
-    std::mutex m_mutex;
+    mutable std::mutex m_mutex;
     std::condition_variable m_cv;
     std::condition_variable m_shutdown_cv;
     bool m_shutdown;

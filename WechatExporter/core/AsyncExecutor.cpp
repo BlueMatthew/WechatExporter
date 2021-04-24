@@ -52,7 +52,7 @@ void AsyncExecutor::addTask(AsyncExecutor::Task* task)
     m_tasks.push(task);
 
     // Increase pool size or notify as needed
-    if (m_threads_waiting == 0/* && m_dead_threads.size() < m_max_threads*/)
+    if (m_threads_waiting == 0 && m_nthreads < m_max_threads)
     {
         // Kick off a new thread
         m_nthreads++;
@@ -112,6 +112,31 @@ void AsyncExecutor::DestroyThreads(std::list<Thread*> *threads)
         delete *it;
     }
 }
+
+size_t AsyncExecutor::getNumberOfQueue() const
+{
+    std::unique_lock<std::mutex> lock(m_mutex);
+    size_t size = m_tasks.size();
+    
+    return size;
+}
+
+void AsyncExecutor::cancel()
+{
+    std::queue<Task *> tasks;
+    {
+        std::unique_lock<std::mutex> lock(m_mutex);
+        tasks.swap(m_tasks);
+    }
+    
+    while (!tasks.empty())
+    {
+        auto task = m_tasks.front();
+        m_tasks.pop();
+        delete task;
+    }
+}
+
 
 void AsyncExecutor::ThreadFunc()
 {

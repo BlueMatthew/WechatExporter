@@ -20,16 +20,16 @@
 class TaskManager : public AsyncExecutor::Callback
 {
 private:
+    Logger* m_logger;
+    
     AsyncExecutor   *m_downloadExecutor;
-    AsyncExecutor   *m_mp3Executor;
+    AsyncExecutor   *m_audioExecutor;
     AsyncExecutor   *m_pdfExecutor;
     std::map<std::string, std::string> m_downloadTasks;
     
-    Logger* m_logger;
-
     std::string m_userAgent;
     
-    std::mutex m_mutex;
+    mutable std::mutex m_mutex;
     std::map<std::string, uint32_t> m_downloadingTasks;
     // std::map<uint32_t, uint32_t> m_taskDeps;
     std::map<const Session*, uint32_t> m_sessionTaskCount;
@@ -47,19 +47,17 @@ public:
     
     void setUserAgent(const std::string& userAgent);
     
-    void cancel()
-    {
-        
-    }
-    
-    void finishAndWaitForExit()
-    {
-    }
-    
+    size_t getNumberOfQueue() const;
+    void cancel();
+    void shutdown();
+
     void download(const Session* session, const std::string &url, const std::string& output, time_t mtime, const std::string& defaultFile = "", std::string type = "");
-    void convertMp3(const Session* session, const std::string& pcmPath, const std::string& mp3Path, unsigned int mtime);
+    void convertAudio(const Session* session, const std::string& pcmPath, const std::string& mp3Path, unsigned int mtime);
     void convertPdf(const Session* session, const std::string& htmlPath, const std::string& pdfPath, PdfConverter* pdfConverter);
     
+private:
+    
+    void shutdownExecutors();
     
     inline uint32_t increaseSessionTask(const Session* session)
     {
@@ -107,13 +105,16 @@ public:
     inline AsyncExecutor::Task* dequeuePdfTasks(const Session* session)
     {
         AsyncExecutor::Task* task = NULL;
-        std::map<const Session*, AsyncExecutor::Task *>::iterator it = m_pdfTaskQueue.find(session);
-        if (it != m_pdfTaskQueue.end())
+        if (!m_pdfTaskQueue.empty())
         {
-            task = it->second;
-            m_pdfTaskQueue.erase(it);
+            std::map<const Session*, AsyncExecutor::Task *>::iterator it = m_pdfTaskQueue.find(session);
+            if (it != m_pdfTaskQueue.end())
+            {
+                task = it->second;
+                m_pdfTaskQueue.erase(it);
+            }
         }
-        
+
         return task;
     }
     
