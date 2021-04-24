@@ -14,8 +14,8 @@ class MMKVReader
 {
 private:
     const unsigned char *m_ptr;
-    uint32_t m_size;
-    mutable uint32_t m_position;
+	size_t m_size;
+    mutable size_t m_position;
     
 public:
     
