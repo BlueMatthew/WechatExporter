@@ -469,7 +469,7 @@ void Downloader::cancel()
     m_mtx.unlock();
 }
 
-void Downloader::finishAndWaitForExit()
+void Downloader::shutdown()
 {
     setNoMoreTask();
     for (std::vector<std::thread>::iterator it = m_threads.begin(); it != m_threads.end(); ++it)

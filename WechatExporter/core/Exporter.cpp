@@ -512,19 +512,30 @@ bool Exporter::exportUser(Friend& user, std::string& userOutputPath)
     
     if (m_cancelled)
     {
-        // downloader.cancel();
-        // taskManager.cancel();
+#ifdef USING_DOWNLOADER
+        downloader.cancel();
+#else
+        taskManager.cancel();
+#endif
     }
     else
     {
-        int dlCount = 0; //downloader.getRunningCount();
+#ifdef USING_DOWNLOADER
+        int dlCount = downloader.getRunningCount();
+#else
+        size_t dlCount = taskManager.getNumberOfQueue();
+#endif
         if (dlCount > 0)
         {
             m_logger->write(formatString(getLocaleString("Waiting for images(%d) downloading."), dlCount));
         }
     }
-    // downloader.finishAndWaitForExit();
-    taskManager.finishAndWaitForExit();
+    
+#ifdef USING_DOWNLOADER
+    downloader.shutdown();
+#else
+    taskManager.shutdown();
+#endif
     
     if (!m_cancelled && !pdfSessions.empty())
     {

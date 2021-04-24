@@ -116,7 +116,7 @@ public:
     void run(int idx);
     
     void cancel();
-    void finishAndWaitForExit();
+    void shutdown();
     int getCount() const;
     int getRunningCount() const;
 

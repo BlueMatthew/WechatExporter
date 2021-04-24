@@ -278,7 +278,7 @@ void MessageParser::parseVoice(const WXMSG& msg, const Session& session, Templat
         std::string assetsDir = combinePath(m_outputPath, session.getOutputFileName() + "_files");
         ensureDirectoryExisted(assetsDir);
         std::string mp3Path = combinePath(assetsDir, msg.msgId + ".mp3");
-        m_taskManager.convertMp3(&session, audioSrc, mp3Path, ITunesDb::parseModifiedTime(audioSrcFile->blob));
+        m_taskManager.convertAudio(&session, audioSrc, mp3Path, ITunesDb::parseModifiedTime(audioSrcFile->blob));
         
         tv.setName("audio");
         tv["%%AUDIOPATH%%"] = session.getOutputFileName() + "_files/" + msg.msgId + ".mp3";
