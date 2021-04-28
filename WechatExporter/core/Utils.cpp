@@ -216,10 +216,11 @@ void removeHtmlTags(std::string& html)
     {
         // auto startpos = html.find("<");
         auto endpos = html.find(">", startpos + 1);
-        if (endpos != std::string::npos)
+        if (endpos == std::string::npos)
         {
-            html.erase(startpos, endpos - startpos + 1);
+            break;
         }
+        html.erase(startpos, endpos - startpos + 1);
     }
 }
 
