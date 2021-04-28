@@ -154,18 +154,25 @@ bool deleteDirectory(const std::string& path)
 #ifdef _WIN32
 	CW2T pszT(CA2W(path.c_str(), CP_UTF8));
 
+	size_t len = _tcslen(pszT);
+	TCHAR* pszT2 = new TCHAR[len + 2];
+	_tcscpy(pszT2, pszT);
+	pszT2[len + 1] = 0;
+	pszT2[len] = 0;
+
 	SHFILEOPSTRUCT file_op = {
-        NULL,
-        FO_DELETE,
-        (LPCTSTR)pszT,
-        TEXT(""),
-        FOF_NOCONFIRMATION |
-        FOF_NOERRORUI |
-        FOF_SILENT,
-        FALSE,
-        0,
-        TEXT("") };
-	return SHFileOperation(&file_op) == 0;
+		NULL,
+		FO_DELETE,
+		pszT2,
+		NULL,
+		FOF_NOCONFIRMATION | FOF_NOERRORUI | FOF_SILENT,
+		FALSE,
+		NULL,
+		NULL };
+
+	bool result = (SHFileOperation(&file_op) == 0);
+	delete[] pszT2;
+	return result;
 #else
     int ret = 0;
     FTS *ftsp = NULL;

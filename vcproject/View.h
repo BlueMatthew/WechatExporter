@@ -9,6 +9,7 @@
 #include <chrono>
 #include "Core.h"
 #include "LoggerImpl.h"
+#include "PdfConverterImpl.h"
 #include "ExportNotifierImpl.h"
 // #include "ColoredControls.h"
 #include "LogListBox.h"
@@ -16,6 +17,8 @@
 #include "AppConfiguration.h"
 #include "VersionDetector.h"
 #include "ViewHelper.h"
+
+#define SAFE_DELETE(ptr) { delete ptr; ptr = NULL; }
 
 class CView : public CDialogImpl<CView>, public CDialogResize<CView>
 {
@@ -39,6 +42,7 @@ private:
 	CStatic					m_progressTextCtrl;
 	
 	LoggerImpl*			m_logger;
+	PdfConverterImpl*	m_pdfConverter;
 	ExportNotifierImpl* m_notifier;
 	Exporter*			m_exporter;
 
@@ -66,7 +70,7 @@ private:
 		}
 	public:
 
-		CLoadingHandler(HWND hWnd, const std::string& resDir, const std::string& backupDir, Logger* logger) : m_hWnd(hWnd), m_exp(resDir, backupDir, "", logger)
+		CLoadingHandler(HWND hWnd, const std::string& resDir, const std::string& backupDir, Logger* logger) : m_hWnd(hWnd), m_exp(resDir, backupDir, "", logger, NULL)
 		{
 		}
 
@@ -179,13 +183,14 @@ public:
 	{
 		m_progressTextCtrl = GetDlgItem(IDC_PROGRESS_TEXT);
 		m_logListBox.SubclassWindow(GetDlgItem(IDC_LOGS));
-		// m_cbmBoxBackups.SubclassWindow(GetDlgItem(IDC_BACKUP));
+		// m_cbmBoxBackups.SubclassWindow(GetDlgItem(m_exporter));
 		// m_cbmBoxUsers.SubclassWindow(GetDlgItem(IDC_USERS));
 
 		// m_cbmBoxBackups.SetEditColors(CLR_INVALID, ::GetSysColor(COLOR_WINDOWTEXT));
 		// m_cbmBoxUsers.SetEditColors(CLR_INVALID, ::GetSysColor(COLOR_WINDOWTEXT));
 		
 		m_logger = NULL;
+		m_pdfConverter = NULL;
 		m_notifier = NULL;
 		m_exporter = NULL;
 
@@ -246,19 +251,13 @@ public:
 		{
 			m_exporter->cancel();
 			m_exporter->waitForComplition();
-			delete m_exporter;
+			SAFE_DELETE(m_exporter);
 			m_exporter = NULL;
 		}
-		if (NULL != m_notifier)
-		{
-			delete m_notifier;
-			m_notifier = NULL;
-		}
-		if (NULL != m_logger)
-		{
-			delete m_logger;
-			m_logger = NULL;
-		}
+		SAFE_DELETE(m_notifier);
+		SAFE_DELETE(m_pdfConverter);
+		SAFE_DELETE(m_logger);
+
 		// override to do something, if needed
 	}
 
@@ -691,6 +690,13 @@ public:
 		bool supportingFilter = AppConfiguration::GetSupportingFilter();
 		UINT outputFormat = AppConfiguration::GetOutputFormat();
 
+		if (outputFormat == AppConfiguration::OUTPUT_FORMAT_PDF)
+		{
+			asyncLoading = false;
+			loadingDataOnScroll = false;
+			supportingFilter = false;
+		}
+
 		CListBox lstboxLogs = GetDlgItem(IDC_LOGS);
 		lstboxLogs.ResetContent();
 
@@ -708,12 +714,18 @@ public:
 		progressCtrl.SetStep(1);
 		progressCtrl.SetPos(0);
 
+		UpdateProgressBarText(0, true);
+
 #if !defined(NDEBUG) || defined(DBG_PERF)
 		std::string log = "Record Count:" + std::to_string(numberOfRecords);
 		m_logger->debug(log);
 #endif
+		if (outputFormat == AppConfiguration::OUTPUT_FORMAT_PDF && NULL == m_pdfConverter)
+		{
+			m_pdfConverter = new PdfConverterImpl();
+		}
 
-		m_exporter = new Exporter((LPCSTR)resDir, backup, (LPCSTR)output, m_logger);
+		m_exporter = new Exporter((LPCSTR)resDir, backup, (LPCSTR)output, m_logger, m_pdfConverter);
 		m_exporter->setNotifier(m_notifier);
 		m_exporter->setOrder(!descOrder);
 		m_exporter->setSyncLoading(!asyncLoading);
@@ -729,6 +741,11 @@ public:
 			m_exporter->setExtName("txt");
 			m_exporter->setTemplatesName("templates_txt");
 		}
+		else if (outputFormat == AppConfiguration::OUTPUT_FORMAT_PDF)
+		{
+			m_exporter->setPdfMode();
+		}
+		
 		m_exporter->filterUsersAndSessions(usersAndSessions);
 		if (m_exporter->run())
 		{
@@ -888,15 +905,26 @@ protected:
 		}
 		progressCtrl.OffsetPos(1);
 		pos = progressCtrl.GetPos();
+
 		int percent = (range.iHigh > range.iLow) ? ((pos - range.iLow) * 100 / (range.iHigh - range.iLow)) : 0;
 		if (percent >= 100)
 		{
 			percent = (pos < range.iHigh) ? 99 : 100;
 		}
 
-		CString text;
-		text.Format(TEXT("%d%%"), percent);
-		m_progressTextCtrl.SetWindowText(text);
+		UpdateProgressBarText(percent);
+	}
+
+	void UpdateProgressBarText(int percent, bool forceUpdate = false)
+	{
+		if (forceUpdate || percent != m_progressTextCtrl.GetWindowLongPtr(GWLP_USERDATA))
+		{
+			// Avoid flashing
+			CString text;
+			text.Format(TEXT("%d%%"), percent);
+			m_progressTextCtrl.SetWindowLongPtr(GWLP_USERDATA, percent);
+			m_progressTextCtrl.SetWindowText(text);
+		}
 	}
 
 	void UpdateBackups(const std::vector<BackupManifest>& manifests, BOOL onLaunch = FALSE)

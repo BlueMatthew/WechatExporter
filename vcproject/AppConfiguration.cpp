@@ -1,5 +1,6 @@
 #include "stdafx.h"
 #include "AppConfiguration.h"
+#include "PdfConverterImpl.h"
 #include <Shlobj.h>
 #include "Utils.h"
 
@@ -167,7 +168,6 @@ BOOL AppConfiguration::GetCheckingUpdateDisabled()
 	return dwValue != 0;
 }
 
-
 void AppConfiguration::SetLoadingDataOnScroll(BOOL loadingDataOnScroll)
 {
 	SetDwordProperty(TEXT("LoadingDataOnScroll"), loadingDataOnScroll);
@@ -190,6 +190,13 @@ BOOL AppConfiguration::GetSupportingFilter()
 	DWORD dwValue = 0;	// FALSE
 	GetDwordProperty(TEXT("Filter"), dwValue);
 	return dwValue != 0;
+}
+
+BOOL AppConfiguration::IsPdfSupported()
+{
+	PdfConverterImpl converter;
+
+	return converter.isPdfSupported() ? TRUE : FALSE;
 }
 
 BOOL AppConfiguration::GetStringProperty(LPCTSTR name, CString& value)
@@ -250,4 +257,3 @@ BOOL AppConfiguration::SetDwordProperty(LPCTSTR name, DWORD value)
 
 	return FALSE;
 }
-

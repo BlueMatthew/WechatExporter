@@ -301,7 +301,7 @@
         __strong typeof(weakSelf) strongSelf = weakSelf;  // strong by default
         if (nil != strongSelf)
         {
-            Exporter exp([workDir UTF8String], [backupDir UTF8String], "", strongSelf->m_logger);
+            Exporter exp([workDir UTF8String], [backupDir UTF8String], "", strongSelf->m_logger, NULL);
             exp.loadUsersAndSessions();
             exp.swapUsersAndSessions(strongSelf->m_usersAndSessions);
         }
@@ -506,7 +506,7 @@
     std::map<std::string, std::map<std::string, void *>> usersAndSessions;
     [m_dataSource getSelectedUserAndSessions:usersAndSessions];
     
-    m_exporter = new Exporter([workDir UTF8String], [backup UTF8String], [output UTF8String], m_logger);
+    m_exporter = new Exporter([workDir UTF8String], [backup UTF8String], [output UTF8String], m_logger, NULL);
     if (nil != descOrder && [descOrder boolValue])
     {
         m_exporter->setOrder(false);

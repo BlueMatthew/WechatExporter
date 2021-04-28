@@ -11,7 +11,7 @@
 #include "Downloader.h"
 #include "WechatParser.h"
 
-Exporter::Exporter(const std::string& workDir, const std::string& backup, const std::string& output, Logger* logger)
+Exporter::Exporter(const std::string& workDir, const std::string& backup, const std::string& output, Logger* logger, PdfConverter* pdfConverter)
 {
     m_running = false;
     m_iTunesDb = NULL;
@@ -20,6 +20,7 @@ Exporter::Exporter(const std::string& workDir, const std::string& backup, const 
     m_backup = backup;
     m_output = output;
     m_logger = logger;
+    m_pdfConverter = pdfConverter;
     m_notifier = NULL;
     m_cancelled = false;
     m_options = 0;
@@ -49,6 +50,7 @@ void Exporter::setNotifier(ExportNotifier *notifier)
 {
     m_notifier = notifier;
 }
+
 bool Exporter::isRunning() const
 {
     return m_running;
@@ -72,9 +74,18 @@ void Exporter::waitForComplition()
 void Exporter::setTextMode(bool textMode/* = true*/)
 {
     if (textMode)
-        m_options |=     SPO_TEXT_MODE;
+        m_options |= SPO_TEXT_MODE;
     else
-        m_options &= ~    SPO_TEXT_MODE;
+        m_options &= ~SPO_TEXT_MODE;
+}
+
+void Exporter::setPdfMode(bool pdfMode/* = true*/)
+{
+    setTextMode(!pdfMode);  // html mode
+    if (pdfMode)
+        m_options |= SPO_PDF_MODE;
+    else
+        m_options &= ~SPO_PDF_MODE;
 }
 
 void Exporter::setOrder(bool asc/* = true*/)
@@ -394,6 +405,8 @@ bool Exporter::exportUser(Friend& user, std::string& userOutputPath)
         // downloader.addTask(user.getPortrait(), combinePath(outputBase, "Portrait", user.getLocalPortrait()), 0);
     }
     
+    std::vector<Session *> pdfSessions;
+    
     std::set<std::string> sessionFileNames;
     for (std::vector<Session>::iterator it = sessions.begin(); it != sessions.end(); ++it)
     {
@@ -448,7 +461,7 @@ bool Exporter::exportUser(Friend& user, std::string& userOutputPath)
             replaceAll(userItem, "%%ITEMPICPATH%%", "Portrait/" + it->getLocalPortrait());
             if ((m_options & SPO_IGNORE_HTML_ENC) == 0)
             {
-                replaceAll(userItem, "%%ITEMLINK%%", encodeUrl(it->getOutputFileName()) + "." + m_extName);
+                replaceAll(userItem, "%%ITEMLINK%%", encodeUrl(it->getOutputFileName()) + "." + ((m_options & SPO_PDF_MODE && NULL != m_pdfConverter) ? "pdf" : m_extName));
                 replaceAll(userItem, "%%ITEMTEXT%%", safeHTML(sessionDisplayName));
             }
             else
@@ -461,6 +474,11 @@ bool Exporter::exportUser(Friend& user, std::string& userOutputPath)
         }
 
 		notifySessionComplete(it->getUsrName(), it->getData(), m_cancelled);
+        
+        if (m_options & SPO_PDF_MODE && NULL != m_pdfConverter)
+        {
+            pdfSessions.push_back(&(*it));
+        }
     }
 
     std::string html = getTemplate("listframe");
@@ -484,10 +502,35 @@ bool Exporter::exportUser(Friend& user, std::string& userOutputPath)
     }
     downloader.finishAndWaitForExit();
     
+    if (!m_cancelled && !pdfSessions.empty())
+    {
+        m_logger->write(getLocaleString("Convert to PDF..."));
+        for (std::vector<Session *>::const_iterator it = pdfSessions.cbegin(); it != pdfSessions.cend(); ++it)
+        {
+            std::string fileName = combinePath(outputBase, (*it)->getOutputFileName() + "." + m_extName);
+            if (existsFile(fileName))
+            {
+                std::string pdfFileName = combinePath(outputBase, (*it)->getOutputFileName() + ".pdf");
+                deleteFile(pdfFileName);
+                m_pdfConverter->convert(fileName, pdfFileName);
+
+                deleteFile(fileName);
+                deleteDirectory(combinePath(outputBase, (*it)->getOutputFileName() + "_files"));
+                m_logger->write((*it)->getDisplayName() + " PDF completes");
+            }
+            
+            if (m_cancelled)
+            {
+                break;
+            }
+        }
+    }
+    
 #ifndef NDEBUG
     m_logger->debug(formatString("Total Downloads: %d", downloader.getCount()));
     m_logger->debug("Download Stats: " + downloader.getStats());
 #endif
+    
 
     return true;
 }
