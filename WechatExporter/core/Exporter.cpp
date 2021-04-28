@@ -9,6 +9,7 @@
 #include "Exporter.h"
 #include <json/json.h>
 #include "Downloader.h"
+#include "TaskManager.h"
 #include "WechatParser.h"
 
 Exporter::Exporter(const std::string& workDir, const std::string& backup, const std::string& output, Logger* logger, PdfConverter* pdfConverter)
@@ -212,6 +213,9 @@ void Exporter::swapUsersAndSessions(std::vector<std::pair<Friend, std::vector<Se
 
 bool Exporter::runImpl()
 {
+#ifndef NDEBUG
+    setThreadName("exp");
+#endif
     time_t startTime;
     std::time(&startTime);
     notifyStart();
@@ -387,21 +391,32 @@ bool Exporter::exportUser(Friend& user, std::string& userOutputPath)
         itUser = m_usersAndSessionsFilter.find(user.getUsrName());
     }
     
+    bool pdfOutput = (m_options & SPO_PDF_MODE && NULL != m_pdfConverter);
+    
+#ifdef USING_DOWNLOADER
     Downloader downloader(m_logger);
+#else
+    TaskManager taskManager(pdfOutput, m_logger);
+#endif
 #ifndef NDEBUG
     m_logger->debug("UA: " + m_wechatInfo.buildUserAgent());
 #endif
+    
+#ifdef USING_DOWNLOADER
     downloader.setUserAgent(m_wechatInfo.buildUserAgent());
+#else
+    taskManager.setUserAgent(m_wechatInfo.buildUserAgent());
+#endif
     
     std::function<std::string(const std::string&)> localeFunction = std::bind(&Exporter::getLocaleString, this, std::placeholders::_1);
-    MessageParser msgParser(*m_iTunesDb, *m_iTunesDbShare, downloader, friends, *myself, m_options, m_workDir, outputBase, localeFunction);
+    MessageParser msgParser(*m_iTunesDb, *m_iTunesDbShare, taskManager, friends, *myself, m_options, m_workDir, outputBase, localeFunction);
     
     if ((m_options & SPO_IGNORE_AVATAR) == 0)
     {
 #ifndef NDEBUG
         m_logger->debug("Download avatar: *" + user.getPortrait() + "* => " + combinePath(outputBase, "Portrait", user.getLocalPortrait()));
 #endif
-        msgParser.copyPortraitIcon(user.getUsrName(), user.getHash(), user.getPortrait(), combinePath(outputBase, "Portrait"));
+        msgParser.copyPortraitIcon(NULL, user.getUsrName(), user.getHash(), user.getPortrait(), combinePath(outputBase, "", "Portrait"));
         // downloader.addTask(user.getPortrait(), combinePath(outputBase, "Portrait", user.getLocalPortrait()), 0);
     }
     
@@ -449,7 +464,7 @@ bool Exporter::exportUser(Friend& user, std::string& userOutputPath)
         }
         if ((m_options & SPO_IGNORE_AVATAR) == 0)
         {
-            msgParser.copyPortraitIcon(it->getUsrName(), it->getHash(), it->getPortrait(), combinePath(outputBase, "Portrait"));
+            msgParser.copyPortraitIcon(NULL, it->getUsrName(), it->getHash(), it->getPortrait(), combinePath(outputBase, "", "Portrait"));
         }
         int count = exportSession(*myself, msgParser, *it, userBase, outputBase);
         
@@ -475,8 +490,15 @@ bool Exporter::exportUser(Friend& user, std::string& userOutputPath)
 
 		notifySessionComplete(it->getUsrName(), it->getData(), m_cancelled);
         
-        if (m_options & SPO_PDF_MODE && NULL != m_pdfConverter)
+        if (pdfOutput)
         {
+            std::string htmlFileName = combinePath(outputBase, it->getOutputFileName() + "." + m_extName);
+            if (existsFile(htmlFileName))
+            {
+                std::string pdfFileName = combinePath(outputBase, it->getOutputFileName() + ".pdf");
+                taskManager.convertPdf(&(*it), htmlFileName, pdfFileName, m_pdfConverter);
+            }
+
             pdfSessions.push_back(&(*it));
         }
     }
@@ -490,35 +512,39 @@ bool Exporter::exportUser(Friend& user, std::string& userOutputPath)
     
     if (m_cancelled)
     {
+#ifdef USING_DOWNLOADER
         downloader.cancel();
+#else
+        taskManager.cancel();
+#endif
     }
     else
     {
+#ifdef USING_DOWNLOADER
         int dlCount = downloader.getRunningCount();
+#else
+        size_t dlCount = taskManager.getNumberOfQueue();
+#endif
         if (dlCount > 0)
         {
             m_logger->write(formatString(getLocaleString("Waiting for images(%d) downloading."), dlCount));
         }
     }
-    downloader.finishAndWaitForExit();
+    
+#ifdef USING_DOWNLOADER
+    downloader.shutdown();
+#else
+    taskManager.shutdown();
+#endif
     
     if (!m_cancelled && !pdfSessions.empty())
     {
-        m_logger->write(getLocaleString("Convert to PDF..."));
+        // m_logger->write(getLocaleString("Convert to PDF..."));
         for (std::vector<Session *>::const_iterator it = pdfSessions.cbegin(); it != pdfSessions.cend(); ++it)
         {
-            std::string fileName = combinePath(outputBase, (*it)->getOutputFileName() + "." + m_extName);
-            if (existsFile(fileName))
-            {
-                std::string pdfFileName = combinePath(outputBase, (*it)->getOutputFileName() + ".pdf");
-                deleteFile(pdfFileName);
-                m_pdfConverter->convert(fileName, pdfFileName);
-
-                deleteFile(fileName);
-                deleteDirectory(combinePath(outputBase, (*it)->getOutputFileName() + "_files"));
-                m_logger->write((*it)->getDisplayName() + " PDF completes");
-            }
-            
+            std::string htmlFileName = combinePath(outputBase, (*it)->getOutputFileName() + "." + m_extName);
+            deleteFile(htmlFileName);
+            deleteDirectory(combinePath(outputBase, (*it)->getOutputFileName() + "_files"));
             if (m_cancelled)
             {
                 break;
@@ -527,8 +553,8 @@ bool Exporter::exportUser(Friend& user, std::string& userOutputPath)
     }
     
 #ifndef NDEBUG
-    m_logger->debug(formatString("Total Downloads: %d", downloader.getCount()));
-    m_logger->debug("Download Stats: " + downloader.getStats());
+    // m_logger->debug(formatString("Total Downloads: %d", downloader.getCount()));
+    // m_logger->debug("Download Stats: " + downloader.getStats());
 #endif
     
 

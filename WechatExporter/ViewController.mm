@@ -13,6 +13,7 @@
 
 #include "LoggerImpl.h"
 #include "ExportNotifierImpl.h"
+#include "PdfConverterImpl.h"
 #include "Utils.h"
 #include "Exporter.h"
 #include "Updater.h"
@@ -21,6 +22,8 @@
 {
     LoggerImpl* m_logger;
     ExportNotifierImpl *m_notifier;
+    PdfConverterImpl *m_pdfConverter;
+    
     Exporter* m_exporter;
     
     std::vector<BackupManifest> m_manifests;
@@ -85,6 +88,11 @@
     {
         delete m_logger;
         m_logger = NULL;
+    }
+    if (NULL != m_pdfConverter)
+    {
+        delete m_pdfConverter;
+        m_pdfConverter = NULL;
     }
     
     [self.btnBackup setAction:nil];
@@ -481,7 +489,6 @@
     [self.view.window.windowController close];
 }
 
-
 - (void)run:(NSDictionary *)dict
 {
     NSString *backup = [dict objectForKey:@"backup"];
@@ -506,7 +513,17 @@
     std::map<std::string, std::map<std::string, void *>> usersAndSessions;
     [m_dataSource getSelectedUserAndSessions:usersAndSessions];
     
-    m_exporter = new Exporter([workDir UTF8String], [backup UTF8String], [output UTF8String], m_logger, NULL);
+#ifndef NDEBUG
+    if ([AppConfiguration isPdfMode])
+    {
+        if (NULL == m_pdfConverter)
+        {
+            m_pdfConverter = new PdfConverterImpl();
+            m_pdfConverter->setWorkDir(output);
+        }
+    }
+#endif
+    m_exporter = new Exporter([workDir UTF8String], [backup UTF8String], [output UTF8String], m_logger, m_pdfConverter);
     if (nil != descOrder && [descOrder boolValue])
     {
         m_exporter->setOrder(false);
@@ -530,6 +547,13 @@
         m_exporter->setExtName("txt");
         m_exporter->setTemplatesName("templates_txt");
     }
+    
+#ifndef NDEBUG
+    if ([AppConfiguration isPdfMode])
+    {
+        m_exporter->setPdfMode();
+    }
+#endif
     m_exporter->supportsFilter([AppConfiguration getSupportingFilter]);
     
     m_exporter->setNotifier(m_notifier);

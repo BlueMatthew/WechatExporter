@@ -15,6 +15,7 @@ typedef NS_ENUM(NSInteger, OUTPUT_FORMAT)
 {
     OUTPUT_FORMAT_HTML = 0,
     OUTPUT_FORMAT_TEXT,
+    OUTPUT_FORMAT_PDF,
     OUTPUT_FORMAT_LAST
 };
 
@@ -25,6 +26,7 @@ typedef NS_ENUM(NSInteger, OUTPUT_FORMAT)
 + (NSInteger)getOutputFormat;
 + (BOOL)isHtmlMode;
 + (BOOL)isTextMode;
++ (BOOL)isPdfMode;
 + (void)setOutputFormat:(NSInteger)outputFormat;
 + (void)setSavingInSession:(BOOL)savingInSession;
 + (BOOL)getSavingInSession;

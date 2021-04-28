@@ -12,6 +12,14 @@
 #include <string>
 #include <vector>
 
+#ifdef _WIN32
+#define DIR_SEP '\\'
+#define DIR_SEP_R '/'
+#else
+#define DIR_SEP '/'
+#define DIR_SEP_R '\\'
+#endif
+
 size_t getFileSize(const std::string& path);
 bool existsDirectory(const std::string& path);
 bool makeDirectory(const std::string& path);
