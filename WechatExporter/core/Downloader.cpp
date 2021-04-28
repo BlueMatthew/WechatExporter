@@ -154,7 +154,7 @@ bool Task::downloadFile()
     ++m_retries;
     
     m_outputTmp = m_output + ".tmp";
-    remove(utf8ToLocalAnsi(m_outputTmp).c_str());
+    deleteFile(m_outputTmp);
 
 	CURLcode res = CURLE_OK;
     CURL *curl = NULL;
@@ -453,7 +453,7 @@ void Downloader::run(int idx)
         }
         else
         {
-            std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+            std::this_thread::sleep_for(std::chrono::milliseconds(100));
         }
     }
 }
@@ -469,7 +469,7 @@ void Downloader::cancel()
     m_mtx.unlock();
 }
 
-void Downloader::finishAndWaitForExit()
+void Downloader::shutdown()
 {
     setNoMoreTask();
     for (std::vector<std::thread>::iterator it = m_threads.begin(); it != m_threads.end(); ++it)

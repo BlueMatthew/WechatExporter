@@ -14,7 +14,7 @@
 #include <plist/plist.h>
 #include "XmlParser.h"
 
-MessageParser::MessageParser(const ITunesDb& iTunesDb, const ITunesDb& iTunesDbShare, Downloader& downloader, Friends& friends, Friend myself, int options, const std::string& resPath, const std::string& outputPath, std::function<std::string(const std::string&)>& localeFunc) : m_iTunesDb(iTunesDb), m_iTunesDbShare(iTunesDbShare), m_downloader(downloader), m_friends(friends), m_myself(myself), m_options(options), m_resPath(resPath), m_outputPath(outputPath)
+MessageParser::MessageParser(const ITunesDb& iTunesDb, const ITunesDb& iTunesDbShare, TaskManager& taskManager, Friends& friends, Friend myself, int options, const std::string& resPath, const std::string& outputPath, std::function<std::string(const std::string&)>& localeFunc) : m_iTunesDb(iTunesDb), m_iTunesDbShare(iTunesDbShare), m_taskManager(taskManager), m_friends(friends), m_myself(myself), m_options(options), m_resPath(resPath), m_outputPath(outputPath)
 {
     m_userBase = "Documents/" + m_myself.getHash();
     m_localFunction = std::move(localeFunc);
@@ -207,7 +207,7 @@ bool MessageParser::parse(WXMSG& msg, const Session& session, std::vector<Templa
     {
         if (NULL != protraitUser)
         {
-            copyPortraitIcon(*protraitUser, combinePath(m_outputPath, portraitPath));
+            copyPortraitIcon(session, *protraitUser, combinePath(m_outputPath, portraitPath));
             // m_downloader.addTask(remotePortrait, combinePath(m_outputPath, localPortrait), msg.createTime);
         }
     }
@@ -274,6 +274,16 @@ void MessageParser::parseVoice(const WXMSG& msg, const Session& session, Templat
     bool result = false;
     if (!audioSrc.empty())
     {
+#ifdef USING_ASYNC_TASK_FOR_MP3
+        std::string assetsDir = combinePath(m_outputPath, session.getOutputFileName() + "_files");
+        ensureDirectoryExisted(assetsDir);
+        std::string mp3Path = combinePath(assetsDir, msg.msgId + ".mp3");
+        m_taskManager.convertAudio(&session, audioSrc, mp3Path, ITunesDb::parseModifiedTime(audioSrcFile->blob));
+        
+        tv.setName("audio");
+        tv["%%AUDIOPATH%%"] = session.getOutputFileName() + "_files/" + msg.msgId + ".mp3";
+        result = true;
+#else
         m_pcmData.clear();
         if (silkToPcm(audioSrc, m_pcmData) && !m_pcmData.empty())
         {
@@ -288,11 +298,13 @@ void MessageParser::parseVoice(const WXMSG& msg, const Session& session, Templat
                 result = true;
             }
         }
-        if (!result)
-        {
-            tv.setName("msg");
-            tv["%%MESSAGE%%"] = voiceLen == -1 ? getLocaleString("[Audio]") : formatString(getLocaleString("[Audio %s]"), getDisplayTime(voiceLen).c_str());
-        }
+#endif
+    }
+    
+    if (!result)
+    {
+        tv.setName("msg");
+        tv["%%MESSAGE%%"] = voiceLen == -1 ? getLocaleString("[Audio]") : formatString(getLocaleString("[Audio %s]"), getDisplayTime(voiceLen).c_str());
     }
 }
 
@@ -368,7 +380,8 @@ void MessageParser::parseEmotion(const WXMSG& msg, const Session& session, Templ
         std::string emojiPath = ((m_options & SPO_ICON_IN_SESSION) == SPO_ICON_IN_SESSION) ? session.getOutputFileName() + "_files/Emoji/" : "Emoji/";
         localFile = emojiPath + localFile + ".gif";
         ensureDirectoryExisted(m_outputPath);
-        m_downloader.addTask(url, combinePath(m_outputPath, localFile), msg.createTime, "emoji");
+        // m_downloader.addTask(url, combinePath(m_outputPath, localFile), msg.createTime, "emoji");
+        
         tv.setName("emoji");
         tv["%%EMOJIPATH%%"] = localFile;
     }
@@ -561,7 +574,7 @@ void MessageParser::parseVerification(const WXMSG& msg, const Session& session, 
 void MessageParser::parseCard(const WXMSG& msg, const Session& session, TemplateValues& tv) const
 {
     std::string portraitDir = ((m_options & SPO_ICON_IN_SESSION) == SPO_ICON_IN_SESSION) ? session.getOutputFileName() + "_files/Portrait" : "Portrait";
-    parseCard(m_outputPath, portraitDir, msg.content, tv);
+    parseCard(session, m_outputPath, portraitDir, msg.content, tv);
 }
 
 void MessageParser::parseNotice(const WXMSG& msg, const Session& session, TemplateValues& tv) const
@@ -800,7 +813,7 @@ void MessageParser::parseAppMsgChannelCard(const WXAPPMSG& appMsg, const XmlPars
     
     std::string portraitDir = ((m_options & SPO_ICON_IN_SESSION) == SPO_ICON_IN_SESSION) ? session.getOutputFileName() + "_files/Portrait" : "Portrait";
     
-    parseChannelCard(portraitDir, nodes["username"], nodes["avatar"], nodes["nickname"], tv);
+    parseChannelCard(session, portraitDir, nodes["username"], nodes["avatar"], nodes["nickname"], tv);
 }
 
 void MessageParser::parseAppMsgChannels(const WXAPPMSG& appMsg, const XmlParser& xmlParser, const Session& session, TemplateValues& tv) const
@@ -1012,7 +1025,7 @@ void MessageParser::parseFwdMsgCard(const WXFWDMSG& fwdMsg, const XmlParser& xml
     xmlParser.getChildNodeContent(itemNode, "datadesc", cardContent);
     
     std::string portraitDir = ((m_options & SPO_ICON_IN_SESSION) == SPO_ICON_IN_SESSION) ? session.getOutputFileName() + "_files/Portrait" : "Portrait";
-    parseCard(m_outputPath, portraitDir, cardContent, tv);
+    parseCard(session, m_outputPath, portraitDir, cardContent, tv);
 }
 
 void MessageParser::MessageParser::parseFwdMsgNestedFwdMsg(const WXFWDMSG& fwdMsg, const XmlParser& xmlParser, xmlNodePtr itemNode, const Session& session, std::string& nestedFwdMsg, std::string& nestedFwdMsgTitle, TemplateValues& tv) const
@@ -1053,7 +1066,7 @@ void MessageParser::MessageParser::parseFwdMsgChannelCard(const WXFWDMSG& fwdMsg
     }
     
     std::string portraitDir = ((m_options & SPO_ICON_IN_SESSION) == SPO_ICON_IN_SESSION) ? session.getOutputFileName() + "_files/Portrait" : "Portrait";
-    parseChannelCard(portraitDir, usrName, avatar, nickName, tv);
+    parseChannelCard(session, portraitDir, usrName, avatar, nickName, tv);
 }
 
 ///////////////////////////////
@@ -1159,7 +1172,7 @@ void MessageParser::parseFile(const std::string& sessionPath, const std::string&
     }
 }
 
-void MessageParser::parseCard(const std::string& sessionPath, const std::string& portraitDir, const std::string& cardMessage, TemplateValues& tv) const
+void MessageParser::parseCard(const Session& session, const std::string& sessionPath, const std::string& portraitDir, const std::string& cardMessage, TemplateValues& tv) const
 {
     // static std::regex pattern42_1("nickname ?= ?\"(.+?)\"");
     // static std::regex pattern42_2("smallheadimgurl ?= ?\"(.+?)\"");
@@ -1188,7 +1201,8 @@ void MessageParser::parseCard(const std::string& sessionPath, const std::string&
             std::string localfile = combinePath(portraitDir, imgFileName + ".jpg");
             ensureDirectoryExisted(combinePath(sessionPath, portraitDir));
 			std::string output = combinePath(sessionPath, localfile);
-            m_downloader.addTask(portraitUrl, combinePath(sessionPath, localfile), 0, "card");
+            // m_downloader.addTask(portraitUrl, combinePath(sessionPath, localfile), 0, "card");
+            m_taskManager.download(&session, portraitUrl, combinePath(sessionPath, localfile), 0, "", "card");
         }
         else if (!attrs["nickname"].empty())
         {
@@ -1206,7 +1220,7 @@ void MessageParser::parseCard(const std::string& sessionPath, const std::string&
     tv["%%EXTRA_CLS%%"] = "contact-card";
 }
 
-void MessageParser::parseChannelCard(const std::string& portraitDir, const std::string& usrName, const std::string& avatar, const std::string& name, TemplateValues& tv) const
+void MessageParser::parseChannelCard(const Session& session, const std::string& portraitDir, const std::string& usrName, const std::string& avatar, const std::string& name, TemplateValues& tv) const
 {
     bool hasImg = false;
     if ((m_options & SPO_IGNORE_SHARING) == 0)
@@ -1223,7 +1237,8 @@ void MessageParser::parseChannelCard(const std::string& portraitDir, const std::
             tv["%%CARDIMGPATH%%"] = portraitDir + "/" + usrName + ".jpg";
             std::string localfile = combinePath(portraitDir, usrName + ".jpg");
             ensureDirectoryExisted(combinePath(m_outputPath, portraitDir));
-            m_downloader.addTask(avatar, combinePath(m_outputPath, localfile), 0, "card");
+            // m_downloader.addTask(avatar, combinePath(m_outputPath, localfile), 0, "card");
+            m_taskManager.download(&session, avatar, combinePath(m_outputPath, localfile), 0, "", "card");
         }
         else
         {
@@ -1277,14 +1292,16 @@ void MessageParser::parseChannels(const std::string& msgId, const XmlParser& xml
         std::string thumbFile = session.getOutputFileName() + "_files/" + msgId + ".jpg";
         tv["%%CHANNELTHUMBPATH%%"] = thumbFile;
         ensureDirectoryExisted(combinePath(m_outputPath, session.getOutputFileName() + "_files"));
-        m_downloader.addTask(thumbUrl, combinePath(m_outputPath, thumbFile), 0, "thumb");
+        // m_downloader.addTask(thumbUrl, combinePath(m_outputPath, thumbFile), 0, "thumb");
+        m_taskManager.download(&session, thumbUrl, combinePath(m_outputPath, thumbFile), 0, "", "thumb");
         
         if (!nodes["avatar"].empty())
         {
             tv["%%CARDIMGPATH%%"] = portraitDir + "/" + nodes["username"] + ".jpg";
             std::string localFile = combinePath(portraitDir, nodes["username"] + ".jpg");
             ensureDirectoryExisted(combinePath(m_outputPath, portraitDir));
-            m_downloader.addTask(nodes["avatar"], combinePath(m_outputPath, localFile), 0, "card");
+            // m_downloader.addTask(nodes["avatar"], combinePath(m_outputPath, localFile), 0, "card");
+            m_taskManager.download(&session, nodes["avatar"], combinePath(m_outputPath, localFile), 0, "", "card");
         }
 
         tv["%%CHANNELURL%%"] = videoNodes["url"];
@@ -1387,7 +1404,7 @@ bool MessageParser::parseForwardedMsgs(const Session& session, const WXMSG& msg,
             // std::string localPortrait;
             // bool hasPortrait = false;
             // localPortrait = combinePath(portraitPath, fmsg.usrName + ".jpg");
-            if (copyPortraitIcon(fmsg.usrName, fmsg.portrait, combinePath(m_outputPath, portraitPath)))
+            if (copyPortraitIcon(session, fmsg.usrName, fmsg.portrait, combinePath(m_outputPath, portraitPath)))
             {
                 tv["%%AVATAR%%"] = portraitPath + "/" + fmsg.usrName + ".jpg";
             }
@@ -1423,17 +1440,17 @@ std::string MessageParser::getDisplayTime(int ms) const
     return std::to_string(std::round((double)ms)) + "\"";
 }
 
-bool MessageParser::copyPortraitIcon(const std::string& usrName, const std::string& portraitUrl, const std::string& destPath) const
+bool MessageParser::copyPortraitIcon(const Session& session, const std::string& usrName, const std::string& portraitUrl, const std::string& destPath) const
 {
-    return copyPortraitIcon(usrName, md5(usrName), portraitUrl, destPath);
+    return copyPortraitIcon(session, usrName, md5(usrName), portraitUrl, destPath);
 }
 
-bool MessageParser::copyPortraitIcon(const Friend& f, const std::string& destPath) const
+bool MessageParser::copyPortraitIcon(const Session& session, const Friend& f, const std::string& destPath) const
 {
-    return copyPortraitIcon(f.getUsrName(), f.getHash(), f.getPortrait(), destPath);
+    return copyPortraitIcon(session, f.getUsrName(), f.getHash(), f.getPortrait(), destPath);
 }
 
-bool MessageParser::copyPortraitIcon(const std::string& usrName, const std::string& usrNameHash, const std::string& portraitUrl, const std::string& destPath) const
+bool MessageParser::copyPortraitIcon(const Session& session, const std::string& usrName, const std::string& usrNameHash, const std::string& portraitUrl, const std::string& destPath) const
 {
     std::string destFileName = usrName + ".jpg";
     std::string avatarPath = "share/" + m_myself.getHash() + "/session/headImg/" + usrNameHash + ".pic";
@@ -1448,14 +1465,16 @@ bool MessageParser::copyPortraitIcon(const std::string& usrName, const std::stri
                 std::string url = f->getPortrait();
                 if (!url.empty())
                 {
-                    m_downloader.addTask(url, combinePath(destPath, destFileName), 0, "avatar");
+                    // m_downloader.addTask(url, combinePath(destPath, destFileName), 0, "avatar");
+                    m_taskManager.download(&session, url, combinePath(destPath, destFileName), 0, "", "avatar");
                     hasPortrait = true;
                 }
             }
         }
         else
         {
-            m_downloader.addTask(portraitUrl, combinePath(destPath, destFileName), 0, "avatar");
+            // m_downloader.addTask(portraitUrl, combinePath(destPath, destFileName), 0, "avatar");
+            m_taskManager.download(&session, portraitUrl, combinePath(destPath, destFileName), 0, "", "avatar");
             hasPortrait = true;
         }
     }

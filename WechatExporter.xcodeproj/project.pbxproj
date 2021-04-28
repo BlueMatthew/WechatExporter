@@ -24,6 +24,9 @@
 		345CE65825F8A456003DDD0F /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = 345CE65A25F8A456003DDD0F /* Localizable.strings */; };
 		3471A77A25EB5A9A007D186B /* FileSystem.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 34AB9A1325B8908D006D3617 /* FileSystem.cpp */; };
 		347E601525C7E55100B33BAB /* SessionDataSource.mm in Sources */ = {isa = PBXBuildFile; fileRef = 347E601425C7E55100B33BAB /* SessionDataSource.mm */; };
+		3489DE46262A843C00F51416 /* AsyncExecutor.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 3489DE44262A843C00F51416 /* AsyncExecutor.cpp */; };
+		3489DE50262E74BF00F51416 /* AsyncTask.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 3489DE4E262E74BE00F51416 /* AsyncTask.cpp */; };
+		3489DE55262EB03000F51416 /* TaskManager.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 3489DE53262EB03000F51416 /* TaskManager.cpp */; };
 		3497342625F384D100CAC6CD /* Updater.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 3497342425F384D100CAC6CD /* Updater.cpp */; };
 		3497342B25F75D4300CAC6CD /* HttpHelper.mm in Sources */ = {isa = PBXBuildFile; fileRef = 3497342A25F75D4300CAC6CD /* HttpHelper.mm */; };
 		3497891B26037783001D1F8F /* AppConfiguration.mm in Sources */ = {isa = PBXBuildFile; fileRef = 3497891A26037783001D1F8F /* AppConfiguration.mm */; };
@@ -73,6 +76,13 @@
 		347E600D25C00A4100B33BAB /* MMKVReader.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MMKVReader.h; sourceTree = "<group>"; };
 		347E601325C7E53500B33BAB /* SessionDataSource.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SessionDataSource.h; sourceTree = "<group>"; };
 		347E601425C7E55100B33BAB /* SessionDataSource.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = SessionDataSource.mm; sourceTree = "<group>"; };
+		3489DE44262A843C00F51416 /* AsyncExecutor.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = AsyncExecutor.cpp; sourceTree = "<group>"; };
+		3489DE45262A843C00F51416 /* AsyncExecutor.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AsyncExecutor.h; sourceTree = "<group>"; };
+		3489DE4E262E74BE00F51416 /* AsyncTask.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = AsyncTask.cpp; sourceTree = "<group>"; };
+		3489DE4F262E74BE00F51416 /* AsyncTask.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AsyncTask.h; sourceTree = "<group>"; };
+		3489DE53262EB03000F51416 /* TaskManager.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = TaskManager.cpp; sourceTree = "<group>"; };
+		3489DE54262EB03000F51416 /* TaskManager.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TaskManager.h; sourceTree = "<group>"; };
+		3489DE5A26316ECB00F51416 /* PdfConverterImpl.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = PdfConverterImpl.h; sourceTree = "<group>"; };
 		3497342425F384D100CAC6CD /* Updater.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = Updater.cpp; sourceTree = "<group>"; };
 		3497342525F384D100CAC6CD /* Updater.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Updater.h; sourceTree = "<group>"; };
 		3497342A25F75D4300CAC6CD /* HttpHelper.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = HttpHelper.mm; sourceTree = "<group>"; };
@@ -161,6 +171,7 @@
 				3497342A25F75D4300CAC6CD /* HttpHelper.mm */,
 				3497342E25F75D5A00CAC6CD /* HttpHelper.h */,
 				345CE65A25F8A456003DDD0F /* Localizable.strings */,
+				3489DE5A26316ECB00F51416 /* PdfConverterImpl.h */,
 			);
 			path = WechatExporter;
 			sourceTree = "<group>";
@@ -201,6 +212,12 @@
 				3497342425F384D100CAC6CD /* Updater.cpp */,
 				3497342525F384D100CAC6CD /* Updater.h */,
 				347BE8D12626B37D0004EBE4 /* PdfConverter.h */,
+				3489DE44262A843C00F51416 /* AsyncExecutor.cpp */,
+				3489DE45262A843C00F51416 /* AsyncExecutor.h */,
+				3489DE4E262E74BE00F51416 /* AsyncTask.cpp */,
+				3489DE4F262E74BE00F51416 /* AsyncTask.h */,
+				3489DE53262EB03000F51416 /* TaskManager.cpp */,
+				3489DE54262EB03000F51416 /* TaskManager.h */,
 			);
 			path = core;
 			sourceTree = "<group>";
@@ -302,14 +319,17 @@
 				34A0336125E34B0300E06CC5 /* MessageParser.cpp in Sources */,
 				343F611A252322D500FFE085 /* ViewController.mm in Sources */,
 				3497891B26037783001D1F8F /* AppConfiguration.mm in Sources */,
+				3489DE46262A843C00F51416 /* AsyncExecutor.cpp in Sources */,
 				34ED31E825528A1800C42698 /* Utils_audio.cpp in Sources */,
 				342EDB0325245206006A295A /* Downloader.cpp in Sources */,
 				34E3E90A2531BD8E0093042D /* Utils_md5.cpp in Sources */,
+				3489DE50262E74BF00F51416 /* AsyncTask.cpp in Sources */,
 				343F6122252322D600FFE085 /* main.m in Sources */,
 				342EDAFC25241D91006A295A /* WechatParser.cpp in Sources */,
 				3497342B25F75D4300CAC6CD /* HttpHelper.mm in Sources */,
 				342EDB0925247852006A295A /* Utils.cpp in Sources */,
 				349DAD32255E6A0700BFE204 /* Utils_thread.cpp in Sources */,
+				3489DE55262EB03000F51416 /* TaskManager.cpp in Sources */,
 				343F6117252322D500FFE085 /* AppDelegate.mm in Sources */,
 				349DAD2C255D3BB800BFE204 /* XmlParser.cpp in Sources */,
 				342EDB062524700A006A295A /* Exporter.cpp in Sources */,
