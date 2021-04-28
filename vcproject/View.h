@@ -896,24 +896,16 @@ protected:
 	{
 		CProgressBarCtrl progressCtrl = GetDlgItem(IDC_PROGRESS);
 		PBRANGE range;
-		progressCtrl.GetRange(&range);
 		int pos = progressCtrl.GetPos();
+		progressCtrl.GetRange(&range);
 		if (increaseUpper || pos == range.iHigh)
 		{
 			range.iHigh += progressCtrl.GetStep();
 			progressCtrl.SetRange32(range.iLow, range.iHigh);
 		}
-		int prevPos = progressCtrl.OffsetPos(1);
+		progressCtrl.OffsetPos(1);
 		pos = progressCtrl.GetPos();
-#ifndef NDEBUG
-		if (pos != prevPos + 1)
-		{
-			CString text;
-			text.Format(TEXT("pos=%d, prevPos=%d"), pos, prevPos);
-			MsgBox(m_hWnd, text);
-			ATLASSERT(false);
-		}
-#endif
+
 		int percent = (range.iHigh > range.iLow) ? ((pos - range.iLow) * 100 / (range.iHigh - range.iLow)) : 0;
 		if (percent >= 100)
 		{
