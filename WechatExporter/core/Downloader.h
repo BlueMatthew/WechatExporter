@@ -16,11 +16,13 @@
 #include <utility>
 #include <thread>
 #include <mutex>
+#include <atomic>
 #include "Logger.h"
 
 class Task
 {
 protected:
+    uint32_t m_taskId;
     std::string m_url;
     std::string m_output;
     std::string m_outputTmp;
@@ -32,11 +34,11 @@ protected:
 public:
     static const unsigned int MAX_RETRIES = 3;
 public:
-    Task() : m_localCopy(false)
+    Task() : m_taskId(0), m_localCopy(false)
     {
     }
     
-    Task(const std::string &url, const std::string& output, time_t mtime, bool localCopy = false);
+    Task(uint32_t taskId, const std::string &url, const std::string& output, time_t mtime, bool localCopy = false);
     
     void setUserAgent(const std::string& userAgent)
     {
@@ -67,6 +69,7 @@ public:
     {
         if (this != &task)
         {
+            m_taskId = task.m_taskId;
             m_url = task.m_url;
             m_output = task.m_output;
             m_mtime = task.m_mtime;
@@ -94,9 +97,10 @@ protected:
     std::map<std::string, std::string> m_urls;  // url => local file path for first download
     mutable std::mutex m_mtx;
     bool m_noMoreTask;
-    unsigned m_downloadTaskSize;    // +1 when task is added, -1 when download is completed
+    size_t m_downloadTaskSize;    // +1 when task is added, -1 when download is completed
     std::vector<std::thread> m_threads;
     std::string m_userAgent;
+    static std::atomic_uint32_t m_nextTaskId;
     
     Logger* m_logger;
     
@@ -106,7 +110,8 @@ public:
     
     void setUserAgent(const std::string& userAgent);
     
-    void addTask(const std::string &url, const std::string& output, time_t mtime, std::string type = "");
+    // return taskId
+    uint32_t addTask(const std::string &url, const std::string& output, time_t mtime, std::string type = "");
     void setNoMoreTask();
     void run(int idx);
     
@@ -126,6 +131,7 @@ public:
     
 protected:
     const Task& dequeue();
+    
     
 #ifndef NDEBUG
     std::map<std::string, uint32_t> m_statsType;

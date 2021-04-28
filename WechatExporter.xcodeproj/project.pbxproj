@@ -69,6 +69,7 @@
 		345C8D4E2543F5E30036368C /* semaphore.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = semaphore.h; sourceTree = "<group>"; };
 		345CE65925F8A456003DDD0F /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/Localizable.strings; sourceTree = "<group>"; };
 		345CE66125F8A717003DDD0F /* zh-Hans */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "zh-Hans"; path = "zh-Hans.lproj/Localizable.strings"; sourceTree = "<group>"; };
+		347BE8D12626B37D0004EBE4 /* PdfConverter.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = PdfConverter.h; sourceTree = "<group>"; };
 		347E600D25C00A4100B33BAB /* MMKVReader.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MMKVReader.h; sourceTree = "<group>"; };
 		347E601325C7E53500B33BAB /* SessionDataSource.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SessionDataSource.h; sourceTree = "<group>"; };
 		347E601425C7E55100B33BAB /* SessionDataSource.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = SessionDataSource.mm; sourceTree = "<group>"; };
@@ -199,6 +200,7 @@
 				349DAD2B255D3BB800BFE204 /* XmlParser.h */,
 				3497342425F384D100CAC6CD /* Updater.cpp */,
 				3497342525F384D100CAC6CD /* Updater.h */,
+				347BE8D12626B37D0004EBE4 /* PdfConverter.h */,
 			);
 			path = core;
 			sourceTree = "<group>";

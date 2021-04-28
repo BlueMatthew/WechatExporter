@@ -12,6 +12,7 @@
 #include <atomic>
 
 #include "Logger.h"
+#include "PdfConverter.h"
 #include "WechatObjects.h"
 #include "ITunesParser.h"
 #include "ExportNotifier.h"
@@ -35,6 +36,7 @@ protected:
     std::string m_backup;
     std::string m_output;
     Logger* m_logger;
+    PdfConverter* m_pdfConverter;
     
     ITunesDb *m_iTunesDb;
     ITunesDb *m_iTunesDbShare;
@@ -55,7 +57,7 @@ protected:
     std::vector<std::pair<Friend, std::vector<Session>>> m_usersAndSessions;
 
 public:
-    Exporter(const std::string& workDir, const std::string& backup, const std::string& output, Logger* logger);
+    Exporter(const std::string& workDir, const std::string& backup, const std::string& output, Logger* logger, PdfConverter* pdfConverter);
     ~Exporter();
 
     void setNotifier(ExportNotifier *notifier);
@@ -70,6 +72,7 @@ public:
     
     void filterUsersAndSessions(const std::map<std::string, std::map<std::string, void *>>& usersAndSessions);
     void setTextMode(bool textMode = true);
+    void setPdfMode(bool pdfMode = true);
     void setOrder(bool asc = true);
     void saveFilesInSessionFolder(bool flags = true);
     void setSyncLoading(bool syncLoading = true);
