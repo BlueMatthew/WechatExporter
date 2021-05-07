@@ -270,6 +270,11 @@ Mp3Task::Mp3Task(const std::string &pcm, const std::string& mp3, unsigned int mt
 {
 }
 
+void Mp3Task::swapBuffer(std::vector<unsigned char>& buffer)
+{
+    m_pcmData.swap(buffer);
+}
+
 bool Mp3Task::run()
 {
     std::vector<unsigned char> pcmData;
@@ -278,6 +283,7 @@ bool Mp3Task::run()
         if (pcmToMp3(pcmData, m_mp3))
         {
             updateFileTime(m_mp3, m_mtime);
+            std::this_thread::sleep_for(std::chrono::milliseconds(192));
             return true;
         }
     }

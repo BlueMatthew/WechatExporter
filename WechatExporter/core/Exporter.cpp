@@ -213,7 +213,7 @@ void Exporter::swapUsersAndSessions(std::vector<std::pair<Friend, std::vector<Se
 
 bool Exporter::runImpl()
 {
-#ifndef NDEBUG
+#if !defined(NDEBUG) || defined(DBG_PERF)
     setThreadName("exp");
 #endif
     time_t startTime;
@@ -392,11 +392,17 @@ bool Exporter::exportUser(Friend& user, std::string& userOutputPath)
     }
     
     bool pdfOutput = (m_options & SPO_PDF_MODE && NULL != m_pdfConverter);
+    // bool pdfOutput = (m_options & SPO_PDF_MODE && NULL != m_pdfConverter);
+    if (pdfOutput)
+    {
+        makeDirectory(combinePath(m_output, "pdf", userOutputPath));
+    }
     
 #ifdef USING_DOWNLOADER
     Downloader downloader(m_logger);
 #else
-    TaskManager taskManager(pdfOutput, m_logger);
+    // TaskManager taskManager(pdfOutput, m_logger);
+    TaskManager taskManager(false, m_logger);
 #endif
 #ifndef NDEBUG
     m_logger->debug("UA: " + m_wechatInfo.buildUserAgent());
@@ -469,14 +475,14 @@ bool Exporter::exportUser(Friend& user, std::string& userOutputPath)
         int count = exportSession(*myself, msgParser, *it, userBase, outputBase);
         
         m_logger->write(formatString(getLocaleString("Succeeded handling %d messages."), count));
-        
+
         if (count > 0)
         {
             std::string userItem = getTemplate("listitem");
             replaceAll(userItem, "%%ITEMPICPATH%%", "Portrait/" + it->getLocalPortrait());
             if ((m_options & SPO_IGNORE_HTML_ENC) == 0)
             {
-                replaceAll(userItem, "%%ITEMLINK%%", encodeUrl(it->getOutputFileName()) + "." + ((m_options & SPO_PDF_MODE && NULL != m_pdfConverter) ? "pdf" : m_extName));
+                replaceAll(userItem, "%%ITEMLINK%%", encodeUrl(it->getOutputFileName()) + "." + m_extName);
                 replaceAll(userItem, "%%ITEMTEXT%%", safeHTML(sessionDisplayName));
             }
             else
@@ -492,14 +498,15 @@ bool Exporter::exportUser(Friend& user, std::string& userOutputPath)
         
         if (pdfOutput)
         {
+            // std::string 
             std::string htmlFileName = combinePath(outputBase, it->getOutputFileName() + "." + m_extName);
             if (existsFile(htmlFileName))
             {
-                std::string pdfFileName = combinePath(outputBase, it->getOutputFileName() + ".pdf");
-                taskManager.convertPdf(&(*it), htmlFileName, pdfFileName, m_pdfConverter);
+                std::string pdfFileName = combinePath(m_output, "pdf", userOutputPath, it->getOutputFileName() + ".pdf");
+                // taskManager.convertPdf(&(*it), htmlFileName, pdfFileName, m_pdfConverter);
+                m_pdfConverter->convert(htmlFileName, pdfFileName);
             }
-
-            pdfSessions.push_back(&(*it));
+            // pdfSessions.push_back(&(*it));
         }
     }
 

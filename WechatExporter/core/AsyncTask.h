@@ -118,12 +118,16 @@ public:
         return "Mp3: " + m_mp3;
     }
     
+    void swapBuffer(std::vector<unsigned char>& buffer);
+
     bool run();
     
 private:
     std::string m_pcm;
     std::string m_mp3;
     unsigned int m_mtime;
+    
+    std::vector<unsigned char> m_pcmData;
 };
 
 class PdfTask : public AsyncExecutor::Task

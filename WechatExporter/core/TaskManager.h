@@ -37,6 +37,8 @@ private:
     std::map<uint32_t, std::set<AsyncExecutor::Task *>> m_copyTaskQueue;
     std::map<const Session*, AsyncExecutor::Task *> m_pdfTaskQueue;
     
+    std::queue<std::vector<unsigned char>> m_Buffers;
+    
 public:
     
     TaskManager(bool needPdfExecutor, Logger* logger);

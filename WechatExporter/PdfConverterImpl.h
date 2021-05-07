@@ -45,6 +45,27 @@ public:
     {
         m_workDir = [NSString stringWithString:workDir];
     }
+    
+    void initShellFile(const std::string& output)
+    {
+        
+    }
+    
+    void appendConvertCommand(const std::string& htmlPath, const std::string& pdfPath)
+    {
+        if (!m_pdfSupported)
+        {
+            return;
+        }
+
+        std::string command = [m_assemblyPath UTF8String];
+        command += " --headless --print-to-pdf-no-header --print-to-pdf=\"" + pdfPath + "\" ";
+        NSURL *url = [NSURL fileURLWithPath:[NSString stringWithUTF8String:htmlPath.c_str()]];
+        
+        command += [[url absoluteString] UTF8String];
+        
+        // return command;
+    }
 
     bool convert(const std::string& htmlPath, const std::string& pdfPath)
     {

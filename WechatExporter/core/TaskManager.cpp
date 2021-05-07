@@ -12,14 +12,15 @@
 
 TaskManager::TaskManager(bool needPdfExecutor, Logger* logger) : m_logger(logger), m_downloadExecutor(NULL), m_audioExecutor(NULL), m_pdfExecutor(NULL)
 {
-    m_downloadExecutor = new AsyncExecutor(4, 8, this);
-    m_audioExecutor = new AsyncExecutor(2, 4, this);
+    m_downloadExecutor = new AsyncExecutor(2, 2, this);
+    m_audioExecutor = new AsyncExecutor(2, 2, this);
+    // m_audioExecutor = m_downloadExecutor;
     if (needPdfExecutor)
     {
         m_pdfExecutor = new AsyncExecutor(4, 4, this);
     }
     
-#ifndef NDEBUG
+#if !defined(NDEBUG) || defined(DBG_PERF)
     m_downloadExecutor->setTag("dl");
     m_audioExecutor->setTag("audio");
     if (m_pdfExecutor)
@@ -93,15 +94,39 @@ void TaskManager::cancel()
 
 size_t TaskManager::getNumberOfQueue() const
 {
-    size_t size = m_downloadExecutor->getNumberOfQueue();
-    size += m_audioExecutor->getNumberOfQueue();
-    size += m_pdfTaskQueue.size();
+    size_t numberOfDownloads = m_downloadExecutor->getNumberOfQueue();
+    size_t numberOfAudio = m_audioExecutor->getNumberOfQueue();
+    size_t numberOfPdf = m_pdfTaskQueue.size();
     
-    std::unique_lock<std::mutex> lock(m_mutex);
-    size += m_copyTaskQueue.size();
-    size += m_pdfTaskQueue.size();
+    {
+        std::unique_lock<std::mutex> lock(m_mutex);
+        numberOfDownloads += m_copyTaskQueue.size();
+        numberOfPdf += m_pdfTaskQueue.size();
+    }
     
-    return size;
+    std::string queueDesc = "";
+    if (numberOfDownloads > 0)
+    {
+        queueDesc += std::to_string(numberOfDownloads) + " downloads";
+    }
+    if (numberOfAudio > 0)
+    {
+        if (!queueDesc.empty())
+        {
+            queueDesc += ", ";
+        }
+        queueDesc += std::to_string(numberOfAudio) + " audios";
+    }
+    if (numberOfPdf > 0)
+    {
+        if (!queueDesc.empty())
+        {
+            queueDesc += ", ";
+        }
+        queueDesc += std::to_string(numberOfPdf) + " pdf files";
+    }
+
+    return numberOfDownloads + numberOfAudio + numberOfPdf;
 }
 
 void TaskManager::shutdownExecutors()
