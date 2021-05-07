@@ -8,6 +8,7 @@
 
 #include "PdfConverter.h"
 #include "FileSystem.h"
+#include "Utils.h"
 
 #ifndef PdfConverterImpl_h
 #define PdfConverterImpl_h
@@ -15,7 +16,7 @@
 class PdfConverterImpl : public PdfConverter
 {
 public:
-    PdfConverterImpl() : m_pdfSupported(false)
+    PdfConverterImpl(const char *outputDir) : m_pdfSupported(false)
     {
         if (detectChromeInstalled())
         {
@@ -29,12 +30,16 @@ public:
             // m_param = @[@"--headless", @"--disable-extensions", @"--disable-gpu", @"--print-to-pdf-no-header"];
             m_param = @[@"--headless", @"--print-to-pdf-no-header"];
         }
+        
+        if (NULL != outputDir)
+        {
+            initShellFile(outputDir);
+        }
     }
     
     bool isPdfSupported() const
     {
-        return false;
-        // return m_pdfSupported;
+        return m_pdfSupported;
     }
 
     ~PdfConverterImpl()
@@ -46,30 +51,20 @@ public:
         m_workDir = [NSString stringWithString:workDir];
     }
     
-    void initShellFile(const std::string& output)
-    {
-        
-    }
-    
-    void appendConvertCommand(const std::string& htmlPath, const std::string& pdfPath)
-    {
-        if (!m_pdfSupported)
-        {
-            return;
-        }
-
-        std::string command = [m_assemblyPath UTF8String];
-        command += " --headless --print-to-pdf-no-header --print-to-pdf=\"" + pdfPath + "\" ";
-        NSURL *url = [NSURL fileURLWithPath:[NSString stringWithUTF8String:htmlPath.c_str()]];
-        
-        command += [[url absoluteString] UTF8String];
-        
-        // return command;
-    }
-
     bool convert(const std::string& htmlPath, const std::string& pdfPath)
     {
-        return false;
+        NSURL *url = [NSURL fileURLWithPath:[NSString stringWithUTF8String:htmlPath.c_str()]];
+     
+        std::string command = "chrome ";
+        command += "--headless --disable-extensions --print-to-pdf-no-header --print-to-pdf=\"";
+        command += pdfPath;
+        command += "\" ";
+        command += [[url absoluteString] UTF8String];
+        command += "\r";
+                
+        appendFile(m_shellPath, reinterpret_cast<const unsigned char *>(command.c_str()), command.size());
+        
+        return true;
         
         /*
         if (!m_pdfSupported)
@@ -154,11 +149,25 @@ protected:
         
         return false;
     }
+    
+    void initShellFile(const char *outputDir)
+    {
+        m_shellPath = outputDir;
+        m_shellPath = combinePath(m_shellPath, "pdf.sh");
+        deleteFile(m_shellPath);
+
+        std::string aliasCmd = [m_assemblyPath UTF8String];
+        replaceAll(aliasCmd, " ", "\\ ");
+        aliasCmd = "alias chrome=\"" + aliasCmd + "\"\r";
+        
+        appendFile(m_shellPath, reinterpret_cast<const unsigned char *>(aliasCmd.c_str()), aliasCmd.size());
+    }
 
 private:
     bool m_pdfSupported;
     NSString *m_assemblyPath;
     NSArray *m_param;
+    std::string m_shellPath;
     NSString *m_workDir;
 };
 

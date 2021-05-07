@@ -724,6 +724,7 @@ public:
 		if (NULL != m_pdfConverter)
 		{
 			delete m_pdfConverter;
+			m_pdfConverter = NULL;
 		}
 		if (outputFormat == AppConfiguration::OUTPUT_FORMAT_PDF)
 		{	
