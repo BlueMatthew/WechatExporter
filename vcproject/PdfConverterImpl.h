@@ -53,29 +53,26 @@ public:
 
 	}
 
-	CString buildCommand(const CString& htmlPath, const CString& pdfPath)
+	bool makeUserDirectory(const std::string& dirName)
 	{
-		if (!m_pdfSupported)
-		{
-			return "";
-		}
+		CW2T pszDir(CA2W(dirName.c_str(), CP_UTF8));
 
-		TCHAR output[MAX_PATH * 4] = { 0 };
-		DWORD cchUrl = MAX_PATH * 4; // max posible buffer size
+		TCHAR pdfOutputDir[MAX_PATH] = { 0 };
+		PathCombine(pdfOutputDir, m_output, TEXT("pdf"));
 
-		HRESULT res = UrlCreateFromPath(htmlPath, output, &cchUrl, NULL);
-		if (FAILED(res))
-		{
-			return "";
-		}
+		TCHAR userOutputDir[MAX_PATH] = { 0 };
+		PathCombine(userOutputDir, pdfOutputDir, pszDir);
+		CString command = TEXT("\r\nIF NOT EXIST \"");
+		command += userOutputDir;
+		command += TEXT("\" MKDIR \"");
+		command += userOutputDir;
+		command += TEXT("\"\r\n");
 
-		CString command(TEXT("\""));
-		command += m_assemblyPath;
-		command += TEXT("\" ");
-		command += TEXT("--headless --print-to-pdf-no-header --print-to-pdf=\"") + pdfPath + TEXT("\" ");
-		command += output;
+		CW2A pszU(CT2W(command), CP_UTF8);
 
-		return command;
+		appendFile(m_shellPath, reinterpret_cast<const unsigned char *>((LPCSTR)pszU), strlen(pszU));
+
+		return true;
 	}
 
 	bool convert(const std::string& htmlPath, const std::string& pdfPath)
@@ -184,13 +181,24 @@ protected:
 
 	void initShellFile(LPCTSTR outputDir)
 	{
+		m_output = outputDir;
+
 		TCHAR shellFile[MAX_PATH] = { 0 };
 		PathCombine(shellFile, outputDir, TEXT("pdf.bat"));
 		m_shellPath = shellFile;
 		::DeleteFile(shellFile);
 
-		LPCTSTR chcp = TEXT("chcp 65001\r\n");
-		CW2A pszU(chcp, CP_UTF8);
+		CString command = TEXT("chcp 65001\r\n");
+		TCHAR pdfPath[MAX_PATH] = { 0 };
+		PathCombine(pdfPath, outputDir, TEXT("pdf"));
+
+		command += TEXT("IF NOT EXIST \"");
+		command += pdfPath;
+		command += TEXT("\" MKDIR \"");
+		command += pdfPath;
+		command += TEXT("\"\r\n");
+
+		CW2A pszU(CT2W(command), CP_UTF8);
 
 		appendFile((LPCTSTR)m_shellPath, reinterpret_cast<const unsigned char *>((LPCSTR)pszU), strlen(pszU));
 	}
@@ -215,6 +223,7 @@ protected:
 private:
 	bool m_pdfSupported;
 	CString m_assemblyPath;
+	CString m_output;
 	CString m_shellPath;
 	CString m_param;
 };

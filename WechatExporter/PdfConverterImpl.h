@@ -51,16 +51,26 @@ public:
         m_workDir = [NSString stringWithString:workDir];
     }
     
+    bool makeUserDirectory(const std::string& dirName)
+    {
+        std::string command = replaceAll(dirName, " ", "\\ ");
+        command = NEW_LINE + "[ -d \"pdf/" + command + "\" ] || mkdir \"pdf/" + command + "\"" + NEW_LINE;
+        
+        appendFile(m_shellPath, reinterpret_cast<const unsigned char *>(command.c_str()), command.size());
+        
+        return true;
+    }
+    
     bool convert(const std::string& htmlPath, const std::string& pdfPath)
     {
         NSURL *url = [NSURL fileURLWithPath:[NSString stringWithUTF8String:htmlPath.c_str()]];
      
         std::string command = "chrome ";
-        command += "--headless --disable-extensions --print-to-pdf-no-header --print-to-pdf=\"";
+        command += "--headless --disable-gpu --disable-extensions --print-to-pdf-no-header --print-to-pdf=\"";
         command += pdfPath;
         command += "\" ";
         command += [[url absoluteString] UTF8String];
-        command += "\r";
+        command += NEW_LINE;
                 
         appendFile(m_shellPath, reinterpret_cast<const unsigned char *>(command.c_str()), command.size());
         
@@ -152,13 +162,19 @@ protected:
     
     void initShellFile(const char *outputDir)
     {
-        m_shellPath = outputDir;
-        m_shellPath = combinePath(m_shellPath, "pdf.sh");
+        m_output = outputDir;
+        m_shellPath = combinePath(m_output, "pdf.sh");
         deleteFile(m_shellPath);
 
         std::string aliasCmd = [m_assemblyPath UTF8String];
         replaceAll(aliasCmd, " ", "\\ ");
-        aliasCmd = "alias chrome=\"" + aliasCmd + "\"\r";
+        aliasCmd = "#/bin/sh" + NEW_LINE + NEW_LINE + "alias chrome=\"" + aliasCmd + "\"" + NEW_LINE + NEW_LINE;
+        
+        std::string output = m_output;
+        replaceAll(output, " ", "\\ ");
+        
+        aliasCmd += "cd \"" + output + "\"" + NEW_LINE;
+        aliasCmd += "[ -d pdf ] || mkdir pdf" + NEW_LINE;
         
         appendFile(m_shellPath, reinterpret_cast<const unsigned char *>(aliasCmd.c_str()), aliasCmd.size());
     }
@@ -167,8 +183,11 @@ private:
     bool m_pdfSupported;
     NSString *m_assemblyPath;
     NSArray *m_param;
+    std::string m_output;
     std::string m_shellPath;
     NSString *m_workDir;
+    
+    const std::string NEW_LINE = "\n";
 };
 
 
