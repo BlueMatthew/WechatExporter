@@ -12,8 +12,8 @@
 
 TaskManager::TaskManager(bool needPdfExecutor, Logger* logger) : m_logger(logger), m_downloadExecutor(NULL), m_audioExecutor(NULL), m_pdfExecutor(NULL)
 {
-    m_downloadExecutor = new AsyncExecutor(2, 2, this);
-    m_audioExecutor = new AsyncExecutor(2, 2, this);
+    m_downloadExecutor = new AsyncExecutor(2, 4, this);
+    m_audioExecutor = new AsyncExecutor(1, 1, this);
     // m_audioExecutor = m_downloadExecutor;
     if (needPdfExecutor)
     {
