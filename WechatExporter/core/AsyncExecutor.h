@@ -68,7 +68,7 @@ public:
         virtual ~Callback() {}
     };
     
-private:
+protected:
     class Thread
     {
     public:
@@ -78,6 +78,7 @@ private:
         AsyncExecutor* m_executor;
         std::unique_ptr<std::thread> m_thread;
         void ThreadFunc();
+        
     };
 
 public:
@@ -85,23 +86,23 @@ public:
     ~AsyncExecutor();
 
     static uint32_t genNextTaskId();
-    void addTask(Task *task);
+    virtual void addTask(Task *task);
     
     size_t getNumberOfQueue() const;
-    
+    void shutdown();
     void cancel();
     
-#ifndef NDEBUG
+#if !defined(NDEBUG) || defined(DBG_PERF)
     void setTag(const std::string& tag)
     {
         m_tag = tag;
     }
 #endif
 
-private:
+protected:
     
     Callback* m_callback;
-#ifndef NDEBUG
+#if !defined(NDEBUG) || defined(DBG_PERF)
     std::string m_tag;
     uint32_t m_tid;
 #endif
@@ -114,6 +115,7 @@ private:
     int m_reserve_threads;
     int m_max_threads;
     int m_nthreads;
+
     int m_threads_waiting;
     std::list<Thread*> m_dead_threads;
     

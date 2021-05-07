@@ -666,16 +666,17 @@ public:
 
 		std::string backup = manifest.getPath();
 
-		TCHAR buffer[MAX_PATH] = { 0 };
-		GetDlgItemText(IDC_OUTPUT, buffer, MAX_PATH);
-		if (!::PathFileExists(buffer))
+		TCHAR outputDir[MAX_PATH] = { 0 };
+		GetDlgItemText(IDC_OUTPUT, outputDir, MAX_PATH);
+		if (!::PathFileExists(outputDir))
 		{
 			MsgBox(m_hWnd, IDS_INVALID_OUTPUT_DIR);
 			return 0;
 		}
-		CW2A output(CT2W(buffer), CP_UTF8);
+		CW2A output(CT2W(outputDir), CP_UTF8);
 
-		DWORD dwRet = GetCurrentDirectory(MAX_PATH, buffer);
+		TCHAR curDir[MAX_PATH] = { 0 };
+		DWORD dwRet = GetCurrentDirectory(MAX_PATH, curDir);
 		if (dwRet == 0)
 		{
 			// printf("GetCurrentDirectory failed (%d)\n", GetLastError());
@@ -700,7 +701,7 @@ public:
 		CListBox lstboxLogs = GetDlgItem(IDC_LOGS);
 		lstboxLogs.ResetContent();
 
-		CW2A resDir(CT2W(buffer), CP_UTF8);
+		CW2A resDir(CT2W(curDir), CP_UTF8);
 
 		std::map<std::string, std::map<std::string, void *>> usersAndSessions;
 		int numberOfSessions = 0;
@@ -720,9 +721,13 @@ public:
 		std::string log = "Record Count:" + std::to_string(numberOfRecords);
 		m_logger->debug(log);
 #endif
-		if (outputFormat == AppConfiguration::OUTPUT_FORMAT_PDF && NULL == m_pdfConverter)
+		if (NULL != m_pdfConverter)
 		{
-			m_pdfConverter = new PdfConverterImpl();
+			delete m_pdfConverter;
+		}
+		if (outputFormat == AppConfiguration::OUTPUT_FORMAT_PDF)
+		{	
+			m_pdfConverter = new PdfConverterImpl(outputDir);
 		}
 
 		m_exporter = new Exporter((LPCSTR)resDir, backup, (LPCSTR)output, m_logger, m_pdfConverter);
@@ -743,6 +748,10 @@ public:
 		}
 		else if (outputFormat == AppConfiguration::OUTPUT_FORMAT_PDF)
 		{
+			TCHAR pdfDir[MAX_PATH] = { 0 };
+			PathCombine(pdfDir, outputDir, TEXT("pdf"));
+			CreateDirectory(pdfDir, NULL);
+
 			m_exporter->setPdfMode();
 		}
 		
@@ -767,6 +776,13 @@ public:
 
 	LRESULT OnComplete(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 	{
+		if (NULL != m_pdfConverter)
+		{
+			m_pdfConverter->executeCommand();
+			delete m_pdfConverter;
+			m_pdfConverter = NULL;
+		}
+
 		if (m_exporter)
 		{
 			m_exporter->waitForComplition();
@@ -779,7 +795,7 @@ public:
 			KillTimer(m_eventIdProgress);
 			m_eventIdProgress = 0;
 		}
-		
+
 		PostMessage(WM_UPD_VIEWSTATE, VS_IDLE, 1);
 		return 0;
 	}
@@ -830,7 +846,6 @@ public:
 		m_progressListCtrl.ClearProgressBar();
 
 		int nItem = wParam;
-		
 		CString text;
 		text.LoadString((lParam != 0) ? IDS_SESSION_CANCELLED : IDS_SESSION_DONE);
 		m_progressListCtrl.SetItemText(nItem, SUBITEM_PROGRESS, text);

@@ -194,7 +194,7 @@ BOOL AppConfiguration::GetSupportingFilter()
 
 BOOL AppConfiguration::IsPdfSupported()
 {
-	PdfConverterImpl converter;
+	PdfConverterImpl converter(NULL);
 
 	return converter.isPdfSupported() ? TRUE : FALSE;
 }

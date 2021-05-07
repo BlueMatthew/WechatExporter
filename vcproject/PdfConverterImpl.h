@@ -2,11 +2,12 @@
 
 #include "stdafx.h"
 #include "Core.h"
+#include <atlstr.h>
 
 class PdfConverterImpl : public PdfConverter
 {
 public:
-	PdfConverterImpl() : m_pdfSupported(false)
+	PdfConverterImpl(LPCTSTR outputDir) : m_pdfSupported(false)
 	{
 		if (isChromeInstalled(m_assemblyPath))
 		{
@@ -18,6 +19,11 @@ public:
 			m_pdfSupported = true;
 			m_param = TEXT("--headless --disable-extensions --disable-gpu --print-to-pdf=\"%%DEST%%\" --print-to-pdf-no-header \"file://%%SRC%%\"");
 		}
+
+		if (NULL != outputDir)
+		{
+			initShellFile(outputDir);
+		}
 	}
 	
 	bool isPdfSupported() const
@@ -27,10 +33,89 @@ public:
 
 	~PdfConverterImpl()
 	{
+	}
+
+	void executeCommand()
+	{
+		if (!::PathFileExists(m_shellPath))
+		{
+			return;
+		}
+
+		const char *pauseCmd = "pause\r\n";
+		appendFile(m_shellPath, reinterpret_cast<const unsigned char *>(pauseCmd), strlen(pauseCmd));
+
+		ShellExecute(NULL, TEXT("open"), m_shellPath, NULL, NULL, SW_SHOW);
+	}
+
+	void buildCommands(LPCTSTR outputBase, LPCTSTR userName)
+	{
 
 	}
 
+	CString buildCommand(const CString& htmlPath, const CString& pdfPath)
+	{
+		if (!m_pdfSupported)
+		{
+			return "";
+		}
+
+		TCHAR output[MAX_PATH * 4] = { 0 };
+		DWORD cchUrl = MAX_PATH * 4; // max posible buffer size
+
+		HRESULT res = UrlCreateFromPath(htmlPath, output, &cchUrl, NULL);
+		if (FAILED(res))
+		{
+			return "";
+		}
+
+		CString command(TEXT("\""));
+		command += m_assemblyPath;
+		command += TEXT("\" ");
+		command += TEXT("--headless --print-to-pdf-no-header --print-to-pdf=\"") + pdfPath + TEXT("\" ");
+		command += output;
+
+		return command;
+	}
+
 	bool convert(const std::string& htmlPath, const std::string& pdfPath)
+	{
+		if (!m_pdfSupported)
+		{
+			return false;
+		}
+
+		CW2T pszHtmlPath(CA2W(htmlPath.c_str(), CP_UTF8));
+		TCHAR url[MAX_PATH * 4] = { 0 };
+		DWORD cchUrl = MAX_PATH * 4; // max posible buffer size
+		
+		HRESULT res = UrlCreateFromPath(pszHtmlPath, url, &cchUrl, NULL);
+		if (FAILED(res))
+		{
+			return false;
+		}
+
+		CW2T pszPdfPath(CA2W(pdfPath.c_str(), CP_UTF8));
+
+		CString command(TEXT("\""));
+		command += m_assemblyPath;
+		command += TEXT("\" ");
+		command += TEXT("--headless --disable-extensions --disable-gpu --print-to-pdf-no-header --print-to-pdf=\"");
+		command += (LPCTSTR)pszPdfPath;
+		command += TEXT("\" ");
+		command += url;
+		command += TEXT("\r\n");
+
+		CT2A content(command, CP_UTF8);
+		
+		appendFile((LPCTSTR)m_shellPath, reinterpret_cast<const unsigned char *>((LPCSTR)content), strlen(content));
+		// appendFile((LPCTSTR)m_shellPath, reinterpret_cast<const unsigned char *>((LPCTSTR)command), _tcslen(command) * sizeof(TCHAR));
+
+		return true;
+	}
+
+	
+	bool convert2(const std::string& htmlPath, const std::string& pdfPath)
 	{
 		CString param = m_param;
 		CW2T pszSrc(CA2W(htmlPath.c_str(), CP_UTF8));
@@ -97,8 +182,39 @@ protected:
 		return installed;
 	}
 
+	void initShellFile(LPCTSTR outputDir)
+	{
+		TCHAR shellFile[MAX_PATH] = { 0 };
+		PathCombine(shellFile, outputDir, TEXT("pdf.bat"));
+		m_shellPath = shellFile;
+		::DeleteFile(shellFile);
+
+		LPCTSTR chcp = TEXT("chcp 65001\r\n");
+		CW2A pszU(chcp, CP_UTF8);
+
+		appendFile((LPCTSTR)m_shellPath, reinterpret_cast<const unsigned char *>((LPCSTR)pszU), strlen(pszU));
+	}
+
+	bool appendFile(LPCTSTR path, const unsigned char* data, size_t dataLength)
+	{
+		HANDLE hFile = ::CreateFile(path, GENERIC_WRITE, 0, NULL, OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+		if (hFile == INVALID_HANDLE_VALUE)
+		{
+			return false;
+		}
+
+		::SetFilePointer(hFile, 0, 0, FILE_END);
+		DWORD dwBytesToWrite = static_cast<DWORD>(dataLength);
+		DWORD dwBytesWritten = 0;
+		BOOL bErrorFlag = WriteFile(hFile, data, dwBytesToWrite, &dwBytesWritten, NULL);
+		::CloseHandle(hFile);
+		return (TRUE == bErrorFlag);
+
+	}
+
 private:
 	bool m_pdfSupported;
 	CString m_assemblyPath;
+	CString m_shellPath;
 	CString m_param;
 };

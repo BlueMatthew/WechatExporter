@@ -29,7 +29,7 @@ AsyncExecutor::Thread::~Thread()
 
 void AsyncExecutor::Thread::ThreadFunc()
 {
-#ifndef NDEBUG
+#if !defined(NDEBUG) || defined(DBG_PERF)
     std::string tname = m_executor->m_tag + std::to_string(++m_executor->m_tid);
     setThreadName(tname.c_str());
 #endif
@@ -121,6 +121,11 @@ size_t AsyncExecutor::getNumberOfQueue() const
     return size;
 }
 
+void AsyncExecutor::shutdown()
+{
+    
+}
+
 void AsyncExecutor::cancel()
 {
     std::queue<Task *> tasks;
@@ -136,7 +141,6 @@ void AsyncExecutor::cancel()
         delete task;
     }
 }
-
 
 void AsyncExecutor::ThreadFunc()
 {
