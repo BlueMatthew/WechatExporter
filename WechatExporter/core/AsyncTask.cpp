@@ -283,7 +283,7 @@ bool Mp3Task::run()
         if (pcmToMp3(pcmData, m_mp3))
         {
             updateFileTime(m_mp3, m_mtime);
-            std::this_thread::sleep_for(std::chrono::milliseconds(192));
+            // std::this_thread::sleep_for(std::chrono::milliseconds(192));
             return true;
         }
     }
