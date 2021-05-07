@@ -395,7 +395,7 @@ bool Exporter::exportUser(Friend& user, std::string& userOutputPath)
     // bool pdfOutput = (m_options & SPO_PDF_MODE && NULL != m_pdfConverter);
     if (pdfOutput)
     {
-        makeDirectory(combinePath(m_output, "pdf", userOutputPath));
+        m_pdfConverter->makeUserDirectory(userOutputPath);
     }
     
 #ifdef USING_DOWNLOADER

@@ -749,10 +749,6 @@ public:
 		}
 		else if (outputFormat == AppConfiguration::OUTPUT_FORMAT_PDF)
 		{
-			TCHAR pdfDir[MAX_PATH] = { 0 };
-			PathCombine(pdfDir, outputDir, TEXT("pdf"));
-			CreateDirectory(pdfDir, NULL);
-
 			m_exporter->setPdfMode();
 		}
 		

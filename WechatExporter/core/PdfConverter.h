@@ -12,6 +12,7 @@
 class PdfConverter
 {
 public:
+    virtual bool makeUserDirectory(const std::string& dirName) = 0;
     virtual bool convert(const std::string& htmlPath, const std::string& pdfPath) = 0;
     virtual ~PdfConverter() {}
 };
