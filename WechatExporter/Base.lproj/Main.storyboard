@@ -72,6 +72,12 @@
                                                 <action selector="formatMenuItemClick:" target="Voe-Tx-rLC" id="5kY-da-x9v"/>
                                             </connections>
                                         </menuItem>
+                                        <menuItem title="PDF" identifier="pdfMode" id="T2A-kG-daZ">
+                                            <modifierMask key="keyEquivalentModifierMask"/>
+                                            <connections>
+                                                <action selector="formatMenuItemClick:" target="Voe-Tx-rLC" id="g68-A8-wGQ"/>
+                                            </connections>
+                                        </menuItem>
                                     </items>
                                 </menu>
                             </menuItem>

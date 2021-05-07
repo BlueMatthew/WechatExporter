@@ -466,6 +466,14 @@
     BOOL syncLoading = ![AppConfiguration getAsyncLoading];
     BOOL saveFilesInSessionFolder = [AppConfiguration getSavingInSession];
     
+    NSInteger outputFormat = [AppConfiguration getOutputFormat];
+    if (outputFormat == OUTPUT_FORMAT_PDF)
+    {
+        syncLoading = YES;
+        // loadingDataOnScroll = false;
+        // supportingFilter = false;
+    }
+    
     self.txtViewLogs.string = @"";
     [self onStart];
     NSDictionary *dict = @{@"backup": backupPath, @"output": outputPath, @"descOrder": @(descOrder), @"textMode": @(textMode), @"syncLoading": @(syncLoading), @"saveFilesInSessionFolder": @(saveFilesInSessionFolder)};
@@ -514,13 +522,15 @@
     [m_dataSource getSelectedUserAndSessions:usersAndSessions];
     
 #ifndef NDEBUG
+    if (NULL != m_pdfConverter)
+    {
+        delete m_pdfConverter;
+        m_pdfConverter = NULL;
+    }
     if ([AppConfiguration isPdfMode])
     {
-        if (NULL == m_pdfConverter)
-        {
-            m_pdfConverter = new PdfConverterImpl();
-            m_pdfConverter->setWorkDir(output);
-        }
+        m_pdfConverter = new PdfConverterImpl([output UTF8String]);
+        m_pdfConverter->setWorkDir(output);
     }
 #endif
     m_exporter = new Exporter([workDir UTF8String], [backup UTF8String], [output UTF8String], m_logger, m_pdfConverter);

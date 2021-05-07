@@ -37,6 +37,8 @@
     menuItem.state = htmlMode ? NSControlStateValueOn : NSControlStateValueOff;
     menuItem = [formatMenu.submenu itemAtIndex:1];
     menuItem.state = [AppConfiguration isTextMode] ? NSControlStateValueOn : NSControlStateValueOff;
+    menuItem = [formatMenu.submenu itemAtIndex:2];
+    menuItem.state = [AppConfiguration isPdfMode] ? NSControlStateValueOn : NSControlStateValueOff;
     
     NSMenuItem *optionsMenu = [mainMenu itemAtIndex:3];
     // [optionsMenu.submenu setAutoenablesItems:NO]; // Set in storyboard
@@ -80,23 +82,26 @@
 
 - (IBAction)formatMenuItemClick:(NSMenuItem *)sender
 {
-    if ([sender.identifier isEqualToString:@"htmlMode"] || [sender.identifier isEqualToString:@"textMode"])
+    if ([sender.identifier isEqualToString:@"htmlMode"] || [sender.identifier isEqualToString:@"textMode"] || [sender.identifier isEqualToString:@"pdfMode"])
     {
         if (sender.state == NSControlStateValueOff)
         {
-            NSInteger outputFormat = [sender.identifier isEqualToString:@"htmlMode"] ? OUTPUT_FORMAT_HTML : OUTPUT_FORMAT_TEXT;
+            NSInteger outputFormat = [sender.identifier isEqualToString:@"htmlMode"] ? OUTPUT_FORMAT_HTML : ([sender.identifier isEqualToString:@"pdfMode"] ? OUTPUT_FORMAT_PDF : OUTPUT_FORMAT_TEXT);
             [AppConfiguration setOutputFormat:outputFormat];
             BOOL htmlMode = [AppConfiguration isHtmlMode];
             
-            sender.state = NSControlStateValueOn;
+            // sender.state = NSControlStateValueOn;
             
             NSMenuItem *menuItem = nil;
             NSMenu *mainMenu = [[NSApplication sharedApplication] mainMenu];
 
             NSMenuItem *formatMenu = [mainMenu itemAtIndex:2];
-            menuItem = [formatMenu.submenu itemAtIndex:(htmlMode ? 1 : 0)];
-            menuItem.state = NSControlStateValueOff;
-            
+            for (NSInteger idx = 0; idx < 3; idx++)
+            {
+                menuItem = [formatMenu.submenu itemAtIndex:idx];
+                menuItem.state = [menuItem.identifier isEqualToString:sender.identifier] ? NSControlStateValueOn : NSControlStateValueOff;
+            }
+
             NSMenuItem *optionsMenu = [mainMenu itemAtIndex:3];
             menuItem = [optionsMenu.submenu itemAtIndex:3];
             menuItem.enabled = htmlMode;
