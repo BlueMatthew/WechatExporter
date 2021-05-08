@@ -643,6 +643,14 @@
 
 - (void)onComplete:(BOOL)cancelled
 {
+    if (NULL != m_pdfConverter)
+    {
+        m_pdfConverter->executeCommand();
+        
+        delete m_pdfConverter;
+        m_pdfConverter = NULL;
+    }
+    
     [self setUIEnabled:YES withCancellable:YES];
     
     if (m_exporter)

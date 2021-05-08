@@ -86,7 +86,7 @@ public:
     ~AsyncExecutor();
 
     static uint32_t genNextTaskId();
-    virtual void addTask(Task *task);
+    void addTask(Task *task);
     
     size_t getNumberOfQueue() const;
     void shutdown();

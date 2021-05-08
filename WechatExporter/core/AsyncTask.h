@@ -15,7 +15,7 @@
 
 #define TASK_TYPE_DOWNLOAD  1
 #define TASK_TYPE_COPY      2
-#define TASK_TYPE_MP3       3
+#define TASK_TYPE_AUDIO     3
 #define TASK_TYPE_PDF       4
 
 class DownloadTask : public AsyncExecutor::Task
@@ -111,7 +111,7 @@ public:
     
     virtual int getType() const
     {
-        return TASK_TYPE_MP3;
+        return TASK_TYPE_AUDIO;
     }
     virtual std::string getName() const
     {

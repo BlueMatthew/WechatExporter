@@ -7,6 +7,7 @@
 //
 
 #include "PdfConverter.h"
+#import <Cocoa/Cocoa.h>
 #include "FileSystem.h"
 #include "Utils.h"
 
@@ -46,6 +47,23 @@ public:
     {
     }
     
+    void executeCommand()
+    {
+        NSString *shellPathString = [NSString stringWithUTF8String:m_shellPath.c_str()];
+        if (![[NSFileManager defaultManager] fileExistsAtPath:shellPathString])
+        {
+            return;
+        }
+
+        NSURL *terminalUrl = [[NSWorkspace sharedWorkspace] URLForApplicationWithBundleIdentifier:@"com.apple.Terminal"];
+        if (nil == terminalUrl)
+        {
+            return;
+        }
+        
+        [[NSWorkspace sharedWorkspace] openFile:shellPathString withApplication:terminalUrl.path];
+    }
+    
     void setWorkDir(NSString* workDir)
     {
         m_workDir = [NSString stringWithString:workDir];
@@ -63,6 +81,11 @@ public:
     
     bool convert(const std::string& htmlPath, const std::string& pdfPath)
     {
+        if (!m_pdfSupported)
+        {
+            return false;
+        }
+        
         NSURL *url = [NSURL fileURLWithPath:[NSString stringWithUTF8String:htmlPath.c_str()]];
      
         std::string command = "chrome ";
@@ -70,18 +93,14 @@ public:
         command += pdfPath;
         command += "\" ";
         command += [[url absoluteString] UTF8String];
-        command += NEW_LINE;
+        command += " >/dev/null 2>&1" + NEW_LINE;
+        command += "echo " + pdfPath.substr(m_output.size()) + NEW_LINE;
                 
         appendFile(m_shellPath, reinterpret_cast<const unsigned char *>(command.c_str()), command.size());
         
         return true;
         
         /*
-        if (!m_pdfSupported)
-        {
-            return false;
-        }
-
         std::string command = [m_assemblyPath UTF8String];
         command += " ";
         
@@ -135,14 +154,15 @@ public:
 protected:
     bool detectChromeInstalled()
     {
-        NSString *appPath = @"/Applications/Google Chrome.app/Contents/MacOS/Google Chrome";
-        if ([[NSFileManager defaultManager] fileExistsAtPath:appPath])
+        NSString *appPath = [[NSWorkspace sharedWorkspace] absolutePathForAppBundleWithIdentifier:@"com.google.Chrome"];
+        if (nil != appPath)
         {
-            m_assemblyPath = [NSString stringWithString:appPath];
-#ifndef NDEBUG
-            return false;
-#endif
-            return true;
+            appPath = [appPath stringByAppendingPathComponent:@"Contents/MacOS/Google Chrome"];
+            if ([[NSFileManager defaultManager] fileExistsAtPath:appPath])
+            {
+                m_assemblyPath = [NSString stringWithString:appPath];
+                return true;
+            }
         }
         
         return false;
@@ -150,11 +170,15 @@ protected:
 
     bool detectEdgeInstalled()
     {
-        NSString *appPath = @"/Applications/Microsoft Edge.app/Contents/MacOS/Microsoft Edge";
-        if ([[NSFileManager defaultManager] fileExistsAtPath:appPath])
+        NSString *appPath = [[NSWorkspace sharedWorkspace] absolutePathForAppBundleWithIdentifier:@"com.microsoft.edgemac"];
+        if (nil != appPath)
         {
-            m_assemblyPath = [NSString stringWithString:appPath];
-            return true;
+            appPath = [appPath stringByAppendingPathComponent:@"Contents/MacOS/Microsoft Edge"];
+            if ([[NSFileManager defaultManager] fileExistsAtPath:appPath])
+            {
+                m_assemblyPath = [NSString stringWithString:appPath];
+                return true;
+            }
         }
         
         return false;
@@ -163,6 +187,10 @@ protected:
     void initShellFile(const char *outputDir)
     {
         m_output = outputDir;
+        if (!endsWith(m_output, "/"))
+        {
+            m_output += "/";
+        }
         m_shellPath = combinePath(m_output, "pdf.sh");
         deleteFile(m_shellPath);
 
@@ -176,7 +204,12 @@ protected:
         aliasCmd += "cd \"" + output + "\"" + NEW_LINE;
         aliasCmd += "[ -d pdf ] || mkdir pdf" + NEW_LINE;
         
-        appendFile(m_shellPath, reinterpret_cast<const unsigned char *>(aliasCmd.c_str()), aliasCmd.size());
+        NSDictionary<NSFileAttributeKey, id> *attributes = @{NSFilePosixPermissions : [NSNumber numberWithShort:0777]};
+        NSData *contents = [NSData dataWithBytes:aliasCmd.c_str() length:aliasCmd.size()];
+        NSString *shellPath = [NSString stringWithUTF8String:m_shellPath.c_str()];
+        [[NSFileManager defaultManager] createFileAtPath:shellPath contents:contents attributes:attributes];
+        
+        // appendFile(m_shellPath, reinterpret_cast<const unsigned char *>(aliasCmd.c_str()), aliasCmd.size());
     }
 
 private:

@@ -11,7 +11,9 @@
 #import "AppConfiguration.h"
 
 @interface AppDelegate ()
-
+{
+    BOOL m_pdfSupported;
+}
 @end
 
 @implementation AppDelegate
@@ -24,6 +26,8 @@
 - (void)applicationDidFinishLaunching:(NSNotification *)notification
 {
     Exporter::initializeExporter();
+    
+    m_pdfSupported = [AppConfiguration IsPdfSupported];
     
     NSMenuItem *menuItem = nil;
     NSMenu *mainMenu = [[NSApplication sharedApplication] mainMenu];
@@ -38,7 +42,7 @@
     menuItem = [formatMenu.submenu itemAtIndex:1];
     menuItem.state = [AppConfiguration isTextMode] ? NSControlStateValueOn : NSControlStateValueOff;
     menuItem = [formatMenu.submenu itemAtIndex:2];
-    menuItem.state = [AppConfiguration isPdfMode] ? NSControlStateValueOn : NSControlStateValueOff;
+    menuItem.state = [AppConfiguration isPdfMode] && m_pdfSupported ? NSControlStateValueOn : NSControlStateValueOff;
     
     NSMenuItem *optionsMenu = [mainMenu itemAtIndex:3];
     // [optionsMenu.submenu setAutoenablesItems:NO]; // Set in storyboard
