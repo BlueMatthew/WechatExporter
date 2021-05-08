@@ -92,7 +92,7 @@ void TaskManager::cancel()
     pdfTaskQueue.clear();
 }
 
-size_t TaskManager::getNumberOfQueue() const
+size_t TaskManager::getNumberOfQueue(std::string& queueDesc) const
 {
     size_t numberOfDownloads = m_downloadExecutor->getNumberOfQueue();
     size_t numberOfAudio = m_audioExecutor->getNumberOfQueue();
@@ -104,7 +104,7 @@ size_t TaskManager::getNumberOfQueue() const
         numberOfPdf += m_pdfTaskQueue.size();
     }
     
-    std::string queueDesc = "";
+    queueDesc = "";
     if (numberOfDownloads > 0)
     {
         queueDesc += std::to_string(numberOfDownloads) + " downloads";
@@ -136,7 +136,7 @@ void TaskManager::shutdownExecutors()
         delete m_pdfExecutor;
         m_pdfExecutor = NULL;
     }
-    if (NULL != m_audioExecutor)
+    if (NULL != m_audioExecutor && m_audioExecutor != m_downloadExecutor)
     {
         delete m_audioExecutor;
         m_audioExecutor = NULL;
@@ -155,7 +155,7 @@ void TaskManager::setUserAgent(const std::string& userAgent)
 
 void TaskManager::onTaskStart(const AsyncExecutor* executor, const AsyncExecutor::Task *task)
 {
-    if (NULL != m_logger && task->getType() != TASK_TYPE_MP3)
+    if (NULL != m_logger && task->getType() != TASK_TYPE_AUDIO)
     {
         if (task->getType() == TASK_TYPE_PDF)
         {
@@ -188,7 +188,7 @@ void TaskManager::onTaskComplete(const AsyncExecutor* executor, const AsyncExecu
     }
     
     const Session* session = task->getUserData() == NULL ? NULL : reinterpret_cast<const Session *>(task->getUserData());
-    if (executor == m_downloadExecutor && task->getType() == TASK_TYPE_DOWNLOAD)
+    if (/*executor == m_downloadExecutor && */task->getType() == TASK_TYPE_DOWNLOAD)
     {
         const DownloadTask* downloadTask = dynamic_cast<const DownloadTask *>(task);
         
@@ -225,7 +225,7 @@ void TaskManager::onTaskComplete(const AsyncExecutor* executor, const AsyncExecu
             m_pdfExecutor->addTask(pdfTask);
         }
     }
-    else if (((executor == m_downloadExecutor) && (task->getType() == TASK_TYPE_COPY)) || executor == m_audioExecutor)
+    else if ((task->getType() == TASK_TYPE_COPY) || (task->getType() == TASK_TYPE_AUDIO))
     {
         // check copy task
         AsyncExecutor::Task *pdfTask = NULL;

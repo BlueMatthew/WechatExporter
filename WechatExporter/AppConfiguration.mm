@@ -8,6 +8,7 @@
 
 #import "AppConfiguration.h"
 #include "Utils.h"
+#include "PdfConverterImpl.h"
 
 @implementation AppConfiguration
 
@@ -19,6 +20,12 @@
 + (BOOL)getDescOrder
 {
     return [[NSUserDefaults standardUserDefaults] boolForKey:@"DescOrder"];
+}
+
++ (BOOL)IsPdfSupported
+{
+    PdfConverterImpl converter(NULL);
+    return converter.isPdfSupported() ? YES : NO;
 }
 
 + (NSInteger)getOutputFormat

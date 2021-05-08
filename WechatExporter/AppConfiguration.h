@@ -23,6 +23,7 @@ typedef NS_ENUM(NSInteger, OUTPUT_FORMAT)
 
 + (void)setDescOrder:(BOOL)descOrder;
 + (BOOL)getDescOrder;
++ (BOOL)IsPdfSupported;
 + (NSInteger)getOutputFormat;
 + (BOOL)isHtmlMode;
 + (BOOL)isTextMode;
