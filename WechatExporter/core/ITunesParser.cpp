@@ -413,16 +413,26 @@ std::string ManifestParser::getLastError() const
 
 bool ManifestParser::parse(std::vector<BackupManifest>& manifests) const
 {
-    bool res = parseDirectory(m_manifestPath, manifests);
-    if (res)
-    {
-        return res;
-    }
+    bool res = false;
     
     std::string path = normalizePath(m_manifestPath);
     if (endsWith(path, normalizePath("/MobileSync")) || endsWith(path, normalizePath("/MobileSync/")))
     {
         path = combinePath(path, "Backup");
+        res = parseDirectory(path, manifests);
+    }
+    else if (isValidBackupItem(path))
+    {
+        BackupManifest manifest;
+        if (parse(path, manifest) && manifest.isValid())
+        {
+            res = true;
+            manifests.push_back(manifest);
+        }
+    }
+    else
+    {
+        // Assume the directory is ../../Backup/../
         res = parseDirectory(path, manifests);
     }
     
@@ -443,13 +453,14 @@ bool ManifestParser::parseDirectory(const std::string& path, std::vector<BackupM
     bool res = false;
     for (std::vector<std::string>::const_iterator it = subDirectories.cbegin(); it != subDirectories.cend(); ++it)
     {
-		if (!isValidBackupId(path, *it))
+        std::string backupPath = combinePath(path, *it);
+		if (!isValidBackupItem(backupPath))
 		{
 			continue;
 		}
         
         BackupManifest manifest;
-        if (parse(path, *it, manifest) && manifest.isValid())
+        if (parse(backupPath, manifest) && manifest.isValid())
         {
             res = true;
             manifests.push_back(manifest);
@@ -459,48 +470,39 @@ bool ManifestParser::parseDirectory(const std::string& path, std::vector<BackupM
 	if (!res)
 	{
 		m_lastError += "No valid backup id found in:" + path + "\r\n";
-		// res = false;
 	}
 
     return res;
 }
 
-bool ManifestParser::isValidBackupId(const std::string& backupPath, const std::string& backupId) const
+bool ManifestParser::isValidBackupItem(const std::string& path) const
 {
-	std::string path = combinePath(backupPath, backupId);
-	std::string fileName = combinePath(path, "Info.plist");
+    std::string fileName = combinePath(path, "Info.plist");
+    if (!existsFile(fileName))
+    {
+        m_lastError += "Info.plist not found\r\n";
+        return false;
+    }
 
-	// if (it->size() != 40)
-	// {
-	//	return false;
-	// }
+    fileName = combinePath(path, "Manifest.plist");
+    if (!existsFile(fileName))
+    {
+        m_lastError += "Manifest.plist not found\r\n";
+        return false;
+    }
 
-	if (!existsFile(fileName))
-	{
-		m_lastError += "Info.plist not found\r\n";
-		return false;
-	}
-
-	fileName = combinePath(path, "Manifest.plist");
-	if (!existsFile(fileName))
-	{
-		m_lastError += "Manifest.plist not found\r\n";
-		return false;
-	}
-
-	fileName = combinePath(path, "Manifest.db");
-	if (!existsFile(fileName))
-	{
-		m_lastError += "Manifest.db not found\r\n";
-		return false;
-	}
-	return true;
+    fileName = combinePath(path, "Manifest.db");
+    if (!existsFile(fileName))
+    {
+        m_lastError += "Manifest.db not found\r\n";
+        return false;
+    }
+    return true;
 }
 
-bool ManifestParser::parse(const std::string& backupPath, const std::string& backupId, BackupManifest& manifest) const
+bool ManifestParser::parse(const std::string& path, BackupManifest& manifest) const
 {
     //Info.plist is a xml file
-    std::string path = combinePath(backupPath, backupId);
     if (!parseInfoPlist(path, manifest))
     {
 		m_lastError += "Failed to parse xml: Info.plist\r\n";
