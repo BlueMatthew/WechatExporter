@@ -48,11 +48,6 @@ public:
 		ShellExecute(NULL, TEXT("open"), m_shellPath, NULL, NULL, SW_SHOW);
 	}
 
-	void buildCommands(LPCTSTR outputBase, LPCTSTR userName)
-	{
-
-	}
-
 	bool makeUserDirectory(const std::string& dirName)
 	{
 		CW2T pszDir(CA2W(dirName.c_str(), CP_UTF8));
@@ -68,7 +63,7 @@ public:
 		command += userOutputDir;
 		command += TEXT("\"\r\n");
 
-		CW2A pszU(CT2W(command), CP_UTF8);
+		CW2A pszU(CT2W(command), TARGET_CODE_PAGE);
 
 		appendFile(m_shellPath, reinterpret_cast<const unsigned char *>((LPCSTR)pszU), strlen(pszU));
 
@@ -103,7 +98,7 @@ public:
 		command += url;
 		command += TEXT("\r\n");
 
-		CT2A content(command, CP_UTF8);
+		CT2A content(command, TARGET_CODE_PAGE);
 		
 		appendFile((LPCTSTR)m_shellPath, reinterpret_cast<const unsigned char *>((LPCSTR)content), strlen(content));
 		// appendFile((LPCTSTR)m_shellPath, reinterpret_cast<const unsigned char *>((LPCTSTR)command), _tcslen(command) * sizeof(TCHAR));
@@ -188,7 +183,11 @@ protected:
 		m_shellPath = shellFile;
 		::DeleteFile(shellFile);
 
-		CString command = TEXT("chcp 65001\r\n");
+		CString command;
+		if (TARGET_CODE_PAGE == CP_UTF8)
+		{
+			command += TEXT("CHCP 65001\r\n");
+		}
 		TCHAR pdfPath[MAX_PATH] = { 0 };
 		PathCombine(pdfPath, outputDir, TEXT("pdf"));
 
@@ -198,7 +197,7 @@ protected:
 		command += pdfPath;
 		command += TEXT("\"\r\n");
 
-		CW2A pszU(CT2W(command), CP_UTF8);
+		CW2A pszU(CT2W(command), TARGET_CODE_PAGE);
 
 		appendFile((LPCTSTR)m_shellPath, reinterpret_cast<const unsigned char *>((LPCSTR)pszU), strlen(pszU));
 	}
@@ -226,4 +225,7 @@ private:
 	CString m_output;
 	CString m_shellPath;
 	CString m_param;
+
+	const UINT TARGET_CODE_PAGE = CP_ACP;
+	// const UINT TARGET_CODE_PAGE = CP_UTF8;
 };
