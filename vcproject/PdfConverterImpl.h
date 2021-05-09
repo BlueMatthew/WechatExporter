@@ -226,6 +226,6 @@ private:
 	CString m_shellPath;
 	CString m_param;
 
-	const UINT TARGET_CODE_PAGE = CP_ACP;
-	// const UINT TARGET_CODE_PAGE = CP_UTF8;
+	// const UINT TARGET_CODE_PAGE = CP_ACP;
+	const UINT TARGET_CODE_PAGE = CP_UTF8;
 };
