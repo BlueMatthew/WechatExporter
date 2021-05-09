@@ -21,8 +21,6 @@
 #include "XmlParser.h"
 #include "Utils.h"
 
-#define USING_ASYNC_TASK_FOR_MP3
-
 enum SessionParsingOption
 {
     SPO_IGNORE_AVATAR = 1 << 0,

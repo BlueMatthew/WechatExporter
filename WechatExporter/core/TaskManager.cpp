@@ -10,10 +10,16 @@
 #include "AsyncTask.h"
 #include "FileSystem.h"
 
-TaskManager::TaskManager(bool needPdfExecutor, Logger* logger) : m_logger(logger), m_downloadExecutor(NULL), m_audioExecutor(NULL), m_pdfExecutor(NULL)
+TaskManager::TaskManager(bool needPdfExecutor, Logger* logger) : m_logger(logger), m_downloadExecutor(NULL),
+#ifdef USING_ASYNC_TASK_FOR_MP3
+    m_audioExecutor(NULL),
+#endif
+    m_pdfExecutor(NULL)
 {
     m_downloadExecutor = new AsyncExecutor(2, 4, this);
+#ifdef USING_ASYNC_TASK_FOR_MP3
     m_audioExecutor = new AsyncExecutor(1, 1, this);
+#endif
     // m_audioExecutor = m_downloadExecutor;
     if (needPdfExecutor)
     {
@@ -22,7 +28,9 @@ TaskManager::TaskManager(bool needPdfExecutor, Logger* logger) : m_logger(logger
     
 #if !defined(NDEBUG) || defined(DBG_PERF)
     m_downloadExecutor->setTag("dl");
+#ifdef USING_ASYNC_TASK_FOR_MP3
     m_audioExecutor->setTag("audio");
+#endif
     if (m_pdfExecutor)
     {
         m_pdfExecutor->setTag("pdf");
@@ -69,7 +77,9 @@ void TaskManager::cancel()
     }
     
     m_downloadExecutor->cancel();
+#ifdef USING_ASYNC_TASK_FOR_MP3
     m_audioExecutor->cancel();
+#endif
     if (NULL != m_pdfExecutor)
     {
         m_pdfExecutor->cancel();
@@ -95,7 +105,9 @@ void TaskManager::cancel()
 size_t TaskManager::getNumberOfQueue(std::string& queueDesc) const
 {
     size_t numberOfDownloads = m_downloadExecutor->getNumberOfQueue();
+#ifdef USING_ASYNC_TASK_FOR_MP3
     size_t numberOfAudio = m_audioExecutor->getNumberOfQueue();
+#endif
     size_t numberOfPdf = m_pdfTaskQueue.size();
     
     {
@@ -109,6 +121,7 @@ size_t TaskManager::getNumberOfQueue(std::string& queueDesc) const
     {
         queueDesc += std::to_string(numberOfDownloads) + " downloads";
     }
+#ifdef USING_ASYNC_TASK_FOR_MP3
     if (numberOfAudio > 0)
     {
         if (!queueDesc.empty())
@@ -117,6 +130,7 @@ size_t TaskManager::getNumberOfQueue(std::string& queueDesc) const
         }
         queueDesc += std::to_string(numberOfAudio) + " audios";
     }
+#endif
     if (numberOfPdf > 0)
     {
         if (!queueDesc.empty())
@@ -126,7 +140,11 @@ size_t TaskManager::getNumberOfQueue(std::string& queueDesc) const
         queueDesc += std::to_string(numberOfPdf) + " pdf files";
     }
 
-    return numberOfDownloads + numberOfAudio + numberOfPdf;
+    return numberOfDownloads +
+#ifdef USING_ASYNC_TASK_FOR_MP3
+        numberOfAudio +
+#endif
+        numberOfPdf;
 }
 
 void TaskManager::shutdownExecutors()
@@ -136,11 +154,13 @@ void TaskManager::shutdownExecutors()
         delete m_pdfExecutor;
         m_pdfExecutor = NULL;
     }
+#ifdef USING_ASYNC_TASK_FOR_MP3
     if (NULL != m_audioExecutor && m_audioExecutor != m_downloadExecutor)
     {
         delete m_audioExecutor;
         m_audioExecutor = NULL;
     }
+#endif
     if (NULL != m_downloadExecutor)
     {
         delete m_downloadExecutor;
@@ -317,6 +337,7 @@ void TaskManager::download(const Session* session, const std::string &url, const
     }
 }
 
+#ifdef USING_ASYNC_TASK_FOR_MP3
 void TaskManager::convertAudio(const Session* session, const std::string& pcmPath, const std::string& mp3Path, unsigned int mtime)
 {
     if (NULL == session)
@@ -343,6 +364,7 @@ void TaskManager::convertAudio(const Session* session, const std::string& pcmPat
     
     m_audioExecutor->addTask(task);
 }
+#endif
 
 void TaskManager::convertPdf(const Session* session, const std::string& htmlPath, const std::string& pdfPath, PdfConverter* pdfConverter)
 {

@@ -23,7 +23,9 @@ private:
     Logger* m_logger;
     
     AsyncExecutor   *m_downloadExecutor;
+#ifdef USING_ASYNC_TASK_FOR_MP3
     AsyncExecutor   *m_audioExecutor;
+#endif
     AsyncExecutor   *m_pdfExecutor;
     std::map<std::string, std::string> m_downloadTasks;
     
@@ -31,13 +33,14 @@ private:
     
     mutable std::mutex m_mutex;
     std::map<std::string, uint32_t> m_downloadingTasks;
-    // std::map<uint32_t, uint32_t> m_taskDeps;
     std::map<const Session*, uint32_t> m_sessionTaskCount;
     
     std::map<uint32_t, std::set<AsyncExecutor::Task *>> m_copyTaskQueue;
     std::map<const Session*, AsyncExecutor::Task *> m_pdfTaskQueue;
     
+#ifdef USING_ASYNC_TASK_FOR_MP3
     std::queue<std::vector<unsigned char>> m_Buffers;
+#endif
     
 public:
     
@@ -54,7 +57,9 @@ public:
     void shutdown();
 
     void download(const Session* session, const std::string &url, const std::string& output, time_t mtime, const std::string& defaultFile = "", std::string type = "");
+#ifdef USING_ASYNC_TASK_FOR_MP3
     void convertAudio(const Session* session, const std::string& pcmPath, const std::string& mp3Path, unsigned int mtime);
+#endif
     void convertPdf(const Session* session, const std::string& htmlPath, const std::string& pdfPath, PdfConverter* pdfConverter);
     
 private:
