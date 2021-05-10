@@ -477,7 +477,8 @@
     self.txtViewLogs.string = @"";
     [self onStart];
     NSDictionary *dict = @{@"backup": backupPath, @"output": outputPath, @"descOrder": @(descOrder), @"textMode": @(textMode), @"syncLoading": @(syncLoading), @"saveFilesInSessionFolder": @(saveFilesInSessionFolder)};
-    [NSThread detachNewThreadSelector:@selector(run:) toTarget:self withObject:dict];
+    // [NSThread detachNewThreadSelector:@selector(run:) toTarget:self withObject:dict];
+    [self run:dict];
 }
 
 - (void)btnCancelClicked:(id)sender
@@ -645,8 +646,11 @@
 {
     if (NULL != m_pdfConverter)
     {
-        m_pdfConverter->executeCommand();
-        
+        if (!cancelled)
+        {
+            m_pdfConverter->executeCommand();
+        }
+
         delete m_pdfConverter;
         m_pdfConverter = NULL;
     }
