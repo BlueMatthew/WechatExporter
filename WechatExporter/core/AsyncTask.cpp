@@ -112,7 +112,7 @@ bool DownloadTask::httpGet(const std::string& url, const std::vector<std::pair<s
     }
 #endif // no FAKE_DOWNLOAD
     
-    return res == CURLE_OK;
+    return res == CURLE_OK && httpStatus == 200;
 }
 
 size_t writeTaskHttpData(void *buffer, size_t size, size_t nmemb, void *user_p)
@@ -241,9 +241,10 @@ bool DownloadTask::downloadFile()
 #ifndef NDEBUG
         ::deleteFile(logPath);
 #endif
+        return true;
     }
 
-    return res == CURLE_OK;
+    return false;
 }
 
 
