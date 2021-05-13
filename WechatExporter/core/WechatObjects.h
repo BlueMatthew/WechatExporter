@@ -331,6 +331,11 @@ public:
         return m_portraitHD.empty() ? m_portrait : m_portraitHD;
     }
     
+    inline std::string getSecondaryPortrait() const
+    {
+        return (m_portraitHD.empty() || m_portrait.empty()) ? "" : m_portrait;
+    }
+    
     inline std::string getLocalPortrait() const
     {
         return m_usrName + ".jpg";

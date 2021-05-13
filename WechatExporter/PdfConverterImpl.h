@@ -91,10 +91,10 @@ public:
         std::string command = "chrome ";
         command += "--headless --disable-gpu --disable-extensions --print-to-pdf-no-header --print-to-pdf=\"";
         command += pdfPath;
-        command += "\" ";
+        command += "\" \"";
         command += [[url absoluteString] UTF8String];
-        command += " >/dev/null 2>&1" + NEW_LINE;
-        command += "echo " + pdfPath.substr(m_output.size()) + NEW_LINE;
+        command += "\" >/dev/null 2>&1" + NEW_LINE;
+        command += "echo \"" + pdfPath.substr(m_output.size()) + "\"" + NEW_LINE;
                 
         appendFile(m_shellPath, reinterpret_cast<const unsigned char *>(command.c_str()), command.size());
         

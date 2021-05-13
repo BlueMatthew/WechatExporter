@@ -22,6 +22,7 @@ class DownloadTask : public AsyncExecutor::Task
 {
 private:
     std::string m_url;
+    std::string m_urlBackup;
     std::string m_output;
     std::string m_default;
     std::string m_outputTmp;
@@ -68,6 +69,8 @@ public:
         return m_error;
     }
     
+    static void initialize();
+    static void uninitialize();
     static bool httpGet(const std::string& url, const std::vector<std::pair<std::string, std::string>>& headers, long& httpStatus, std::vector<unsigned char>& body);
     
     size_t writeData(void *buffer, size_t size, size_t nmemb);
@@ -77,7 +80,7 @@ public:
     bool run();
     
 protected:
-    bool downloadFile();
+    bool downloadFile(const std::string& url);
 };
 
 class CopyTask : public AsyncExecutor::Task

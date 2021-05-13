@@ -56,7 +56,7 @@ public:
     void cancel();
     void shutdown();
 
-    void download(const Session* session, const std::string &url, const std::string& output, time_t mtime, const std::string& defaultFile = "", std::string type = "");
+    void download(const Session* session, const std::string &url, const std::string &backupUrl, const std::string& output, time_t mtime, const std::string& defaultFile = "", std::string type = "");
 #ifdef USING_ASYNC_TASK_FOR_MP3
     void convertAudio(const Session* session, const std::string& pcmPath, const std::string& mp3Path, unsigned int mtime);
 #endif

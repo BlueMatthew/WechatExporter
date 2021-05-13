@@ -268,8 +268,15 @@ void TaskManager::onTaskComplete(const AsyncExecutor* executor, const AsyncExecu
     }
 }
 
-void TaskManager::download(const Session* session, const std::string &url, const std::string& output, time_t mtime, const std::string& defaultFile/* = ""*/, std::string type/* = ""*/)
+void TaskManager::download(const Session* session, const std::string &url, const std::string &backupUrl, const std::string& output, time_t mtime, const std::string& defaultFile/* = ""*/, std::string type/* = ""*/)
 {
+#ifndef NDEBUG
+    if (url == "")
+    {
+        assert(!"url shouldn't be empty");
+    }
+#endif
+    
     std::map<std::string, std::string>::iterator it = m_downloadTasks.find(url);
     if (it != m_downloadTasks.end() && it->second == output)
     {

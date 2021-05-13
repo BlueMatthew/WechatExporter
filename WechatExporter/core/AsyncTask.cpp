@@ -35,6 +35,16 @@ size_t writeHttpDataToBuffer(void *buffer, size_t size, size_t nmemb, void *user
     return 0;
 }
 
+void DownloadTask::initialize()
+{
+    curl_global_init(CURL_GLOBAL_ALL);
+}
+
+void DownloadTask::uninitialize()
+{
+    curl_global_cleanup();
+}
+
 bool DownloadTask::httpGet(const std::string& url, const std::vector<std::pair<std::string, std::string>>& headers, long& httpStatus, std::vector<unsigned char>& body)
 {
     httpStatus = 0;
@@ -112,7 +122,7 @@ bool DownloadTask::httpGet(const std::string& url, const std::vector<std::pair<s
     }
 #endif // no FAKE_DOWNLOAD
     
-    return res == CURLE_OK && httpStatus == 200;
+    return res == CURLE_OK;
 }
 
 size_t writeTaskHttpData(void *buffer, size_t size, size_t nmemb, void *user_p)
@@ -143,32 +153,42 @@ unsigned int DownloadTask::getRetries() const
 
 bool DownloadTask::run()
 {
-    bool result = false;
-    for (int idx = 0; idx < DEFAULT_RETRIES; idx++)
+    std::string* urls[] = { &m_url, &m_urlBackup };
+    
+    for (int item = 0; item < sizeof(urls) / sizeof(std::string*); ++item)
     {
-        result = downloadFile();
-        if (result)
+        if (urls[item]->empty())
         {
-            break;
+            continue;
+        }
+        for (int idx = 0; idx < DEFAULT_RETRIES; idx++)
+        {
+            if (downloadFile(*urls[item]))
+            {
+                return true;
+            }
+        }
+        
+        if (startsWith(*urls[item], "http://"))
+        {
+            std::string url = *urls[item];
+            url.replace(0, 7, "https://");
+            if (downloadFile(url))
+            {
+                return true;
+            }
         }
     }
     
-    if (!result && startsWith(m_url, "http://"))
+    if (!m_default.empty() && copyFile(m_default, m_output))
     {
-        std::string url = m_url;
-        m_url.replace(0, 7, "https://");
-        result = downloadFile();
-        m_url.replace(0, 8, "http://");
+        return true;
     }
     
-    if (!result && !m_default.empty())
-    {
-        copyFile(m_default, m_output);
-    }
-    return result;
+    return false;
 }
 
-bool DownloadTask::downloadFile()
+bool DownloadTask::downloadFile(const std::string& url)
 {
     ++m_retries;
     
@@ -178,7 +198,7 @@ bool DownloadTask::downloadFile()
     CURLcode res = CURLE_OK;
     CURL *curl = NULL;
 #ifndef NDEBUG
-    std::string logPath = m_output + ".log";
+    std::string logPath = m_output + ".http.log";
     
 #ifdef _WIN32
     CA2W pszW(logPath.c_str(), CP_UTF8);
@@ -193,7 +213,7 @@ bool DownloadTask::downloadFile()
 #ifndef FAKE_DOWNLOAD
     // User-Agent: WeChat/7.0.15.33 CFNetwork/978.0.7 Darwin/18.6.0
     curl = curl_easy_init();
-    curl_easy_setopt(curl, CURLOPT_URL, m_url.c_str());
+    curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
     curl_easy_setopt(curl, CURLOPT_USERAGENT, userAgent.c_str());
     curl_easy_setopt(curl, CURLOPT_FORBID_REUSE, 1L);
     curl_easy_setopt(curl, CURLOPT_TIMEOUT, 60);
@@ -246,7 +266,6 @@ bool DownloadTask::downloadFile()
 
     return false;
 }
-
 
 size_t DownloadTask::writeData(void *buffer, size_t size, size_t nmemb)
 {

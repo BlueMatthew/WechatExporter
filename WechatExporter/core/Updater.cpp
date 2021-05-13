@@ -8,6 +8,7 @@
 
 #include "Updater.h"
 #include "Downloader.h"
+#include "AsyncTask.h"
 #include "Utils.h"
 
 Updater::Updater(const std::string& currentVersion) : m_currentVersion(currentVersion)
@@ -51,7 +52,11 @@ bool Updater::checkUpdate()
     url += "&dbg=1";
 #endif
     long httpStatus = 0;
+#ifdef USING_DOWNLOADER
     if (!Downloader::httpGet(url, headers, httpStatus, body) || httpStatus != 200 || body.empty())
+#else
+    if (!DownloadTask::httpGet(url, headers, httpStatus, body) || httpStatus != 200 || body.empty())
+#endif
     {
         return false;
     }

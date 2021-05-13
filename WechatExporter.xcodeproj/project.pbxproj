@@ -492,6 +492,11 @@
 				CURRENT_PROJECT_VERSION = 3;
 				DEVELOPMENT_TEAM = L848BW5698;
 				ENABLE_HARDENED_RUNTIME = YES;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					USING_ASYNC_TASK_FOR_MP3,
+					"$(inherited)",
+				);
 				HEADER_SEARCH_PATHS = (
 					/usr/local/include/,
 					"${SDKROOT}/usr/include/libxml2/",
@@ -527,7 +532,10 @@
 				CURRENT_PROJECT_VERSION = 3;
 				DEVELOPMENT_TEAM = L848BW5698;
 				ENABLE_HARDENED_RUNTIME = YES;
-				GCC_PREPROCESSOR_DEFINITIONS = "NDEBUG=1";
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"NDEBUG=1",
+					USING_ASYNC_TASK_FOR_MP3,
+				);
 				HEADER_SEARCH_PATHS = (
 					/usr/local/include/,
 					"${SDKROOT}/usr/include/libxml2/",
