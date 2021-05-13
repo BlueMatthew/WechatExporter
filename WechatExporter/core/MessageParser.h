@@ -67,6 +67,7 @@ struct WXFWDMSG
     std::string usrName;
     std::string displayName;
     std::string portrait;
+    std::string portraitLD;
     std::string dataType;
     std::string subType;
     std::string dataId;
@@ -293,8 +294,8 @@ public:
     MessageParser(const ITunesDb& iTunesDb, const ITunesDb& iTunesDbShare, TaskManager& taskManager, Friends& friends, Friend myself, int options, const std::string& resPath, const std::string& outputPath, std::function<std::string(const std::string&)>& localeFunc);
     
     bool parse(WXMSG& msg, const Session& session, std::vector<TemplateValues>& tvs) const;
-    bool copyPortraitIcon(const Session& session, const std::string& usrName, const std::string& portraitUrl, const std::string& destPath) const;
-    bool copyPortraitIcon(const Session& session, const std::string& usrName, const std::string& usrNameHash, const std::string& portraitUrl, const std::string& destPath) const;
+    bool copyPortraitIcon(const Session& session, const std::string& usrName, const std::string& portraitUrl, const std::string& portraitUrlLD, const std::string& destPath) const;
+    bool copyPortraitIcon(const Session& session, const std::string& usrName, const std::string& usrNameHash, const std::string& portraitUrl, const std::string& portraitUrlLD, const std::string& destPath) const;
     bool copyPortraitIcon(const Session& session, const Friend& f, const std::string& destPath) const;
     
 protected:
@@ -358,7 +359,7 @@ protected:
     void parseVideo(const std::string& sessionPath, const std::string& sessionAssertsPath, const std::string& src, const std::string& dest, const std::string& srcThumb, const std::string& destThumb, const std::string& width, const std::string& height, TemplateValues& tv) const;
     void parseFile(const std::string& sessionPath, const std::string& sessionAssertsPath, const std::string& src, const std::string& dest, const std::string& fileName, TemplateValues& tv) const;
     void parseCard(const Session& session, const std::string& sessionPath, const std::string& portraitDir, const std::string& cardMessage, TemplateValues& tv) const;
-    void parseChannelCard(const Session& session, const std::string& portraitDir, const std::string& usrName, const std::string& avatar, const std::string& name, TemplateValues& tv) const;
+    void parseChannelCard(const Session& session, const std::string& portraitDir, const std::string& usrName, const std::string& avatar, const std::string& avatarLD, const std::string& name, TemplateValues& tv) const;
     void parseChannels(const std::string& msgId, const XmlParser& xmlParser, xmlNodePtr parentNode, const std::string& finderFeedXPath, const Session& session, TemplateValues& tv) const;
     bool parseForwardedMsgs(const Session& session, const WXMSG& msg, const std::string& title, const std::string& message, std::vector<TemplateValues>& tvs) const;
     

@@ -19,6 +19,8 @@
 #include <atomic>
 #include "Logger.h"
 
+#ifdef USING_DOWNLOADER
+
 class Task
 {
 protected:
@@ -137,5 +139,7 @@ protected:
     std::map<std::string, uint32_t> m_statsType;
 #endif
 };
+
+#endif // USING_DOWNLOADER
 
 #endif /* Downloader_h */

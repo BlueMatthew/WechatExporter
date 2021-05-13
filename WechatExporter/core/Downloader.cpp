@@ -6,6 +6,8 @@
 //  Copyright © 2020 Matthew. All rights reserved.
 //
 
+#ifdef USING_DOWNLOADER
+
 #include "Downloader.h"
 #include <curl/curl.h>
 #include <iostream>
@@ -492,3 +494,5 @@ int Downloader::getRunningCount() const
     
     return static_cast<int>(count);
 }
+
+#endif // USING_DOWNLOADER

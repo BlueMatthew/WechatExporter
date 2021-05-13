@@ -8,7 +8,11 @@
 
 #include "Exporter.h"
 #include <json/json.h>
+#ifdef USING_DOWNLOADER
 #include "Downloader.h"
+#else
+#include "AsyncTask.h"
+#endif
 #include "TaskManager.h"
 #include "WechatParser.h"
 
@@ -39,12 +43,20 @@ Exporter::~Exporter()
 
 void Exporter::initializeExporter()
 {
+#ifdef USING_DOWNLOADER
     Downloader::initialize();
+#else
+    DownloadTask::initialize();
+#endif
 }
 
 void Exporter::uninitializeExporter()
 {
+#ifdef USING_DOWNLOADER
     Downloader::uninitialize();
+#else
+    DownloadTask::uninitialize();
+#endif
 }
 
 void Exporter::setNotifier(ExportNotifier *notifier)
@@ -422,7 +434,7 @@ bool Exporter::exportUser(Friend& user, std::string& userOutputPath)
 #ifndef NDEBUG
         m_logger->debug("Download avatar: *" + user.getPortrait() + "* => " + combinePath(outputBase, "Portrait", user.getLocalPortrait()));
 #endif
-        msgParser.copyPortraitIcon(NULL, user.getUsrName(), user.getHash(), user.getPortrait(), combinePath(outputBase, "", "Portrait"));
+        msgParser.copyPortraitIcon(NULL, user.getUsrName(), user.getHash(), user.getPortrait(), user.getSecondaryPortrait(), combinePath(outputBase, "", "Portrait"));
         // downloader.addTask(user.getPortrait(), combinePath(outputBase, "Portrait", user.getLocalPortrait()), 0);
     }
     
@@ -470,7 +482,7 @@ bool Exporter::exportUser(Friend& user, std::string& userOutputPath)
         }
         if ((m_options & SPO_IGNORE_AVATAR) == 0)
         {
-            msgParser.copyPortraitIcon(NULL, it->getUsrName(), it->getHash(), it->getPortrait(), combinePath(outputBase, "", "Portrait"));
+            msgParser.copyPortraitIcon(NULL, it->getUsrName(), it->getHash(), it->getPortrait(), it->getSecondaryPortrait(), combinePath(outputBase, "", "Portrait"));
         }
         int count = exportSession(*myself, msgParser, *it, userBase, outputBase);
         
