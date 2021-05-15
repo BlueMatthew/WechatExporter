@@ -275,6 +275,10 @@ void TaskManager::download(const Session* session, const std::string &url, const
     {
         assert(!"url shouldn't be empty");
     }
+	if (output.find(DIR_SEP_R) != std::string::npos)
+	{
+		assert(!"Directory is invalid");
+	}
 #endif
     
     std::map<std::string, std::string>::iterator it = m_downloadTasks.find(url);
