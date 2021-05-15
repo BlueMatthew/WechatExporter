@@ -378,10 +378,10 @@ void MessageParser::parseEmotion(const WXMSG& msg, const Session& session, Templ
         }
         
         std::string emojiPath = ((m_options & SPO_ICON_IN_SESSION) == SPO_ICON_IN_SESSION) ? session.getOutputFileName() + "_files/Emoji/" : "Emoji/";
-        emojiFile = emojiPath + emojiFile + ".gif";
 		std::string localEmojiPath = normalizePath((const std::string&)emojiPath);
-        ensureDirectoryExisted(combinePath(m_outputPath, localEmojiPath));
 		std::string localEmojiFile = localEmojiPath + emojiFile + ".gif";
+		emojiFile = emojiPath + emojiFile + ".gif";
+        ensureDirectoryExisted(combinePath(m_outputPath, localEmojiPath));
         
 #ifdef USING_DOWNLOADER
         m_downloader.addTask(url, combinePath(m_outputPath, localEmojiFile), msg.createTime, "emoji");
