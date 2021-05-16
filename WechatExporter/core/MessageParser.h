@@ -294,9 +294,10 @@ public:
     MessageParser(const ITunesDb& iTunesDb, const ITunesDb& iTunesDbShare, TaskManager& taskManager, Friends& friends, Friend myself, int options, const std::string& resPath, const std::string& outputPath, std::function<std::string(const std::string&)>& localeFunc);
     
     bool parse(WXMSG& msg, const Session& session, std::vector<TemplateValues>& tvs) const;
-    bool copyPortraitIcon(const Session& session, const std::string& usrName, const std::string& portraitUrl, const std::string& portraitUrlLD, const std::string& destPath) const;
-    bool copyPortraitIcon(const Session& session, const std::string& usrName, const std::string& usrNameHash, const std::string& portraitUrl, const std::string& portraitUrlLD, const std::string& destPath) const;
-    bool copyPortraitIcon(const Session& session, const Friend& f, const std::string& destPath) const;
+    
+    bool copyPortraitIcon(const Session* session, const std::string& usrName, const std::string& portraitUrl, const std::string& portraitUrlLD, const std::string& destPath) const;
+    bool copyPortraitIcon(const Session* session, const std::string& usrName, const std::string& usrNameHash, const std::string& portraitUrl, const std::string& portraitUrlLD, const std::string& destPath) const;
+    bool copyPortraitIcon(const Session* session, const Friend& f, const std::string& destPath) const;
     
 protected:
     

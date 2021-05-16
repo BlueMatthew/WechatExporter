@@ -207,7 +207,7 @@ bool MessageParser::parse(WXMSG& msg, const Session& session, std::vector<Templa
     {
         if (NULL != protraitUser)
         {
-            copyPortraitIcon(session, *protraitUser, combinePath(m_outputPath, portraitPath));
+            copyPortraitIcon(&session, *protraitUser, combinePath(m_outputPath, portraitPath));
             // m_downloader.addTask(remotePortrait, combinePath(m_outputPath, localPortrait), msg.createTime);
         }
     }
@@ -1430,7 +1430,7 @@ bool MessageParser::parseForwardedMsgs(const Session& session, const WXMSG& msg,
             // std::string localPortrait;
             // bool hasPortrait = false;
             // localPortrait = combinePath(portraitPath, fmsg.usrName + ".jpg");
-            if (copyPortraitIcon(session, fmsg.usrName, fmsg.portrait, fmsg.portraitLD, combinePath(m_outputPath, portraitPath)))
+            if (copyPortraitIcon(&session, fmsg.usrName, fmsg.portrait, fmsg.portraitLD, combinePath(m_outputPath, portraitPath)))
             {
                 tv["%%AVATAR%%"] = portraitPath + "/" + fmsg.usrName + ".jpg";
             }
@@ -1466,17 +1466,17 @@ std::string MessageParser::getDisplayTime(int ms) const
     return std::to_string(std::round((double)ms)) + "\"";
 }
 
-bool MessageParser::copyPortraitIcon(const Session& session, const std::string& usrName, const std::string& portraitUrl, const std::string& portraitUrlLD, const std::string& destPath) const
+bool MessageParser::copyPortraitIcon(const Session* session, const std::string& usrName, const std::string& portraitUrl, const std::string& portraitUrlLD, const std::string& destPath) const
 {
     return copyPortraitIcon(session, usrName, md5(usrName), portraitUrl, portraitUrlLD, destPath);
 }
 
-bool MessageParser::copyPortraitIcon(const Session& session, const Friend& f, const std::string& destPath) const
+bool MessageParser::copyPortraitIcon(const Session* session, const Friend& f, const std::string& destPath) const
 {
     return copyPortraitIcon(session, f.getUsrName(), f.getHash(), f.getPortrait(), f.getSecondaryPortrait(), destPath);
 }
 
-bool MessageParser::copyPortraitIcon(const Session& session, const std::string& usrName, const std::string& usrNameHash, const std::string& portraitUrl, const std::string& portraitUrlLD, const std::string& destPath) const
+bool MessageParser::copyPortraitIcon(const Session* session, const std::string& usrName, const std::string& usrNameHash, const std::string& portraitUrl, const std::string& portraitUrlLD, const std::string& destPath) const
 {
     std::string destFileName = usrName + ".jpg";
     std::string avatarPath = "share/" + m_myself.getHash() + "/session/headImg/" + usrNameHash + ".pic";
@@ -1496,7 +1496,7 @@ bool MessageParser::copyPortraitIcon(const Session& session, const std::string& 
 #ifdef USING_DOWNLOADER
                     m_downloader.addTask(url, combinePath(localDestPath, destFileName), 0, "avatar");
 #else
-                    m_taskManager.download(&session, url, urlLD, combinePath(localDestPath, destFileName), 0, "", "avatar");
+                    m_taskManager.download(session, url, urlLD, combinePath(localDestPath, destFileName), 0, "", "avatar");
 #endif
                     hasPortrait = true;
                 }
@@ -1508,7 +1508,7 @@ bool MessageParser::copyPortraitIcon(const Session& session, const std::string& 
 #ifdef USING_DOWNLOADER
             m_downloader.addTask(portraitUrl, combinePath(localDestPath, destFileName), 0, "avatar");
 #else
-            m_taskManager.download(&session, portraitUrl, portraitUrlLD, combinePath(localDestPath, destFileName), 0, combinePath(m_resPath, "res", "DefaultProfileHead@2x.png"), "avatar");
+            m_taskManager.download(session, portraitUrl, portraitUrlLD, combinePath(localDestPath, destFileName), 0, combinePath(m_resPath, "res", "DefaultProfileHead@2x.png"), "avatar");
 #endif
             hasPortrait = true;
         }
