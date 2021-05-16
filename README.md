@@ -12,6 +12,11 @@
 4. 按界面提示进行操作。  
 ![Windows界面截屏](https://src.wakin.org/github/wxexp/screenshots/win.png) ![MacOS界面截屏](https://src.wakin.org/github/wxexp/screenshots/mac.png###)
 
+5. 导出后的页面示例：  
+![导出后的页面示例截屏](https://src.wakin.org/github/wxexp/demo/demo.png)
+  
+[点击链接可打开网页：https://src.wakin.org/github/wxexp/demo/](https://src.wakin.org/github/wxexp/demo/)
+
 ## 模版修改
 解压目录下的res\templates(MacOS版本位于Contents\Resources\res)子目录里存放了输出聊天记录的html页面模版，其中通过两个%包含起来的字符串，譬如，%%NAME%%，不要修改之外，其它页面内容和格式都可以自行调整。  
   
