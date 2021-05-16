@@ -32,6 +32,7 @@ private:
     std::string m_userAgent;
     
     mutable std::mutex m_mutex;
+    std::set<std::string> m_downloadedFiles;
     std::map<std::string, uint32_t> m_downloadingTasks;
     std::map<const Session*, uint32_t> m_sessionTaskCount;
     
