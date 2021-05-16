@@ -234,7 +234,7 @@ void TaskManager::onTaskComplete(const AsyncExecutor* executor, const AsyncExecu
         
         lock.unlock();
 #ifndef NDEBUG
-        assert(existsFile(downloadTask->getOutput()));
+        assert(succeeded && existsFile(downloadTask->getOutput()));
 #endif
         for (std::set<AsyncExecutor::Task *>::iterator it = copyTasks.begin(); it != copyTasks.end(); ++it)
         {
