@@ -180,9 +180,16 @@ bool DownloadTask::run()
         }
     }
     
-    if (!m_default.empty() && copyFile(m_default, m_output))
+    if (!m_default.empty())
     {
-        return true;
+        if (copyFile(m_default, m_output))
+        {
+            return true;
+        }
+        else
+        {
+            m_error += "\r\nFailed to copy default file: " + m_default + " => " + m_output;
+        }
     }
     
     return false;
@@ -231,7 +238,8 @@ bool DownloadTask::downloadFile(const std::string& url)
     res = curl_easy_perform(curl);
     if (res != CURLE_OK)
     {
-        m_error = curl_easy_strerror(res);
+        m_error = "Failed " + m_name + "\r\n";
+        m_error += curl_easy_strerror(res);
         if (m_retries >= DEFAULT_RETRIES)
         {
             fprintf(stderr, "%s: %s\n", m_error.c_str(), m_url.c_str());
@@ -264,6 +272,10 @@ bool DownloadTask::downloadFile(const std::string& url)
         return true;
     }
 
+    if (m_error.empty())
+    {
+        m_error = "HTTP Status:" + std::to_string(httpStatus);
+    }
     return false;
 }
 
@@ -283,7 +295,25 @@ CopyTask::CopyTask(const std::string &src, const std::string& dest, const std::s
 
 bool CopyTask::run()
 {
-    return ::copyFile(m_src, m_dest);
+    if (::copyFile(m_src, m_dest))
+    {
+        return true;
+    }
+    
+    if (!existsFile(m_src))
+    {
+        m_error = "Failed CP: " + m_src + "(not existed)  => " + m_dest;
+    }
+    else
+    {
+        m_error = "Failed CP: " + m_src + " => " + m_dest;
+#ifdef _WIN32
+        DWORD lastError = ::GetLastError();
+        m_error += "LastError:" + std::to_string(lastError);
+#endif
+    }
+    
+    return false;
 }
 
 Mp3Task::Mp3Task(const std::string &pcm, const std::string& mp3, unsigned int mtime) : m_pcm(pcm), m_mp3(mp3), m_mtime(mtime)
@@ -306,6 +336,14 @@ bool Mp3Task::run()
             // std::this_thread::sleep_for(std::chrono::milliseconds(192));
             return true;
         }
+        else
+        {
+            m_error = "Failed pcmToMp3: " + m_pcm + " => " + m_mp3;
+        }
+    }
+    else
+    {
+        m_error = "Failed silkTpPcm: " + m_pcm;
     }
     return false;
 }

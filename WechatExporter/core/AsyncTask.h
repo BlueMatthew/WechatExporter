@@ -64,7 +64,11 @@ public:
         return m_output;
     }
     
-    inline std::string getError() const
+    bool hasError() const
+    {
+        return !m_error.empty();
+    }
+    std::string getError() const
     {
         return m_error;
     }
@@ -97,6 +101,14 @@ public:
     {
         return m_name;
     }
+    bool hasError() const
+    {
+        return !m_error.empty();
+    }
+    std::string getError() const
+    {
+        return m_error;
+    }
     
     bool run();
     
@@ -104,6 +116,7 @@ private:
     std::string m_src;
     std::string m_dest;
     std::string m_name;
+    std::string m_error;
 };
 
 class Mp3Task : public AsyncExecutor::Task
@@ -120,6 +133,14 @@ public:
     {
         return "Mp3: " + m_mp3;
     }
+    bool hasError() const
+    {
+        return !m_error.empty();
+    }
+    std::string getError() const
+    {
+        return m_error;
+    }
     
     void swapBuffer(std::vector<unsigned char>& buffer);
 
@@ -129,6 +150,7 @@ private:
     std::string m_pcm;
     std::string m_mp3;
     unsigned int m_mtime;
+    std::string m_error;
     
     std::vector<unsigned char> m_pcmData;
 };

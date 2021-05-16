@@ -188,9 +188,9 @@ void TaskManager::onTaskComplete(const AsyncExecutor* executor, const AsyncExecu
 {
     if (NULL != m_logger)
     {
-        if (!succeeded)
+        if (!succeeded || task->hasError())
         {
-            m_logger->write("Failed: " + task->getName());
+            m_logger->write(task->getError());
         }
 #ifndef NDEBUG
         else
@@ -283,6 +283,16 @@ void TaskManager::download(const Session* session, const std::string &url, const
 		assert(!"Directory is invalid");
 	}
 #endif
+    
+    {
+        std::unique_lock<std::mutex> lock(m_mutex);
+        std::set<std::string>::iterator it = m_downloadedFiles.find(output);
+        if (it != m_downloadedFiles.end())
+        {
+            return;
+        }
+        m_downloadedFiles.insert(output);
+    }
     
     std::map<std::string, std::string>::iterator it = m_downloadTasks.find(url);
     if (it != m_downloadTasks.end() && it->second == output)

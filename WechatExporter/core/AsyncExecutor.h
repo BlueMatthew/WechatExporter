@@ -29,6 +29,14 @@ public:
         {
             return "";
         }
+        virtual bool hasError() const
+        {
+            return false;
+        }
+        virtual std::string getError() const
+        {
+            return "";
+        }
 
         Task() : m_taskId(0u), m_userData(NULL)
         {
