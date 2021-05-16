@@ -773,7 +773,7 @@ public:
 
 	LRESULT OnComplete(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 	{
-		BOOL cancelled = (lParam != 0) ? FALSE : TRUE;
+		BOOL cancelled = (lParam != 0) ? TRUE : FALSE;
 		if (NULL != m_pdfConverter)
 		{
 			if (!cancelled)
