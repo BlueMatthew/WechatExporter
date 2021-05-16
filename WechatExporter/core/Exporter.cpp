@@ -680,7 +680,6 @@ int Exporter::exportSession(const Friend& user, const MessageParser& msgParser, 
         }
 
         std::string scripts = (m_options & SPO_SYNC_LOADING) || (messages.size() <= pageSize) ? "" : getTemplate("scripts");
-        
 
         std::string html = getTemplate("frame");
 #ifndef NDEBUG
@@ -870,18 +869,28 @@ std::string Exporter::getLocaleString(const std::string& key) const
     return it == m_localeStrings.cend() ? key : it->second;
 }
 
-std::string Exporter::buildContentFromTemplateValues(const TemplateValues& values) const
+std::string Exporter::buildContentFromTemplateValues(const TemplateValues& tv) const
 {
-    std::string content = getTemplate(values.getName());
-    for (TemplateValues::const_iterator it = values.cbegin(); it != values.cend(); ++it)
+#ifndef NDEBUG
+    std::string alignment = "";
+#endif
+    std::string content = getTemplate(tv.getName());
+    for (TemplateValues::const_iterator it = tv.cbegin(); it != tv.cend(); ++it)
     {
         if (startsWith(it->first, "%"))
         {
             replaceAll(content, it->first, it->second);
         }
+#ifndef NDEBUG
+        if (it->first == "%%ALIGNMENT%%")
+        {
+            alignment = it->second;
+        }
+#endif
     }
     
     std::string::size_type pos = 0;
+
     while ((pos = content.find("%%", pos)) != std::string::npos)
     {
         std::string::size_type posEnd = content.find("%%", pos + 2);
@@ -892,6 +901,11 @@ std::string Exporter::buildContentFromTemplateValues(const TemplateValues& value
         
         content.erase(pos, posEnd + 2 - pos);
     }
+    
+#ifndef NDEBUG
+    std::string fileName = "sample_" + tv.getName() + alignment + ".html";
+    writeFile(combinePath(m_output, "dbg", fileName), content);
+#endif
     
     return content;
 }
