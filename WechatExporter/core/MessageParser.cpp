@@ -1317,9 +1317,10 @@ void MessageParser::parseChannels(const std::string& msgId, const XmlParser& xml
         
         if (!nodes["avatar"].empty())
         {
-            tv["%%CARDIMGPATH%%"] = portraitDir + "/" + nodes["username"] + ".jpg";
+            std::string fileName = nodes["username"].empty() ? nodes["objectId"] : nodes["username"];
+            tv["%%CARDIMGPATH%%"] = portraitDir + "/" + fileName + ".jpg";
 			std::string localPortraitDir = normalizePath(portraitDir);
-            std::string localFile = combinePath(localPortraitDir, nodes["username"] + ".jpg");
+            std::string localFile = combinePath(localPortraitDir, fileName + ".jpg");
             ensureDirectoryExisted(combinePath(m_outputPath, localPortraitDir));
 #ifdef USING_DOWNLOADER
             m_downloader.addTask(nodes["avatar"], combinePath(m_outputPath, localFile), 0, "card");
