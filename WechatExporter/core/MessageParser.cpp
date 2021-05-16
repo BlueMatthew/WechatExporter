@@ -1137,7 +1137,8 @@ void MessageParser::parseImage(const std::string& sessionPath, const std::string
     {
         tv.setName("image");
         tv["%%IMGPATH%%"] = sessionAssertsPath + "/" + dest;
-        tv["%%IMGTHUMBPATH%%"] = sessionAssertsPath + "/" + dest;
+        // If it is PDF mode, use the raw image directly for print quaility
+        tv["%%IMGTHUMBPATH%%"] = sessionAssertsPath + "/" + (((!hasThumb) || (m_options & SPO_PDF_MODE)) ? dest : destThumb);
         tv["%%MSGTYPE%%"] = "image";
         tv["%%EXTRA_CLS%%"] = "raw-img";
     }
