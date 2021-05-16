@@ -136,8 +136,8 @@ void AsyncExecutor::cancel()
     
     while (!tasks.empty())
     {
-        auto task = m_tasks.front();
-        m_tasks.pop();
+        auto task = tasks.front();
+        tasks.pop();
         delete task;
     }
 }
