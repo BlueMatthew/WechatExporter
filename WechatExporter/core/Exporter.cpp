@@ -871,7 +871,7 @@ std::string Exporter::getLocaleString(const std::string& key) const
 
 std::string Exporter::buildContentFromTemplateValues(const TemplateValues& tv) const
 {
-#ifndef NDEBUG
+#if !defined(NDEBUG) && defined(SAMPLING_TMPL)
     std::string alignment = "";
 #endif
     std::string content = getTemplate(tv.getName());
@@ -881,7 +881,7 @@ std::string Exporter::buildContentFromTemplateValues(const TemplateValues& tv) c
         {
             replaceAll(content, it->first, it->second);
         }
-#ifndef NDEBUG
+#if !defined(NDEBUG) && defined(SAMPLING_TMPL)
         if (it->first == "%%ALIGNMENT%%")
         {
             alignment = it->second;
@@ -902,14 +902,13 @@ std::string Exporter::buildContentFromTemplateValues(const TemplateValues& tv) c
         content.erase(pos, posEnd + 2 - pos);
     }
     
-#ifndef NDEBUG
+#if !defined(NDEBUG) && defined(SAMPLING_TMPL)
     std::string fileName = "sample_" + tv.getName() + alignment + ".html";
     writeFile(combinePath(m_output, "dbg", fileName), content);
 #endif
     
     return content;
 }
-
 
 void Exporter::notifyStart()
 {
