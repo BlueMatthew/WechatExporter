@@ -434,7 +434,7 @@ bool Exporter::exportUser(Friend& user, std::string& userOutputPath)
 #ifndef NDEBUG
         m_logger->debug("Download avatar: *" + user.getPortrait() + "* => " + combinePath(outputBase, "Portrait", user.getLocalPortrait()));
 #endif
-        msgParser.copyPortraitIcon(NULL, user.getUsrName(), user.getHash(), user.getPortrait(), user.getSecondaryPortrait(), combinePath(outputBase, "", "Portrait"));
+        msgParser.copyPortraitIcon(NULL, user, combinePath(outputBase, "Portrait"));
         // downloader.addTask(user.getPortrait(), combinePath(outputBase, "Portrait", user.getLocalPortrait()), 0);
     }
     
@@ -482,7 +482,8 @@ bool Exporter::exportUser(Friend& user, std::string& userOutputPath)
         }
         if ((m_options & SPO_IGNORE_AVATAR) == 0)
         {
-            msgParser.copyPortraitIcon(NULL, it->getUsrName(), it->getHash(), it->getPortrait(), it->getSecondaryPortrait(), combinePath(outputBase, "", "Portrait"));
+            // Download avatar for session
+            msgParser.copyPortraitIcon(&(*it), *it, combinePath(outputBase, "Portrait"));
         }
         int count = exportSession(*myself, msgParser, *it, userBase, outputBase);
         
