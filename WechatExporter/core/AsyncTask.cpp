@@ -248,6 +248,17 @@ bool DownloadTask::downloadFile(const std::string& url)
     else
     {
         curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &httpStatus);
+        
+#ifndef NDEBUG
+        char *lastUrl = NULL;
+        CURLcode res2 = curl_easy_getinfo(curl, CURLINFO_EFFECTIVE_URL, &lastUrl);
+
+        if((CURLE_OK == res2) && lastUrl && m_url != lastUrl)
+        {
+            m_error += " \r\nRedirect: ";
+            m_error += lastUrl;
+        }
+#endif
     }
     curl_easy_cleanup(curl);
 #endif // no FAKE_DOWNLOAD
