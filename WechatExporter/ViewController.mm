@@ -521,8 +521,7 @@
     
     std::map<std::string, std::map<std::string, void *>> usersAndSessions;
     [m_dataSource getSelectedUserAndSessions:usersAndSessions];
-    
-#ifndef NDEBUG
+
     if (NULL != m_pdfConverter)
     {
         delete m_pdfConverter;
@@ -533,7 +532,7 @@
         m_pdfConverter = new PdfConverterImpl([output UTF8String]);
         m_pdfConverter->setWorkDir(output);
     }
-#endif
+
     m_exporter = new Exporter([workDir UTF8String], [backup UTF8String], [output UTF8String], m_logger, m_pdfConverter);
     if (nil != descOrder && [descOrder boolValue])
     {
@@ -551,6 +550,7 @@
     {
         m_exporter->setLoadingDataOnScroll([AppConfiguration getLoadingDataOnScroll]);
     }
+    m_exporter->supportsFilter([AppConfiguration getSupportingFilter]);
 
     if (nil != textMode && textMode.boolValue)
     {
@@ -558,14 +558,14 @@
         m_exporter->setExtName("txt");
         m_exporter->setTemplatesName("templates_txt");
     }
-    
-#ifndef NDEBUG
+
     if ([AppConfiguration isPdfMode])
     {
         m_exporter->setPdfMode();
+        m_exporter->setSyncLoading(true);
+        m_exporter->setLoadingDataOnScroll(false);
+        m_exporter->supportsFilter(false);
     }
-#endif
-    m_exporter->supportsFilter([AppConfiguration getSupportingFilter]);
     
     m_exporter->setNotifier(m_notifier);
     
