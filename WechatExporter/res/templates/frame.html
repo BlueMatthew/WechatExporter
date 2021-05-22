@@ -87,7 +87,7 @@
 			clear:both;
 			overflow: auto;
 			margin:0 auto;
-			padding: 8px 8px;
+			padding: 8px 8px 0px 8px;
 	  	}
 		.chat.left div.avatar-box,
 		.media.left div.avatar-box
@@ -112,15 +112,15 @@
 			position: relative;
 			background-color: white;
 			/*float: left;*/
-			margin: 0 50px 10px 50px;
-			padding: 10px 10px 10px 10px;
+			margin: 0 50px 8px 50px;
+			padding: 8px 8px 8px 8px;
 			border-radius:4px;
 		}
 		.media.left div.content-box
 		{
 			/*float: left;*/
-			margin: 0 50px 10px 50px;
-			padding: 10px 10px 10px 10px;
+			margin: 0 50px 8px 50px;
+			padding: 8px 8px 8px 8px;
     	}
 	    div.content-box
 	    {
@@ -144,7 +144,7 @@
 			max-width: 670px;
 			margin: 0 auto;
 			background-color: #ebebeb;
-			padding: 8px 8px 8px 58px;
+			padding: 8px 8px 0px 58px;
 		}
 		.chat.right div.avatar-box,
 		.media.right div.avatar-box
@@ -164,15 +164,15 @@
 		{
       		position: relative;
 			background-color: #b2e281;
-			margin: 0px 50px 10px auto;
-			padding: 10px 10px 10px 10px;
+			margin: 0px 50px 8px auto;
+			padding: 8px 8px 8px 8px;
 			border-radius: 4px;
 		}
 		.media.right div.content-box
 		{
 			float: right;
-			margin: 0px 0px 10px 50px;
-			padding: 10px 10px 10px 10px;
+			margin: 0px 0px 8px 50px;
+			padding: 8px 8px 8px 8px;
 		}
 		
 		.name.right
@@ -296,6 +296,10 @@
 		{
 			margin-left: 2px;
 		}
+		span.app-name:empty
+		{
+			display: none;
+		}
 		div.card-type
 		{
 			border-top: 1px dotted #dedede;
@@ -386,6 +390,14 @@
 			.header
 			{
 				position: absolute;
+			}
+			.chat.left div.content-box
+			{
+				margin: 0 50px 4px 50px;
+			}
+			.chat.right div.content-box
+			{
+				margin: 0px 50px 4px auto;
 			}
 		}
 		</style>
