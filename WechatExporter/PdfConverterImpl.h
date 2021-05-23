@@ -71,8 +71,8 @@ public:
     
     bool makeUserDirectory(const std::string& dirName)
     {
-        std::string command = replaceAll(dirName, " ", "\\ ");
-        command = NEW_LINE + "[ -d \"pdf/" + command + "\" ] || mkdir \"pdf/" + command + "\"" + NEW_LINE;
+        // std::string command = replaceAll(dirName, " ", "\\ ");
+        std::string command = NEW_LINE + "[ -d \"pdf/" + dirName + "\" ] || mkdir \"pdf/" + dirName + "\"" + NEW_LINE;
         
         appendFile(m_shellPath, reinterpret_cast<const unsigned char *>(command.c_str()), command.size());
         
@@ -199,7 +199,7 @@ protected:
         aliasCmd = "#/bin/sh" + NEW_LINE + NEW_LINE + "alias chrome=\"" + aliasCmd + "\"" + NEW_LINE + NEW_LINE;
         
         std::string output = m_output;
-        replaceAll(output, " ", "\\ ");
+        // replaceAll(output, " ", "\\ ");
         
         aliasCmd += "cd \"" + output + "\"" + NEW_LINE;
         aliasCmd += "[ -d pdf ] || mkdir pdf" + NEW_LINE;
