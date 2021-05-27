@@ -56,6 +56,8 @@ public:
     size_t getNumberOfQueue(std::string& queueDesc) const;
     void cancel();
     void shutdown();
+    // true: completed, false: timeout
+    bool waitForCompltion(unsigned int ms);
 
     void download(const Session* session, const std::string &url, const std::string &backupUrl, const std::string& output, time_t mtime, const std::string& defaultFile = "", std::string type = "");
 #ifdef USING_ASYNC_TASK_FOR_MP3

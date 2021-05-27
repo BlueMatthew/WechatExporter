@@ -404,7 +404,6 @@ bool Exporter::exportUser(Friend& user, std::string& userOutputPath)
     }
     
     bool pdfOutput = (m_options & SPO_PDF_MODE && NULL != m_pdfConverter);
-    // bool pdfOutput = (m_options & SPO_PDF_MODE && NULL != m_pdfConverter);
     if (pdfOutput)
     {
         m_pdfConverter->makeUserDirectory(userOutputPath);
@@ -437,9 +436,7 @@ bool Exporter::exportUser(Friend& user, std::string& userOutputPath)
         msgParser.copyPortraitIcon(NULL, user, combinePath(outputBase, "Portrait"));
         // downloader.addTask(user.getPortrait(), combinePath(outputBase, "Portrait", user.getLocalPortrait()), 0);
     }
-    
-    std::vector<Session *> pdfSessions;
-    
+
     std::set<std::string> sessionFileNames;
     for (std::vector<Session>::iterator it = sessions.begin(); it != sessions.end(); ++it)
     {
@@ -519,7 +516,6 @@ bool Exporter::exportUser(Friend& user, std::string& userOutputPath)
                 // taskManager.convertPdf(&(*it), htmlFileName, pdfFileName, m_pdfConverter);
                 m_pdfConverter->convert(htmlFileName, pdfFileName);
             }
-            // pdfSessions.push_back(&(*it));
         }
     }
 
@@ -529,7 +525,7 @@ bool Exporter::exportUser(Friend& user, std::string& userOutputPath)
     
     std::string fileName = combinePath(outputBase, "index." + m_extName);
     writeFile(fileName, html);
-    
+
     if (m_cancelled)
     {
 #ifdef USING_DOWNLOADER
@@ -553,35 +549,42 @@ bool Exporter::exportUser(Friend& user, std::string& userOutputPath)
         {
             m_logger->write("Waiting for tasks: " + queueDesc);
         }
+        taskManager.shutdown();
 #endif
     }
-    
+
 #ifdef USING_DOWNLOADER
     downloader.shutdown();
 #else
-    taskManager.shutdown();
-#endif
-    
-    if (!m_cancelled && !pdfSessions.empty())
+    unsigned int timeout = m_cancelled ? 0 : 2048;
+    while(true)
     {
-        // m_logger->write(getLocaleString("Convert to PDF..."));
-        for (std::vector<Session *>::const_iterator it = pdfSessions.cbegin(); it != pdfSessions.cend(); ++it)
+        if (taskManager.waitForCompltion(timeout))
         {
-            std::string htmlFileName = combinePath(outputBase, (*it)->getOutputFileName() + "." + m_extName);
-            deleteFile(htmlFileName);
-            deleteDirectory(combinePath(outputBase, (*it)->getOutputFileName() + "_files"));
-            if (m_cancelled)
+            break;
+        }
+        
+        if (m_cancelled)
+        {
+            taskManager.cancel();
+            timeout = 0;
+        }
+        else
+        {
+            std::string queueDesc;
+            size_t dlCount = taskManager.getNumberOfQueue(queueDesc);
+            if (dlCount > 0)
             {
-                break;
+                m_logger->write("Waiting for tasks: " + queueDesc);
             }
         }
     }
-    
+#endif
+
 #ifndef NDEBUG
     // m_logger->debug(formatString("Total Downloads: %d", downloader.getCount()));
     // m_logger->debug("Download Stats: " + downloader.getStats());
 #endif
-    
 
     return true;
 }
