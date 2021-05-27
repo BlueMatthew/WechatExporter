@@ -99,6 +99,8 @@ public:
     size_t getNumberOfQueue() const;
     void shutdown();
     void cancel();
+    // true: completed, false: timeout
+    bool waitForCompltion(unsigned int ms);
     
 #if !defined(NDEBUG) || defined(DBG_PERF)
     void setTag(const std::string& tag)

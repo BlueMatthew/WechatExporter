@@ -46,8 +46,49 @@ TaskManager::~TaskManager()
 
 void TaskManager::shutdown()
 {
+    if (NULL != m_pdfExecutor)
+    {
+        m_pdfExecutor->shutdown();
+    }
+#ifdef USING_ASYNC_TASK_FOR_MP3
+    if (NULL != m_audioExecutor && m_audioExecutor != m_downloadExecutor)
+    {
+        m_audioExecutor->shutdown();
+    }
+#endif
+    if (NULL != m_downloadExecutor)
+    {
+        m_downloadExecutor->shutdown();
+    }
+}
+
+void TaskManager::shutdownExecutors()
+{
+    if (NULL != m_pdfExecutor)
+    {
+        delete m_pdfExecutor;
+        m_pdfExecutor = NULL;
+    }
+#ifdef USING_ASYNC_TASK_FOR_MP3
+    if (NULL != m_audioExecutor && m_audioExecutor != m_downloadExecutor)
+    {
+        delete m_audioExecutor;
+        m_audioExecutor = NULL;
+    }
+#endif
+    if (NULL != m_downloadExecutor)
+    {
+        delete m_downloadExecutor;
+        m_downloadExecutor = NULL;
+    }
+}
+
+// true: completed, false: timeout
+bool TaskManager::waitForCompltion(unsigned int ms)
+{
+    /*
     bool hasMoreTasks = true;
-    while (1)
+    while (hasMoreTasks)
     {
         {
             std::unique_lock<std::mutex> lock(m_mutex);
@@ -58,11 +99,34 @@ void TaskManager::shutdown()
         {
             break;
         }
-        
-        std::this_thread::sleep_for(std::chrono::milliseconds(100));
+
+        std::this_thread::sleep_for(std::chrono::milliseconds(ms == 0 ? 128 : ms));
+        if (ms > 0)
+        {
+            return false;
+        }
+    }
+     */
+    
+    if (!m_downloadExecutor->waitForCompltion(ms))
+    {
+        return false;
+    }
+#ifdef USING_ASYNC_TASK_FOR_MP3
+    if (NULL != m_audioExecutor && m_audioExecutor != m_downloadExecutor)
+    {
+        if (!m_audioExecutor->waitForCompltion(ms))
+        {
+            return false;
+        }
+    }
+#endif
+    if (NULL != m_pdfExecutor && !m_pdfExecutor->waitForCompltion(ms))
+    {
+        return false;
     }
     
-    shutdownExecutors();
+    return true;
 }
 
 void TaskManager::cancel()
@@ -78,7 +142,10 @@ void TaskManager::cancel()
     
     m_downloadExecutor->cancel();
 #ifdef USING_ASYNC_TASK_FOR_MP3
-    m_audioExecutor->cancel();
+    if (NULL != m_audioExecutor && m_audioExecutor != m_downloadExecutor)
+    {
+        m_audioExecutor->cancel();
+    }
 #endif
     if (NULL != m_pdfExecutor)
     {
@@ -145,27 +212,6 @@ size_t TaskManager::getNumberOfQueue(std::string& queueDesc) const
         numberOfAudio +
 #endif
         numberOfPdf;
-}
-
-void TaskManager::shutdownExecutors()
-{
-    if (NULL != m_pdfExecutor)
-    {
-        delete m_pdfExecutor;
-        m_pdfExecutor = NULL;
-    }
-#ifdef USING_ASYNC_TASK_FOR_MP3
-    if (NULL != m_audioExecutor && m_audioExecutor != m_downloadExecutor)
-    {
-        delete m_audioExecutor;
-        m_audioExecutor = NULL;
-    }
-#endif
-    if (NULL != m_downloadExecutor)
-    {
-        delete m_downloadExecutor;
-        m_downloadExecutor = NULL;
-    }
 }
 
 void TaskManager::setUserAgent(const std::string& userAgent)

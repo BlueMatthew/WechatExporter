@@ -123,7 +123,32 @@ size_t AsyncExecutor::getNumberOfQueue() const
 
 void AsyncExecutor::shutdown()
 {
-    
+    std::unique_lock<std::mutex> lock(m_mutex);
+    m_shutdown = true;
+    m_cv.notify_all();
+}
+
+// true: completed, false: timeout
+bool AsyncExecutor::waitForCompltion(unsigned int ms)
+{
+    std::unique_lock<std::mutex> lock(m_mutex);
+    if (m_nthreads != 0)
+    {
+        if (ms == 0)
+        {
+            m_shutdown_cv.wait(lock);
+            return false;
+        }
+        else
+        {
+            if (m_shutdown_cv.wait_for(lock, std::chrono::milliseconds(ms)) == std::cv_status::timeout)
+            {
+                return false;
+            }
+        }
+    }
+
+    return true;
 }
 
 void AsyncExecutor::cancel()
