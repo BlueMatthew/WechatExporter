@@ -26,7 +26,6 @@ private:
 #ifdef USING_ASYNC_TASK_FOR_MP3
     AsyncExecutor   *m_audioExecutor;
 #endif
-    AsyncExecutor   *m_pdfExecutor;
     std::map<std::string, std::string> m_downloadTasks;
     
     std::string m_userAgent;
@@ -34,10 +33,8 @@ private:
     mutable std::mutex m_mutex;
     std::set<std::string> m_downloadedFiles;
     std::map<std::string, uint32_t> m_downloadingTasks;
-    std::map<const Session*, uint32_t> m_sessionTaskCount;
     
     std::map<uint32_t, std::set<AsyncExecutor::Task *>> m_copyTaskQueue;
-    std::map<const Session*, AsyncExecutor::Task *> m_pdfTaskQueue;
     
 #ifdef USING_ASYNC_TASK_FOR_MP3
     std::queue<std::vector<unsigned char>> m_Buffers;
@@ -45,7 +42,7 @@ private:
     
 public:
     
-    TaskManager(bool needPdfExecutor, Logger* logger);
+    TaskManager(Logger* logger);
     ~TaskManager();
     
     virtual void onTaskStart(const AsyncExecutor* executor, const AsyncExecutor::Task *task);
@@ -63,41 +60,10 @@ public:
 #ifdef USING_ASYNC_TASK_FOR_MP3
     void convertAudio(const Session* session, const std::string& pcmPath, const std::string& mp3Path, unsigned int mtime);
 #endif
-    void convertPdf(const Session* session, const std::string& htmlPath, const std::string& pdfPath, PdfConverter* pdfConverter);
     
 private:
     
     void shutdownExecutors();
-    
-    inline uint32_t increaseSessionTask(const Session* session)
-    {
-        if (NULL != session)
-        {
-            std::map<const Session*, uint32_t>::iterator it = m_sessionTaskCount.find(session);
-            if (it != m_sessionTaskCount.end())
-            {
-                it->second++;
-                return it->second;
-            }
-        }
-        
-        return 0u;
-    }
-    
-    inline uint32_t decreaseSessionTask(const Session* session)
-    {
-        if (NULL != session)
-        {
-            std::map<const Session*, uint32_t>::iterator it = m_sessionTaskCount.find(session);
-            if (it != m_sessionTaskCount.end())
-            {
-                it->second--;
-                return it->second;
-            }
-        }
-        
-        return 0u;
-    }
     
     inline std::set<AsyncExecutor::Task *> dequeueCopyTasks(uint32_t taskId)
     {
@@ -111,23 +77,7 @@ private:
         
         return tasks;
     }
-    
-    inline AsyncExecutor::Task* dequeuePdfTasks(const Session* session)
-    {
-        AsyncExecutor::Task* task = NULL;
-        if (!m_pdfTaskQueue.empty())
-        {
-            std::map<const Session*, AsyncExecutor::Task *>::iterator it = m_pdfTaskQueue.find(session);
-            if (it != m_pdfTaskQueue.end())
-            {
-                task = it->second;
-                m_pdfTaskQueue.erase(it);
-            }
-        }
 
-        return task;
-    }
-    
 };
 
 #endif /* SessionTaskManager_h */
