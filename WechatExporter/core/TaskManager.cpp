@@ -10,31 +10,25 @@
 #include "AsyncTask.h"
 #include "FileSystem.h"
 
-TaskManager::TaskManager(bool needPdfExecutor, Logger* logger) : m_logger(logger), m_downloadExecutor(NULL),
+TaskManager::TaskManager(Logger* logger) : m_logger(logger), m_downloadExecutor(NULL)
 #ifdef USING_ASYNC_TASK_FOR_MP3
-    m_audioExecutor(NULL),
+    , m_audioExecutor(NULL)
 #endif
-    m_pdfExecutor(NULL)
 {
     m_downloadExecutor = new AsyncExecutor(2, 4, this);
 #ifdef USING_ASYNC_TASK_FOR_MP3
     m_audioExecutor = new AsyncExecutor(1, 1, this);
 #endif
     // m_audioExecutor = m_downloadExecutor;
-    if (needPdfExecutor)
-    {
-        m_pdfExecutor = new AsyncExecutor(4, 4, this);
-    }
     
 #if !defined(NDEBUG) || defined(DBG_PERF)
     m_downloadExecutor->setTag("dl");
 #ifdef USING_ASYNC_TASK_FOR_MP3
-    m_audioExecutor->setTag("audio");
-#endif
-    if (m_pdfExecutor)
+    if (NULL != m_audioExecutor && m_audioExecutor != m_downloadExecutor)
     {
-        m_pdfExecutor->setTag("pdf");
+        m_audioExecutor->setTag("audio");
     }
+#endif
 #endif
 }
 
@@ -46,10 +40,6 @@ TaskManager::~TaskManager()
 
 void TaskManager::shutdown()
 {
-    if (NULL != m_pdfExecutor)
-    {
-        m_pdfExecutor->shutdown();
-    }
 #ifdef USING_ASYNC_TASK_FOR_MP3
     if (NULL != m_audioExecutor && m_audioExecutor != m_downloadExecutor)
     {
@@ -64,11 +54,6 @@ void TaskManager::shutdown()
 
 void TaskManager::shutdownExecutors()
 {
-    if (NULL != m_pdfExecutor)
-    {
-        delete m_pdfExecutor;
-        m_pdfExecutor = NULL;
-    }
 #ifdef USING_ASYNC_TASK_FOR_MP3
     if (NULL != m_audioExecutor && m_audioExecutor != m_downloadExecutor)
     {
@@ -100,7 +85,7 @@ bool TaskManager::waitForCompltion(unsigned int ms)
             break;
         }
 
-        std::this_thread::sleep_for(std::chrono::milliseconds(ms == 0 ? 128 : ms));
+        std::this_thread::sleep_for(std::chrono::milliseconds(ms == 0 ? 512 : ms));
         if (ms > 0)
         {
             return false;
@@ -121,23 +106,17 @@ bool TaskManager::waitForCompltion(unsigned int ms)
         }
     }
 #endif
-    if (NULL != m_pdfExecutor && !m_pdfExecutor->waitForCompltion(ms))
-    {
-        return false;
-    }
-    
+
     return true;
 }
 
 void TaskManager::cancel()
 {
     std::map<uint32_t, std::set<AsyncExecutor::Task *>> copyTaskQueue;
-    std::map<const Session*, AsyncExecutor::Task *> pdfTaskQueue;
     
     {
         std::unique_lock<std::mutex> lock(m_mutex);
         copyTaskQueue.swap(m_copyTaskQueue);
-        pdfTaskQueue.swap(m_pdfTaskQueue);
     }
     
     m_downloadExecutor->cancel();
@@ -147,10 +126,6 @@ void TaskManager::cancel()
         m_audioExecutor->cancel();
     }
 #endif
-    if (NULL != m_pdfExecutor)
-    {
-        m_pdfExecutor->cancel();
-    }
     
     for (std::map<uint32_t, std::set<AsyncExecutor::Task *>>::iterator it = copyTaskQueue.begin(); it != copyTaskQueue.end(); ++it)
     {
@@ -161,26 +136,22 @@ void TaskManager::cancel()
         it->second.clear();
     }
     copyTaskQueue.clear();
-    
-    for (std::map<const Session*, AsyncExecutor::Task *>::iterator it = pdfTaskQueue.begin(); it != pdfTaskQueue.end(); ++it)
-    {
-        delete it->second;
-    }
-    pdfTaskQueue.clear();
 }
 
 size_t TaskManager::getNumberOfQueue(std::string& queueDesc) const
 {
     size_t numberOfDownloads = m_downloadExecutor->getNumberOfQueue();
 #ifdef USING_ASYNC_TASK_FOR_MP3
-    size_t numberOfAudio = m_audioExecutor->getNumberOfQueue();
+    size_t numberOfAudio = 0;
+    if (m_audioExecutor != m_downloadExecutor)
+    {
+        numberOfAudio = m_audioExecutor->getNumberOfQueue();
+    }
 #endif
-    size_t numberOfPdf = m_pdfTaskQueue.size();
     
     {
         std::unique_lock<std::mutex> lock(m_mutex);
         numberOfDownloads += m_copyTaskQueue.size();
-        numberOfPdf += m_pdfTaskQueue.size();
     }
     
     queueDesc = "";
@@ -198,20 +169,12 @@ size_t TaskManager::getNumberOfQueue(std::string& queueDesc) const
         queueDesc += std::to_string(numberOfAudio) + " audios";
     }
 #endif
-    if (numberOfPdf > 0)
-    {
-        if (!queueDesc.empty())
-        {
-            queueDesc += ", ";
-        }
-        queueDesc += std::to_string(numberOfPdf) + " pdf files";
-    }
 
-    return numberOfDownloads +
+    return numberOfDownloads
 #ifdef USING_ASYNC_TASK_FOR_MP3
-        numberOfAudio +
+		+ numberOfAudio
 #endif
-        numberOfPdf;
+    ;
 }
 
 void TaskManager::setUserAgent(const std::string& userAgent)
@@ -269,16 +232,8 @@ void TaskManager::onTaskComplete(const AsyncExecutor* executor, const AsyncExecu
         }
         
         std::set<AsyncExecutor::Task *> copyTasks = dequeueCopyTasks(task->getTaskId());
-        
-        // check copy task
-        AsyncExecutor::Task *pdfTask = NULL;
-        uint32_t taskCount = decreaseSessionTask(session);
-        if (0 == taskCount)
-        {
-            pdfTask = dequeuePdfTasks(session);
-        }
-        
         lock.unlock();
+        
 #ifndef NDEBUG
         if (succeeded)
         {
@@ -289,31 +244,10 @@ void TaskManager::onTaskComplete(const AsyncExecutor* executor, const AsyncExecu
         {
             m_downloadExecutor->addTask(*it);
         }
-        if (NULL != pdfTask)
-        {
-            m_pdfExecutor->addTask(pdfTask);
-        }
     }
     else if ((task->getType() == TASK_TYPE_COPY) || (task->getType() == TASK_TYPE_AUDIO))
     {
         // check copy task
-        AsyncExecutor::Task *pdfTask = NULL;
-        std::unique_lock<std::mutex> lock(m_mutex);
-        uint32_t taskCount = decreaseSessionTask(session);
-        if (0 == taskCount)
-        {
-            pdfTask = dequeuePdfTasks(session);
-        }
-        
-        lock.unlock();
-        if (NULL != pdfTask)
-        {
-            m_pdfExecutor->addTask(pdfTask);
-        }
-    }
-    else if (executor == m_pdfExecutor)
-    {
-        
     }
 }
 
@@ -367,19 +301,6 @@ void TaskManager::download(const Session* session, const std::string &url, const
     task->setUserData(reinterpret_cast<const void *>(session));
     
     std::unique_lock<std::mutex> lock(m_mutex);
-    if (NULL != session)
-    {
-        std::map<const Session*, uint32_t>::iterator it2 = m_sessionTaskCount.find(session);
-        if (it2 == m_sessionTaskCount.end())
-        {
-            m_sessionTaskCount.insert(std::pair<const Session*, uint32_t>(session, 1u));
-        }
-        else
-        {
-            it2->second++;
-        }
-    }
-    
     if (downloadFile)
     {
         m_downloadingTasks.insert(std::pair<std::string, uint32_t>(url, taskId));
@@ -419,45 +340,6 @@ void TaskManager::convertAudio(const Session* session, const std::string& pcmPat
     task->setTaskId(AsyncExecutor::genNextTaskId());
     task->setUserData(reinterpret_cast<const void *>(session));
     
-    std::unique_lock<std::mutex> lock(m_mutex);
-    std::map<const Session*, uint32_t>::iterator it = m_sessionTaskCount.find(session);
-    if (it == m_sessionTaskCount.end())
-    {
-        m_sessionTaskCount.insert(std::pair<const Session*, uint32_t>(session, 1u));
-    }
-    else
-    {
-        it->second++;
-    }
-    
-    lock.unlock();
-    
     m_audioExecutor->addTask(task);
 }
 #endif
-
-void TaskManager::convertPdf(const Session* session, const std::string& htmlPath, const std::string& pdfPath, PdfConverter* pdfConverter)
-{
-    if (NULL == session)
-    {
-        return;
-    }
-    
-    PdfTask *task = new PdfTask(pdfConverter, htmlPath, pdfPath, "PDF: " + htmlPath + " => " + pdfPath);
-    task->setTaskId(AsyncExecutor::genNextTaskId());
-    task->setUserData(reinterpret_cast<const void *>(session));
-    
-    std::unique_lock<std::mutex> lock(m_mutex);
-    std::map<const Session*, uint32_t>::iterator it = m_sessionTaskCount.find(session);
-    if (it != m_sessionTaskCount.end() && it->second != 0)
-    {
-        m_pdfTaskQueue.insert(std::pair<const Session*, AsyncExecutor::Task *>(session, task));
-    }
-    else
-    {
-        lock.unlock();
-        m_pdfExecutor->addTask(task);
-    }
-    
-    
-}

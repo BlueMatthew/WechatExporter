@@ -412,8 +412,7 @@ bool Exporter::exportUser(Friend& user, std::string& userOutputPath)
 #ifdef USING_DOWNLOADER
     Downloader downloader(m_logger);
 #else
-    // TaskManager taskManager(pdfOutput, m_logger);
-    TaskManager taskManager(false, m_logger);
+    TaskManager taskManager(m_logger);
 #endif
 #ifndef NDEBUG
     m_logger->debug("UA: " + m_wechatInfo.buildUserAgent());
@@ -526,6 +525,7 @@ bool Exporter::exportUser(Friend& user, std::string& userOutputPath)
     std::string fileName = combinePath(outputBase, "index." + m_extName);
     writeFile(fileName, html);
 
+    size_t prevDlCount = 0;
     if (m_cancelled)
     {
 #ifdef USING_DOWNLOADER
@@ -544,8 +544,8 @@ bool Exporter::exportUser(Friend& user, std::string& userOutputPath)
         }
 #else
         std::string queueDesc;
-        size_t dlCount = taskManager.getNumberOfQueue(queueDesc);
-        if (dlCount > 0)
+        prevDlCount = taskManager.getNumberOfQueue(queueDesc);
+        if (prevDlCount > 0)
         {
             m_logger->write("Waiting for tasks: " + queueDesc);
         }
@@ -556,8 +556,8 @@ bool Exporter::exportUser(Friend& user, std::string& userOutputPath)
 #ifdef USING_DOWNLOADER
     downloader.shutdown();
 #else
-    unsigned int timeout = m_cancelled ? 0 : 2048;
-    while(true)
+    unsigned int timeout = m_cancelled ? 0 : 512;
+    for (int idx = 1; ; ++idx)
     {
         if (taskManager.waitForCompltion(timeout))
         {
@@ -569,12 +569,13 @@ bool Exporter::exportUser(Friend& user, std::string& userOutputPath)
             taskManager.cancel();
             timeout = 0;
         }
-        else
+        else if ((idx % 4) == 0)
         {
             std::string queueDesc;
             size_t dlCount = taskManager.getNumberOfQueue(queueDesc);
-            if (dlCount > 0)
+            if (dlCount > 0 && dlCount != prevDlCount)
             {
+                prevDlCount = dlCount;
                 m_logger->write("Waiting for tasks: " + queueDesc);
             }
         }
