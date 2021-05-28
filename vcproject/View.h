@@ -484,6 +484,8 @@ public:
 		{
 			return 0;
 		}
+		
+		SendMessage(WM_NEXTDLGCTL, 0, 0);
 		CW2A resDir(CT2W(buffer), CP_UTF8);
 
 		PostMessage(WM_UPD_VIEWSTATE, VS_LOADING, 1);
