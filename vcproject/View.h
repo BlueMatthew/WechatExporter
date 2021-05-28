@@ -170,6 +170,9 @@ public:
 	static const UINT WM_SESSION_START = ExportNotifierImpl::WM_SESSION_START;
 	static const UINT WM_SESSION_COMPLETE = ExportNotifierImpl::WM_SESSION_COMPLETE;
 	static const UINT WM_SESSION_PROGRESS = ExportNotifierImpl::WM_SESSION_PROGRESS;
+	static const UINT WM_TASKS_START = ExportNotifierImpl::WM_TASKS_START;
+	static const UINT WM_TASKS_COMPLETE = ExportNotifierImpl::WM_TASKS_COMPLETE;
+	static const UINT WM_TASKS_PROGRESS = ExportNotifierImpl::WM_TASKS_PROGRESS;
 	static const UINT WM_MSG_START = ExportNotifierImpl::WM_EN_END;
 	static const UINT WM_UPD_VIEWSTATE = WM_MSG_START + 1;
 	static const UINT WM_LOADDATA = WM_MSG_START + 2;
@@ -286,6 +289,9 @@ public:
 		MESSAGE_HANDLER(WM_SESSION_START, OnSessionStart)
 		MESSAGE_HANDLER(WM_SESSION_COMPLETE, OnSessionComplete)
 		MESSAGE_HANDLER(WM_SESSION_PROGRESS, OnSessionProgress)
+		MESSAGE_HANDLER(WM_TASKS_START, OnTasksStart)
+		MESSAGE_HANDLER(WM_TASKS_COMPLETE, OnTasksComplete)
+		MESSAGE_HANDLER(WM_TASKS_PROGRESS, OnTasksProgress)
 		MESSAGE_HANDLER(WM_UPD_VIEWSTATE, OnUpdateViewState)
 		MESSAGE_HANDLER(WM_LOADDATA, OnLoadData)
 		MESSAGE_HANDLER(WM_CHKUPDATE, OnCheckUpdate)
@@ -871,6 +877,25 @@ public:
 		return 0;
 	}
 
+	LRESULT OnTasksStart(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+	{
+		UpdateProgressBar(0, static_cast<int>(lParam));
+
+		return 0;
+	}
+
+	LRESULT OnTasksComplete(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+	{
+		return 0;
+	}
+
+	LRESULT OnTasksProgress(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+	{
+		UpdateProgressBar(static_cast<int>(lParam), 0);
+
+		return 0;
+	}
+
 	BOOL IsViewIdle() const
 	{
 		return m_viewState == VS_IDLE;
@@ -910,17 +935,25 @@ protected:
 
 	void UpdateProgressBar(BOOL increaseUpper = FALSE)
 	{
+		UpdateProgressBar(1, increaseUpper ? 1 : 0);
+	}
+
+	void UpdateProgressBar(int increasedPos, int increasedUpper)
+	{
 		CProgressBarCtrl progressCtrl = GetDlgItem(IDC_PROGRESS);
 		PBRANGE range;
 		int pos = progressCtrl.GetPos();
 		progressCtrl.GetRange(&range);
-		if (increaseUpper || pos == range.iHigh)
+		if ((increasedUpper > 0) || pos == range.iHigh)
 		{
-			range.iHigh += progressCtrl.GetStep();
+			range.iHigh += increasedUpper;
 			progressCtrl.SetRange32(range.iLow, range.iHigh);
 		}
-		progressCtrl.OffsetPos(1);
-		pos = progressCtrl.GetPos();
+		if (increasedPos > 0)
+		{
+			progressCtrl.OffsetPos(increasedPos);
+			pos = progressCtrl.GetPos();
+		}
 
 		int percent = (range.iHigh > range.iLow) ? ((pos - range.iLow) * 100 / (range.iHigh - range.iLow)) : 0;
 		if (percent >= 100)

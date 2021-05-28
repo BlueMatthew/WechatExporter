@@ -113,6 +113,9 @@ protected:
     void notifySessionStart(const std::string& sessionUsrName, void * sessionData, uint32_t numberOfTotalMessages);
     void notifySessionComplete(const std::string& sessionUsrName, void * sessionData, bool cancelled = false);
     void notifySessionProgress(const std::string& sessionUsrName, void * sessionData, uint32_t numberOfMessages, uint32_t numberOfTotalMessages);
+    void notifyTasksStart(const std::string& usrName, uint32_t numberOfTotalTasks);
+    void notifyTasksComplete(const std::string& usrName, bool cancelled = false);
+    void notifyTasksProgress(const std::string& usrName, uint32_t numberOfCompletedTasks, uint32_t numberOfTotalTasks);
     bool buildFileNameForUser(Friend& user, std::set<std::string>& existingFileNames);
     std::string buildContentFromTemplateValues(const TemplateValues& values) const;
     

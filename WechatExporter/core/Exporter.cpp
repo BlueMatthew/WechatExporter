@@ -525,6 +525,7 @@ bool Exporter::exportUser(Friend& user, std::string& userOutputPath)
     std::string fileName = combinePath(outputBase, "index." + m_extName);
     writeFile(fileName, html);
 
+    size_t dlCount = 0;
     size_t prevDlCount = 0;
     if (m_cancelled)
     {
@@ -537,15 +538,17 @@ bool Exporter::exportUser(Friend& user, std::string& userOutputPath)
     else
     {
 #ifdef USING_DOWNLOADER
-        int dlCount = downloader.getRunningCount();
+        dlCount = downloader.getRunningCount();
+        prevDlCount = dlCount;
         if (dlCount > 0)
         {
             m_logger->write("Waiting for tasks: " + std::to_string(dlCount));
         }
 #else
         std::string queueDesc;
-        prevDlCount = taskManager.getNumberOfQueue(queueDesc);
-        if (prevDlCount > 0)
+        dlCount = taskManager.getNumberOfQueue(queueDesc);
+        prevDlCount = dlCount;
+        if (dlCount > 0)
         {
             m_logger->write("Waiting for tasks: " + queueDesc);
         }
@@ -553,6 +556,8 @@ bool Exporter::exportUser(Friend& user, std::string& userOutputPath)
 #endif
     }
 
+    notifyTasksStart(user.getUsrName(), static_cast<uint32_t>(dlCount));
+    
 #ifdef USING_DOWNLOADER
     downloader.shutdown();
 #else
@@ -569,19 +574,25 @@ bool Exporter::exportUser(Friend& user, std::string& userOutputPath)
             taskManager.cancel();
             timeout = 0;
         }
-        else if ((idx % 4) == 0)
+        else if ((idx % 2) == 0)
         {
             std::string queueDesc;
-            size_t dlCount = taskManager.getNumberOfQueue(queueDesc);
-            if (dlCount > 0 && dlCount != prevDlCount)
+            size_t curDlCount = taskManager.getNumberOfQueue(queueDesc);
+            if (curDlCount != prevDlCount)
             {
-                prevDlCount = dlCount;
-                m_logger->write("Waiting for tasks: " + queueDesc);
+                notifyTasksProgress(user.getUsrName(), static_cast<uint32_t>(prevDlCount - curDlCount), static_cast<uint32_t>(dlCount));
+                prevDlCount = curDlCount;
             }
         }
     }
 #endif
 
+    if (dlCount != prevDlCount)
+    {
+        notifyTasksProgress(user.getUsrName(), static_cast<uint32_t>(dlCount - prevDlCount), static_cast<uint32_t>(dlCount));
+    }
+    notifyTasksComplete(user.getUsrName(), m_cancelled);
+    
 #ifndef NDEBUG
     // m_logger->debug(formatString("Total Downloads: %d", downloader.getCount()));
     // m_logger->debug("Download Stats: " + downloader.getStats());
@@ -960,6 +971,30 @@ void Exporter::notifySessionProgress(const std::string& sessionUsrName, void * s
     if (m_notifier)
     {
         m_notifier->onSessionProgress(sessionUsrName, sessionData, numberOfMessages, numberOfTotalMessages);
+    }
+}
+
+void Exporter::notifyTasksStart(const std::string& usrName, uint32_t numberOfTotalTasks)
+{
+    if (m_notifier)
+    {
+        m_notifier->onTasksStart(usrName, numberOfTotalTasks);
+    }
+}
+
+void Exporter::notifyTasksComplete(const std::string& usrName, bool cancelled/* = false*/)
+{
+    if (m_notifier)
+    {
+        m_notifier->onTasksComplete(usrName, cancelled);
+    }
+}
+
+void Exporter::notifyTasksProgress(const std::string& usrName, uint32_t numberOfCompletedTasks, uint32_t numberOfTotalTasks)
+{
+    if (m_notifier)
+    {
+        m_notifier->onTasksProgress(usrName, numberOfCompletedTasks, numberOfTotalTasks);
     }
 }
 
