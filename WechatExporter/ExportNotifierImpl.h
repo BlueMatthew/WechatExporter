@@ -76,6 +76,21 @@ public:
     {
         
     }
+    
+    void onTasksStart(const std::string& usrName, uint32_t numberOfTotalTasks) const
+    {
+        
+    }
+    
+    void onTasksProgress(const std::string& usrName, uint32_t numberOfCompletedTasks, uint32_t numberOfTotalMessages) const
+    {
+        
+    }
+    
+    void onTasksComplete(const std::string& usrName, bool cancelled) const
+    {
+        
+    }
 	
 };
 
