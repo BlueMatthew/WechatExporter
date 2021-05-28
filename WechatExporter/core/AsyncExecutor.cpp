@@ -157,6 +157,8 @@ void AsyncExecutor::cancel()
     {
         std::unique_lock<std::mutex> lock(m_mutex);
         tasks.swap(m_tasks);
+		m_shutdown = true;
+		m_cv.notify_all();
     }
     
     while (!tasks.empty())
