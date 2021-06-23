@@ -438,9 +438,7 @@ public:
 			}
 			else
 			{
-#ifndef NDEBUG
 				m_logger->debug(parser.getLastError());
-#endif
 				MsgBox(m_hWnd, IDS_FAILED_TO_LOAD_BKP);
 			}
 		}
