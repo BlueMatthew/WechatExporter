@@ -57,6 +57,7 @@ void normalizePath(std::string& path);
 // int makePath(const std::string& path, mode_t mode);
 
 std::string md5(const std::string& s);
+std::string sha1(const std::string& s);
 
 std::string safeHTML(const std::string& s);
 void removeHtmlTags(std::string& html);
