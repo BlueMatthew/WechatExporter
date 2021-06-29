@@ -189,6 +189,10 @@ public:
     bool copyFile(const std::string& vpath, const std::string& destPath, const std::string& destFileName, bool overwrite = false) const;
     
 protected:
+    bool loadMbdb(const std::string& domain, bool onlyFile);
+    
+protected:
+    bool m_isMbdb;
     mutable std::vector<ITunesFile *> m_files;
     std::string m_rootPath;
     std::string m_manifestFileName;
