@@ -48,9 +48,9 @@ public:
 
 	void debug(const std::string& log)
 	{
-#if !defined(NDEBUG) || defined(DBG_PERF)
+// #if !defined(NDEBUG) || defined(DBG_PERF)
 		write("[DBG] " + log);
-#endif
+// #endif
 	}
 };
 
