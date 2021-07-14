@@ -158,7 +158,7 @@ bool LoginInfo2Parser::parse(const std::string& loginInfo2Path, std::vector<Frie
 #if !defined(NDEBUG) || defined(DBG_PERF)
     m_logger->debug("Length of field 1 in Documents/LoginInfo2.dat = " + std::to_string(length));
 #endif
-    while (1)
+    while (offset < length)
     {
 #if !defined(NDEBUG) || defined(DBG_PERF)
         m_logger->debug("Offset of field 1 in Documents/LoginInfo2.dat = " + std::to_string(offset) + "/" + std::to_string(length));
