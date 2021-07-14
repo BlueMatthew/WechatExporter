@@ -9,7 +9,6 @@
 #ifndef MMKVReader_h
 #define MMKVReader_h
 
-
 class MMKVReader
 {
 private:
@@ -28,6 +27,9 @@ public:
         uint32_t keyLength = 0;
         const unsigned char* data = calcVarint32Ptr(m_ptr + m_position, m_ptr + m_size, &keyLength);
         m_position += data - (m_ptr + m_position);
+#if !defined(NDEBUG)
+		assert(m_position <= m_size);
+#endif
         if (keyLength > 0)
         {
             auto s_size = static_cast<size_t>(keyLength);
@@ -41,6 +43,10 @@ public:
                 m_position = m_size;
             }
         }
+
+#if !defined(NDEBUG)
+		assert(m_position <= m_size);
+#endif
         
         return key;
     }
@@ -52,7 +58,14 @@ public:
         m_position += data - (m_ptr + m_position);
         if (valueLength > 0)
         {
-            m_position += valueLength;
+			if ((m_position + valueLength) > m_size)
+			{
+				m_position = m_size;
+			}
+			else
+			{
+				m_position += valueLength;
+			}
         }
     }
     
@@ -69,6 +82,10 @@ public:
             uint32_t mbbLength = 0;
             const unsigned char *ptr = m_ptr + m_position;
             ptr = calcVarint32Ptr(ptr, m_ptr + m_size, &mbbLength);
+#if !defined(NDEBUG)
+			assert((m_position + valueLength) <= m_size);
+			assert(valueLength == (ptr - (m_ptr + m_position)) + mbbLength);
+#endif
             if (mbbLength > 0)
             {
                 auto s_size = static_cast<size_t>(mbbLength);
@@ -87,6 +104,10 @@ public:
                 m_position += valueLength;
             }
         }
+
+#if !defined(NDEBUG)
+		assert(m_position <= m_size);
+#endif
         
         return value;
     }
@@ -103,10 +124,10 @@ public:
     
     bool isAtEnd() const
     {
-#if !defined(NDEBUG) || defined(DBG_PERF)
+#if !defined(NDEBUG)
         assert(m_position <= m_size);
 #endif
-        return m_position == m_size;
+        return m_position >= m_size;
     }
 };
 
