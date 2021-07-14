@@ -991,7 +991,7 @@ protected:
 			{
 				if (selectedIndex == -1)
 				{
-					selectedIndex = static_cast<int>(std::distance(it2, m_manifests.cbegin()));
+					selectedIndex = static_cast<int>(std::distance(m_manifests.cbegin(), it2));
 				}
 			}
 			else
