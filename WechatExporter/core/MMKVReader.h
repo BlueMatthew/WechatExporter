@@ -16,12 +16,11 @@ private:
     const unsigned char *m_ptr;
 	size_t m_size;
     mutable size_t m_position;
-    
+
 public:
     
-    MMKVReader(const unsigned char *ptr, uint32_t size) : m_ptr(ptr), m_size(size), m_position(0)
+    MMKVReader(const unsigned char *ptr, size_t size) : m_ptr(ptr), m_size(size), m_position(0)
     {
-        
     }
     std::string readKey() const
     {
@@ -92,13 +91,21 @@ public:
         return value;
     }
     
-    void seek(uint32_t position) const
+    void seek(size_t position) const
     {
         m_position = position;
     }
     
+    size_t getPos() const
+    {
+        return m_position;
+    }
+    
     bool isAtEnd() const
     {
+#if !defined(NDEBUG) || defined(DBG_PERF)
+        assert(m_position <= m_size);
+#endif
         return m_position == m_size;
     }
 };

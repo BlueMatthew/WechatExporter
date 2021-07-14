@@ -98,11 +98,18 @@ bool parseMembers(const std::string& xml, T& f)
     return result;
 }
 
-LoginInfo2Parser::LoginInfo2Parser(ITunesDb *iTunesDb) : m_iTunesDb(iTunesDb)
+LoginInfo2Parser::LoginInfo2Parser(ITunesDb *iTunesDb
+#if !defined(NDEBUG) || defined(DBG_PERF)
+                                   , Logger* logger
+#endif
+                                   ) : m_iTunesDb(iTunesDb)
+#if !defined(NDEBUG) || defined(DBG_PERF)
+                                    , m_logger(logger)
+#endif
 {
 }
 
-#ifndef NDEBUG
+#if !defined(NDEBUG) || defined(DBG_PERF)
 std::string LoginInfo2Parser::getError() const
 {
     return m_error;
@@ -116,6 +123,9 @@ bool LoginInfo2Parser::parse(std::vector<Friend>& users)
     
     if (realPath.empty())
     {
+#if !defined(NDEBUG) || defined(DBG_PERF)
+        m_logger->debug("Documents/LoginInfo2.dat not exists.");
+#endif
         return false;
     }
     
@@ -127,21 +137,32 @@ bool LoginInfo2Parser::parse(const std::string& loginInfo2Path, std::vector<Frie
     RawMessage msg;
     if (!msg.mergeFile(loginInfo2Path))
     {
+#if !defined(NDEBUG) || defined(DBG_PERF)
+        m_logger->debug("Failed to parse Documents/LoginInfo2.dat(pb).");
+#endif
         return false;
     }
     
     std::string value1;
     if (!msg.parse("1", value1))
     {
+#if !defined(NDEBUG) || defined(DBG_PERF)
+        m_logger->debug("Failed to parse field 1 in Documents/LoginInfo2.dat.");
+#endif
         return false;
     }
     
     users.clear();
     int offset = 0;
-    
     std::string::size_type length = value1.size();
+#if !defined(NDEBUG) || defined(DBG_PERF)
+    m_logger->debug("Length of field 1 in Documents/LoginInfo2.dat = " + std::to_string(length));
+#endif
     while (1)
     {
+#if !defined(NDEBUG) || defined(DBG_PERF)
+        m_logger->debug("Offset of field 1 in Documents/LoginInfo2.dat = " + std::to_string(offset) + "/" + std::to_string(length));
+#endif
         int res = parseUser(value1.c_str() + offset, static_cast<int>(length - offset), users);
         if (res < 0)
         {
@@ -151,6 +172,13 @@ bool LoginInfo2Parser::parse(const std::string& loginInfo2Path, std::vector<Frie
         offset += res;
     }
     
+#if !defined(NDEBUG) || defined(DBG_PERF)
+    for (std::vector<Friend>::iterator it = users.begin(); it != users.end(); ++it)
+    {
+        m_logger->debug("User from Documents/LoginInfo2.dat:" + it->getUsrName() + "(" + it->getHash() + ") => " + it->getDisplayName());
+    }
+#endif
+    
     parseUserFromFolder(users);
     
     MMSettingInMMappedKVFilter filter;
@@ -159,6 +187,9 @@ bool LoginInfo2Parser::parse(const std::string& loginInfo2Path, std::vector<Frie
     std::map<std::string, std::string> mmsettingFiles;  // hash => usrName
     for (ITunesFilesConstIterator it = mmsettings.cbegin(); it != mmsettings.cend(); ++it)
     {
+#if !defined(NDEBUG) || defined(DBG_PERF)
+        m_logger->debug("mmsetting: " + (*it)->relativePath  + " => " + (*it)->fileId);
+#endif
         std::string fileName = filter.parse((*it));
         fileName = fileName.substr(filter.getPrefix().size());
         if (fileName.empty())
@@ -172,9 +203,15 @@ bool LoginInfo2Parser::parse(const std::string& loginInfo2Path, std::vector<Frie
     
     for (std::vector<Friend>::iterator it = users.begin(); it != users.end(); ++it)
     {
+#if !defined(NDEBUG) || defined(DBG_PERF)
+        m_logger->debug("Parse user:" + it->getUsrName() + "(" + it->getHash() + ") => " + it->getDisplayName());
+#endif
         MMSettingParser mmsettingParser(m_iTunesDb);
         if (mmsettingParser.parse(it->getHash()))
         {
+#if !defined(NDEBUG) || defined(DBG_PERF)
+            m_logger->debug("Succeeded to parse mmsetting:" + it->getUsrName());
+#endif
             it->setUsrName(mmsettingParser.getUsrName());
             if (it->isDisplayNameEmpty())
             {
@@ -185,6 +222,9 @@ bool LoginInfo2Parser::parse(const std::string& loginInfo2Path, std::vector<Frie
         }
         else
         {
+#if !defined(NDEBUG) || defined(DBG_PERF)
+            m_logger->debug("Failed to parse mmsetting:" + it->getUsrName());
+#endif
             // Check mmsettings.archive in MMappedKV folde
             if (it->getUsrName().empty())
             {
@@ -200,9 +240,20 @@ bool LoginInfo2Parser::parse(const std::string& loginInfo2Path, std::vector<Frie
                 std::string realCrcPath = m_iTunesDb->findRealPath("Documents/MMappedKV/mmsetting.archive." + it->getUsrName() + ".crc");
                 if (!realPath.empty() && !realCrcPath.empty())
                 {
+#if !defined(NDEBUG) || defined(DBG_PERF)
+                    MMKVParser parser(m_logger);
+#else
                     MMKVParser parser;
+#endif
+#if !defined(NDEBUG) || defined(DBG_PERF)
+                    m_logger->debug("Parse MMKV file: Documents/MMappedKV/mmsetting.archive." + it->getUsrName() + " => " + realPath);
+                    m_logger->debug("Parse MMKV file: Documents/MMappedKV/mmsetting.archive." + it->getUsrName() + ".crc => " + realCrcPath);
+#endif
                     if (parser.parse(realPath, realCrcPath))
                     {
+#if !defined(NDEBUG) || defined(DBG_PERF)
+                        m_logger->debug("Succeeded to parse mmkv:" + it->getUsrName());
+#endif
                         if (it->isDisplayNameEmpty())
                         {
                             it->setDisplayName(parser.getDisplayName());
@@ -210,6 +261,18 @@ bool LoginInfo2Parser::parse(const std::string& loginInfo2Path, std::vector<Frie
                         it->setPortrait(parser.getPortrait());
                         it->setPortraitHD(parser.getPortraitHD());
                     }
+                    else
+                    {
+#if !defined(NDEBUG) || defined(DBG_PERF)
+                        m_logger->debug("Failed to parse MMKV: Documents/MMappedKV/mmsetting.archive." + it->getUsrName());
+#endif
+                    }
+                }
+                else
+                {
+#if !defined(NDEBUG) || defined(DBG_PERF)
+                    m_logger->debug("MMKV file not exists: Documents/MMappedKV/mmsetting.archive." + it->getUsrName());
+#endif
                 }
             }
         }
@@ -220,7 +283,8 @@ bool LoginInfo2Parser::parse(const std::string& loginInfo2Path, std::vector<Frie
     {
         if (it->getUsrName().empty())
         {
-#ifndef NDEBUG
+#if !defined(NDEBUG) || defined(DBG_PERF)
+            m_logger->debug("Erase: md5=" + it->getHash() + "* dn=" + it->getDisplayName() + "*");
             m_error += "Erase: md5=" + it->getHash() + "* dn=" + it->getDisplayName() + "* ";
 #endif
             // erase() invalidates the iterator, use returned iterator
@@ -256,10 +320,16 @@ int LoginInfo2Parser::parseUser(const char* data, int length, std::vector<Friend
     std::string value;
     if (msg.parse("1", value))
     {
+#if !defined(NDEBUG) || defined(DBG_PERF)
+        m_logger->debug("UsrName from Documents/LoginInfo2.dat = " + value);
+#endif
         user.setUsrName(value);
     }
     if (msg.parse("3", value))
     {
+#if !defined(NDEBUG) || defined(DBG_PERF)
+        m_logger->debug("DisplayName from Documents/LoginInfo2.dat = " + value);
+#endif
         user.setDisplayName(value);
     }
 #ifndef NDEBUG
@@ -272,7 +342,7 @@ int LoginInfo2Parser::parseUser(const char* data, int length, std::vector<Friend
 #endif
     users.push_back(user);
     
-#ifndef NDEBUG
+#if !defined(NDEBUG) || defined(DBG_PERF)
     m_error += "LoginInfo2.dat: *" + user.getDisplayName() + "* ";
 #endif
     
@@ -281,19 +351,26 @@ int LoginInfo2Parser::parseUser(const char* data, int length, std::vector<Friend
 
 bool LoginInfo2Parser::parseUserFromFolder(std::vector<Friend>& users)
 {
+#if !defined(NDEBUG) || defined(DBG_PERF)
+    m_logger->debug("parseUserFromFolder starts...");
+#endif
     UserFolderFilter filter;
     ITunesFileVector folders = m_iTunesDb->filter(filter);
     
     for (ITunesFilesConstIterator it = folders.cbegin(); it != folders.cend(); ++it)
     {
         std::string fileName = filter.parse((*it));
-#ifndef NDEBUG
+#if !defined(NDEBUG) || defined(DBG_PERF)
         m_error += "User Folder: *" + fileName + "*  ";
 #endif
         if (fileName == "00000000000000000000000000000000")
         {
             continue;
         }
+        
+#if !defined(NDEBUG) || defined(DBG_PERF)
+    m_logger->debug("Find User Folder:" + fileName);
+#endif
         
         bool existing = false;
         std::vector<Friend>::const_iterator it2 = users.cbegin();
@@ -308,8 +385,11 @@ bool LoginInfo2Parser::parseUserFromFolder(std::vector<Friend>& users)
         
         if (!existing)
         {
+#if !defined(NDEBUG) || defined(DBG_PERF)
+            m_logger->debug("New User Folder:" + fileName);
+#endif
             users.emplace(users.end(), "", fileName);
-#ifndef NDEBUG
+#if !defined(NDEBUG) || defined(DBG_PERF)
             m_error += "New User From Folder: *" + fileName + "*  ";
 #endif
         }
@@ -346,7 +426,14 @@ std::string MMSettings::getPortraitHD() const
     return m_portraitHD;
 }
 
-MMKVParser::MMKVParser()
+MMKVParser::MMKVParser(
+#if !defined(NDEBUG) || defined(DBG_PERF)
+                     Logger *logger
+#endif
+                       )
+#if !defined(NDEBUG) || defined(DBG_PERF)
+                    : m_logger(logger)
+#endif
 {
 }
 
@@ -359,17 +446,45 @@ bool MMKVParser::parse(const std::string& path, const std::string& crcPath)
     // 88: DisplayName
     if (readFile(crcPath, contents))
     {
-        memcpy(&lastActualSize, &contents[32], 4);
+        if (contents.size() >= 36)
+        {
+            memcpy(&lastActualSize, &contents[32], 4);
+#if !defined(NDEBUG) || defined(DBG_PERF)
+            m_logger->debug("MMKV lastActualSize from crc: " + std::to_string(lastActualSize) + " crc file size:" + std::to_string(contents.size()));
+#endif
+        }
+        else
+        {
+#if !defined(NDEBUG) || defined(DBG_PERF)
+            m_logger->debug("MMKV crc file size:" + std::to_string(contents.size()));
+#endif
+        }
         contents.clear();
+    }
+    else
+    {
+#if !defined(NDEBUG) || defined(DBG_PERF)
+        m_logger->debug("Failed to read MMKV crc file:" + crcPath);
+#endif
     }
     
     if (!readFile(path, contents))
     {
+#if !defined(NDEBUG) || defined(DBG_PERF)
+        m_logger->debug("Failed to read MMKV file:" + path);
+#endif
         return false;
     }
     
+#if !defined(NDEBUG) || defined(DBG_PERF)
+    m_logger->debug("MMKV file size:" + std::to_string(contents.size()));
+#endif
+    
     uint32_t actualSize = 0;
-    memcpy(&actualSize, &contents[0], 4);
+    if (contents.size() >= 4)
+    {
+        memcpy(&actualSize, &contents[0], 4);
+    }
     if (actualSize <= 0)
     {
         actualSize = lastActualSize;
@@ -377,26 +492,44 @@ bool MMKVParser::parse(const std::string& path, const std::string& crcPath)
     
     if (actualSize <= 0)
     {
+#if !defined(NDEBUG) || defined(DBG_PERF)
+        m_logger->debug("MMKV actualSize is less than 0: " + std::to_string(actualSize));
+#endif
         return false;
     }
 
     actualSize += 4;
+    if (contents.size() < actualSize)
+    {
+#if !defined(NDEBUG) || defined(DBG_PERF)
+        m_logger->debug("MMKV contents size < actualSize: " + std::to_string(contents.size()) + "/" + std::to_string(actualSize));
+#endif
+    }
     
     MMKVReader reader(&contents[0], actualSize);
     reader.seek(8);
     
     while (!reader.isAtEnd())
     {
+#if !defined(NDEBUG) || defined(DBG_PERF)
+        m_logger->debug("MMKV offset: " + std::to_string(reader.getPos()) + "/" + std::to_string(actualSize));
+#endif
         // 
         const auto k = reader.readKey();
         if (k.empty())
         {
+#if !defined(NDEBUG) || defined(DBG_PERF)
+            m_logger->debug("MMKV exception: empty key");
+#endif
             break;
         }
         
         if (k == "86")
         {
             m_usrName = reader.readStringValue();
+#if !defined(NDEBUG) || defined(DBG_PERF)
+            m_logger->debug("MMKV usrName: " + m_usrName);
+#endif
         }
         else if (k == "87")
         {
@@ -405,6 +538,9 @@ bool MMKVParser::parse(const std::string& path, const std::string& crcPath)
         else if (k == "88")
         {
             m_displayName = reader.readStringValue();
+#if !defined(NDEBUG) || defined(DBG_PERF)
+            m_logger->debug("MMKV displayName: " + m_displayName);
+#endif
         }
         else if (k == "headimgurl")
         {

@@ -65,7 +65,7 @@ private:
 		bool runTask()
 		{
 			bool ret = m_exp.loadUsersAndSessions();
-			::PostMessage(m_hWnd, WM_LOADDATA, 0, reinterpret_cast<LPARAM>(this));
+			::PostMessage(m_hWnd, WM_LOADDATA, (ret ? 1 : 0), reinterpret_cast<LPARAM>(this));
 			return ret;
 		}
 	public:
@@ -473,9 +473,6 @@ public:
 			return 0;
 		}
 
-#ifndef NDEBUG
-		m_logger->write("Start loading users and sessions.");
-#endif
 		TCHAR buffer[MAX_PATH] = { 0 };
 		DWORD dwRet = GetCurrentDirectory(MAX_PATH, buffer);
 		if (dwRet == 0)
@@ -483,6 +480,9 @@ public:
 			return 0;
 		}
 		
+#ifndef NDEBUG
+		m_logger->write("Start loading users and sessions.");
+#endif
 		SendMessage(WM_NEXTDLGCTL, 0, 0);
 		CW2A resDir(CT2W(buffer), CP_UTF8);
 
@@ -724,8 +724,7 @@ public:
 		UpdateProgressBarText(0, true);
 
 #if !defined(NDEBUG) || defined(DBG_PERF)
-		std::string log = "Record Count:" + std::to_string(numberOfRecords);
-		m_logger->debug(log);
+		m_logger->debug("Record Count:" + std::to_string(numberOfRecords));
 #endif
 		if (NULL != m_pdfConverter)
 		{
