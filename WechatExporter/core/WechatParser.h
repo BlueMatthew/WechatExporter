@@ -21,6 +21,9 @@
 #include "WechatObjects.h"
 #include "ITunesParser.h"
 #include "MessageParser.h"
+#if !defined(NDEBUG) || defined(DBG_PERF)
+#include "Logger.h"
+#endif
 
 template<class T>
 class FilterBase
@@ -172,17 +175,22 @@ class LoginInfo2Parser
 {
 private:
     ITunesDb *m_iTunesDb;
-#ifndef NDEBUG
+#if !defined(NDEBUG) || defined(DBG_PERF)
     std::string m_error;
+    Logger*     m_logger;
 #endif
     
 public:
-    LoginInfo2Parser(ITunesDb *iTunesDb);
+    LoginInfo2Parser(ITunesDb *iTunesDb
+#if !defined(NDEBUG) || defined(DBG_PERF)
+                     , Logger* logger
+#endif
+    );
     
     bool parse(std::vector<Friend>& users);
     bool parse(const std::string& loginInfo2Path, std::vector<Friend>& users);
     
-#ifndef NDEBUG
+#if !defined(NDEBUG) || defined(DBG_PERF)
     std::string getError() const;
 #endif
     
@@ -252,8 +260,17 @@ protected:
 
 class MMKVParser : public MMSettings
 {
+private:
+#if !defined(NDEBUG) || defined(DBG_PERF)
+    Logger*     m_logger;
+#endif
+    
 public:
-    MMKVParser();
+    MMKVParser(
+#if !defined(NDEBUG) || defined(DBG_PERF)
+               Logger* logger
+#endif
+    );
     bool parse(const std::string& path, const std::string& crcPath);
 };
 

@@ -197,15 +197,19 @@ bool Exporter::loadUsersAndSessions()
     }
     
     std::vector<Friend> users;
+#if !defined(NDEBUG) || defined(DBG_PERF)
+    LoginInfo2Parser loginInfo2Parser(m_iTunesDb, m_logger);
+#else
     LoginInfo2Parser loginInfo2Parser(m_iTunesDb);
+#endif
     if (!loginInfo2Parser.parse(users))
     {
+#if !defined(NDEBUG) || defined(DBG_PERF)
+		m_logger->debug(loginInfo2Parser.getError());
+#endif
         return false;
     }
 
-#ifndef NDEBUG
-    m_logger->debug(loginInfo2Parser.getError());
-#endif
     m_logger->debug("Wechat Users loaded.");
     m_usersAndSessions.reserve(users.size()); // Avoid re-allocation and causing the pointer changed
     for (std::vector<Friend>::const_iterator it = users.cbegin(); it != users.cend(); ++it)
@@ -257,16 +261,21 @@ bool Exporter::runImpl()
     m_logger->write(getLocaleString("Finding Wechat accounts..."));
 
     std::vector<Friend> users;
+    
+#if !defined(NDEBUG) || defined(DBG_PERF)
+    LoginInfo2Parser loginInfo2Parser(m_iTunesDb, m_logger);
+#else
     LoginInfo2Parser loginInfo2Parser(m_iTunesDb);
+#endif
     if (!loginInfo2Parser.parse(users))
     {
         m_logger->write(getLocaleString("Failed to find Wechat account."));
+#if !defined(NDEBUG) || defined(DBG_PERF)
+        m_logger->debug(loginInfo2Parser.getError());
+#endif
         notifyComplete();
         return false;
     }
-#ifndef NDEBUG
-    m_logger->debug(loginInfo2Parser.getError());
-#endif
 
     m_logger->write(formatString(getLocaleString("%d Wechat account(s) found."), (int)(users.size())));
 
@@ -624,7 +633,7 @@ bool Exporter::loadUserFriendsAndSessions(const Friend& user, Friends& friends, 
  
     std::sort(sessions.begin(), sessions.end(), SessionLastMsgTimeCompare());
     
-    m_logger->debug("Wechat Sessions for: " + user.getDisplayName() + " loaded.");
+    // m_logger->debug("Wechat Sessions for: " + user.getDisplayName() + " loaded.");
     return true;
 }
 
