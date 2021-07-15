@@ -21,6 +21,7 @@
 #define WechatObjects_h
 
 // https://www.theiphonewiki.com/wiki/Kernel#iOS
+// https://en.wikipedia.org/wiki/Darwin_(operating_system)
 // Major * 10000 + Minor * 100 + Patch
 /*
 6.0     13.0.0
@@ -160,7 +161,10 @@ public:
             {140200, "20.1.0 1206"},
             {140300, "20.2.0 1209"},
             {140400, "20.3.0 1220.1"},
-            {140500, "20.4.0 1220"},
+            {140500, "20.4.0 1237"},
+            {140600, "20.5.0 1240.0.4"},
+            {140700, "20.6.0 1240.0.4"},
+            {150000, "21.0.0 1300.1"},
         };
         
         int osVersion = getOSVersionNumber();
