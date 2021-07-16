@@ -1325,9 +1325,9 @@ SessionParser::SessionParser(int options) : m_options(options)
 {
 }
 
-SessionParser::MessageEnumerator* SessionParser::buildMsgEnumerator(const Session& session)
+SessionParser::MessageEnumerator* SessionParser::buildMsgEnumerator(const Session& session, uint64_t minId)
 {
-    return new MessageEnumerator(session, m_options);
+    return new MessageEnumerator(session, m_options, minId);
 }
 
 struct MSG_ENUMERATOR_CONTEXT
@@ -1347,7 +1347,7 @@ struct MSG_ENUMERATOR_CONTEXT
     }
 };
 
-SessionParser::MessageEnumerator::MessageEnumerator(const Session& session, int options)
+SessionParser::MessageEnumerator::MessageEnumerator(const Session& session, int options, int64_t minId)
 {
     MSG_ENUMERATOR_CONTEXT* context = new MSG_ENUMERATOR_CONTEXT(NULL, NULL);
     m_context = context;
@@ -1360,7 +1360,13 @@ SessionParser::MessageEnumerator::MessageEnumerator(const Session& session, int 
         return;
     }
     
-    std::string sql = "SELECT CreateTime,Message,Des,Type,MesLocalID FROM Chat_" + session.getHash() + " ORDER BY CreateTime";
+    std::string sql = "SELECT CreateTime,Message,Des,Type,MesLocalID FROM Chat_" + session.getHash();
+    if (minId > 0)
+    {
+        // Incremental Exporting
+        sql += " WHERE MesLocalID>" + std::to_string(minId);
+    }
+    sql += " ORDER BY CreateTime";
     if ((options & SPO_DESC) == SPO_DESC)
     {
         sql += " DESC";
@@ -1429,7 +1435,8 @@ bool SessionParser::MessageEnumerator::nextMessage(WXMSG& msg)
         }
         msg.des = sqlite3_column_int(context->stmt, 2);
         msg.type = sqlite3_column_int(context->stmt, 3);
-        msg.msgId = std::to_string(sqlite3_column_int(context->stmt, 4));
+        msg.msgIdValue = sqlite3_column_int64(context->stmt, 4);
+        msg.msgId = std::to_string(msg.msgIdValue);
         
         return true;
     }

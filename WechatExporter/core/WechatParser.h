@@ -332,7 +332,7 @@ public:
     class MessageEnumerator
     {
     protected:
-        MessageEnumerator(const Session& session, int options);
+        MessageEnumerator(const Session& session, int options, int64_t minId);
         
         friend SessionParser;
     public:
@@ -352,7 +352,7 @@ private:
 public:
     SessionParser(int options);
 
-    MessageEnumerator* buildMsgEnumerator(const Session& session);
+    MessageEnumerator* buildMsgEnumerator(const Session& session, uint64_t minId);
 };
 
 

@@ -15,6 +15,7 @@
 #endif
 #include "TaskManager.h"
 #include "WechatParser.h"
+#include "ExportContext.h"
 
 Exporter::Exporter(const std::string& workDir, const std::string& backup, const std::string& output, Logger* logger, PdfConverter* pdfConverter)
 {
@@ -32,10 +33,16 @@ Exporter::Exporter(const std::string& workDir, const std::string& backup, const 
     m_loadingDataOnScroll = false; // disabled by default
     m_extName = "html";
     m_templatesName = "templates";
+    m_exportContext = NULL;
 }
 
 Exporter::~Exporter()
 {
+    if (NULL != m_exportContext)
+    {
+        delete m_exportContext;
+        m_exportContext = NULL;
+    }
     releaseITunes();
     m_logger = NULL;
     m_notifier = NULL;
@@ -57,6 +64,47 @@ void Exporter::uninitializeExporter()
 #else
     DownloadTask::uninitialize();
 #endif
+}
+
+bool Exporter::hasPreviousExporting(const std::string& outputDir, int& options, std::string& exportTime)
+{
+    std::string fileName = combinePath(outputDir, "wxexp.dat");
+    if (!existsFile(fileName))
+    {
+        return false;
+    }
+    
+    ExportContext context;
+    if (!loadExportContext(fileName, &context))
+    {
+        return false;
+    }
+    
+    options = context.getOptions();
+    std::time_t ts = context.getExportTime();
+    std::tm * ptm = std::localtime(&ts);
+    char buffer[32];
+    std::strftime(buffer, 32, "%Y-%m-%d %H:%M", ptm);
+    
+    exportTime = buffer;
+    
+    return true;
+}
+
+bool Exporter::loadExportContext(const std::string& contextFile, ExportContext *context)
+{
+    std::string contents = readFile(contextFile);
+    if (contents.empty())
+    {
+        return false;
+    }
+
+    if (!context->unserialize(contents) || context->getNumberOfSessions() == 0)
+    {
+        return false;
+    }
+    
+    return true;
 }
 
 void Exporter::setNotifier(ExportNotifier *notifier)
@@ -279,6 +327,23 @@ bool Exporter::runImpl()
 
     m_logger->write(formatString(getLocaleString("%d Wechat account(s) found."), (int)(users.size())));
 
+    if (NULL == m_exportContext)
+    {
+        m_exportContext = new ExportContext();
+    }
+    int orgOptions = m_options;
+    std::string contextFileName = combinePath(m_output, "wxexp.dat");
+    if ((m_options & SPO_INCREMENTAL_EXP) && loadExportContext(contextFileName, m_exportContext))
+    {
+        // Use the previous options
+        m_options = m_exportContext->getOptions() | SPO_INCREMENTAL_EXP;
+    }
+    else
+    {
+        // If there is no export context, save current options
+        m_exportContext->setOptions(m_options);
+    }
+    
     std::string htmlBody;
 
     std::set<std::string> userFileNames;
@@ -329,6 +394,17 @@ bool Exporter::runImpl()
     replaceAll(html, "%%TBODY%%", htmlBody);
     
     writeFile(fileName, html);
+    
+    m_options = orgOptions;
+    if (m_exportContext->getNumberOfSessions() > 0)
+    {
+        m_exportContext->refreshExportTime();
+        fileName = combinePath(m_output, "wxexp.dat");
+        writeFile(fileName, m_exportContext->serialize());
+    }
+    
+    delete m_exportContext;
+    m_exportContext = NULL;
     
     time_t endTime = 0;
     std::time(&endTime);
@@ -663,13 +739,21 @@ int Exporter::exportSession(const Friend& user, const MessageParser& msgParser, 
         messages.reserve(session.getRecordCount());
     }
     
+    int64_t maxMsgId = 0;
+    m_exportContext->getMaxId(session.getUsrName(), maxMsgId);
+    
     int numberOfMsgs = 0;
     SessionParser sessionParser(m_options);
-    std::unique_ptr<SessionParser::MessageEnumerator> enumerator(sessionParser.buildMsgEnumerator(session));
+    std::unique_ptr<SessionParser::MessageEnumerator> enumerator(sessionParser.buildMsgEnumerator(session, maxMsgId));
     std::vector<TemplateValues> tvs;
     WXMSG msg;
     while (enumerator->nextMessage(msg))
     {
+        if (msg.msgIdValue > maxMsgId)
+        {
+            maxMsgId = msg.msgIdValue;
+        }
+        
         tvs.clear();
         msgParser.parse(msg, session, tvs);
         exportMessage(session, tvs, messages);
@@ -680,6 +764,11 @@ int Exporter::exportSession(const Friend& user, const MessageParser& msgParser, 
         {
             break;
         }
+    }
+    
+    if (maxMsgId > 0)
+    {
+        m_exportContext->setMaxId(session.getUsrName(), maxMsgId);
     }
 
     if (numberOfMsgs > 0 && !messages.empty())

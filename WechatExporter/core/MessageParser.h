@@ -39,6 +39,8 @@ enum SessionParsingOption
     SPO_ICON_IN_SESSION = 1 << 21,     // Put Head Icon and Emoji files in the folder of session
     SPO_SYNC_LOADING = 1 << 22,
     SPO_SUPPORT_FILTER = 1 << 23,
+    
+    SPO_INCREMENTAL_EXP = 1 << 30,
 	
 	SPO_END
 };
@@ -50,6 +52,7 @@ struct WXMSG
     int des;
     int type;
     std::string msgId;
+    int64_t msgIdValue;
 };
 
 struct WXAPPMSG

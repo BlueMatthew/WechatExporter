@@ -99,6 +99,7 @@
 		34AB9A1325B8908D006D3617 /* FileSystem.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = FileSystem.cpp; sourceTree = "<group>"; };
 		34C051D726070F2500035AF4 /* zh-Hans */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "zh-Hans"; path = "zh-Hans.lproj/Main.strings"; sourceTree = "<group>"; };
 		34C051D92607118800035AF4 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/Main.strings; sourceTree = "<group>"; };
+		34CA9B0F269FE6FB00C530C2 /* ExportContext.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ExportContext.h; sourceTree = "<group>"; };
 		34CC0787253D98CA00AC8860 /* ByteArrayLocater.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ByteArrayLocater.h; sourceTree = "<group>"; };
 		34E3E9032525C2640093042D /* LoggerImpl.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = LoggerImpl.h; sourceTree = "<group>"; };
 		34E3E9092531BD8E0093042D /* Utils_md5.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Utils_md5.cpp; sourceTree = "<group>"; };
@@ -180,24 +181,35 @@
 		343F612A25234BBE00FFE085 /* core */ = {
 			isa = PBXGroup;
 			children = (
+				3489DE44262A843C00F51416 /* AsyncExecutor.cpp */,
+				3489DE45262A843C00F51416 /* AsyncExecutor.h */,
+				3489DE4E262E74BE00F51416 /* AsyncTask.cpp */,
+				3489DE4F262E74BE00F51416 /* AsyncTask.h */,
 				34CC0787253D98CA00AC8860 /* ByteArrayLocater.h */,
 				342EDB0125245206006A295A /* Downloader.cpp */,
 				342EDB0225245206006A295A /* Downloader.h */,
+				34CA9B0F269FE6FB00C530C2 /* ExportContext.h */,
 				342EDB042524700A006A295A /* Exporter.cpp */,
 				342EDB052524700A006A295A /* Exporter.h */,
 				345C8D4D2543F5E30036368C /* ExportNotifier.h */,
-				34AB9A1225B89075006D3617 /* FileSystem.h */,
 				34AB9A1325B8908D006D3617 /* FileSystem.cpp */,
+				34AB9A1225B89075006D3617 /* FileSystem.h */,
 				343F612C25234BD300FFE085 /* ITunesParser.cpp */,
 				343F612B25234BD300FFE085 /* ITunesParser.h */,
 				342EDB07252471D6006A295A /* Logger.h */,
+				347A144E2685A77300E794ED /* MbdbReader.h */,
 				34A0335F25E34B0300E06CC5 /* MessageParser.cpp */,
 				34A0336025E34B0300E06CC5 /* MessageParser.h */,
 				347E600D25C00A4100B33BAB /* MMKVReader.h */,
 				34E3E9252535B5AC0093042D /* OSDef.h */,
+				347BE8D12626B37D0004EBE4 /* PdfConverter.h */,
 				34E3E9232535555F0093042D /* RawMessage.cpp */,
 				34E3E922253555470093042D /* RawMessage.h */,
 				345C8D4E2543F5E30036368C /* semaphore.h */,
+				3489DE53262EB03000F51416 /* TaskManager.cpp */,
+				3489DE54262EB03000F51416 /* TaskManager.h */,
+				3497342425F384D100CAC6CD /* Updater.cpp */,
+				3497342525F384D100CAC6CD /* Updater.h */,
 				34ED31E725528A1800C42698 /* Utils_audio.cpp */,
 				34E3E9092531BD8E0093042D /* Utils_md5.cpp */,
 				34E3E90B2531BE1F0093042D /* Utils_protobuf.cpp */,
@@ -210,16 +222,6 @@
 				342EDAFB25241D91006A295A /* WechatParser.h */,
 				349DAD2A255D3BB800BFE204 /* XmlParser.cpp */,
 				349DAD2B255D3BB800BFE204 /* XmlParser.h */,
-				3497342425F384D100CAC6CD /* Updater.cpp */,
-				3497342525F384D100CAC6CD /* Updater.h */,
-				347BE8D12626B37D0004EBE4 /* PdfConverter.h */,
-				3489DE44262A843C00F51416 /* AsyncExecutor.cpp */,
-				3489DE45262A843C00F51416 /* AsyncExecutor.h */,
-				3489DE4E262E74BE00F51416 /* AsyncTask.cpp */,
-				3489DE4F262E74BE00F51416 /* AsyncTask.h */,
-				3489DE53262EB03000F51416 /* TaskManager.cpp */,
-				3489DE54262EB03000F51416 /* TaskManager.h */,
-				347A144E2685A77300E794ED /* MbdbReader.h */,
 			);
 			path = core;
 			sourceTree = "<group>";

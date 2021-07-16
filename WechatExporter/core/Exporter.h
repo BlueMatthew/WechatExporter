@@ -24,6 +24,7 @@
 
 class MessageParser;
 class TemplateValues;
+class ExportContext;
 
 class Exporter
 {
@@ -57,6 +58,8 @@ protected:
     std::map<std::string, std::map<std::string, void *>> m_usersAndSessionsFilter;
     
     std::vector<std::pair<Friend, std::vector<Session>>> m_usersAndSessions;
+    
+    ExportContext*  m_exportContext;
 
 public:
     Exporter(const std::string& workDir, const std::string& backup, const std::string& output, Logger* logger, PdfConverter* pdfConverter);
@@ -89,6 +92,8 @@ public:
     
     static void initializeExporter();
     static void uninitializeExporter();
+    
+    static bool hasPreviousExporting(const std::string& outputDir, int& options, std::string& exportTime);
 
 protected:
     bool runImpl();
@@ -120,6 +125,8 @@ protected:
     std::string buildContentFromTemplateValues(const TemplateValues& values) const;
     
     bool filterITunesFile(const char * file, int flags) const;
+    
+    static bool loadExportContext(const std::string& contextFile, ExportContext *context);
 };
 
 #endif /* Exporter_h */
