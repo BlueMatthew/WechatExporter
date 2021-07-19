@@ -2,6 +2,8 @@
 
 本程序参考 https://github.com/stomakun/WechatExport-iOS 修改成C++来实现，移除对dotnet的依赖，方便在MacOS下的运行。支持Text、HTML、PDF三种格式的导出。  
   
+考虑到本程序的主要目的是备份，以及事后的浏览多数是在电脑中（即直接双击某个备份出来的页面通过浏览器打开进行浏览，此时是通过file:/// 的链接方式打开页面），故在处理数据的时候，即使是异步加载的方式，也是把所有的消息数据全部写在了页面中，规避了通过XMLHTTPRequest的方式异步分页加载消息数据的方式。在电脑上直接打开一个比较大的HTML页面的性能应该是能接受的。但是如果把备份文件上传到HTTP server上，通过Internet访问，页面的打开可能会很慢。  
+  
 ## 操作步骤：
 1. 通过iTunes将手机备份到电脑上(备份时不要选择设置口令)，Windows操作系统一般位于目录：C:\用户[用户名]\AppData\Roaming\Apple Computer\MobileSync\Backup\。Android手机可以找一个iPad/iPhone设备，把聊天记录迁移到iPad/iPhone设备上，然后通过iTunes备份到电脑上。
 ![iTunesBackup-960](https://user-images.githubusercontent.com/37573096/125906418-090d4ac8-a2ba-4a26-9db2-c6dbed4b0a3c.png)
