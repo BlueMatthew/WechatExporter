@@ -20,6 +20,9 @@
 #include <winsock.h>
 #endif
 
+#define WXEXP_DATA_FOLDER   ".wxexp"
+#define WXEXP_DATA_FILE   "wxexp.dat"
+
 Exporter::Exporter(const std::string& workDir, const std::string& backup, const std::string& output, Logger* logger, PdfConverter* pdfConverter)
 {
     m_running = false;
@@ -71,7 +74,7 @@ void Exporter::uninitializeExporter()
 
 bool Exporter::hasPreviousExporting(const std::string& outputDir, int& options, std::string& exportTime)
 {
-    std::string fileName = combinePath(outputDir, ".IncrementalExp", "wxexp.dat");
+    std::string fileName = combinePath(outputDir, WXEXP_DATA_FOLDER, WXEXP_DATA_FILE);
     if (!existsFile(fileName))
     {
         return false;
@@ -340,7 +343,7 @@ bool Exporter::runImpl()
 
     // if (m_options & SPO_INCREMENTAL_EXP)
     {
-        std::string path = combinePath(m_output, ".IncrementalExp");
+        std::string path = combinePath(m_output, WXEXP_DATA_FOLDER);
         makeDirectory(path);
     }
     if (NULL == m_exportContext)
@@ -348,7 +351,7 @@ bool Exporter::runImpl()
         m_exportContext = new ExportContext();
     }
     int orgOptions = m_options;
-    std::string contextFileName = combinePath(m_output, ".IncrementalExp", "wxexp.dat");
+    std::string contextFileName = combinePath(m_output, WXEXP_DATA_FOLDER, WXEXP_DATA_FILE);
     if ((m_options & SPO_INCREMENTAL_EXP) && loadExportContext(contextFileName, m_exportContext))
     {
         // Use the previous options
@@ -415,7 +418,7 @@ bool Exporter::runImpl()
     if (m_exportContext->getNumberOfSessions() > 0)
     {
         m_exportContext->refreshExportTime();
-        fileName = combinePath(m_output, ".IncrementalExp", "wxexp.dat");
+        fileName = combinePath(m_output, WXEXP_DATA_FOLDER, WXEXP_DATA_FILE);
         writeFile(fileName, m_exportContext->serialize());
     }
     
@@ -478,7 +481,7 @@ bool Exporter::exportUser(Friend& user, std::string& userOutputPath)
     }
     // if (m_options & SPO_INCREMENTAL_EXP)
     {
-        std::string path = combinePath(m_output, ".IncrementalExp", user.getUsrName());
+        std::string path = combinePath(m_output, WXEXP_DATA_FOLDER, user.getUsrName());
         makeDirectory(path);
     }
     
@@ -792,7 +795,7 @@ int Exporter::exportSession(const Friend& user, const MessageParser& msgParser, 
         m_exportContext->setMaxId(session.getUsrName(), maxMsgId);
     }
     
-    std::string rawMsgFileName = combinePath(m_output, ".IncrementalExp", session.getOwner()->getUsrName(), session.getUsrName() + ".dat");
+    std::string rawMsgFileName = combinePath(m_output, WXEXP_DATA_FOLDER, session.getOwner()->getUsrName(), session.getUsrName() + ".dat");
     if (m_options & SPO_INCREMENTAL_EXP)
     {
         mergeMessages(rawMsgFileName, messages);
