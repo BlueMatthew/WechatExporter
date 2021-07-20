@@ -45,6 +45,7 @@ public:
 		COMMAND_ID_HANDLER(ID_OPT_FILTER, OnFilter)
 		COMMAND_ID_HANDLER(ID_OPT_ASYNC_LOADING, OnAsyncFormat)
 		COMMAND_ID_HANDLER(ID_OPT_LM_ONSCROLL, OnLoadingDataOnScroll)
+		COMMAND_ID_HANDLER(ID_OPT_INCREMENTALEXP, OnIncrementalExporting)
 		CHAIN_MSG_MAP(CUpdateUI<CMainFrame>)
 		CHAIN_MSG_MAP(CFrameWindowImpl<CMainFrame>)
 	END_MSG_MAP()
@@ -87,6 +88,8 @@ public:
 		subMenuOptions.EnableMenuItem(ID_OPT_LM_ONSCROLL, MF_BYCOMMAND | ((outputFormat == AppConfiguration::OUTPUT_FORMAT_HTML) && asyncLoading ? MF_ENABLED : MF_DISABLED));
 		subMenuOptions.CheckMenuItem(ID_OPT_LM_ONSCROLL, MF_BYCOMMAND | (AppConfiguration::GetLoadingDataOnScroll() ? MF_CHECKED : MF_UNCHECKED));
 
+		subMenuOptions.CheckMenuItem(ID_OPT_INCREMENTALEXP, MF_BYCOMMAND | (AppConfiguration::GetIncrementalExporting() ? MF_CHECKED : MF_UNCHECKED));
+
 		return 0;
 	}
 
@@ -128,6 +131,8 @@ public:
 		subMenuOptions.EnableMenuItem(ID_OPT_ASYNC_LOADING, MF_BYCOMMAND | (asyncLoadingEnabled ? MF_ENABLED : MF_DISABLED));
 		subMenuOptions.EnableMenuItem(ID_OPT_LM_ONSCROLL, MF_BYCOMMAND | (asyncLoadingEnabled && AppConfiguration::GetAsyncLoading() ? MF_ENABLED : MF_DISABLED));
 		subMenuOptions.CheckMenuItem(ID_OPT_LM_ONSCROLL, MF_BYCOMMAND | (AppConfiguration::GetLoadingDataOnScroll() ? MF_CHECKED : MF_UNCHECKED));
+
+		subMenuOptions.CheckMenuItem(ID_OPT_INCREMENTALEXP, MF_BYCOMMAND | (AppConfiguration::GetIncrementalExporting() ? MF_CHECKED : MF_UNCHECKED));
 
 		return 1;
 	}
@@ -191,6 +196,18 @@ public:
 		AppConfiguration::SetAsyncLoading(!asyncLoading);
 
 		subMenu.EnableMenuItem(ID_OPT_LM_ONSCROLL, MF_BYCOMMAND | ((!asyncLoading) ? MF_ENABLED : MF_DISABLED));
+
+		return 0;
+	}
+
+	LRESULT OnIncrementalExporting(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/)
+	{
+		CMenuHandle menu = GetMenu();
+		CMenuHandle subMenu = menu.GetSubMenu(2);
+		UINT menuState = subMenu.GetMenuState(ID_OPT_INCREMENTALEXP, MF_BYCOMMAND);
+		BOOL incrementalExporting = (menuState != 0xFFFFFFFF) && ((menuState & MF_CHECKED) == MF_CHECKED) ? TRUE : FALSE;
+		subMenu.CheckMenuItem(ID_OPT_ASYNC_LOADING, MF_BYCOMMAND | (incrementalExporting ? MF_UNCHECKED : MF_CHECKED));
+		AppConfiguration::SetIncrementalExporting(!incrementalExporting);
 
 		return 0;
 	}

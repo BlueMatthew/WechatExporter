@@ -14,6 +14,9 @@
 /* Class = "NSTextFieldCell"; title = "Table View Cell"; ObjectID = "5Mi-xr-dCf"; */
 "5Mi-xr-dCf.title" = "Table View Cell";
 
+/* Class = "NSMenuItem"; title = "Incremental Exporting"; ObjectID = "5c2-wM-XIf"; */
+"5c2-wM-XIf.title" = "Incremental Exporting";
+
 /* Class = "NSMenuItem"; title = "About WechatExporter"; ObjectID = "5kV-Vb-QxS"; */
 "5kV-Vb-QxS.title" = "About WechatExporter";
 
@@ -29,8 +32,8 @@
 /* Class = "NSButtonCell"; title = "Cancel"; ObjectID = "CHb-bh-1kG"; */
 "CHb-bh-1kG.title" = "Cancel";
 
-/* Class = "NSMenuItem"; title = "From Earlier To Newer"; ObjectID = "GbO-lL-BLb"; */
-"GbO-lL-BLb.title" = "From Newer To Earlier";
+/* Class = "NSMenuItem"; title = "From Newer To Earlier"; ObjectID = "GbO-lL-BLb"; */
+"GbO-lL-BLb.title" = "Sort by Time in Descending Order";
 
 /* Class = "NSMenuItem"; title = "Text"; ObjectID = "GeM-zb-UkW"; */
 "GeM-zb-UkW.title" = "Text";
@@ -55,6 +58,9 @@
 
 /* Class = "NSTextFieldCell"; title = "Text Cell"; ObjectID = "Q3f-RG-97F"; */
 "Q3f-RG-97F.title" = "Text Cell";
+
+/* Class = "NSMenuItem"; title = "PDF"; ObjectID = "T2A-kG-daZ"; */
+"T2A-kG-daZ.title" = "PDF";
 
 /* Class = "NSMenuItem"; title = "File"; ObjectID = "UCE-Dj-bc1"; */
 "UCE-Dj-bc1.title" = "File";

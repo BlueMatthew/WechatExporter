@@ -61,6 +61,10 @@
     menuItem = [optionsMenu.submenu itemAtIndex:6];
     menuItem.state = [AppConfiguration getSupportingFilter] ? NSControlStateValueOn : NSControlStateValueOff;
     menuItem.enabled = htmlMode;
+    
+    menuItem = [optionsMenu.submenu itemAtIndex:8];
+    menuItem.state = [AppConfiguration getIncrementalExporting] ? NSControlStateValueOn : NSControlStateValueOff;
+
 }
 
 - (void)applicationWillTerminate:(NSNotification *)aNotification
@@ -148,6 +152,10 @@
     else if ([sender.identifier isEqualToString:@"filter"])
     {
         [AppConfiguration setSupportingFilter:newValue];
+    }
+    else if ([sender.identifier isEqualToString:@"incrementalExp"])
+    {
+        [AppConfiguration setIncrementalExporting:newValue];
     }
 }
 

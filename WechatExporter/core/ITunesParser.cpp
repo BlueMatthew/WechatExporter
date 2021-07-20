@@ -493,6 +493,11 @@ std::string ITunesDb::getRealPath(const ITunesFile& file) const
     return fileIdToRealPath(file.fileId);
 }
 
+std::string ITunesDb::getRealPath(const ITunesFile* file) const
+{
+    return fileIdToRealPath(file->fileId);
+}
+
 std::string ITunesDb::findRealPath(const std::string& relativePath) const
 {
     std::string fieldId = findFileId(relativePath);

@@ -82,6 +82,7 @@ public:
     void saveFilesInSessionFolder(bool flags = true);
     void setSyncLoading(bool syncLoading = true);
     void setLoadingDataOnScroll(bool loadingDataOnScroll = true);
+    void setIncrementalExporting(bool incrementalExporting);
     void supportsFilter(bool supportsFilter = true);
     void setExtName(const std::string& extName);
     void setTemplatesName(const std::string& templatesName);
@@ -126,7 +127,13 @@ protected:
     
     bool filterITunesFile(const char * file, int flags) const;
     
+    void serializeMessages(const std::string& fileName, const std::vector<std::string>& messages);
+    void unserializeMessages(const std::string& fileName, std::vector<std::string>& messages);
+    void mergeMessages(const std::string& fileName, std::vector<std::string>& messages);
+    
     static bool loadExportContext(const std::string& contextFile, ExportContext *context);
+    
+    
 };
 
 #endif /* Exporter_h */

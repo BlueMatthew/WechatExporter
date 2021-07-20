@@ -117,6 +117,13 @@
                                                 <action selector="optionsMenuItemClick:" target="Voe-Tx-rLC" id="0Pi-LY-fNC"/>
                                             </connections>
                                         </menuItem>
+                                        <menuItem isSeparatorItem="YES" id="BZ6-lW-JdL"/>
+                                        <menuItem title="Incremental Exporting" identifier="incrementalExp" id="5c2-wM-XIf" userLabel="IncrementalExp">
+                                            <modifierMask key="keyEquivalentModifierMask"/>
+                                            <connections>
+                                                <action selector="optionsMenuItemClick:" target="Voe-Tx-rLC" id="HQe-Oy-Na5"/>
+                                            </connections>
+                                        </menuItem>
                                     </items>
                                 </menu>
                             </menuItem>

@@ -15,6 +15,9 @@ public:
 
 	static void SetAsyncLoading(BOOL asyncLoading);
 	static BOOL GetAsyncLoading();
+
+	static void SetIncrementalExporting(BOOL incrementalExporting);
+	static BOOL GetIncrementalExporting();
 	
 	static void SetLastOutputDir(LPCTSTR szOutputDir);
 	static CString GetLastOrDefaultOutputDir();

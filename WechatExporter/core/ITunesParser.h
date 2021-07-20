@@ -175,7 +175,6 @@ public:
     
     const ITunesFile* findITunesFile(const std::string& relativePath) const;
     std::string findFileId(const std::string& relativePath) const;
-    std::string fileIdToRealPath(const std::string& fileId) const;
     std::string findRealPath(const std::string& relativePath) const;
     template<class TFilter>
     ITunesFileVector filter(TFilter f) const;
@@ -183,6 +182,7 @@ public:
     void enumFiles(THandler handler) const;
     
     std::string getRealPath(const ITunesFile& file) const;
+    std::string getRealPath(const ITunesFile* file) const;
     
     static unsigned int parseModifiedTime(const std::vector<unsigned char>& data);
     bool copyFile(const std::string& vpath, const std::string& dest, bool overwrite = false) const;
@@ -190,6 +190,7 @@ public:
     
 protected:
     bool loadMbdb(const std::string& domain, bool onlyFile);
+    std::string fileIdToRealPath(const std::string& fileId) const;
     
 protected:
     bool m_isMbdb;

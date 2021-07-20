@@ -625,6 +625,11 @@ bool writeFile(const std::string& path, const unsigned char* data, size_t dataLe
 #endif
 }
 
+bool appendFile(const std::string& path, const std::string& data)
+{
+    return appendFile(path, reinterpret_cast<const unsigned char*>(data.c_str()), data.size());
+}
+
 bool appendFile(const std::string& path, const unsigned char* data, size_t dataLength)
 {
 #ifdef _WIN32

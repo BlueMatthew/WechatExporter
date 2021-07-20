@@ -34,6 +34,9 @@ typedef NS_ENUM(NSInteger, OUTPUT_FORMAT)
 
 + (void)setAsyncLoading:(BOOL)asyncLoading;
 + (BOOL)getAsyncLoading;
+
++ (void)setIncrementalExporting:(BOOL)incrementalExp;
++ (BOOL)getIncrementalExporting;
    
 + (void)setLastOutputDir:(NSString *)outputDir;
 + (NSString *)getLastOrDefaultOutputDir;

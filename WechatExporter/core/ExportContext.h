@@ -107,19 +107,20 @@ public:
         }
         
         m_options = contextObj["options"].asInt();
-        m_options = static_cast<std::time_t>(contextObj["exportTime"].asInt());
+        m_exportTime = static_cast<std::time_t>(contextObj["exportTime"].asInt());
         
         m_maxIdForSessions.clear();
         
         for (Json::ArrayIndex idx = 0; idx < maxIdForSessions.size(); idx++)
         {
             const Json::Value& itemObj = maxIdForSessions[idx];
-            if (!maxIdForSessions.isArray() || !contextObj.isMember("usrName") || !contextObj.isMember("maxId"))
+            
+            if (!itemObj.isObject() || !itemObj.isMember("usrName") || !itemObj.isMember("maxId"))
             {
                 return false;
             }
             
-            m_maxIdForSessions.insert(std::pair<std::string, int64_t>(contextObj["options"].asString(), contextObj["options"].asInt64()));
+            m_maxIdForSessions.insert(std::pair<std::string, int64_t>(itemObj["usrName"].asString(), itemObj["maxId"].asInt64()));
         }
         
         return true;

@@ -695,6 +695,7 @@ public:
 		bool asyncLoading = AppConfiguration::GetAsyncLoading();
 		bool loadingDataOnScroll = AppConfiguration::GetLoadingDataOnScroll();
 		bool supportingFilter = AppConfiguration::GetSupportingFilter();
+		bool incrementalExp = AppConfiguration::GetIncrementalExporting();
 		UINT outputFormat = AppConfiguration::GetOutputFormat();
 
 		if (outputFormat == AppConfiguration::OUTPUT_FORMAT_PDF)
@@ -742,6 +743,7 @@ public:
 		m_exporter->setSyncLoading(!asyncLoading);
 		m_exporter->setLoadingDataOnScroll(loadingDataOnScroll);
 		m_exporter->supportsFilter(supportingFilter);
+		m_exporter->setIncrementalExporting(incrementalExp);
 		if (saveFilesInSessionFolder)
 		{
 			m_exporter->saveFilesInSessionFolder();

@@ -550,6 +550,7 @@
     {
         m_exporter->setLoadingDataOnScroll([AppConfiguration getLoadingDataOnScroll]);
     }
+    m_exporter->setIncrementalExporting([AppConfiguration getIncrementalExporting]);
     m_exporter->supportsFilter([AppConfiguration getSupportingFilter]);
 
     if (nil != textMode && textMode.boolValue)

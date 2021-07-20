@@ -16,6 +16,9 @@
 #include "TaskManager.h"
 #include "WechatParser.h"
 #include "ExportContext.h"
+#ifdef _WIN32
+#include <winsock.h>
+#endif
 
 Exporter::Exporter(const std::string& workDir, const std::string& backup, const std::string& output, Logger* logger, PdfConverter* pdfConverter)
 {
@@ -68,7 +71,7 @@ void Exporter::uninitializeExporter()
 
 bool Exporter::hasPreviousExporting(const std::string& outputDir, int& options, std::string& exportTime)
 {
-    std::string fileName = combinePath(outputDir, "wxexp.dat");
+    std::string fileName = combinePath(outputDir, ".IncrementalExp", "wxexp.dat");
     if (!existsFile(fileName))
     {
         return false;
@@ -176,6 +179,14 @@ void Exporter::setSyncLoading(bool syncLoading/* = true*/)
 void Exporter::setLoadingDataOnScroll(bool loadingDataOnScroll/* = true*/)
 {
     m_loadingDataOnScroll = loadingDataOnScroll;
+}
+
+void Exporter::setIncrementalExporting(bool incrementalExporting)
+{
+    if (incrementalExporting)
+        m_options |= SPO_INCREMENTAL_EXP;
+    else
+        m_options &= ~SPO_INCREMENTAL_EXP;
 }
 
 void Exporter::supportsFilter(bool supportsFilter/* = true*/)
@@ -327,12 +338,17 @@ bool Exporter::runImpl()
 
     m_logger->write(formatString(getLocaleString("%d Wechat account(s) found."), (int)(users.size())));
 
+    // if (m_options & SPO_INCREMENTAL_EXP)
+    {
+        std::string path = combinePath(m_output, ".IncrementalExp");
+        makeDirectory(path);
+    }
     if (NULL == m_exportContext)
     {
         m_exportContext = new ExportContext();
     }
     int orgOptions = m_options;
-    std::string contextFileName = combinePath(m_output, "wxexp.dat");
+    std::string contextFileName = combinePath(m_output, ".IncrementalExp", "wxexp.dat");
     if ((m_options & SPO_INCREMENTAL_EXP) && loadExportContext(contextFileName, m_exportContext))
     {
         // Use the previous options
@@ -399,7 +415,7 @@ bool Exporter::runImpl()
     if (m_exportContext->getNumberOfSessions() > 0)
     {
         m_exportContext->refreshExportTime();
-        fileName = combinePath(m_output, "wxexp.dat");
+        fileName = combinePath(m_output, ".IncrementalExp", "wxexp.dat");
         writeFile(fileName, m_exportContext->serialize());
     }
     
@@ -459,6 +475,11 @@ bool Exporter::exportUser(Friend& user, std::string& userOutputPath)
     {
         std::string emojiPath = combinePath(outputBase, "Emoji");
         makeDirectory(emojiPath);
+    }
+    // if (m_options & SPO_INCREMENTAL_EXP)
+    {
+        std::string path = combinePath(m_output, ".IncrementalExp", user.getUsrName());
+        makeDirectory(path);
     }
     
     m_logger->write(formatString(getLocaleString("Handling account: %s, Wechat Id: %s"), user.getDisplayName().c_str(), user.getUsrName().c_str()));
@@ -770,6 +791,13 @@ int Exporter::exportSession(const Friend& user, const MessageParser& msgParser, 
     {
         m_exportContext->setMaxId(session.getUsrName(), maxMsgId);
     }
+    
+    std::string rawMsgFileName = combinePath(m_output, ".IncrementalExp", session.getOwner()->getUsrName(), session.getUsrName() + ".dat");
+    if (m_options & SPO_INCREMENTAL_EXP)
+    {
+        mergeMessages(rawMsgFileName, messages);
+    }
+    serializeMessages(rawMsgFileName, messages);
 
     if (numberOfMsgs > 0 && !messages.empty())
     {
@@ -830,6 +858,80 @@ bool Exporter::exportMessage(const Session& session, const std::vector<TemplateV
     
     messages.push_back(content);
     return m_cancelled;
+}
+
+void Exporter::serializeMessages(const std::string& fileName, const std::vector<std::string>& messages)
+{
+    uint32_t size = htonl(static_cast<uint32_t>(messages.size()));
+    writeFile(fileName, "");
+    appendFile(fileName, reinterpret_cast<const unsigned char *>(&size), sizeof(size));
+    
+    for (std::vector<std::string>::const_iterator it = messages.cbegin(); it != messages.cend(); ++it)
+    {
+        size = htonl(static_cast<uint32_t>(it->size()));
+        appendFile(fileName, reinterpret_cast<const unsigned char *>(&size), sizeof(size));
+        appendFile(fileName, *it);
+    }
+}
+
+void Exporter::unserializeMessages(const std::string& fileName, std::vector<std::string>& messages)
+{
+    std::vector<unsigned char> data;
+    if (!readFile(fileName, data))
+    {
+        messages.clear();
+        return;
+    }
+    
+    size_t dataSize = data.size();
+    if (dataSize < sizeof(uint32_t))
+    {
+        return;
+    }
+    
+    size_t offset = 0;
+    uint32_t itemSize = 0;
+    memcpy(&itemSize, &data[offset], sizeof(uint32_t));
+    offset += sizeof(uint32_t);
+    itemSize = ntohl(itemSize);
+    
+    messages.clear();
+    messages.reserve(itemSize);
+    
+    uint32_t sizeOfString = 0;
+    for (uint32_t idx = 0; idx < itemSize; ++idx)
+    {
+        if (offset + sizeof(uint32_t) > dataSize)
+        {
+            break;
+        }
+        memcpy(&sizeOfString, &data[offset], sizeof(uint32_t));
+        offset += sizeof(uint32_t);
+        sizeOfString = ntohl(sizeOfString);
+        
+        if (offset + sizeOfString > dataSize)
+        {
+            break;
+        }
+        
+        messages.emplace_back(reinterpret_cast<const char *>(&data[offset]), sizeOfString);
+        offset += sizeOfString;
+    }
+}
+
+void Exporter::mergeMessages(const std::string& fileName, std::vector<std::string>& messages)
+{
+    std::vector<std::string> orgMessages;
+    unserializeMessages(fileName, orgMessages);
+    
+    std::string contents = readFile(fileName);
+    if ((m_options & SPO_DESC) == 0)
+    {
+        messages.swap(orgMessages);
+    }
+    
+    messages.reserve(messages.size() + orgMessages.size());
+    messages.insert(messages.cend(), orgMessages.cbegin(), orgMessages.cend());
 }
 
 bool Exporter::buildFileNameForUser(Friend& user, std::set<std::string>& existingFileNames)

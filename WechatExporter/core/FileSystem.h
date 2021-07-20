@@ -38,6 +38,7 @@ bool readFile(const std::string& path, std::vector<unsigned char>& data);
 bool writeFile(const std::string& path, const std::vector<unsigned char>& data);
 bool writeFile(const std::string& path, const std::string& data);
 bool writeFile(const std::string& path, const unsigned char* data, size_t dataLength);
+bool appendFile(const std::string& path, const std::string& data);
 bool appendFile(const std::string& path, const unsigned char* data, size_t dataLength);
 
 

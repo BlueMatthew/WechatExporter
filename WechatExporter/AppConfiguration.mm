@@ -72,6 +72,16 @@
 {
     return ![[NSUserDefaults standardUserDefaults] boolForKey:@"SyncLoading"];
 }
+
++ (void)setIncrementalExporting:(BOOL)incrementalExp
+{
+    [[NSUserDefaults standardUserDefaults] setBool:incrementalExp forKey:@"IncrementalExp"];
+}
+
++ (BOOL)getIncrementalExporting
+{
+    return [[NSUserDefaults standardUserDefaults] boolForKey:@"IncrementalExp"];
+}
    
 + (void)setLastOutputDir:(NSString *)outputDir
 {

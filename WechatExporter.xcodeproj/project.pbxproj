@@ -84,6 +84,8 @@
 		3489DE53262EB03000F51416 /* TaskManager.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = TaskManager.cpp; sourceTree = "<group>"; };
 		3489DE54262EB03000F51416 /* TaskManager.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TaskManager.h; sourceTree = "<group>"; };
 		3489DE5A26316ECB00F51416 /* PdfConverterImpl.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = PdfConverterImpl.h; sourceTree = "<group>"; };
+		348C373226A6954900FDBBDB /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/Main.strings; sourceTree = "<group>"; };
+		348C373626A696B200FDBBDB /* zh-Hans */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "zh-Hans"; path = "zh-Hans.lproj/Main.strings"; sourceTree = "<group>"; };
 		3497342425F384D100CAC6CD /* Updater.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = Updater.cpp; sourceTree = "<group>"; };
 		3497342525F384D100CAC6CD /* Updater.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Updater.h; sourceTree = "<group>"; };
 		3497342A25F75D4300CAC6CD /* HttpHelper.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = HttpHelper.mm; sourceTree = "<group>"; };
@@ -97,8 +99,6 @@
 		34A0336025E34B0300E06CC5 /* MessageParser.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MessageParser.h; sourceTree = "<group>"; };
 		34AB9A1225B89075006D3617 /* FileSystem.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = FileSystem.h; sourceTree = "<group>"; };
 		34AB9A1325B8908D006D3617 /* FileSystem.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = FileSystem.cpp; sourceTree = "<group>"; };
-		34C051D726070F2500035AF4 /* zh-Hans */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "zh-Hans"; path = "zh-Hans.lproj/Main.strings"; sourceTree = "<group>"; };
-		34C051D92607118800035AF4 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/Main.strings; sourceTree = "<group>"; };
 		34CA9B0F269FE6FB00C530C2 /* ExportContext.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ExportContext.h; sourceTree = "<group>"; };
 		34CC0787253D98CA00AC8860 /* ByteArrayLocater.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ByteArrayLocater.h; sourceTree = "<group>"; };
 		34E3E9032525C2640093042D /* LoggerImpl.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = LoggerImpl.h; sourceTree = "<group>"; };
@@ -350,8 +350,8 @@
 			isa = PBXVariantGroup;
 			children = (
 				343F611E252322D600FFE085 /* Base */,
-				34C051D726070F2500035AF4 /* zh-Hans */,
-				34C051D92607118800035AF4 /* en */,
+				348C373226A6954900FDBBDB /* en */,
+				348C373626A696B200FDBBDB /* zh-Hans */,
 			);
 			name = Main.storyboard;
 			sourceTree = "<group>";

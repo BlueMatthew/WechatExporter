@@ -512,7 +512,7 @@ bool MMKVParser::parse(const std::string& path, const std::string& crcPath)
     while (!reader.isAtEnd())
     {
 #if !defined(NDEBUG) || defined(DBG_PERF)
-        m_logger->debug("MMKV offset: " + std::to_string(reader.getPos()) + "/" + std::to_string(actualSize));
+        // m_logger->debug("MMKV offset: " + std::to_string(reader.getPos()) + "/" + std::to_string(actualSize));
 #endif
         // 
         const auto k = reader.readKey();
@@ -1030,7 +1030,7 @@ bool SessionsParser::parseMessageDbs(const std::string& userRoot, std::vector<Se
 
     for (ITunesFilesConstIterator it = dbs.cbegin(); it != dbs.cend(); ++it)
     {
-        dbPath = m_iTunesDb->fileIdToRealPath((*it)->fileId);
+        dbPath = m_iTunesDb->getRealPath(*it);
 		sessionIds.clear();
         parseMessageDb(dbPath, sessionIds);
 
@@ -1168,7 +1168,7 @@ bool SessionsParser::parseCellData(const std::string& userRoot, Session& session
         unsigned int lastModifiedTime = 0;
         for (ITunesFilesConstIterator it = items.cbegin(); it != items.cend(); ++it)
         {
-            fileName = m_iTunesDb->fileIdToRealPath((*it)->fileId);
+            fileName = m_iTunesDb->getRealPath(*it);
             if (fileName.empty())
             {
                 continue;

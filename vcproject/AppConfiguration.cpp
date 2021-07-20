@@ -35,6 +35,18 @@ BOOL AppConfiguration::GetAsyncLoading()
 	return (value != 0) ? TRUE : FALSE;
 }
 
+void AppConfiguration::SetIncrementalExporting(BOOL incrementalExporting)
+{
+	SetDwordProperty(TEXT("IncrementalExp"), incrementalExporting);
+}
+
+BOOL AppConfiguration::GetIncrementalExporting()
+{
+	DWORD value = 0;	// default is 0
+	GetDwordProperty(TEXT("IncrementalExp"), value);
+	return (value != 0) ? TRUE : FALSE;
+}
+
 UINT AppConfiguration::GetOutputFormat()
 {
 	UINT outputFormat = OUTPUT_FORMAT_HTML;
