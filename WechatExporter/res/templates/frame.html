@@ -564,7 +564,7 @@
 				var div = document.createElement('div');
 				fragment.appendChild(div);
 				var visibleMsgs = 0; 
-				for (var idx = 0; idx < window.moreWechatMsgs.length; idx++)
+				while (window.moreWechatMsgs.length > 0)
 				{
 					div.innerHTML = window.moreWechatMsgs.shift();
 					if (div.children.length > 0)
