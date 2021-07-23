@@ -449,9 +449,10 @@
 					}
 				}
 	
-				if (visibleMsgs < 1000 && (typeof window.moreWechatMsgs !== 'undefined') && (window.moreWechatMsgs.length > 0))
+				if (visibleMsgs < window.sizeOfMsgPage && (typeof window.wechatMsgsIndexes !== 'undefined') && (window.wechatMsgsIndexes.length > 0))
 				{
-					loadMsgsForNextPage(1000 - visibleMsgs);
+					window.numberOfMsgsToLoad = window.sizeOfMsgPage - visibleMsgs;
+					loadMsgsForNextPage();
 				}
 				document.body.style.cursor = 'default';
 			}
@@ -527,9 +528,10 @@
 						visibleMsgs++;
 					}
 				}
-				if (visibleMsgs < 1000 && (typeof window.moreWechatMsgs !== 'undefined') && (window.moreWechatMsgs.length > 0))
+				if (visibleMsgs < window.sizeOfMsgPage && (typeof window.wechatMsgsIndexes !== 'undefined') && (window.wechatMsgsIndexes.length > 0))
 				{
-					loadMsgsForNextPage(1000 - visibleMsgs);
+					window.numberOfMsgsToLoad = window.sizeOfMsgPage - visibleMsgs;
+					loadMsgsForNextPage();
 				}
 				document.body.style.cursor = 'default';
 				
@@ -548,60 +550,73 @@
 			{
 				showElements("video");
 			}
-	
-			function loadMsgsForNextPage(numberOfMsgsToLoad)
+
+			function loadMsgsForNextPage()
 			{
-				if ((typeof window.moreWechatMsgs === 'undefined') || (window.moreWechatMsgs.length == 0))
+				console.log("loadMsgsForNextPage starts...");
+
+				if ((typeof window.wechatMsgsIndexes === 'undefined') || (window.wechatMsgsIndexes.length == 0))
 				{
 					return 0;
 				}
-	
-				if (typeof numberOfMsgsToLoad === 'undefined')
+				if ((typeof window.moreWechatMsgs === 'undefined'))
 				{
-					numberOfMsgsToLoad = 1000;
+					window.moreWechatMsgs = [];
 				}
-				var fragment = document.createDocumentFragment();
-				var div = document.createElement('div');
-				fragment.appendChild(div);
-				var visibleMsgs = 0; 
-				while (window.moreWechatMsgs.length > 0)
+				
+				var visibleMsgs = 0;
+				if (window.moreWechatMsgs.length > 0)
 				{
-					div.innerHTML = window.moreWechatMsgs.shift();
-					if (div.children.length > 0)
-					{
-						var msgDiv = div.children[0];
-						fragment.appendChild(msgDiv);
-						
-						if (filterMsg(msgDiv))
-						{
-							visibleMsgs++;
-						}
-					}
+					var fragment = document.createDocumentFragment();
+					var div = document.createElement('div');
+					fragment.appendChild(div);
 					
-					if (visibleMsgs >= numberOfMsgsToLoad)
+					while (window.moreWechatMsgs.length > 0)
 					{
-						break;
+						div.innerHTML = window.moreWechatMsgs.shift();
+						if (div.children.length > 0)
+						{
+							var msgDiv = div.children[0];
+							fragment.appendChild(msgDiv);
+							
+							if (filterMsg(msgDiv))
+							{
+								visibleMsgs++;
+							}
+						}
+						
+					}
+
+					fragment.removeChild(div);
+					var containerDiv = document.getElementById('msgs-div');
+					if (null != containerDiv)
+					{
+						containerDiv.appendChild(fragment);
 					}
 				}
-				fragment.removeChild(div);
-				var containerDiv = document.getElementById('msgs-div');
-				if (null != containerDiv)
+				
+				window.numberOfMsgsToLoad -= visibleMsgs;
+				if ((window.numberOfMsgsToLoad > 0) && window.wechatMsgsIndexes.length > 0)
 				{
-					containerDiv.appendChild(fragment);
+					// Load next page
+					var nextPage = window.wechatMsgsIndexes.shift();
+
+					console.log("load next page:" + nextPage);
+
+					var script   = document.createElement("script");
+					script.type  = "text/javascript";
+					script.src   = "%%DATA_PATH%%/msg-" + nextPage + ".js";
+					document.body.appendChild(script);
 				}
-	
+				else
+				{
+					console.log("(visibleMsgs(" + visibleMsgs + ") < window.numberOfMsgsToLoad("
+						+ window.numberOfMsgsToLoad + ") ) && window.wechatMsgsIndexes.length(" + window.wechatMsgsIndexes.length + ") > 0");
+				}
+
 				return true;
 			}
-			function loadMoreMsgs()
-			{
-				window.requestAnimationFrame(function() {
-					if (loadMsgsForNextPage())
-					{
-						loadMoreMsgs();
-					}
-				});
-			}
-	
+
 			function checkScrollDirectionIsUp(e)
 			{
 				if (e.wheelDelta)
@@ -632,38 +647,68 @@
 
   	</body>
   	<script language="javascript">
-		addEventListener('load', function (e)
+		(function() {
+			window.sizeOfMsgPage = parseInt('%%SIZE_OF_PAGE%%') || 100;
+			var numberOfMsgs = parseInt('%%NUMBER_OF_MSGS%%') || 0;
+			var numberOfPages = parseInt('%%NUMBER_OF_PAGES%%') || 0;
+			var asyncLoadingType = "%%ASYNC_LOADING_TYPE%%";
+
+			if (numberOfPages == 0)
 			{
-				window.moreWechatMsgs = %%JSONDATA%%;
-				window.currentIndex = 0;
-				var asyncLoadingType = "%%ASYNCLOADINGTYPE%%";
-				if (asyncLoadingType == "initial")
+				return;
+			}
+			window.wechatMsgsIndexes = [];
+			for (var idx = 1; idx <= numberOfPages; idx++)
+			{
+				window.wechatMsgsIndexes.push(idx);
+			}
+
+			console.log(window.wechatMsgsIndexes);
+			window.numberOfMsgsToLoad = 0;
+			
+			if (asyncLoadingType == "initial")
+			{
+				// Load all messages
+				window.numberOfMsgsToLoad = numberOfMsgs;
+				window.numberOfVisibleMsgsToLoad = -1;
+
+				console.log("initial");
+				window.addEventListener('load', function (e)
 				{
-					window.setTimeout(loadMoreMsgs, 1000);
-				}
-				else if (asyncLoadingType == "onscroll")
+					console.log("onload");
+
+					loadMsgsForNextPage();
+
+				}, false);
+			}
+			else if (asyncLoadingType == "onscroll")
+			{
+				window.addEventListener('scroll', function(e)
 				{
-					document.addEventListener('scroll', function(e)
+					if (window.wechatMsgsIndexes.length == 0)
 					{
-						if (!checkScrollDirectionIsUp(e))
+						return;
+					}
+
+					if (!checkScrollDirectionIsUp(e))
+					{
+						var lastDiv = document.querySelector("#msgs-div > div:last-child");
+						var lastDivOffset = lastDiv.offsetTop + lastDiv.clientHeight;
+						var pageOffset = window.pageYOffset + window.innerHeight;
+
+						if(pageOffset > lastDivOffset - 20)
 						{
-							var lastDiv = document.querySelector("#msgs-div > div:last-child");
-							var lastDivOffset = lastDiv.offsetTop + lastDiv.clientHeight;
-							var pageOffset = window.pageYOffset + window.innerHeight;
-	
-							if(pageOffset > lastDivOffset - 20)
-							{
-								loadMsgsForNextPage();
-							}
+							window.numberOfMsgsToLoad += window.sizeOfMsgPage;
+							loadMsgsForNextPage();
 						}
-					}, false);
-				
-				}
-			}, false);
+					}
+				}, {passive: true});
+			
+			}
+		})();			
+
+		
 
 	  </script>
-  <!-- scripts.html -->
-  %%LOADING_SCRIPTS%%
-
 
 </html>

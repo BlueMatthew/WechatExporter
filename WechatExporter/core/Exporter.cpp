@@ -812,20 +812,10 @@ int Exporter::exportSession(const Friend& user, const MessageParser& msgParser, 
         auto b = messages.cbegin();
         // No page for text mode
         auto e = (((m_options & (SPO_TEXT_MODE | SPO_SYNC_LOADING)) != 0) || (messages.size() <= pageSize)) ? messages.cend() : (b + pageSize);
-        std::string moreMsgs = ((m_options & (SPO_TEXT_MODE | SPO_SYNC_LOADING)) != 0) ? "[]" : "[]"; // [] = empty json array
-        if (e != messages.cend())
-        {
-            Json::Value jsonMsgs(Json::arrayValue);
-            for (auto it = e; it != messages.cend(); ++it)
-            {
-                jsonMsgs.append(*it);
-            }
-            Json::FastWriter writer;
-            moreMsgs = writer.write(jsonMsgs);
-        }
-
-        std::string scripts = (m_options & SPO_SYNC_LOADING) || (messages.size() <= pageSize) ? "" : getTemplate("scripts");
-
+        
+        const size_t numberOfMessages = std::distance(e, messages.cend());
+        const size_t numberOfPages = (numberOfMessages + pageSize - 1) / pageSize;
+        
         std::string html = getTemplate("frame");
 #ifndef NDEBUG
         replaceAll(html, "%%USRNAME%%", user.getUsrName() + " - " + user.getHash());
@@ -835,17 +825,50 @@ int Exporter::exportSession(const Friend& user, const MessageParser& msgParser, 
         replaceAll(html, "%%SESSION_USRNAME%%", "");
 #endif
         replaceAll(html, "%%DISPLAYNAME%%", session.getDisplayName());
-        replaceAll(html, "%%JSONDATA%%", moreMsgs);
-        replaceAll(html, "%%ASYNCLOADINGTYPE%%", m_loadingDataOnScroll ? "onscroll" : "initial");
+        replaceAll(html, "%%ASYNC_LOADING_TYPE%%", m_loadingDataOnScroll ? "onscroll" : "initial");
+        
+        replaceAll(html, "%%SIZE_OF_PAGE%%", std::to_string(pageSize));
+        replaceAll(html, "%%NUMBER_OF_MSGS%%", std::to_string(numberOfMessages));
+        replaceAll(html, "%%NUMBER_OF_PAGES%%", std::to_string(numberOfPages));
+        
+        replaceAll(html, "%%DATA_PATH%%", encodeUrl(session.getOutputFileName() + "_files") + "/Data");
         
         replaceAll(html, "%%BODY%%", join(b, e, ""));
-        
-        replaceAll(html, "%%LOADING_SCRIPTS%%", scripts);
-        
         replaceAll(html, "%%HEADER_FILTER%%", (m_options & SPO_SUPPORT_FILTER) ? getTemplate("filter") : "");
         
         std::string fileName = combinePath(outputBase, session.getOutputFileName() + "." + m_extName);
         writeFile(fileName, html);
+        
+        if ((m_options & SPO_SYNC_LOADING) == 0 && numberOfPages > 0)
+        {
+            std::string dataPath = combinePath(outputBase, session.getOutputFileName() + "_files", "Data");
+            makeDirectory(dataPath);
+
+            for (size_t page = 0; page < numberOfPages; ++page)
+            {
+                b = e;
+                std::string scripts = getTemplate("scripts");
+                e = (page == (numberOfPages - 1)) ? messages.cend() : (b + pageSize);
+                Json::Value jsonMsgs(Json::arrayValue);
+                for (auto it = b; it != e; ++it)
+                {
+                    jsonMsgs.append(*it);
+                }
+                Json::StreamWriterBuilder builder;
+                builder["indentation"] = "";  // assume default for comments is None
+#ifndef NDEBUG
+                builder["emitUTF8"] = true;
+#endif
+                std::string moreMsgs = Json::writeString(builder, jsonMsgs);
+
+                replaceAll(scripts, "%%JSON_DATA%%", moreMsgs);
+                
+                fileName = combinePath(dataPath, "msg-" + std::to_string(page + 1) + ".js");
+                writeFile(fileName, scripts);
+            }
+        }
+        
+        
     }
     
     return numberOfMsgs;

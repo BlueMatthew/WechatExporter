@@ -1,5 +1,14 @@
-  <script language="javascript">
+    (function() {
+        var msgArray = %%JSON_DATA%%;
+        for (var idx = 0; idx < msgArray.length; idx++)
+        {
+          window.moreWechatMsgs.push(msgArray[idx]);
+        }
 
-    
+        
+        console.log("data loaded" + msgArray.length);
+        msgArray = null;
+        loadMsgsForNextPage();
+    })();
 
-  </script>
+
