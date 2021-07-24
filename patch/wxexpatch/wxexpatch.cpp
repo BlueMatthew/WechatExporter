@@ -17,8 +17,6 @@
 
 CAppModule _Module;
 
-#define BUFFERSIZE (32 * 1024)
-
 bool findInvalidHtmlContent(const char *buffer, size_t& startPos, size_t& endPos)
 {
 	const char* str = strstr(buffer, "loadMsgsForNextPage");
@@ -103,7 +101,7 @@ bool doPatch()
 	size_t startPos = 0;
 	size_t endPos = 0;
 	const char* fixedContents = "while (window.moreWechatMsgs.length > 0)";
-	const char* logTitle = "Fixed FileList:\r\n";
+	const char* logTitle = "Fixed File List:\r\n";
 
 	TCHAR szLogPath[MAX_PATH] = { 0 };
 	TCHAR szLog[MAX_PATH] = { 0 };
@@ -170,7 +168,7 @@ bool doPatch()
 
 							WriteFile(hFile, &buffer[0], startPos, &dwNumberOfBytesWritten, NULL);
 							WriteFile(hFile, fixedContents, strlen(fixedContents), &dwNumberOfBytesWritten, NULL);
-							WriteFile(hFile, &buffer[endPos], buffer.size() - endPos, &dwNumberOfBytesWritten, NULL);
+							WriteFile(hFile, &buffer[endPos], buffer.size() - 1 - endPos, &dwNumberOfBytesWritten, NULL);
 
 							_tcscpy(szLog, szRelativePath);
 							_tcscat(szLog, TEXT("\r\n"));
