@@ -1,7 +1,7 @@
 # WechatExporter
   
  
-> **BUG 1.8.0.7以前的版本异步加载方式存在一个比较严重的小白bug：当设置为滚动到页面底部异步加载时，越靠后面的页码，加载的消息数量越少；设置为页面打开全部消息异步加载时，消息只能加载到一半。如果iTunes备份还存在，请使用版本1.8.0.8重新导出一遍。如果过往的备份已经清除了，可以下载补丁程序[Win64版本](https://github.com/BlueMatthew/WechatExporter/releases/download/v1.8.0.8/patch_x64_win.zip)/[MacOS 64版本](https://github.com/BlueMatthew/WechatExporter/releases/download/v1.8.0.8/patch_x64_macos.zip)并解压，把wxexpatch.exe/wxexppatch拷贝到导出目录，并执行，来修复已经导出的页面（补丁修复的文件清单可查看日志文件 patch.log/patch_log.txt）。**    
+> **BUG!!! 1.8.0.7以前的版本异步加载方式存在一个比较严重的小白bug：当设置为滚动到页面底部异步加载时，越靠后面的页码，加载的消息数量越少；设置为页面打开全部消息异步加载时，消息只能加载到一半。如果iTunes备份还存在，请使用版本1.8.0.8重新导出一遍。如果过往的备份已经清除了，可以下载补丁程序[Win64版本](https://github.com/BlueMatthew/WechatExporter/releases/download/v1.8.0.8/patch_x64_win.zip)/[MacOS 64版本](https://github.com/BlueMatthew/WechatExporter/releases/download/v1.8.0.8/patch_x64_macos.zip)并解压，把wxexpatch.exe/wxexppatch拷贝到导出目录，并执行，来修复已经导出的页面（补丁修复的文件清单可查看日志文件 patch.log/patch_log.txt）。**    
 
 本程序参考 https://github.com/stomakun/WechatExport-iOS 修改成C++来实现，移除对dotnet的依赖，方便在MacOS下的运行。支持Text、HTML、PDF三种格式的导出。  
   
