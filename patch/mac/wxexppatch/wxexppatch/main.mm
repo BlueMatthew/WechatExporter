@@ -113,8 +113,7 @@ bool findInvalidHtmlContent(const char *buffer, size_t& startPos, size_t& endPos
 bool doPatch(const char* root)
 {
     std::string rootPath(root);
-    rootPath = "/Users/matthew/Documents/WxExp/WechatHistory.Test - Copy";
- 
+    
     addPathSlash(rootPath);
     
     std::vector<char> buffer;
@@ -132,7 +131,7 @@ bool doPatch(const char* root)
     char logPath[PATH_MAX] = { 0 };
     char log[PATH_MAX] = { 0 };
     strcpy(logPath, rootPath.c_str());
-    strcat(logPath, "patch_log.txt");
+    strcat(logPath, "patch.log");
 
     writeFile(logPath, logTitle, strlen(logTitle));
 
