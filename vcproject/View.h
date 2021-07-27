@@ -64,6 +64,11 @@ private:
 
 		bool runTask()
 		{
+			if (GetUserDefaultUILanguage() == MAKELANGID(LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED))
+			{
+				m_exp.setLanguageCode("zh-Hans");
+			}
+
 			bool ret = m_exp.loadUsersAndSessions();
 			::PostMessage(m_hWnd, WM_LOADDATA, (ret ? 1 : 0), reinterpret_cast<LPARAM>(this));
 			return ret;
@@ -738,6 +743,10 @@ public:
 		}
 
 		m_exporter = new Exporter((LPCSTR)resDir, backup, (LPCSTR)output, m_logger, m_pdfConverter);
+		if (GetUserDefaultUILanguage() == MAKELANGID(LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED))
+		{
+			m_exporter->setLanguageCode("zh-Hans");
+		}
 		m_exporter->setNotifier(m_notifier);
 		m_exporter->setOrder(!descOrder);
 		m_exporter->setSyncLoading(!asyncLoading);

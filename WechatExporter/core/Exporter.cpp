@@ -210,6 +210,11 @@ void Exporter::setTemplatesName(const std::string& templatesName)
     m_templatesName = templatesName;
 }
 
+void Exporter::setLanguageCode(const std::string& languageCode)
+{
+    m_languageCode = languageCode;
+}
+
 void Exporter::filterUsersAndSessions(const std::map<std::string, std::map<std::string, void *>>& usersAndSessions)
 {
     m_usersAndSessionsFilter = usersAndSessions;
@@ -825,6 +830,7 @@ int Exporter::exportSession(const Friend& user, const MessageParser& msgParser, 
         replaceAll(html, "%%SESSION_USRNAME%%", "");
 #endif
         replaceAll(html, "%%DISPLAYNAME%%", session.getDisplayName());
+        replaceAll(html, "%%WX_CHAT_HISTORY%%", getLocaleString("Wechat Chat History"));
         replaceAll(html, "%%ASYNC_LOADING_TYPE%%", m_loadingDataOnScroll ? "onscroll" : "initial");
         
         replaceAll(html, "%%SIZE_OF_PAGE%%", std::to_string(pageSize));
@@ -1076,7 +1082,11 @@ bool Exporter::loadStrings()
 {
     m_localeStrings.clear();
 
-    std::string path = combinePath(m_workDir, "res", "locale.txt");
+    std::string path = combinePath(m_workDir, "res", m_languageCode + ".txt");
+    if (!existsFile(path))
+    {
+        return false;
+    }
 
     Json::Reader reader;
     Json::Value value;

@@ -60,6 +60,8 @@ protected:
     std::vector<std::pair<Friend, std::vector<Session>>> m_usersAndSessions;
     
     ExportContext*  m_exportContext;
+    
+    std::string m_languageCode;
 
 public:
     Exporter(const std::string& workDir, const std::string& backup, const std::string& output, Logger* logger, PdfConverter* pdfConverter);
@@ -86,6 +88,8 @@ public:
     void supportsFilter(bool supportsFilter = true);
     void setExtName(const std::string& extName);
     void setTemplatesName(const std::string& templatesName);
+    
+    void setLanguageCode(const std::string& languageCode);
     
     std::string getITunesVersion() const;
     std::string getIOSVersion() const;

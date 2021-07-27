@@ -310,6 +310,7 @@
         if (nil != strongSelf)
         {
             Exporter exp([workDir UTF8String], [backupDir UTF8String], "", strongSelf->m_logger, NULL);
+            exp.setLanguageCode([[self getCurrentLanguageCode] UTF8String]);
             exp.loadUsersAndSessions();
             exp.swapUsersAndSessions(strongSelf->m_usersAndSessions);
         }
@@ -534,6 +535,7 @@
     }
 
     m_exporter = new Exporter([workDir UTF8String], [backup UTF8String], [output UTF8String], m_logger, m_pdfConverter);
+    m_exporter->setLanguageCode([[self getCurrentLanguageCode] UTF8String]);
     if (nil != descOrder && [descOrder boolValue])
     {
         m_exporter->setOrder(false);
@@ -795,5 +797,15 @@
     });
 }
 
+- (NSString *)getCurrentLanguageCode
+{
+    NSString *preferredLanguage = [[NSLocale preferredLanguages] objectAtIndex:0];
+    if ([preferredLanguage hasPrefix:@"zh-Hans"])
+    {
+        preferredLanguage = @"zh-Hans";
+    }
+    
+    return preferredLanguage;
+}
 
 @end

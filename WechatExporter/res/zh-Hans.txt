@@ -166,8 +166,8 @@
 		"value": "[文件: %s]"
 	},
 	{
-		"key": "",
-		"value": ""
+		"key": "Wechat Chat History",
+		"value": "微信聊天记录"
 	},
 	{
 		"key": "",
