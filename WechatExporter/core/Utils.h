@@ -46,13 +46,6 @@ std::string formatString(const std::string& format, Args && ...args)
     return output;
 }
 
-std::string combinePath(const std::string& p1, const std::string& p2);
-std::string combinePath(const std::string& p1, const std::string& p2, const std::string& p3);
-std::string combinePath(const std::string& p1, const std::string& p2, const std::string& p3, const std::string& p4);
-
-std::string normalizePath(const std::string& path);
-void normalizePath(std::string& path);
-
 // bool existsFile(const std::string &path);
 // int makePath(const std::string& path, mode_t mode);
 
