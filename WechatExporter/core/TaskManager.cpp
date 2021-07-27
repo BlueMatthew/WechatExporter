@@ -216,7 +216,7 @@ void TaskManager::onTaskComplete(const AsyncExecutor* executor, const AsyncExecu
 #endif
     }
     
-    const Session* session = task->getUserData() == NULL ? NULL : reinterpret_cast<const Session *>(task->getUserData());
+    // const Session* session = task->getUserData() == NULL ? NULL : reinterpret_cast<const Session *>(task->getUserData());
     if (/*executor == m_downloadExecutor && */task->getType() == TASK_TYPE_DOWNLOAD)
     {
         const DownloadTask* downloadTask = dynamic_cast<const DownloadTask *>(task);

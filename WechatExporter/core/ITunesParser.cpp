@@ -305,7 +305,7 @@ bool ITunesDb::loadMbdb(const std::string& domain, bool onlyFile)
         return false;
     }
     
-    unsigned char mdbxBuffer[26];           // buffer for .mbdx record
+    // unsigned char mdbxBuffer[26];           // buffer for .mbdx record
     unsigned char fixedData[40] = { 0 };    // buffer for the fixed part of .mbdb record
     // SHA1CryptoServiceProvider hasher = new SHA1CryptoServiceProvider();
 
@@ -318,7 +318,6 @@ bool ITunesDb::loadMbdb(const std::string& domain, bool onlyFile)
     std::string alwaysNull;
     unsigned short fileMode = 0;
     bool isDir = false;
-    unsigned int mtime = 0;
     bool skipped = false;
     
     bool hasFilter = (bool)m_loadingFilter;
@@ -380,7 +379,7 @@ bool ITunesDb::loadMbdb(const std::string& domain, bool onlyFile)
             
             unsigned int aTime = GetBigEndianInteger(fixedData, 18);
             unsigned int bTime = GetBigEndianInteger(fixedData, 22);
-            unsigned int cTime = GetBigEndianInteger(fixedData, 26);
+            // unsigned int cTime = GetBigEndianInteger(fixedData, 26);
             
             int propertyCount = fixedData[39];
             

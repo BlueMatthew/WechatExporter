@@ -81,7 +81,6 @@ bool silkToPcm(const std::string& silkPath, std::vector<unsigned char>& pcmData)
     
 #ifdef ENABLE_AUDIO_CONVERTION
     unsigned long tottime, starttime;
-    double    filetime;
     size_t    counter;
     SKP_int32 totPackets, i, k;
     SKP_int16 ret, len, tot_len;
