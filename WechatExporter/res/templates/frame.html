@@ -553,8 +553,6 @@
 
 			function loadMsgsForNextPage()
 			{
-				console.log("loadMsgsForNextPage starts...");
-
 				if ((typeof window.wechatMsgsIndexes === 'undefined') || (window.wechatMsgsIndexes.length == 0))
 				{
 					return 0;
@@ -601,17 +599,10 @@
 					// Load next page
 					var nextPage = window.wechatMsgsIndexes.shift();
 
-					console.log("load next page:" + nextPage);
-
 					var script   = document.createElement("script");
 					script.type  = "text/javascript";
 					script.src   = "%%DATA_PATH%%/msg-" + nextPage + ".js";
 					document.body.appendChild(script);
-				}
-				else
-				{
-					console.log("(visibleMsgs(" + visibleMsgs + ") < window.numberOfMsgsToLoad("
-						+ window.numberOfMsgsToLoad + ") ) && window.wechatMsgsIndexes.length(" + window.wechatMsgsIndexes.length + ") > 0");
 				}
 
 				return true;
@@ -663,7 +654,6 @@
 				window.wechatMsgsIndexes.push(idx);
 			}
 
-			console.log(window.wechatMsgsIndexes);
 			window.numberOfMsgsToLoad = 0;
 			
 			if (asyncLoadingType == "initial")
@@ -672,11 +662,8 @@
 				window.numberOfMsgsToLoad = numberOfMsgs;
 				window.numberOfVisibleMsgsToLoad = -1;
 
-				console.log("initial");
 				window.addEventListener('load', function (e)
 				{
-					console.log("onload");
-
 					loadMsgsForNextPage();
 
 				}, false);
