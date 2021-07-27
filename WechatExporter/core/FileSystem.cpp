@@ -261,7 +261,7 @@ bool listSubDirectories(const std::string& path, std::vector<std::string>& subDi
 	HANDLE hFind = INVALID_HANDLE_VALUE;
 
 	std::string formatedPath = combinePath(path, "*.*");
-	std::replace(formatedPath.begin(), formatedPath.end(), DIR_SEP_R, DIR_SEP);
+	std::replace(formatedPath.begin(), formatedPath.end(), ALT_DIR_SEP, DIR_SEP);
 
 	CW2T localPath(CA2W(formatedPath.c_str(), CP_UTF8));
 

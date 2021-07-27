@@ -143,7 +143,7 @@ inline std::string PlistDictionary::toString(const xmlChar* ch, int len)
 
 ITunesDb::ITunesDb(const std::string& rootPath, const std::string& manifestFileName) : m_isMbdb(false), m_rootPath(rootPath), m_manifestFileName(manifestFileName)
 {
-    std::replace(m_rootPath.begin(), m_rootPath.end(), DIR_SEP_R, DIR_SEP);
+    std::replace(m_rootPath.begin(), m_rootPath.end(), ALT_DIR_SEP, DIR_SEP);
     
     if (!endsWith(m_rootPath, DIR_SEP))
     {

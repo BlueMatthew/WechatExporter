@@ -1108,7 +1108,7 @@ bool SessionsParser::parseMessageDb(const std::string& mmPath, std::vector<std::
 bool SessionsParser::parseCellData(const std::string& userRoot, Session& session)
 {
 	std::string fileName = session.getExtFileName();
-	if (startsWith(fileName, DIR_SEP) || startsWith(fileName, DIR_SEP_R))
+	if (startsWith(fileName, DIR_SEP) || startsWith(fileName, ALT_DIR_SEP))
 	{
 		fileName = fileName.substr(1);
 	}

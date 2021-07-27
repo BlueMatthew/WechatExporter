@@ -159,7 +159,7 @@ std::string combinePath(const std::string& p1, const std::string& p2)
     if (!p1.empty())
     {
         path = p1;
-        if (path[path.size() - 1] != DIR_SEP && path[path.size() - 1] != DIR_SEP_R)
+        if (path[path.size() - 1] != DIR_SEP && path[path.size() - 1] != ALT_DIR_SEP)
         {
             path += DIR_SEP;
         }
@@ -199,7 +199,7 @@ std::string normalizePath(const std::string& path)
 
 void normalizePath(std::string& path)
 {
-    std::replace(path.begin(), path.end(), DIR_SEP_R, DIR_SEP);
+    std::replace(path.begin(), path.end(), ALT_DIR_SEP, DIR_SEP);
 }
 
 std::string safeHTML(const std::string& s)

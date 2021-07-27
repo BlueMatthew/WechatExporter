@@ -14,10 +14,12 @@
 
 #ifdef _WIN32
 #define DIR_SEP '\\'
-#define DIR_SEP_R '/'
+#define DIR_SEP_STR "\\"
+#define ALT_DIR_SEP '/'
 #else
 #define DIR_SEP '/'
-#define DIR_SEP_R '\\'
+#define DIR_SEP_STR "/"
+#define ALT_DIR_SEP '\\'
 #endif
 
 size_t getFileSize(const std::string& path);
