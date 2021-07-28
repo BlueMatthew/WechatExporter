@@ -1128,7 +1128,14 @@ bool SessionsParser::parseCellData(const std::string& userRoot, Session& session
 	}
 
 	std::string value;
-	int value2;
+	int value2 = 0;
+    if (msg.parse("1.1.1", value))
+    {
+        if (session.isUsrNameEmpty() && (session.isHashEmpty() || md5(value) == session.getHash()))
+        {
+            session.setUsrName(value);
+        }
+    }
     if (msg.parse("1.1.6", value))
     {
         session.setDisplayName(value);
@@ -1157,7 +1164,10 @@ bool SessionsParser::parseCellData(const std::string& userRoot, Session& session
 	}
     if (msg.parse("2.2", value2))
     {
-        session.setRecordCount(value2);
+        if (session.getRecordCount() == 0)
+        {
+            session.setRecordCount(value2);
+        }
     }
     
     if (session.isDisplayNameEmpty())
