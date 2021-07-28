@@ -694,6 +694,25 @@ public:
 			return 0;
 		}
 
+		if (AppConfiguration::GetIncrementalExporting())
+		{
+			int options = 0;
+			std::string exportTime;
+			if (Exporter::hasPreviousExporting((LPCSTR)output, options, exportTime))
+			{
+				CW2T exportTimeT(CA2W(exportTime.c_str(), CP_UTF8));
+				CString text;
+				text.Format(IDS_PREV_EXP_FOUND, (LPCTSTR)exportTimeT);
+				MessageBoxTimeout(m_hWnd, text, TEXT(""), MB_OK, 0, 4000);
+			}
+			else
+			{
+				CString text;
+				text.LoadString(IDS_NO_PREV_EXP);
+				MessageBoxTimeout(m_hWnd, text, TEXT(""), MB_OK, 0, 4000);
+			}
+		}
+
 		// CButton btn = GetDlgItem(IDC_DESC_ORDER);
 		bool descOrder = AppConfiguration::GetDescOrder();
 		bool saveFilesInSessionFolder = AppConfiguration::GetSavingInSession();
