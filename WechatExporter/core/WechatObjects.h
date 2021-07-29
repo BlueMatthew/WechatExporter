@@ -214,20 +214,21 @@ protected:
     std::string m_displayName;
     int m_userType;
     bool m_isChatroom;
+	bool m_deleted;
     std::string m_portrait;
     std::string m_portraitHD;
-    
+
     std::string m_outputFileName; // Use displayName first and then usrName
     
     std::map<std::string, std::pair<std::string, std::string>> m_members; // uidHash => <uid,NickName>
     
 public:
     
-    Friend() : m_isChatroom(false)
+    Friend() : m_isChatroom(false), m_deleted(false)
     {
     }
     
-    Friend(const std::string& uid, const std::string& hash) : m_usrName(uid), m_uidHash(hash)
+    Friend(const std::string& uid, const std::string& hash) : m_usrName(uid), m_uidHash(hash), m_isChatroom(false), m_deleted(false)
     {
         m_isChatroom = isChatroom(uid);
     }
@@ -251,6 +252,16 @@ public:
     {
         return m_uidHash.empty();
     }
+
+	bool isDeleted() const
+	{
+		return m_deleted;
+	}
+
+	void setDeleted(bool deleted)
+	{
+		m_deleted = deleted;
+	}
 
     bool containMember(const std::string& uidHash) const
     {
@@ -282,7 +293,7 @@ public:
     
     inline std::string getDisplayName() const
     {
-        return m_displayName.empty() ? m_usrName : m_displayName;
+        return (m_displayName.empty() ? m_usrName : m_displayName) + (m_deleted ? "-deleted" : "");
     }
     
     inline bool isDisplayNameEmpty() const
@@ -511,21 +522,15 @@ protected:
     std::string m_extFileName;
     std::string m_dbFile;
     void *m_data;
-    bool m_deleted;
     const Friend* m_owner;
     
 public:
-    Session(const Friend* owner) : Friend(), m_unreadCount(0), m_recordCount(0), m_createTime(0), m_lastMessageTime(0), m_data(NULL), m_deleted(false), m_owner(owner)
+    Session(const Friend* owner) : Friend(), m_unreadCount(0), m_recordCount(0), m_createTime(0), m_lastMessageTime(0), m_data(NULL), m_owner(owner)
     {
     }
     
-    Session(const std::string& uid, const std::string& hash, const Friend* owner) : Friend(uid, hash), m_unreadCount(0), m_recordCount(0), m_createTime(0), m_lastMessageTime(0), m_data(NULL), m_deleted(false), m_owner(owner)
+    Session(const std::string& uid, const std::string& hash, const Friend* owner) : Friend(uid, hash), m_unreadCount(0), m_recordCount(0), m_createTime(0), m_lastMessageTime(0), m_data(NULL), m_owner(owner)
     {
-    }
-    
-    inline std::string getDisplayName() const
-    {
-        return m_deleted ? Friend::getDisplayName() + "-deleted" : Friend::getDisplayName();
     }
     
     inline unsigned int getCreateTime() const
@@ -611,16 +616,6 @@ public:
     bool update(const Friend& f)
     {
         return Friend::update(f);
-    }
-    
-    bool isDeleted() const
-    {
-        return m_deleted;
-    }
-    
-    void setDeleted(bool deleted)
-    {
-        m_deleted = deleted;
     }
     
     const Friend* getOwner() const
