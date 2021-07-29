@@ -228,15 +228,15 @@ public:
 		std::vector<BackupManifest> manifests;
 		if (!backupDir.IsEmpty())
 		{
-			CW2A backupDir(CT2W(backupDir), CP_UTF8);
-			ManifestParser parser((LPCSTR)backupDir);
+			CW2A backupDirU8(CT2W(backupDir), CP_UTF8);
+			ManifestParser parser((LPCSTR)backupDirU8);
 			parser.parse(manifests);
 		}
 #ifndef NDEBUG
 		if (!lastBackupDir.IsEmpty() && lastBackupDir != backupDir)
 		{
-			CW2A backupDir(CT2W(lastBackupDir), CP_UTF8);
-			ManifestParser parser((LPCSTR)backupDir);
+			CW2A backupDirU8(CT2W(lastBackupDir), CP_UTF8);
+			ManifestParser parser((LPCSTR)backupDirU8);
 			parser.parse(manifests);
 		}
 #endif
