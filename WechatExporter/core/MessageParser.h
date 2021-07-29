@@ -77,7 +77,7 @@ struct WXFWDMSG
     std::string dataFormat;
     std::string msgTime;
     std::string srcMsgTime;
-#ifndef NDEBUG
+#if !defined(NDEBUG) || defined(DBG_PERF)
     std::string rawMessage;
 #endif
 };

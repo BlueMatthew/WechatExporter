@@ -303,7 +303,7 @@ bool Exporter::runImpl()
     std::time(&startTime);
     notifyStart();
     
-#ifndef NDEBUG
+#if !defined(NDEBUG) || defined(DBG_PERF)
     makeDirectory(combinePath(m_output, "dbg"));
 #endif
     loadStrings();
@@ -734,7 +734,7 @@ bool Exporter::loadUserFriendsAndSessions(const Friend& user, Friends& friends, 
 
     SessionsParser sessionsParser(m_iTunesDb, m_iTunesDbShare, m_wechatInfo.getCellDataVersion(), detailedInfo);
     
-    sessionsParser.parse(user, sessions, friends);
+    sessionsParser.parse(user, friends, sessions);
  
     std::sort(sessions.begin(), sessions.end(), SessionLastMsgTimeCompare());
     

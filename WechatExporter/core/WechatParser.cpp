@@ -528,7 +528,7 @@ bool MMKVParser::parse(const std::string& path, const std::string& crcPath)
         {
             m_usrName = reader.readStringValue();
 #if !defined(NDEBUG) || defined(DBG_PERF)
-            m_logger->debug("MMKV usrName: " + m_usrName);
+            // m_logger->debug("MMKV usrName: " + m_usrName);
 #endif
         }
         else if (k == "87")
@@ -539,7 +539,7 @@ bool MMKVParser::parse(const std::string& path, const std::string& crcPath)
         {
             m_displayName = reader.readStringValue();
 #if !defined(NDEBUG) || defined(DBG_PERF)
-            m_logger->debug("MMKV displayName: " + m_displayName);
+            // m_logger->debug("MMKV displayName: " + m_displayName);
 #endif
         }
         else if (k == "headimgurl")
@@ -930,7 +930,7 @@ SessionsParser::SessionsParser(ITunesDb *iTunesDb, ITunesDb *iTunesDbShare, cons
     }
 }
 
-bool SessionsParser::parse(const Friend& user, std::vector<Session>& sessions, const Friends& friends)
+bool SessionsParser::parse(const Friend& user, const Friends& friends, std::vector<Session>& sessions)
 {
     std::string usrNameHash = user.getHash();
     std::string userRoot = "Documents/" + usrNameHash;
@@ -962,7 +962,7 @@ bool SessionsParser::parse(const Friend& user, std::vector<Session>& sessions, c
     while (sqlite3_step(stmt) == SQLITE_ROW)
     {
         const char *usrName = reinterpret_cast<const char*>(sqlite3_column_text(stmt, 3));
-        if (NULL == usrName || Session::isSubscription(usrName))
+        if (NULL == usrName/* || Session::isSubscription(usrName)*/)
         {
             continue;
         }
@@ -975,19 +975,6 @@ bool SessionsParser::parse(const Friend& user, std::vector<Session>& sessions, c
         const char* extFileName = reinterpret_cast<const char*>(sqlite3_column_text(stmt, 0));
         if (NULL != extFileName) session.setExtFileName(extFileName);
         session.setUnreadCount(sqlite3_column_int(stmt, 2));
-
-        if (!session.isExtFileNameEmpty())
-        {
-            parseCellData(userRoot, session);
-        }
-        const Friend* f = friends.getFriend(session.getHash());
-        if (NULL != f)
-        {
-            if (!session.isChatroom())
-            {
-                session.update(*f);
-            }
-        }
     }
     
     sqlite3_finalize(stmt);
@@ -998,57 +985,91 @@ bool SessionsParser::parse(const Friend& user, std::vector<Session>& sessions, c
     
     // if (m_detailedInfo)
     {
-        parseMessageDbs(userRoot, sessions);
+        parseMessageDbs(user, userRoot, sessions);
     }
     
+    for (std::vector<Session>::iterator it = sessions.begin(); it != sessions.end(); )
+    {
+        if (!it->isExtFileNameEmpty())
+        {
+            parseCellData(userRoot, *it);
+        }
+        if (!it->isUsrNameEmpty() && it->isSubscription())
+        {
+            it = sessions.erase(it);
+            continue;
+        }
+        
+        const Friend* f = friends.getFriend(it->getHash());
+        if (NULL != f)
+        {
+            if (!it->isChatroom())
+            {
+                it->update(*f);
+            }
+        }
+        ++it;
+    }
     
+#ifndef NDEBUG
+    // Invalidate db path
+    int cnt = 0;
+    for (std::vector<Session>::const_iterator it = sessions.cbegin(); it != sessions.cend(); ++it)
+    {
+        if (it->isDbFileEmpty())
+        {
+            cnt++;
+        }
+    }
+    if (cnt > 0)
+    {
+        // assert(false);
+    }
+#endif
+
     return true;
 }
 
-bool SessionsParser::parseMessageDbs(const std::string& userRoot, std::vector<Session>& sessions)
+bool SessionsParser::parseMessageDbs(const Friend& user, const std::string& userRoot, std::vector<Session>& sessions)
 {
 	SessionHashCompare comp;
 	std::sort(sessions.begin(), sessions.end(), comp);
 
     MessageDbFilter filter(userRoot);
     ITunesFileVector dbs = m_iTunesDb->filter(filter);
-    
-    std::string dbPath = m_iTunesDb->findRealPath(combinePath(userRoot, "DB", "MM.sqlite"));
+    const ITunesFile* file = m_iTunesDb->findITunesFile(combinePath(userRoot, "DB", "MM.sqlite"));
+    if (NULL != file)
+    {
+        dbs.push_back(const_cast<ITunesFile *>(file));
+    }
 
+    std::vector<Session> deletedSessions;
     std::vector<std::pair<std::string, int>> sessionIds;
-    parseMessageDb(dbPath, sessionIds);
-
-	for (typename std::vector<std::pair<std::string, int>>::const_iterator it = sessionIds.cbegin(); it != sessionIds.cend(); ++it)
-	{
-		std::vector<Session>::iterator itSession = std::lower_bound(sessions.begin(), sessions.end(), it->first, comp);
-		if (itSession != sessions.end() && itSession->getHash() == it->first)
-		{
-			itSession->setDbFile(dbPath);
-            itSession->setRecordCount(it->second);
-		}
-	}
-
     for (ITunesFilesConstIterator it = dbs.cbegin(); it != dbs.cend(); ++it)
     {
-        dbPath = m_iTunesDb->getRealPath(*it);
-		sessionIds.clear();
-        parseMessageDb(dbPath, sessionIds);
-
-		for (typename std::vector<std::pair<std::string, int>>::const_iterator itId = sessionIds.cbegin(); itId != sessionIds.cend(); ++itId)
-		{
-			std::vector<Session>::iterator itSession = std::lower_bound(sessions.begin(), sessions.end(), itId->first, comp);
-			if (itSession != sessions.end() && itSession->getHash() == itId->first)
-			{
-				itSession->setDbFile(dbPath);
-                itSession->setRecordCount(itId->second);
-			}
-		}
+        std::string mmPath = m_iTunesDb->getRealPath(*it);
+        parseMessageDb(user, mmPath, sessions, deletedSessions);
+    }
+    
+    // Append deletedSessions at last as parseMessageDb needs SORTED sessions
+    for (std::vector<Session>::iterator it = deletedSessions.begin(); it != deletedSessions.end(); ++it)
+    {
+        // /session/data/c3/2488b928e0bf604ec1cb02b53f18a7
+        std::string relativePath = combinePath(userRoot, "/session/data/", it->getHash().substr(0, 2), it->getHash().substr(2));
+        const ITunesFile* file = m_iTunesDb->findITunesFile(relativePath);
+        if (NULL != file)
+        {
+            it->setExtFileName(file->relativePath); // it->relativePath is formatted
+        }
+        
+        it->setDeleted(true);
+        sessions.push_back(*it);
     }
 
     return true;
 }
 
-bool SessionsParser::parseMessageDb(const std::string& mmPath, std::vector<std::pair<std::string, int>>& sessionIds)
+bool SessionsParser::parseMessageDb(const Friend& user, const std::string& mmPath, std::vector<Session>& sessions, std::vector<Session>& deletedSessions)
 {
     sqlite3 *db = NULL;
     int rc = openSqlite3ReadOnly(mmPath, &db);
@@ -1069,6 +1090,7 @@ bool SessionsParser::parseMessageDb(const std::string& mmPath, std::vector<std::
         return false;
     }
     
+    SessionHashCompare comp;
     while (sqlite3_step(stmt) == SQLITE_ROW)
     {
         const unsigned char* pName = sqlite3_column_text(stmt, 0);
@@ -1093,9 +1115,36 @@ bool SessionsParser::parseMessageDb(const std::string& mmPath, std::vector<std::
                 }
                 
                 sqlite3_finalize(stmt2);
+                
+                std::vector<Session>::iterator it = std::lower_bound(sessions.begin(), sessions.end(), chatId, comp);
+                if (it != sessions.end() && it->getHash() == chatId)
+                {
+                    it->setDbFile(mmPath);
+                    it->setRecordCount(recordCount);
+                }
+                else
+                {
+                    uint32_t lastCreateTime = 0;
+                    std::string sql3 = "SELECT MAX(CreateTime) AS lct FROM " + name;
+                    sqlite3_stmt* stmt3 = NULL;
+                    rc = sqlite3_prepare_v2(db, sql3.c_str(), (int)(sql3.size()), &stmt3, NULL);
+                    if (rc == SQLITE_OK)
+                    {
+                        if (sqlite3_step(stmt3) == SQLITE_ROW)
+                        {
+                            lastCreateTime = sqlite3_column_int(stmt3, 0);
+                        }
+                        sqlite3_finalize(stmt3);
+                    }
+
+                    it = deletedSessions.emplace(deletedSessions.cend(), "", chatId, &user);
+                    it->setDbFile(mmPath);
+                    it->setLastMessageTime(lastCreateTime);
+                    it->setRecordCount(recordCount);
+                }
             }
             
-            sessionIds.push_back(std::make_pair<>(chatId, recordCount));
+            // sessionIds.push_back(std::make_pair<>(chatId, recordCount));
         }
     }
     

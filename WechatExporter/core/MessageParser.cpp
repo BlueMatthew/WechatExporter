@@ -111,7 +111,7 @@ bool MessageParser::parse(WXMSG& msg, const Session& session, std::vector<Templa
             parseSystem(msg, session, tv);
             break;
         default:
-#ifndef NDEBUG
+#if !defined(NDEBUG) || defined(DBG_PERF)
             writeFile(combinePath(m_outputPath, "../dbg", "msg_unknwn_type_" + std::to_string(msg.type) + msg.msgId + ".txt"), msg.content);
 #endif
             parseText(msg, session, tv);
@@ -896,7 +896,7 @@ void MessageParser::parseAppMsgReaderType(const WXAPPMSG& appMsg, const XmlParse
 
 void MessageParser::parseAppMsgUnknownType(const WXAPPMSG& appMsg, const XmlParser& xmlParser, const Session& session, TemplateValues& tv) const
 {
-#ifndef NDEBUG
+#if !defined(NDEBUG) || defined(DBG_PERF)
     writeFile(combinePath(m_outputPath, "../dbg", "msg" + std::to_string(appMsg.msg->type) + "_app_unknwn_" + std::to_string(appMsg.appMsgType) + ".txt"), appMsg.msg->content);
 #endif
     parseAppMsgDefault(appMsg, xmlParser, session, tv);
@@ -1369,7 +1369,7 @@ bool MessageParser::parseForwardedMsgs(const Session& session, const WXMSG& msg,
                 }
             }
             
-#ifndef NDEBUG
+#if !defined(NDEBUG) || defined(DBG_PERF)
             fmsg.rawMessage = xmlParser.getNodeOuterXml(node);
             writeFile(combinePath(m_outputPath, "../dbg", "fwdmsg_" + fmsg.dataType + ".txt"), fmsg.rawMessage);
 #endif
@@ -1417,7 +1417,7 @@ bool MessageParser::parseForwardedMsgs(const Session& session, const WXMSG& msg,
                     break;
                 default:
                     parseFwdMsgText(fmsg, xmlParser, node, session, tv);
-#ifndef NDEBUG
+#if !defined(NDEBUG) || defined(DBG_PERF)
                     writeFile(combinePath(m_outputPath, "../dbg", "fwdmsg_unknwn_" + fmsg.dataType + ".txt"), fmsg.rawMessage);
 #endif
                     break;

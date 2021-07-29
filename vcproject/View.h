@@ -244,11 +244,12 @@ public:
 		{
 			UpdateBackups(manifests);
 		}
-
+#if defined(NDEBUG) && !defined(DBG_PERF) 
 		if (!AppConfiguration::GetCheckingUpdateDisabled() && (getUnixTimeStamp() - AppConfiguration::GetLastCheckUpdateTime()) > 86400u)
 		{
 			::PostMessage(m_hWnd, WM_CHKUPDATE, 0, 0);
 		}
+#endif
 
 		return TRUE;
 	}

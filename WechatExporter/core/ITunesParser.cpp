@@ -585,8 +585,8 @@ bool ManifestParser::parse(std::vector<BackupManifest>& manifests) const
         BackupManifest manifest;
         if (parse(path, manifest) && manifest.isValid())
         {
-            res = true;
             manifests.push_back(manifest);
+            res = true;
         }
     }
     else
@@ -621,8 +621,8 @@ bool ManifestParser::parseDirectory(const std::string& path, std::vector<BackupM
         BackupManifest manifest;
         if (parse(backupPath, manifest) && manifest.isValid())
         {
-            res = true;
             manifests.push_back(manifest);
+            res = true;
         }
     }
 

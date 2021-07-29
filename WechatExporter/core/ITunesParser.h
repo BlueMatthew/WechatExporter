@@ -26,7 +26,7 @@ struct ITunesFile
     unsigned int modifiedTime;
     std::vector<unsigned char> blob;
     
-    ITunesFile()
+    ITunesFile() : flags(0), modifiedTime(0)
     {
     }
     
