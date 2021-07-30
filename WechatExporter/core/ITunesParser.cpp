@@ -435,6 +435,10 @@ bool ITunesDb::loadMbdb(const std::string& domain, bool onlyFile)
 
 unsigned int ITunesDb::parseModifiedTime(const std::vector<unsigned char>& data)
 {
+    if (data.empty())
+    {
+        return 0;
+    }
     uint64_t val = 0;
     plist_t node = NULL;
     plist_from_memory(reinterpret_cast<const char *>(&data[0]), static_cast<uint32_t>(data.size()), &node);
