@@ -31,6 +31,7 @@
 #define IDS_VERSIONS                    152
 #define IDS_NO_PREV_EXP                 153
 #define IDS_PREV_EXP_FOUND              154
+#define IDS_DELETED_SESSION             155
 #define IDC_BACKUP                      1000
 #define IDC_CHOOSE_BKP                  1001
 #define IDC_OUTPUT                      1002

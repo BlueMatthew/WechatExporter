@@ -319,6 +319,7 @@ public:
     bool parse(const Friend& user, const Friends& friends, std::vector<Session>& sessions);
 
 private:
+    bool parseUniversalSessions(const Friend& user, const std::string& userRoot, std::vector<Session>& sessions);
     bool parseCellData(const std::string& userRoot, Session& session);
     bool parseMessageDbs(const Friend& user, const std::string& userRoot, std::vector<Session>& sessions);
     bool parseMessageDb(const Friend& user, const std::string& mmPath, std::vector<Session>& sessions, std::vector<Session>& deletedSessions);

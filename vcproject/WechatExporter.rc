@@ -193,6 +193,7 @@ BEGIN
     IDS_VERSIONS            "iTunes版本：%s, iOS版本：%s, 微信版本：%s"
     IDS_NO_PREV_EXP         "输出目录下不存在前一次导出的信息，“增量导出”将被忽略。"
     IDS_PREV_EXP_FOUND      "输出目录下发现了%s的导出数据，本次导出将采用“增量导出”模式，并复用前一次的设置。"
+    IDS_DELETED_SESSION     "(已删除)"
 END
 
 #endif    // Chinese (Simplified, PRC) resources
@@ -453,6 +454,7 @@ BEGIN
     IDS_VERSIONS            "iTunes Version: %s, iOS Version: %s, Wechat Version: %s"
     IDS_NO_PREV_EXP         "There is no previous exporting in output directory and ""Incremental Exporting"" will be ignored."
     IDS_PREV_EXP_FOUND      "The previous exporting at %s found, will reuse previous options."
+    IDS_DELETED_SESSION     "(Deleted)"
 END
 
 STRINGTABLE

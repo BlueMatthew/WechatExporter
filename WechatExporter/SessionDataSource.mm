@@ -134,6 +134,10 @@
             sessionItem.userIndex = userIndex;
             sessionItem.checked = YES;
             sessionItem.displayName = [NSString stringWithUTF8String:it2->getDisplayName().c_str()];
+            if (it2->isDeleted())
+            {
+                sessionItem.displayName = [sessionItem.displayName stringByAppendingString:NSLocalizedString(@"session-deleted", comment: "")];
+            }
             sessionItem.sessionUsrName = [NSString stringWithUTF8String:it2->getUsrName().c_str()];
             sessionItem.recordCount = it2->getRecordCount();
             sessionItem.usrName = [NSString stringWithUTF8String:it->first.getUsrName().c_str()];

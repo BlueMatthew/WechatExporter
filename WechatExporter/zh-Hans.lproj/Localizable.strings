@@ -20,3 +20,4 @@
 "err-wrong-param" = "参数错误。";
 "txt-all-wechat-users" = "所有微信账户";
 "prompt-new-version-found" = "发现新版本：%@，是否下载？";
+"session-deleted" = "(已删除)";

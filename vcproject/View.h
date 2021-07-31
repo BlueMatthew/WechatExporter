@@ -1256,6 +1256,8 @@ protected:
 	void LoadSessions(BOOL allUsers, const std::string& usrName)
 	{
 		CListViewCtrl listViewCtrl = GetDlgItem(IDC_SESSIONS);
+		CString strDeletedSession;
+		strDeletedSession.LoadStringW(RBN_DELETEDBAND);
 
 		TCHAR recordCount[16] = { 0 };
 		for (std::vector<std::pair<Friend, std::vector<Session>>>::const_iterator it = m_usersAndSessions.cbegin(); it != m_usersAndSessions.cend(); ++it)
@@ -1293,7 +1295,14 @@ protected:
 				int nItem = listViewCtrl.InsertItem(&lvItem);
 
 				_itot(it2->getRecordCount(), recordCount, 10);
-				listViewCtrl.AddItem(nItem, 1, pszDisplayName);
+				if (it2->isDeleted())
+				{
+					listViewCtrl.AddItem(nItem, 1, pszDisplayName + strDeletedSession);
+				}
+				else
+				{
+					listViewCtrl.AddItem(nItem, 1, pszDisplayName);
+				}
 				listViewCtrl.AddItem(nItem, 2, recordCount);
 				listViewCtrl.AddItem(nItem, 3, pszUserDisplayName);
 				// BOOL bRet = listViewCtrl.SetItem(&lvSubItem);

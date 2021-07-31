@@ -20,3 +20,4 @@
 "err-wrong-param" = "Wrong parameters.";
 "txt-all-wechat-users" = "All Wechat Accounts";
 "prompt-new-version-found" = "Found a new version: %@. Download it now?";
+"session-deleted" = "(Deleted)";

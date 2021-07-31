@@ -979,10 +979,9 @@ bool SessionsParser::parse(const Friend& user, const Friends& friends, std::vect
     
     sqlite3_finalize(stmt);
     sqlite3_close(db);
-
-    std::string shareUserRoot = "share/" + usrNameHash;
-    parseSessionsInGroupApp(shareUserRoot, sessions);
     
+    parseUniversalSessions(user, userRoot, sessions);
+
     // if (m_detailedInfo)
     {
         parseMessageDbs(user, userRoot, sessions);
@@ -1011,6 +1010,19 @@ bool SessionsParser::parse(const Friend& user, const Friends& friends, std::vect
         ++it;
     }
     
+    // Check displayName and avatar
+    std::string shareUserRoot = "share/" + usrNameHash;
+    parseSessionsInGroupApp(shareUserRoot, sessions);
+
+    int sessionId = 1;
+    for (std::vector<Session>::iterator it = sessions.begin(); it != sessions.end(); ++it)
+    {
+        if (it->isUsrNameEmpty())
+        {
+            it->setEmptyUsrName("wxid_unknwn_" + std::to_string(sessionId++));
+        }
+    }
+
 #ifndef NDEBUG
     // Invalidate db path
     int cnt = 0;
@@ -1027,6 +1039,86 @@ bool SessionsParser::parse(const Friend& user, const Friends& friends, std::vect
     }
 #endif
 
+    return true;
+}
+
+bool SessionsParser::parseUniversalSessions(const Friend& user, const std::string& userRoot, std::vector<Session>& sessions)
+{
+    SessionUsrNameCompare comp;
+    std::sort(sessions.begin(), sessions.end(), comp);
+    
+    std::map<std::string, Session> newSessions;
+    
+    std::string items[] = {"BottleSession", "SubscribeSession", "SubscribeSessionList", "WASession"};
+    size_t numberOfItems = sizeof(items) / sizeof(std::string);
+    for (size_t idx = 0; idx < numberOfItems; ++idx)
+    {
+        std::string sessionDbPath = m_iTunesDb->findRealPath(combinePath(userRoot, "UniversalSession", items[idx], "session.db"));
+        if (sessionDbPath.empty())
+        {
+            continue;
+        }
+
+        sqlite3 *db = NULL;
+        int rc = openSqlite3ReadOnly(sessionDbPath, &db);
+        if (rc != SQLITE_OK)
+        {
+            sqlite3_close(db);
+            continue;
+        }
+        
+        std::string sql = "SELECT sessionId,lastMsgUpdateTime,unreadCount FROM SessionTable";
+        sqlite3_stmt* stmt = NULL;
+        rc = sqlite3_prepare_v2(db, sql.c_str(), (int)(sql.size()), &stmt, NULL);
+        if (rc != SQLITE_OK)
+        {
+            std::string error = sqlite3_errmsg(db);
+            sqlite3_close(db);
+            continue;
+        }
+
+        while (sqlite3_step(stmt) == SQLITE_ROW)
+        {
+            const char *usrNamePtr = reinterpret_cast<const char*>(sqlite3_column_text(stmt, 0));
+            if (NULL == usrNamePtr/* || Session::isSubscription(usrName)*/)
+            {
+                continue;
+            }
+            std::string usrName = usrNamePtr;
+            if (newSessions.find(usrName) != newSessions.cend())
+            {
+                continue;
+            }
+            
+            std::vector<Session>::iterator it = std::lower_bound(sessions.begin(), sessions.end(), usrName, comp);
+            if (it == sessions.end() || it->getUsrName() != usrName)
+            {
+                Session session(usrName, md5(usrName), &user);
+                session.setUsrName(usrName);
+                session.setLastMessageTime(static_cast<unsigned int>(sqlite3_column_int(stmt, 1)));
+                session.setUnreadCount(sqlite3_column_int(stmt, 2));
+                // /session/data/c3/2488b928e0bf604ec1cb02b53f18a7
+                std::string relativePath = combinePath(userRoot, "/session/data/", session.getHash().substr(0, 2), session.getHash().substr(2));
+                const ITunesFile* file = m_iTunesDb->findITunesFile(relativePath);
+                if (NULL != file)
+                {
+                    session.setExtFileName(file->relativePath); // file->relativePath is formatted
+                }
+                session.setDeleted(true);
+                
+                newSessions.insert(newSessions.end(), std::pair<std::string, Session>(usrName, session));
+            }
+        }
+        
+        sqlite3_finalize(stmt);
+        sqlite3_close(db);
+    }
+    
+    for (std::map<std::string, Session>::const_iterator it = newSessions.cbegin(); it != newSessions.cend(); ++it)
+    {
+        sessions.push_back(it->second);
+    }
+    
     return true;
 }
 
@@ -1271,9 +1363,14 @@ bool SessionsParser::parseSessionsInGroupApp(const std::string& userRoot, std::v
     std::map<std::string, Session*> sessionMap;
     for (std::vector<Session>::iterator it = sessions.begin(); it != sessions.end(); ++it)
     {
-        sessionMap.insert(sessionMap.cend(), std::make_pair<>(it->getUsrName(), &(*it)));
-        // sessionMap[it->getUsrName()] = &(*it);
+        if (!it->isUsrNameEmpty())
+        {
+            sessionMap.insert(sessionMap.cend(), std::make_pair<>(it->getUsrName(), &(*it)));
+        }
     }
+    
+    SessionHashCompare comp;
+    std::sort(sessions.begin(), sessions.end(), comp);
     
     std::string sessionDataArchivePath = m_iTunesDbShare->findRealPath(combinePath(userRoot, "session", "sessionData.archive"));
     if (!sessionDataArchivePath.empty())
@@ -1298,18 +1395,39 @@ bool SessionsParser::parseSessionsInGroupApp(const std::string& userRoot, std::v
                             std::string value2;
                             if (msg2.parse("1", value2))
                             {
+                                Session* session = NULL;
                                 std::map<std::string, Session*>::iterator it = sessionMap.find(value2);
                                 if (it != sessionMap.end())
+                                {
+                                    session = it->second;
+                                }
+                                else
+                                {
+                                    std::string uidHash = md5(value2);
+                                    std::vector<Session>::iterator it = std::lower_bound(sessions.begin(), sessions.end(), uidHash, comp);
+                                    if (it != sessions.end() && it->getHash() == uidHash)
+                                    {
+                                        session = &(*it);
+                                        if (it->isUsrNameEmpty())
+                                        {
+                                            it->setUsrName(value2);
+                                            sessionMap.insert(sessionMap.cend(), std::make_pair<>(value2, session));
+                                        }
+                                    }
+                                }
+                                
+                                if (NULL != session && session->isDisplayNameEmpty())
                                 {
                                     std::string name;
                                     if (msg2.parse("2", value2))
                                     {
                                         name = value2;
                                     }
-                                    if (msg2.parse("3", value2))
+                                    if (!msg2.parse("3", value2))
                                     {
-                                        it->second->setDisplayName(value2.empty() ? name : value2);
+                                        value2 = "";
                                     }
+                                    session->setDisplayName(value2.empty() ? name : value2);
                                 }
                             }
                         }
@@ -1344,18 +1462,39 @@ bool SessionsParser::parseSessionsInGroupApp(const std::string& userRoot, std::v
                             std::string value2;
                             if (msg2.parse("1", value2))
                             {
+                                Session* session = NULL;
                                 std::map<std::string, Session*>::iterator it = sessionMap.find(value2);
                                 if (it != sessionMap.end())
+                                {
+                                    session = it->second;
+                                }
+                                else
+                                {
+                                    std::string uidHash = md5(value2);
+                                    std::vector<Session>::iterator it = std::lower_bound(sessions.begin(), sessions.end(), uidHash, comp);
+                                    if (it != sessions.end() && it->getHash() == uidHash)
+                                    {
+                                        session = &(*it);
+                                        if (it->isUsrNameEmpty())
+                                        {
+                                            it->setUsrName(value2);
+                                            sessionMap.insert(sessionMap.cend(), std::make_pair<>(value2, session));
+                                        }
+                                    }
+                                }
+                                
+                                if (NULL != session && session->isDisplayNameEmpty())
                                 {
                                     std::string name;
                                     if (msg2.parse("2", value2))
                                     {
-                                        name = value;
+                                        name = value2;
                                     }
-                                    if (msg2.parse("3", value2))
+                                    if (!msg2.parse("3", value2))
                                     {
-                                        // it->second->setDisplayName(value2.empty() ? name : value2);
+                                        value2 = "";
                                     }
+                                    session->setDisplayName(value2.empty() ? name : value2);
                                 }
                             }
                         }

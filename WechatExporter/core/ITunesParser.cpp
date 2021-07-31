@@ -556,7 +556,14 @@ bool ITunesDb::copyFile(const std::string& vpath, const std::string& destPath, c
             bool result = ::copyFile(srcPath, destFullPath, true);
             if (result)
             {
-                updateFileTime(destFullPath, ITunesDb::parseModifiedTime(file->blob));
+                if (file->modifiedTime != 0)
+                {
+                    updateFileTime(destFullPath, static_cast<time_t>(file->modifiedTime));
+                }
+                else if (!file->blob.empty())
+                {
+                    updateFileTime(destFullPath, ITunesDb::parseModifiedTime(file->blob));
+                }
             }
             return result;
         }

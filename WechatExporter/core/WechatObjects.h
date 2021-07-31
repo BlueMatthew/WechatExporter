@@ -253,6 +253,8 @@ public:
         return m_uidHash.empty();
     }
 
+	void setEmptyUsrName(const std::string& usrName) { this->m_usrName = usrName; }
+	
 	bool isDeleted() const
 	{
 		return m_deleted;
@@ -293,7 +295,7 @@ public:
     
     inline std::string getDisplayName() const
     {
-        return (m_displayName.empty() ? m_usrName : m_displayName) + (m_deleted ? "-deleted" : "");
+        return m_displayName.empty() ? m_usrName : m_displayName;
     }
     
     inline bool isDisplayNameEmpty() const
@@ -367,9 +369,13 @@ public:
 protected:
     bool update(const Friend& f)
     {
-        if (m_usrName != f.m_usrName)
+        if (!f.isUsrNameEmpty() && m_usrName != f.m_usrName)
         {
             return false;
+        }
+        else if (isUsrNameEmpty())
+        {
+            setUsrName(f.getUsrName());
         }
         
         if (m_displayName.empty() && !f.m_displayName.empty())
@@ -624,6 +630,19 @@ public:
     }
     
     
+};
+
+struct SessionUsrNameCompare
+{
+    bool operator()(const Session& s1, const Session& s2) const
+    {
+        return s1.getUsrName().compare(s2.getUsrName()) < 0;
+    }
+    
+    bool operator()(const Session& s1, const std::string& s2) const
+    {
+        return s1.getUsrName().compare(s2) < 0;
+    }
 };
 
 struct SessionHashCompare
