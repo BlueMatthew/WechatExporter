@@ -720,7 +720,7 @@ bool Exporter::loadUserFriendsAndSessions(const Friend& user, Friends& friends, 
     std::string uidMd5 = user.getHash();
     std::string userBase = combinePath("Documents", uidMd5);
     
-    if (detailedInfo)
+    // if (detailedInfo)
     {
         std::string wcdbPath = m_iTunesDb->findRealPath(combinePath(userBase, "DB", "WCDB_Contact.sqlite"));
         FriendsParser friendsParser(detailedInfo);
