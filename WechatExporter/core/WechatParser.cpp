@@ -973,7 +973,22 @@ bool SessionsParser::parse(const Friend& user, const Friends& friends, std::vect
         session.setUsrName(usrName);
         session.setCreateTime(static_cast<unsigned int>(sqlite3_column_int(stmt, 1)));
         const char* extFileName = reinterpret_cast<const char*>(sqlite3_column_text(stmt, 0));
-        if (NULL != extFileName) session.setExtFileName(extFileName);
+        if (NULL != extFileName)
+        {
+            session.setExtFileName(extFileName);
+        }
+        else
+        {
+            // Guess ext file name
+            // /session/data/c3/2488b928e0bf604ec1cb02b53f18a7
+            std::string relativePath = combinePath(userRoot, "session/data", session.getHash().substr(0, 2), session.getHash().substr(2));
+            const ITunesFile* file = m_iTunesDb->findITunesFile(relativePath);
+            if (NULL != file)
+            {
+                session.setExtFileName(file->relativePath.substr(userRoot.size())); // file->relativePath is formatted
+            }
+            
+        }
         session.setUnreadCount(sqlite3_column_int(stmt, 2));
     }
     
@@ -998,7 +1013,7 @@ bool SessionsParser::parse(const Friend& user, const Friends& friends, std::vect
             it = sessions.erase(it);
             continue;
         }
-        
+
         const Friend* f = friends.getFriend(it->getHash());
         if (NULL != f)
         {
@@ -1098,11 +1113,11 @@ bool SessionsParser::parseUniversalSessions(const Friend& user, const std::strin
                 session.setLastMessageTime(static_cast<unsigned int>(sqlite3_column_int(stmt, 1)));
                 session.setUnreadCount(sqlite3_column_int(stmt, 2));
                 // /session/data/c3/2488b928e0bf604ec1cb02b53f18a7
-                std::string relativePath = combinePath(userRoot, "/session/data/", session.getHash().substr(0, 2), session.getHash().substr(2));
+                std::string relativePath = combinePath(userRoot, "session/data", session.getHash().substr(0, 2), session.getHash().substr(2));
                 const ITunesFile* file = m_iTunesDb->findITunesFile(relativePath);
                 if (NULL != file)
                 {
-                    session.setExtFileName(file->relativePath); // file->relativePath is formatted
+                    session.setExtFileName(file->relativePath.substr(userRoot.size())); // file->relativePath is formatted
                 }
                 session.setDeleted(true);
                 
