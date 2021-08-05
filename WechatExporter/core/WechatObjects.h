@@ -160,7 +160,10 @@ public:
             {140200, "20.1.0 1206"},
             {140300, "20.2.0 1209"},
             {140400, "20.3.0 1220.1"},
-            {140500, "20.4.0 1220"},
+            {140500, "20.4.0 1237"},
+            {140600, "20.5.0 1240.0.4"},
+            {140700, "20.6.0 1240.0.4"},
+            {150000, "21.0.0 1300.1"},
         };
         
         int osVersion = getOSVersionNumber();
@@ -223,7 +226,7 @@ public:
     {
     }
     
-    Friend(const std::string& uid, const std::string& hash) : m_usrName(uid), m_uidHash(hash)
+    Friend(const std::string& uid, const std::string& hash) : m_usrName(uid), m_uidHash(hash), m_isChatroom(false)
     {
         m_isChatroom = isChatroom(uid);
     }
@@ -239,6 +242,16 @@ public:
     inline std::string getUsrName() const { return m_usrName; }
     inline std::string getHash() const { return m_uidHash; }
     void setUsrName(const std::string& usrName) { this->m_usrName = usrName; m_uidHash = md5(usrName);  m_outputFileName = m_uidHash; m_isChatroom = isChatroom(usrName); }
+    inline bool isUsrNameEmpty() const
+    {
+        return m_usrName.empty();
+    }
+    inline bool isHashEmpty() const
+    {
+        return m_uidHash.empty();
+    }
+
+	void setEmptyUsrName(const std::string& usrName) { this->m_usrName = usrName; }
 
     bool containMember(const std::string& uidHash) const
     {
@@ -344,9 +357,13 @@ public:
 protected:
     bool update(const Friend& f)
     {
-        if (m_usrName != f.m_usrName)
+        if (!f.isUsrNameEmpty() && m_usrName != f.m_usrName)
         {
             return false;
+        }
+        else if (isUsrNameEmpty())
+        {
+            setUsrName(f.getUsrName());
         }
         
         if (m_displayName.empty() && !f.m_displayName.empty())
@@ -505,6 +522,10 @@ public:
     {
     }
     
+    Session(const std::string& uid, const std::string& hash, const Friend* owner) : Friend(uid, hash), m_unreadCount(0), m_recordCount(0), m_createTime(0), m_lastMessageTime(0), m_data(NULL), m_owner(owner)
+    {
+    }
+    
     inline unsigned int getCreateTime() const
     {
         return m_createTime;
@@ -596,6 +617,19 @@ public:
     }
     
     
+};
+
+struct SessionUsrNameCompare
+{
+    bool operator()(const Session& s1, const Session& s2) const
+    {
+        return s1.getUsrName().compare(s2.getUsrName()) < 0;
+    }
+    
+    bool operator()(const Session& s1, const std::string& s2) const
+    {
+        return s1.getUsrName().compare(s2) < 0;
+    }
 };
 
 struct SessionHashCompare

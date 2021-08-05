@@ -436,6 +436,10 @@ bool ITunesDb::loadMbdb(const std::string& domain, bool onlyFile)
 
 unsigned int ITunesDb::parseModifiedTime(const std::vector<unsigned char>& data)
 {
+    if (data.empty())
+    {
+        return 0;
+    }
     uint64_t val = 0;
     plist_t node = NULL;
     plist_from_memory(reinterpret_cast<const char *>(&data[0]), static_cast<uint32_t>(data.size()), &node);
@@ -493,6 +497,11 @@ std::string ITunesDb::getRealPath(const ITunesFile& file) const
     return fileIdToRealPath(file.fileId);
 }
 
+std::string ITunesDb::getRealPath(const ITunesFile* file) const
+{
+    return fileIdToRealPath(file->fileId);
+}
+
 std::string ITunesDb::findRealPath(const std::string& relativePath) const
 {
     std::string fieldId = findFileId(relativePath);
@@ -548,7 +557,14 @@ bool ITunesDb::copyFile(const std::string& vpath, const std::string& destPath, c
             bool result = ::copyFile(srcPath, destFullPath, true);
             if (result)
             {
-                updateFileTime(destFullPath, ITunesDb::parseModifiedTime(file->blob));
+                if (file->modifiedTime != 0)
+                {
+                    updateFileTime(destFullPath, static_cast<time_t>(file->modifiedTime));
+                }
+                else if (!file->blob.empty())
+                {
+                    updateFileTime(destFullPath, ITunesDb::parseModifiedTime(file->blob));
+                }
             }
             return result;
         }
