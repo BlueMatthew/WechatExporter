@@ -325,6 +325,8 @@ private:
     bool parseMessageDb(const Friend& user, const std::string& mmPath, std::vector<Session>& sessions, std::vector<Session>& deletedSessions);
     
     bool parseSessionsInGroupApp(const std::string& userRoot, std::vector<Session>& sessions);
+    
+    bool parseDisplayNameFromMembers(const Friend& user, const Friends& friends, Session& session);
 };
 
 class SessionParser

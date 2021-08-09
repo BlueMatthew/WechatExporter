@@ -794,10 +794,16 @@ bool FriendsParser::parseRemark(const void *data, int length, Friend& f)
     }
     
     std::string value;
-    if (msg.parse("1", value))
+    // Remark Name
+    if (msg.parse("3", value))
     {
         f.setDisplayName(value);
     }
+    if (f.isDisplayNameEmpty() && msg.parse("1", value))
+    {
+        f.setDisplayName(value);
+    }
+    
     /*
     if (msg.parse("6", value))
     {
@@ -966,7 +972,7 @@ bool SessionsParser::parse(const Friend& user, const Friends& friends, std::vect
         {
             continue;
         }
-        
+
         std::vector<Session>::iterator it = sessions.emplace(sessions.cend(), &user);
         Session& session = (*it);
         
@@ -1017,7 +1023,7 @@ bool SessionsParser::parse(const Friend& user, const Friends& friends, std::vect
         const Friend* f = friends.getFriend(it->getHash());
         if (NULL != f)
         {
-            if (!it->isChatroom())
+            // if (!it->isChatroom())
             {
                 it->update(*f);
             }
@@ -1035,6 +1041,11 @@ bool SessionsParser::parse(const Friend& user, const Friends& friends, std::vect
         if (it->isUsrNameEmpty())
         {
             it->setEmptyUsrName("wxid_unknwn_" + std::to_string(sessionId++));
+        }
+        if (it->isDisplayNameEmpty() && !it->isMemberIdsEmpty())
+        {
+            // Combine the display name from member list
+            parseDisplayNameFromMembers(user, friends, *it);
         }
     }
 
@@ -1054,6 +1065,33 @@ bool SessionsParser::parse(const Friend& user, const Friends& friends, std::vect
     }
 #endif
 
+    return true;
+}
+
+bool SessionsParser::parseDisplayNameFromMembers(const Friend& user, const Friends& friends, Session& session)
+{
+    std::vector<std::string> members = split(session.getMemberIds(), ";");
+    // std::vector<std::string displayName;
+    for (std::vector<std::string>::iterator it = members.begin(); it != members.end();)
+    {
+        if (user.getUsrName() == *it)
+        {
+            it = members.erase(it);
+            continue;
+        }
+        
+        const Friend* member = friends.getFriendByUid(*it);
+        if (NULL != member)
+        {
+            std::string displayName = member->getDisplayName();
+            it->swap(displayName);
+        }
+        
+        ++it;
+    }
+    
+    session.setDisplayName(join(members, ","));
+    
     return true;
 }
 
@@ -1292,6 +1330,10 @@ bool SessionsParser::parseCellData(const std::string& userRoot, Session& session
             session.setUsrName(value);
         }
     }
+    if (session.isMemberIdsEmpty() && msg.parse("1.3", value))
+    {
+        session.setMemberIds(value);
+    }
     if (msg.parse("1.1.6", value))
     {
         session.setDisplayName(value);
@@ -1407,42 +1449,43 @@ bool SessionsParser::parseSessionsInGroupApp(const std::string& userRoot, std::v
                         RawMessage msg2;
                         if (msg2.merge(data1, static_cast<int>(blockLen)))
                         {
-                            std::string value2;
-                            if (msg2.parse("1", value2))
+                            std::string usrName;
+                            if (msg2.parse("1", usrName))
                             {
                                 Session* session = NULL;
-                                std::map<std::string, Session*>::iterator it = sessionMap.find(value2);
+                                std::map<std::string, Session*>::iterator it = sessionMap.find(usrName);
                                 if (it != sessionMap.end())
                                 {
                                     session = it->second;
                                 }
                                 else
                                 {
-                                    std::string uidHash = md5(value2);
+                                    std::string uidHash = md5(usrName);
                                     std::vector<Session>::iterator it = std::lower_bound(sessions.begin(), sessions.end(), uidHash, comp);
                                     if (it != sessions.end() && it->getHash() == uidHash)
                                     {
                                         session = &(*it);
                                         if (it->isUsrNameEmpty())
                                         {
-                                            it->setUsrName(value2);
-                                            sessionMap.insert(sessionMap.cend(), std::make_pair<>(value2, session));
+                                            it->setUsrName(usrName);
+                                            sessionMap.insert(sessionMap.cend(), std::make_pair<>(usrName, session));
                                         }
                                     }
                                 }
                                 
                                 if (NULL != session && session->isDisplayNameEmpty())
                                 {
-                                    std::string name;
-                                    if (msg2.parse("2", value2))
+                                    std::string nameCand1;
+                                    std::string nameCand2;
+                                    if (msg2.parse("2", nameCand1))
                                     {
-                                        name = value2;
+                                        // nameCand1 = value2;
                                     }
-                                    if (!msg2.parse("3", value2))
+                                    if (!msg2.parse("3", nameCand2))
                                     {
-                                        value2 = "";
+                                        nameCand2 = "";
                                     }
-                                    session->setDisplayName(value2.empty() ? name : value2);
+                                    session->setDisplayName(nameCand2.empty() ? nameCand1 : nameCand2);
                                 }
                             }
                         }

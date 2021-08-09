@@ -527,8 +527,10 @@ protected:
     unsigned int m_lastMessageTime;
     std::string m_extFileName;
     std::string m_dbFile;
+    std::string m_memberIds;
     void *m_data;
     const Friend* m_owner;
+    
     
 public:
     Session(const Friend* owner) : Friend(), m_unreadCount(0), m_recordCount(0), m_createTime(0), m_lastMessageTime(0), m_data(NULL), m_owner(owner)
@@ -572,6 +574,21 @@ public:
     inline void setExtFileName(const std::string& extFileName)
     {
         m_extFileName = extFileName;
+    }
+    
+    inline bool isMemberIdsEmpty() const
+    {
+        return m_memberIds.empty();
+    }
+    
+    inline std::string getMemberIds() const
+    {
+        return m_memberIds;
+    }
+    
+    inline void setMemberIds(const std::string& memberIds)
+    {
+        m_memberIds = memberIds;
     }
     
     inline int getUnreadCount() const
