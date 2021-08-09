@@ -794,10 +794,16 @@ bool FriendsParser::parseRemark(const void *data, int length, Friend& f)
     }
     
     std::string value;
-    if (msg.parse("1", value))
+    // Remark Name
+    if (msg.parse("3", value))
     {
         f.setDisplayName(value);
     }
+    if (f.isDisplayNameEmpty() && msg.parse("1", value))
+    {
+        f.setDisplayName(value);
+    }
+    
     /*
     if (msg.parse("6", value))
     {
@@ -1015,7 +1021,7 @@ bool SessionsParser::parse(const Friend& user, const Friends& friends, std::vect
         const Friend* f = friends.getFriend(it->getHash());
         if (NULL != f)
         {
-            if (!it->isChatroom())
+            // if (!it->isChatroom())
             {
                 it->update(*f);
             }
@@ -1033,6 +1039,11 @@ bool SessionsParser::parse(const Friend& user, const Friends& friends, std::vect
         if (it->isUsrNameEmpty())
         {
             it->setEmptyUsrName("wxid_unknwn_" + std::to_string(sessionId++));
+        }
+        if (it->isDisplayNameEmpty() && !it->isMemberIdsEmpty())
+        {
+            // Combine the display name from member list
+            parseDisplayNameFromMembers(user, friends, *it);
         }
     }
 
@@ -1052,6 +1063,33 @@ bool SessionsParser::parse(const Friend& user, const Friends& friends, std::vect
     }
 #endif
 
+    return true;
+}
+
+bool SessionsParser::parseDisplayNameFromMembers(const Friend& user, const Friends& friends, Session& session)
+{
+    std::vector<std::string> members = split(session.getMemberIds(), ";");
+    // std::vector<std::string displayName;
+    for (std::vector<std::string>::iterator it = members.begin(); it != members.end();)
+    {
+        if (user.getUsrName() == *it)
+        {
+            it = members.erase(it);
+            continue;
+        }
+        
+        const Friend* member = friends.getFriendByUid(*it);
+        if (NULL != member)
+        {
+            std::string displayName = member->getDisplayName();
+            it->swap(displayName);
+        }
+        
+        ++it;
+    }
+    
+    session.setDisplayName(join(members, ","));
+    
     return true;
 }
 
@@ -1210,6 +1248,10 @@ bool SessionsParser::parseCellData(const std::string& userRoot, Session& session
         {
             session.setUsrName(value);
         }
+    }
+    if (session.isMemberIdsEmpty() && msg.parse("1.3", value))
+    {
+        session.setMemberIds(value);
     }
     if (msg.parse("1.1.6", value))
     {
