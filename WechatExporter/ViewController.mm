@@ -95,6 +95,10 @@
         m_pdfConverter = NULL;
     }
     
+#ifndef NDEBUG
+    [self.tblSessions setTarget:nil];
+    [self.tblSessions setDoubleAction:nil];
+#endif
     [self.btnBackup setAction:nil];
     [self.btnBackup setTarget:nil];
     [self.btnOutput setAction:nil];
@@ -154,7 +158,11 @@
     [self.popupUsers setAction:@selector(handlePopupButton:)];
     [self.btnToggleAll setTarget:self];
     [self.btnToggleAll setAction:@selector(toggleAllSessions:)];
-    
+#ifndef NDEBUG
+    [self.tblSessions setTarget:self];
+    [self.tblSessions setDoubleAction:@selector(tableViewDoubleClick:)];
+#endif
+
     NSRect frame = [self.tblSessions.headerView headerRectOfColumn:0];
     NSRect btnFrame = self.btnToggleAll.frame;
     btnFrame.size.width = btnFrame.size.height;
@@ -355,6 +363,26 @@
     NSButton *btn = (NSButton *)sender;
     NSControlStateValue state = [m_dataSource updateCheckStateAtRow:btn.tag];
     self.btnToggleAll.state = state;
+}
+
+- (void)tableViewDoubleClick:(id)sender
+{
+    NSTableView *tableView = (NSTableView *)sender;
+    if (1 != tableView.clickedColumn)
+    {
+        return;
+    }
+    NSView *view = [tableView viewAtColumn:tableView.clickedColumn row:tableView.clickedRow makeIfNecessary:NO];
+    if (nil == view)
+    {
+        return;
+    }
+    NSTextField *textField = (NSTextField *)view.subviews.firstObject;
+    if (nil != textField && nil != textField.stringValue)
+    {
+        [[NSPasteboard generalPasteboard] declareTypes:[NSArray arrayWithObject:NSStringPboardType] owner:nil];
+        [[NSPasteboard generalPasteboard] setString:textField.stringValue forType:NSStringPboardType];
+    }
 }
 
 - (void)btnBackupClicked:(id)sender
