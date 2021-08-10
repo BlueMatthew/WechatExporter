@@ -100,13 +100,11 @@
 		34AB9A1225B89075006D3617 /* FileSystem.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = FileSystem.h; sourceTree = "<group>"; };
 		34AB9A1325B8908D006D3617 /* FileSystem.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = FileSystem.cpp; sourceTree = "<group>"; };
 		34CA9B0F269FE6FB00C530C2 /* ExportContext.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ExportContext.h; sourceTree = "<group>"; };
-		34CC0787253D98CA00AC8860 /* ByteArrayLocater.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ByteArrayLocater.h; sourceTree = "<group>"; };
 		34E3E9032525C2640093042D /* LoggerImpl.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = LoggerImpl.h; sourceTree = "<group>"; };
 		34E3E9092531BD8E0093042D /* Utils_md5.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Utils_md5.cpp; sourceTree = "<group>"; };
 		34E3E90B2531BE1F0093042D /* Utils_protobuf.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Utils_protobuf.cpp; sourceTree = "<group>"; };
 		34E3E922253555470093042D /* RawMessage.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = RawMessage.h; sourceTree = "<group>"; };
 		34E3E9232535555F0093042D /* RawMessage.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = RawMessage.cpp; sourceTree = "<group>"; };
-		34E3E9252535B5AC0093042D /* OSDef.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OSDef.h; sourceTree = "<group>"; };
 		34ED31E725528A1800C42698 /* Utils_audio.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Utils_audio.cpp; sourceTree = "<group>"; };
 		34ED31EC25528CF500C42698 /* CoreAudio.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreAudio.framework; path = System/Library/Frameworks/CoreAudio.framework; sourceTree = SDKROOT; };
 		34ED31EF255294A000C42698 /* VideoToolbox.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = VideoToolbox.framework; path = System/Library/Frameworks/VideoToolbox.framework; sourceTree = SDKROOT; };
@@ -185,7 +183,6 @@
 				3489DE45262A843C00F51416 /* AsyncExecutor.h */,
 				3489DE4E262E74BE00F51416 /* AsyncTask.cpp */,
 				3489DE4F262E74BE00F51416 /* AsyncTask.h */,
-				34CC0787253D98CA00AC8860 /* ByteArrayLocater.h */,
 				342EDB0125245206006A295A /* Downloader.cpp */,
 				342EDB0225245206006A295A /* Downloader.h */,
 				34CA9B0F269FE6FB00C530C2 /* ExportContext.h */,
@@ -201,7 +198,6 @@
 				34A0335F25E34B0300E06CC5 /* MessageParser.cpp */,
 				34A0336025E34B0300E06CC5 /* MessageParser.h */,
 				347E600D25C00A4100B33BAB /* MMKVReader.h */,
-				34E3E9252535B5AC0093042D /* OSDef.h */,
 				347BE8D12626B37D0004EBE4 /* PdfConverter.h */,
 				34E3E9232535555F0093042D /* RawMessage.cpp */,
 				34E3E922253555470093042D /* RawMessage.h */,

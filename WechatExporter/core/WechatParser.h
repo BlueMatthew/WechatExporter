@@ -17,7 +17,6 @@
 #include <map>
 #include "Utils.h"
 #include "Downloader.h"
-#include "ByteArrayLocater.h"
 #include "WechatObjects.h"
 #include "ITunesParser.h"
 #include "MessageParser.h"

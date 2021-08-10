@@ -26,8 +26,6 @@
 #include "XmlParser.h"
 #include "MMKVReader.h"
 
-#include "OSDef.h"
-
 #ifdef _WIN32
 #include <atlconv.h>
 #endif

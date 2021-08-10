@@ -14,7 +14,6 @@
 #include <fstream>
 #include <sys/types.h>
 #include <sys/stat.h>
-#include "OSDef.h"
 #include "Utils.h"
 #include "FileSystem.h"
 #ifdef _WIN32

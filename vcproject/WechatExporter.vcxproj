@@ -254,7 +254,6 @@ xcopy "$(ProjectDir)..\WechatExporter\res"  "$(OutDir)res"  /Y /S /E</Command>
     <ClCompile Include="..\WechatExporter\core\Utils_protobuf.cpp" />
     <ClCompile Include="..\WechatExporter\core\Utils_silk.cpp" />
     <ClCompile Include="..\WechatExporter\core\Utils_thread.cpp" />
-    <ClCompile Include="..\WechatExporter\core\Utils_xml.cpp" />
     <ClCompile Include="..\WechatExporter\core\WechatParser.cpp" />
     <ClCompile Include="..\WechatExporter\core\XmlParser.cpp" />
     <ClCompile Include="AppConfiguration.cpp" />
@@ -270,7 +269,6 @@ xcopy "$(ProjectDir)..\WechatExporter\res"  "$(OutDir)res"  /Y /S /E</Command>
   <ItemGroup>
     <ClInclude Include="..\WechatExporter\core\AsyncExecutor.h" />
     <ClInclude Include="..\WechatExporter\core\AsyncTask.h" />
-    <ClInclude Include="..\WechatExporter\core\ByteArrayLocater.h" />
     <ClInclude Include="..\WechatExporter\core\Downloader.h" />
     <ClInclude Include="..\WechatExporter\core\Exporter.h" />
     <ClInclude Include="..\WechatExporter\core\ExportNotifier.h" />
@@ -279,7 +277,6 @@ xcopy "$(ProjectDir)..\WechatExporter\res"  "$(OutDir)res"  /Y /S /E</Command>
     <ClInclude Include="..\WechatExporter\core\Logger.h" />
     <ClInclude Include="..\WechatExporter\core\MbdbReader.h" />
     <ClInclude Include="..\WechatExporter\core\MessageParser.h" />
-    <ClInclude Include="..\WechatExporter\core\OSDef.h" />
     <ClInclude Include="..\WechatExporter\core\RawMessage.h" />
     <ClInclude Include="..\WechatExporter\core\semaphore.h" />
     <ClInclude Include="..\WechatExporter\core\TaskManager.h" />

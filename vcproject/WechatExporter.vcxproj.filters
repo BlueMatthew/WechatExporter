@@ -54,9 +54,6 @@
     <ClCompile Include="..\WechatExporter\core\Downloader.cpp">
       <Filter>core</Filter>
     </ClCompile>
-    <ClCompile Include="..\WechatExporter\core\Utils_xml.cpp">
-      <Filter>core</Filter>
-    </ClCompile>
     <ClCompile Include="..\WechatExporter\core\XmlParser.cpp">
       <Filter>core</Filter>
     </ClCompile>
@@ -104,9 +101,6 @@
     <ClInclude Include="resource.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\WechatExporter\core\ByteArrayLocater.h">
-      <Filter>core</Filter>
-    </ClInclude>
     <ClInclude Include="..\WechatExporter\core\Exporter.h">
       <Filter>core</Filter>
     </ClInclude>
@@ -114,9 +108,6 @@
       <Filter>core</Filter>
     </ClInclude>
     <ClInclude Include="..\WechatExporter\core\Logger.h">
-      <Filter>core</Filter>
-    </ClInclude>
-    <ClInclude Include="..\WechatExporter\core\OSDef.h">
       <Filter>core</Filter>
     </ClInclude>
     <ClInclude Include="..\WechatExporter\core\RawMessage.h">
