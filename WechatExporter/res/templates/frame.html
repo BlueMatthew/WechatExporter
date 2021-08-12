@@ -530,6 +530,7 @@
 				}
 				if (visibleMsgs < window.sizeOfMsgPage && (typeof window.wechatMsgsIndexes !== 'undefined') && (window.wechatMsgsIndexes.length > 0))
 				{
+					window.loadingMoreMsgs = true;
 					window.numberOfMsgsToLoad = window.sizeOfMsgPage - visibleMsgs;
 					loadMsgsForNextPage();
 				}
@@ -604,6 +605,10 @@
 					script.src   = "%%DATA_PATH%%/msg-" + nextPage + ".js";
 					document.body.appendChild(script);
 				}
+				else
+				{
+					window.loadingMoreMsgs = false;
+				}
 
 				return true;
 			}
@@ -639,6 +644,7 @@
   	</body>
   	<script language="javascript">
 		(function() {
+			window.loadingMoreMsgs = false;
 			window.sizeOfMsgPage = parseInt('%%SIZE_OF_PAGE%%') || 100;
 			var numberOfMsgs = parseInt('%%NUMBER_OF_MSGS%%') || 0;
 			var numberOfPages = parseInt('%%NUMBER_OF_PAGES%%') || 0;
@@ -672,6 +678,10 @@
 			{
 				window.addEventListener('scroll', function(e)
 				{
+					if (window.loadingMoreMsgs)
+					{
+						return;
+					}
 					if (window.wechatMsgsIndexes.length == 0)
 					{
 						return;
@@ -679,13 +689,15 @@
 
 					if (!checkScrollDirectionIsUp(e))
 					{
-						var lastDiv = document.querySelector("#msgs-div > div:last-child");
-						var lastDivOffset = lastDiv.offsetTop + lastDiv.clientHeight;
+						var containerDiv = document.querySelector("#msgs-div");
+						var containerDivOffset = containerDiv.offsetTop + containerDiv.clientHeight;
+
 						var pageOffset = window.pageYOffset + window.innerHeight;
 
-						if(pageOffset > lastDivOffset - 20)
+						if(pageOffset > containerDivOffset - 20)
 						{
-							window.numberOfMsgsToLoad += window.sizeOfMsgPage;
+							window.loadingMoreMsgs = true;
+							if (window.numberOfMsgsToLoad <= 0) window.numberOfMsgsToLoad = window.sizeOfMsgPage;
 							loadMsgsForNextPage();
 						}
 					}
