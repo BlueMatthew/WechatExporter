@@ -349,8 +349,8 @@ IDR_MAINFRAME           ICON                    "res\\idr_main.ico"
 //
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION 1,8,0,7
- PRODUCTVERSION 1,8,0,7
+ FILEVERSION 1,9,0,0
+ PRODUCTVERSION 1,9,0,0
  FILEFLAGSMASK 0x3fL
 #ifdef _DEBUG
  FILEFLAGS 0x1L
@@ -366,12 +366,12 @@ BEGIN
         BLOCK "000904b0"
         BEGIN
             VALUE "FileDescription", "WechatExporter Module"
-            VALUE "FileVersion", "1.8.0.7"
+            VALUE "FileVersion", "1.9.0.0"
             VALUE "InternalName", "WechatExporter"
             VALUE "LegalCopyright", "Copyright 2020"
             VALUE "OriginalFilename", "WechatExporter.exe"
             VALUE "ProductName", "WechatExporter Module"
-            VALUE "ProductVersion", "1.8.0.7"
+            VALUE "ProductVersion", "1.9.0.0"
         END
     END
     BLOCK "VarFileInfo"
