@@ -119,66 +119,25 @@ bool LoginInfo2Parser::parse(std::vector<Friend>& users)
     std::string loginInfo2 = "Documents/LoginInfo2.dat";
     std::string realPath = m_iTunesDb->findRealPath(loginInfo2);
     
-    if (realPath.empty())
+    if (!realPath.empty())
+    {
+        parse(realPath, users);
+    }
+    else
     {
 #if !defined(NDEBUG) || defined(DBG_PERF)
         m_logger->debug("Documents/LoginInfo2.dat not exists.");
 #endif
-        return false;
+        // return false;
     }
-    
-    return parse(realPath, users);
-}
-
-bool LoginInfo2Parser::parse(const std::string& loginInfo2Path, std::vector<Friend>& users)
-{
-    RawMessage msg;
-    if (!msg.mergeFile(loginInfo2Path))
-    {
-#if !defined(NDEBUG) || defined(DBG_PERF)
-        m_logger->debug("Failed to parse Documents/LoginInfo2.dat(pb).");
-#endif
-        return false;
-    }
-    
-    std::string value1;
-    if (!msg.parse("1", value1))
-    {
-#if !defined(NDEBUG) || defined(DBG_PERF)
-        m_logger->debug("Failed to parse field 1 in Documents/LoginInfo2.dat.");
-#endif
-        return false;
-    }
-    
-    users.clear();
-    int offset = 0;
-    std::string::size_type length = value1.size();
-#if !defined(NDEBUG) || defined(DBG_PERF)
-    m_logger->debug("Length of field 1 in Documents/LoginInfo2.dat = " + std::to_string(length));
-#endif
-    while (offset < length)
-    {
-#if !defined(NDEBUG) || defined(DBG_PERF)
-        m_logger->debug("Offset of field 1 in Documents/LoginInfo2.dat = " + std::to_string(offset) + "/" + std::to_string(length));
-#endif
-        int res = parseUser(value1.c_str() + offset, static_cast<int>(length - offset), users);
-        if (res < 0)
-        {
-            break;
-        }
-        
-        offset += res;
-    }
-    
-#if !defined(NDEBUG) || defined(DBG_PERF)
-    for (std::vector<Friend>::iterator it = users.begin(); it != users.end(); ++it)
-    {
-        m_logger->debug("User from Documents/LoginInfo2.dat:" + it->getUsrName() + "(" + it->getHash() + ") => " + it->getDisplayName());
-    }
-#endif
     
     parseUserFromFolder(users);
     
+    if (users.empty())
+    {
+        return false;
+    }
+
     MMSettingInMMappedKVFilter filter;
     ITunesFileVector mmsettings = m_iTunesDb->filter(filter);
     
@@ -294,6 +253,56 @@ bool LoginInfo2Parser::parse(const std::string& loginInfo2Path, std::vector<Frie
             ++it;
         }
     }
+    
+    return true;
+}
+
+bool LoginInfo2Parser::parse(const std::string& loginInfo2Path, std::vector<Friend>& users)
+{
+    RawMessage msg;
+    if (!msg.mergeFile(loginInfo2Path))
+    {
+#if !defined(NDEBUG) || defined(DBG_PERF)
+        m_logger->debug("Failed to parse Documents/LoginInfo2.dat(pb).");
+#endif
+        return false;
+    }
+    
+    std::string value1;
+    if (!msg.parse("1", value1))
+    {
+#if !defined(NDEBUG) || defined(DBG_PERF)
+        m_logger->debug("Failed to parse field 1 in Documents/LoginInfo2.dat.");
+#endif
+        return false;
+    }
+    
+    users.clear();
+    int offset = 0;
+    std::string::size_type length = value1.size();
+#if !defined(NDEBUG) || defined(DBG_PERF)
+    m_logger->debug("Length of field 1 in Documents/LoginInfo2.dat = " + std::to_string(length));
+#endif
+    while (offset < length)
+    {
+#if !defined(NDEBUG) || defined(DBG_PERF)
+        m_logger->debug("Offset of field 1 in Documents/LoginInfo2.dat = " + std::to_string(offset) + "/" + std::to_string(length));
+#endif
+        int res = parseUser(value1.c_str() + offset, static_cast<int>(length - offset), users);
+        if (res < 0)
+        {
+            break;
+        }
+        
+        offset += res;
+    }
+    
+#if !defined(NDEBUG) || defined(DBG_PERF)
+    for (std::vector<Friend>::iterator it = users.begin(); it != users.end(); ++it)
+    {
+        m_logger->debug("User from Documents/LoginInfo2.dat:" + it->getUsrName() + "(" + it->getHash() + ") => " + it->getDisplayName());
+    }
+#endif
     
     return true;
 }
@@ -512,7 +521,7 @@ bool MMKVParser::parse(const std::string& path, const std::string& crcPath)
 #if !defined(NDEBUG) || defined(DBG_PERF)
         // m_logger->debug("MMKV offset: " + std::to_string(reader.getPos()) + "/" + std::to_string(actualSize));
 #endif
-        // 
+        //
         const auto k = reader.readKey();
         if (k.empty())
         {
@@ -939,10 +948,10 @@ bool SessionsParser::parse(const Friend& user, const Friends& friends, std::vect
     std::string usrNameHash = user.getHash();
     std::string userRoot = "Documents/" + usrNameHash;
     std::string sessionDbPath = m_iTunesDb->findRealPath(combinePath(userRoot, "session", "session.db"));
-	if (sessionDbPath.empty())
-	{
-		return false;
-	}
+    if (sessionDbPath.empty())
+    {
+        return false;
+    }
 
     sqlite3 *db = NULL;
     int rc = openSqlite3ReadOnly(sessionDbPath, &db);
@@ -1175,8 +1184,8 @@ bool SessionsParser::parseUniversalSessions(const Friend& user, const std::strin
 
 bool SessionsParser::parseMessageDbs(const Friend& user, const std::string& userRoot, std::vector<Session>& sessions)
 {
-	SessionHashCompare comp;
-	std::sort(sessions.begin(), sessions.end(), comp);
+    SessionHashCompare comp;
+    std::sort(sessions.begin(), sessions.end(), comp);
 
     MessageDbFilter filter(userRoot);
     ITunesFileVector dbs = m_iTunesDb->filter(filter);
@@ -1299,28 +1308,28 @@ bool SessionsParser::parseMessageDb(const Friend& user, const std::string& mmPat
 
 bool SessionsParser::parseCellData(const std::string& userRoot, Session& session)
 {
-	std::string fileName = session.getExtFileName();
-	if (startsWith(fileName, DIR_SEP) || startsWith(fileName, ALT_DIR_SEP))
-	{
-		fileName = fileName.substr(1);
-	}
+    std::string fileName = session.getExtFileName();
+    if (startsWith(fileName, DIR_SEP) || startsWith(fileName, ALT_DIR_SEP))
+    {
+        fileName = fileName.substr(1);
+    }
     std::string cellDataPath = combinePath(userRoot, fileName);
-	fileName = m_iTunesDb->findRealPath(cellDataPath);
-	
-	if (fileName.empty())
-	{
-		return false;
-	}
+    fileName = m_iTunesDb->findRealPath(cellDataPath);
+    
+    if (fileName.empty())
+    {
+        return false;
+    }
 
 
-	RawMessage msg;
-	if (!msg.mergeFile(fileName))
-	{
-		return false;
-	}
+    RawMessage msg;
+    if (!msg.mergeFile(fileName))
+    {
+        return false;
+    }
 
-	std::string value;
-	int value2 = 0;
+    std::string value;
+    int value2 = 0;
     if (msg.parse("1.1.1", value))
     {
         if (session.isUsrNameEmpty() && (session.isHashEmpty() || md5(value) == session.getHash()))
@@ -1343,21 +1352,21 @@ bool SessionsParser::parseCellData(const std::string& userRoot, Session& session
             session.setDisplayName(value);
         }
     }
-	if (msg.parse("1.1.14", value))
-	{
+    if (msg.parse("1.1.14", value))
+    {
         if (startsWith(value, "http://") || startsWith(value, "https://"))
         {
             session.setPortrait(value);
         }
-	}
-	if (msg.parse("1.5", value))
-	{
-		parseMembers(value, session);
-	}
-	if (msg.parse("2.7", value2))
-	{
-		session.setLastMessageTime(static_cast<unsigned int>(value2));
-	}
+    }
+    if (msg.parse("1.5", value))
+    {
+        parseMembers(value, session);
+    }
+    if (msg.parse("2.7", value2))
+    {
+        session.setLastMessageTime(static_cast<unsigned int>(value2));
+    }
     if (msg.parse("2.2", value2))
     {
         if (session.getRecordCount() == 0)
@@ -1410,7 +1419,7 @@ bool SessionsParser::parseCellData(const std::string& userRoot, Session& session
         }
     }
 
-	return true;
+    return true;
 }
 
 bool SessionsParser::parseSessionsInGroupApp(const std::string& userRoot, std::vector<Session>& sessions)
