@@ -748,7 +748,7 @@ public:
 		progressCtrl.SetStep(1);
 		progressCtrl.SetPos(0);
 
-		UpdateProgressBarText(0, true);
+		UpdateProgressBarText(IDS_EXPORTING_MSGS, 0, true);
 
 #if !defined(NDEBUG) || defined(DBG_PERF)
 		m_logger->debug("Record Count:" + std::to_string(numberOfRecords));
@@ -911,34 +911,48 @@ public:
 
 	LRESULT OnTasksStart(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 	{
-		// UpdateProgressBar(0, static_cast<int>(lParam));
+		CProgressBarCtrl progressCtrl = GetDlgItem(IDC_PROGRESS);
+		progressCtrl.SetRange32(0, 100);
+		progressCtrl.SetPos(0);
+
+		UpdateProgressBarText(IDS_DOWNLOADING_EMOJI, 0, true);
 
 		return 0;
 	}
 
 	LRESULT OnTasksComplete(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 	{
+		CProgressBarCtrl progressCtrl = GetDlgItem(IDC_PROGRESS);
+		// progressCtrl.SetRange32(0, 100);
+		progressCtrl.SetPos(100);
+
 		return 0;
 	}
 
 	LRESULT OnTasksProgress(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 	{
-#if !defined(NDEBUG) || defined(DBG_PERF)
-		UINT dwNumberOfTasks = static_cast<UINT>(wParam - lParam);
+		UINT totalNumberOfTasks = static_cast<UINT>(wParam - lParam);
+		UINT numberOfTasks = static_cast<UINT>(wParam - lParam);
 
+#if !defined(NDEBUG) || defined(DBG_PERF)
 		std::string timeString = getTimestampString(false, true) + ": ";
 		CA2T szTime(timeString.c_str());
 
 		TCHAR szLog[256] = { 0 };
 
 		HWND hWndLog = GetDlgItem(IDC_LOGS);
-		_stprintf(szLog, TEXT("%s: Task Queue Size = %u"), (LPCTSTR)szTime, dwNumberOfTasks);
+		_stprintf(szLog, TEXT("%s: Task Queue Size = %u"), (LPCTSTR)szTime, numberOfTasks);
 		::SendMessage(hWndLog, LB_ADDSTRING, 0, (LPARAM)szLog);
 		LRESULT count = ::SendMessage(hWndLog, LB_GETCOUNT, 0, 0L);
 		::SendMessage(hWndLog, LB_SETTOPINDEX, count - 1, 0L);
 #endif
 
-		UpdateProgressBar(static_cast<int>(lParam), 0);
+		CProgressBarCtrl progressCtrl = GetDlgItem(IDC_PROGRESS);
+		int percent = (totalNumberOfTasks > 0 && numberOfTasks <= totalNumberOfTasks) ? (numberOfTasks * 100 / totalNumberOfTasks) : 100;
+		progressCtrl.SetPos(percent);
+
+		UpdateProgressBarText(IDS_DOWNLOADING_EMOJI, lParam, true);
+		//UpdateProgressBarText(IDS_EXPORTING_MSGS, percent);
 
 		return 0;
 	}
@@ -980,9 +994,9 @@ protected:
 		::EnableMenuItem(::GetSystemMenu(::GetParent(m_hWnd), FALSE), SC_CLOSE, MF_BYCOMMAND | state);
 	}
 
-	void UpdateProgressBarOnDownloadingEmoji(BOOL increaseUpper = FALSE)
+	void UpdateProgressBarOnDownloadingEmoji(uint32_t restedNumberOfFiles, uint32_t totalNumberOfFiles)
 	{
-		// UpdateProgressBar(1, increaseUpper ? 1 : 0);
+		
 	}
 
 	void UpdateProgressBar(BOOL increaseUpper = FALSE)
@@ -1013,18 +1027,18 @@ protected:
 			percent = (pos < range.iHigh) ? 99 : 100;
 		}
 
-		UpdateProgressBarText(percent);
+		UpdateProgressBarText(IDS_EXPORTING_MSGS, percent);
 	}
 
-	void UpdateProgressBarText(int percent, bool forceUpdate = false)
+	void UpdateProgressBarText(UINT stringId, int value, bool forceUpdate = false)
 	{
-		if (forceUpdate || percent != m_progressTextCtrl.GetWindowLongPtr(GWLP_USERDATA))
+		if (forceUpdate || value != m_progressTextCtrl.GetWindowLongPtr(GWLP_USERDATA))
 		{
 			// Avoid flashing
 			CString text;
-			text.Format(IDS_EXPORTING_MSGS, percent);
+			text.Format(stringId, value);
 			// text.Format(TEXT("%d%%"), percent);
-			m_progressTextCtrl.SetWindowLongPtr(GWLP_USERDATA, percent);
+			m_progressTextCtrl.SetWindowLongPtr(GWLP_USERDATA, value);
 			m_progressTextCtrl.SetWindowText(text);
 		}
 	}

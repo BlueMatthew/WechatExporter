@@ -74,7 +74,7 @@ public:
 
 	void onTasksStart(const std::string& usrName, uint32_t numberOfTotalTasks) const
 	{
-		::PostMessage(m_hWnd, WM_TASKS_START, 0, (LPARAM)numberOfTotalTasks);
+		::PostMessage(m_hWnd, WM_TASKS_START, (WPARAM)numberOfTotalTasks, 0);
 	}
 
 	void onTasksProgress(const std::string& usrName, uint32_t numberOfCompletedTasks, uint32_t numberOfTotalMessages) const
