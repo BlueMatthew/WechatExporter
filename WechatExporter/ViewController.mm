@@ -400,7 +400,7 @@
     [panel beginSheetModalForWindow:[self.view window] completionHandler: (^(NSInteger result) {
         if (result == NSOKButton)
         {
-            NSURL *backupUrl = panel.directoryURL;
+            NSURL *backupUrl = panel.URL;
             
             ManifestParser parser([backupUrl.path UTF8String]);
             std::vector<BackupManifest> manifests;
