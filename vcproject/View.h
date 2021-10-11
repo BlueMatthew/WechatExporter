@@ -315,7 +315,7 @@ public:
 		DLGRESIZE_CONTROL(IDC_GRP_USR_CHAT, DLSZ_SIZE_X | DLSZ_SIZE_Y)
 		DLGRESIZE_CONTROL(IDC_VERSIONS, DLSZ_SIZE_X)
 		DLGRESIZE_CONTROL(IDC_PROGRESS, DLSZ_SIZE_X)
-		DLGRESIZE_CONTROL(IDC_PROGRESS_TEXT, DLSZ_MOVE_X)
+		// DLGRESIZE_CONTROL(IDC_PROGRESS_TEXT, DLSZ_MOVE_Y)
 		DLGRESIZE_CONTROL(IDC_SESSIONS, DLSZ_SIZE_X | DLSZ_SIZE_Y)
 		DLGRESIZE_CONTROL(IDC_SESS_PROGRESS, DLSZ_SIZE_X | DLSZ_SIZE_Y)
 		DLGRESIZE_CONTROL(IDC_GRP_LOGS, DLSZ_SIZE_X | DLSZ_SIZE_Y)
@@ -717,6 +717,7 @@ public:
 		// CButton btn = GetDlgItem(IDC_DESC_ORDER);
 		bool descOrder = AppConfiguration::GetDescOrder();
 		bool saveFilesInSessionFolder = AppConfiguration::GetSavingInSession();
+		bool usingRemoteEmoji = AppConfiguration::GetUsingRemoteEmoji();
 		bool asyncLoading = AppConfiguration::GetAsyncLoading();
 		bool loadingDataOnScroll = AppConfiguration::GetLoadingDataOnScroll();
 		bool supportingFilter = AppConfiguration::GetSupportingFilter();
@@ -769,6 +770,7 @@ public:
 		}
 		m_exporter->setNotifier(m_notifier);
 		m_exporter->setOrder(!descOrder);
+		m_exporter->useRemoteEmoji(usingRemoteEmoji);
 		m_exporter->setSyncLoading(!asyncLoading);
 		m_exporter->setLoadingDataOnScroll(loadingDataOnScroll);
 		m_exporter->supportsFilter(supportingFilter);
@@ -909,7 +911,7 @@ public:
 
 	LRESULT OnTasksStart(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 	{
-		UpdateProgressBar(0, static_cast<int>(lParam));
+		// UpdateProgressBar(0, static_cast<int>(lParam));
 
 		return 0;
 	}
@@ -921,6 +923,21 @@ public:
 
 	LRESULT OnTasksProgress(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 	{
+#if !defined(NDEBUG) || defined(DBG_PERF)
+		UINT dwNumberOfTasks = static_cast<UINT>(wParam - lParam);
+
+		std::string timeString = getTimestampString(false, true) + ": ";
+		CA2T szTime(timeString.c_str());
+
+		TCHAR szLog[256] = { 0 };
+
+		HWND hWndLog = GetDlgItem(IDC_LOGS);
+		_stprintf(szLog, TEXT("%s: Task Queue Size = %u"), (LPCTSTR)szTime, dwNumberOfTasks);
+		::SendMessage(hWndLog, LB_ADDSTRING, 0, (LPARAM)szLog);
+		LRESULT count = ::SendMessage(hWndLog, LB_GETCOUNT, 0, 0L);
+		::SendMessage(hWndLog, LB_SETTOPINDEX, count - 1, 0L);
+#endif
+
 		UpdateProgressBar(static_cast<int>(lParam), 0);
 
 		return 0;
@@ -963,6 +980,11 @@ protected:
 		::EnableMenuItem(::GetSystemMenu(::GetParent(m_hWnd), FALSE), SC_CLOSE, MF_BYCOMMAND | state);
 	}
 
+	void UpdateProgressBarOnDownloadingEmoji(BOOL increaseUpper = FALSE)
+	{
+		// UpdateProgressBar(1, increaseUpper ? 1 : 0);
+	}
+
 	void UpdateProgressBar(BOOL increaseUpper = FALSE)
 	{
 		UpdateProgressBar(1, increaseUpper ? 1 : 0);
@@ -1000,7 +1022,8 @@ protected:
 		{
 			// Avoid flashing
 			CString text;
-			text.Format(TEXT("%d%%"), percent);
+			text.Format(IDS_EXPORTING_MSGS, percent);
+			// text.Format(TEXT("%d%%"), percent);
 			m_progressTextCtrl.SetWindowLongPtr(GWLP_USERDATA, percent);
 			m_progressTextCtrl.SetWindowText(text);
 		}

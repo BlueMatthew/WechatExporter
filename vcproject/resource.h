@@ -32,6 +32,8 @@
 #define IDS_NO_PREV_EXP                 153
 #define IDS_PREV_EXP_FOUND              154
 #define IDS_DELETED_SESSION             155
+#define IDS_EXPORTING_MSGS              156
+#define IDS_DOWNLOADING_EMOJI           157
 #define IDC_BACKUP                      1000
 #define IDC_CHOOSE_BKP                  1001
 #define IDC_OUTPUT                      1002
@@ -58,18 +60,19 @@
 #define ID_FORMAT_PDF                   32778
 #define ID_OPT_DESC_ORDER               32779
 #define ID_OPT_SAVING_IN_SESSION        32780
-#define ID_OPT_ASYNC_LOADING            32781
-#define ID_OPT_LM_ONSCROLL              32782
-#define ID_OPT_FILTER                   32783
-#define ID_OPT_INCREMENTALEXP           32784
-#define ID_HELP_HOMEPAGE                32785
+#define ID_OPT_DL_EMOJI                 32781
+#define ID_OPT_ASYNC_LOADING            32782
+#define ID_OPT_LM_ONSCROLL              32783
+#define ID_OPT_FILTER                   32784
+#define ID_OPT_INCREMENTALEXP           32785
+#define ID_HELP_HOMEPAGE                32786
 
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        204
-#define _APS_NEXT_COMMAND_VALUE         32786
+#define _APS_NEXT_COMMAND_VALUE         32787
 #define _APS_NEXT_CONTROL_VALUE         1021
 #define _APS_NEXT_SYMED_VALUE           101
 #endif

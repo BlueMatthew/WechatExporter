@@ -200,6 +200,22 @@ void Exporter::supportsFilter(bool supportsFilter/* = true*/)
         m_options &= ~SPO_SUPPORT_FILTER;
 }
 
+void Exporter::outputDebugLogs(bool outputDebugLogs)
+{
+    if (outputDebugLogs)
+        m_options |= SPO_OUTPUT_DBG_LOGS;
+    else
+        m_options &= ~SPO_OUTPUT_DBG_LOGS;
+}
+
+void Exporter::useRemoteEmoji(bool useEmojiUrl)
+{
+    if (useEmojiUrl)
+        m_options |= SPO_USING_REMOTE_EMOJI;
+    else
+        m_options &= ~SPO_USING_REMOTE_EMOJI;
+}
+
 void Exporter::setExtName(const std::string& extName)
 {
     m_extName = extName;

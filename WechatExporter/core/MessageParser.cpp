@@ -364,34 +364,43 @@ void MessageParser::parseEmotion(const WXMSG& msg, const Session& session, Templ
 
     if (startsWith(url, "http") || startsWith(url, "https"))
     {
-        std::string emojiFile = url;
-        std::smatch sm2;
-        static std::regex pattern47_2("\\/(\\w+?)\\/\\w*$");
-        if (std::regex_search(emojiFile, sm2, pattern47_2))
+        tv.setName("emoji");
+        
+        if ((m_options & SPO_USING_REMOTE_EMOJI) == 0)
         {
-            emojiFile = sm2[1];
+            std::string emojiFile = url;
+            std::smatch sm2;
+            static std::regex pattern47_2("\\/(\\w+?)\\/\\w*$");
+            if (std::regex_search(emojiFile, sm2, pattern47_2))
+            {
+                emojiFile = sm2[1];
+            }
+            else
+            {
+                static int uniqueFileName = 1000000000;
+                emojiFile = std::to_string(uniqueFileName++);
+            }
+            
+            std::string emojiPath = ((m_options & SPO_ICON_IN_SESSION) == SPO_ICON_IN_SESSION) ? session.getOutputFileName() + "_files/Emoji/" : "Emoji/";
+            std::string localEmojiPath = normalizePath((const std::string&)emojiPath);
+            std::string localEmojiFile = localEmojiPath + emojiFile + ".gif";
+            emojiFile = emojiPath + emojiFile + ".gif";
+            ensureDirectoryExisted(combinePath(m_outputPath, localEmojiPath));
+            
+#ifdef USING_DOWNLOADER
+            m_downloader.addTask(url, combinePath(m_outputPath, localEmojiFile), msg.createTime, "emoji");
+#else
+            m_taskManager.download(&session, url, "", combinePath(m_outputPath, localEmojiFile), msg.createTime, "", "emoji");
+#endif
+            
+            tv["%%EMOJIPATH%%"] = emojiFile;
+            tv["%%RAWEMOJIPATH%%"] = url;
         }
         else
         {
-            static int uniqueFileName = 1000000000;
-            emojiFile = std::to_string(uniqueFileName++);
+            tv["%%EMOJIPATH%%"] = url;
+            tv["%%RAWEMOJIPATH%%"] = url;
         }
-        
-        std::string emojiPath = ((m_options & SPO_ICON_IN_SESSION) == SPO_ICON_IN_SESSION) ? session.getOutputFileName() + "_files/Emoji/" : "Emoji/";
-		std::string localEmojiPath = normalizePath((const std::string&)emojiPath);
-		std::string localEmojiFile = localEmojiPath + emojiFile + ".gif";
-		emojiFile = emojiPath + emojiFile + ".gif";
-        ensureDirectoryExisted(combinePath(m_outputPath, localEmojiPath));
-        
-#ifdef USING_DOWNLOADER
-        m_downloader.addTask(url, combinePath(m_outputPath, localEmojiFile), msg.createTime, "emoji");
-#else
-        m_taskManager.download(&session, url, "", combinePath(m_outputPath, localEmojiFile), msg.createTime, "", "emoji");
-#endif
-        
-        tv.setName("emoji");
-        tv["%%EMOJIPATH%%"] = emojiFile;
-        tv["%%RAWEMOJIPATH%%"] = url;
     }
     else
     {

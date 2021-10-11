@@ -34,12 +34,14 @@ enum SessionParsingOption
     SPO_IGNORE_HTML_ENC = 1 << 8,
     SPO_TEXT_MODE = 0xFFFF,
 	SPO_PDF_MODE = 1 << 16,
-
+    
+    SPO_USING_REMOTE_EMOJI = 1 << 19,
     SPO_DESC = 1 << 20,
     SPO_ICON_IN_SESSION = 1 << 21,     // Put Head Icon and Emoji files in the folder of session
     SPO_SYNC_LOADING = 1 << 22,
     SPO_SUPPORT_FILTER = 1 << 23,
     
+    SPO_OUTPUT_DBG_LOGS = 1 << 29,
     SPO_INCREMENTAL_EXP = 1 << 30,
 	
 	SPO_END

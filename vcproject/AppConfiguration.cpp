@@ -35,6 +35,18 @@ BOOL AppConfiguration::GetAsyncLoading()
 	return (value != 0) ? TRUE : FALSE;
 }
 
+void AppConfiguration::SetUsingRemoteEmoji(BOOL usingRemoteEmoji)
+{
+	SetDwordProperty(TEXT("UsingRemoteEmoji"), usingRemoteEmoji);
+}
+
+BOOL AppConfiguration::GetUsingRemoteEmoji()
+{
+	DWORD value = 0;
+	GetDwordProperty(TEXT("UsingRemoteEmoji"), value);
+	return (value != 0) ? TRUE : FALSE;
+}
+
 void AppConfiguration::SetIncrementalExporting(BOOL incrementalExporting)
 {
 	SetDwordProperty(TEXT("IncrementalExp"), incrementalExporting);

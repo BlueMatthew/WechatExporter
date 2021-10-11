@@ -79,7 +79,7 @@ public:
 
 	void onTasksProgress(const std::string& usrName, uint32_t numberOfCompletedTasks, uint32_t numberOfTotalMessages) const
 	{
-		::PostMessage(m_hWnd, WM_TASKS_PROGRESS, 0, (LPARAM)numberOfCompletedTasks);
+		::PostMessage(m_hWnd, WM_TASKS_PROGRESS, numberOfTotalMessages, (LPARAM)numberOfCompletedTasks);
 	}
 
 	void onTasksComplete(const std::string& usrName, bool cancelled) const

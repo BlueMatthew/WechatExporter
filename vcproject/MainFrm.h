@@ -42,6 +42,7 @@ public:
 		COMMAND_RANGE_HANDLER(ID_FORMAT_HTML, ID_FORMAT_PDF, OnOutputFormat)
 		COMMAND_ID_HANDLER(ID_OPT_SAVING_IN_SESSION, OnSavingInSession)
 		COMMAND_ID_HANDLER(ID_OPT_DESC_ORDER, OnDescOrder)
+		COMMAND_ID_HANDLER(ID_OPT_DL_EMOJI, OnDownloadingEmoji)
 		COMMAND_ID_HANDLER(ID_OPT_FILTER, OnFilter)
 		COMMAND_ID_HANDLER(ID_OPT_ASYNC_LOADING, OnAsyncFormat)
 		COMMAND_ID_HANDLER(ID_OPT_LM_ONSCROLL, OnLoadingDataOnScroll)
@@ -79,6 +80,7 @@ public:
 		CMenuHandle subMenuOptions = menu.GetSubMenu(2);
 		subMenuOptions.CheckMenuItem(ID_OPT_DESC_ORDER, MF_BYCOMMAND | (AppConfiguration::GetDescOrder() ? MF_CHECKED : MF_UNCHECKED));
 		subMenuOptions.CheckMenuItem(ID_OPT_SAVING_IN_SESSION, MF_BYCOMMAND | (AppConfiguration::GetSavingInSession() ? MF_CHECKED : MF_UNCHECKED));
+		subMenuOptions.CheckMenuItem(ID_OPT_DL_EMOJI, MF_BYCOMMAND | (AppConfiguration::GetUsingRemoteEmoji() ? MF_UNCHECKED : MF_CHECKED));
 		subMenuOptions.CheckMenuItem(ID_OPT_FILTER, MF_BYCOMMAND | (AppConfiguration::GetSupportingFilter() ? MF_CHECKED : MF_UNCHECKED));
 
 		BOOL asyncLoading = AppConfiguration::GetAsyncLoading();
@@ -120,6 +122,7 @@ public:
 		CMenuHandle subMenuOptions = menu.GetSubMenu(2);
 		subMenuOptions.EnableMenuItem(ID_OPT_DESC_ORDER, MF_BYCOMMAND | (enabled ? MF_ENABLED : MF_DISABLED));
 		subMenuOptions.EnableMenuItem(ID_OPT_SAVING_IN_SESSION, MF_BYCOMMAND | (enabled ? MF_ENABLED : MF_DISABLED));
+		subMenuOptions.EnableMenuItem(ID_OPT_DL_EMOJI, MF_BYCOMMAND | (enabled ? MF_ENABLED : MF_DISABLED));
 		subMenuOptions.EnableMenuItem(ID_OPT_FILTER, MF_BYCOMMAND | (enabled ? MF_ENABLED : MF_DISABLED));
 
 		UINT outputFormat = AppConfiguration::GetOutputFormat();
@@ -170,6 +173,18 @@ public:
 		subMenu.CheckMenuItem(ID_OPT_DESC_ORDER, MF_BYCOMMAND | (curDescOrder ? MF_UNCHECKED : MF_CHECKED));
 		AppConfiguration::SetDescOrder(!curDescOrder);
 		
+		return 0;
+	}
+
+	LRESULT OnDownloadingEmoji(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& /*bHandled*/)
+	{
+		CMenuHandle menu = GetMenu();
+		CMenuHandle subMenu = menu.GetSubMenu(2);
+		UINT menuState = subMenu.GetMenuState(ID_OPT_DL_EMOJI, MF_BYCOMMAND);
+		BOOL curState = (menuState != 0xFFFFFFFF) && ((menuState & MF_CHECKED) == MF_CHECKED) ? TRUE : FALSE;
+		subMenu.CheckMenuItem(ID_OPT_DL_EMOJI, MF_BYCOMMAND | (curState ? MF_UNCHECKED : MF_CHECKED));
+		AppConfiguration::SetUsingRemoteEmoji(curState);
+
 		return 0;
 	}
 

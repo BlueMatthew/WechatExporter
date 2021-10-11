@@ -16,6 +16,9 @@ public:
 	static void SetAsyncLoading(BOOL asyncLoading);
 	static BOOL GetAsyncLoading();
 
+	static void SetUsingRemoteEmoji(BOOL usingRemoteEmoji);
+	static BOOL GetUsingRemoteEmoji();
+
 	static void SetIncrementalExporting(BOOL incrementalExporting);
 	static BOOL GetIncrementalExporting();
 	

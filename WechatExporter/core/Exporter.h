@@ -86,6 +86,8 @@ public:
     void setLoadingDataOnScroll(bool loadingDataOnScroll = true);
     void setIncrementalExporting(bool incrementalExporting);
     void supportsFilter(bool supportsFilter = true);
+    void useRemoteEmoji(bool useEmojiUrl);
+    void outputDebugLogs(bool outputDebugLogs);
     void setExtName(const std::string& extName);
     void setTemplatesName(const std::string& templatesName);
     
