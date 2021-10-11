@@ -250,6 +250,7 @@ protected:
     bool parseDirectory(const std::string& path, std::vector<BackupManifest>& manifests) const;
     bool parse(const std::string& path, BackupManifest& manifest) const;
 	bool isValidBackupItem(const std::string& path) const;
+    bool isValidMobileSync(const std::string& path) const;
     
     static bool parseInfoPlist(const std::string& backupIdPath, BackupManifest& manifest);
 };

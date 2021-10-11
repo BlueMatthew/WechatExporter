@@ -585,7 +585,7 @@ bool ManifestParser::parse(std::vector<BackupManifest>& manifests) const
     bool res = false;
     
     std::string path = normalizePath(m_manifestPath);
-    if (endsWith(path, normalizePath("/MobileSync")) || endsWith(path, normalizePath("/MobileSync/")))
+    if (endsWith(path, normalizePath("/MobileSync")) || endsWith(path, normalizePath("/MobileSync/")) || isValidMobileSync(path))
     {
         path = combinePath(path, "Backup");
         res = parseDirectory(path, manifests);
@@ -668,6 +668,18 @@ bool ManifestParser::isValidBackupItem(const std::string& path) const
         return false;
     }
     
+    return true;
+}
+
+bool ManifestParser::isValidMobileSync(const std::string& path) const
+{
+    std::string backupPath = combinePath(path, "Backup");
+    if (!existsFile(backupPath))
+    {
+        m_lastError += "Backup folder not found\r\n";
+        return false;
+    }
+
     return true;
 }
 
