@@ -65,6 +65,8 @@ https://github.com/BlueMatthew/WechatExporter/releases/download/v1.0/x86-windows
 https://github.com/BlueMatthew/WechatExporter/releases/download/v1.0/x64-macos-static.zip  
   
 已测试iTunes和微信版本  
+iTunes 12.3.3.17 + 微信6.5.9  
+iTunes 12.5.1.21 + 微信6.3.30  
 iTunes 12.10.10.2 + 微信7.0.2  
 iTunes 12.10.9.3 + 微信 7.0.15  
 iTunes 12.9.5.5 + 微信 7.0.2  
