@@ -188,6 +188,9 @@
     <ClInclude Include="..\WechatExporter\core\MbdbReader.h">
       <Filter>core</Filter>
     </ClInclude>
+    <ClInclude Include="TextProgressBarCtrl.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="WechatExporter.rc">

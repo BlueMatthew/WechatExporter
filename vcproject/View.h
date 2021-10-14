@@ -14,6 +14,7 @@
 // #include "ColoredControls.h"
 #include "LogListBox.h"
 #include "ProgressListViewCtrl.h"
+#include "TextProgressBarCtrl.h"
 #include "AppConfiguration.h"
 #include "VersionDetector.h"
 #include "ViewHelper.h"
@@ -40,6 +41,7 @@ private:
 	CSortListViewCtrl		m_sessionsListCtrl;
 	CProgressListViewCtrl	m_progressListCtrl;
 	CStatic					m_progressTextCtrl;
+	CTextProgressBarCtrl	m_progressBarCtrl;
 	
 	LoggerImpl*			m_logger;
 	PdfConverterImpl*	m_pdfConverter;
@@ -191,6 +193,7 @@ public:
 	{
 		m_progressTextCtrl = GetDlgItem(IDC_PROGRESS_TEXT);
 		m_logListBox.SubclassWindow(GetDlgItem(IDC_LOGS));
+		m_progressBarCtrl.SubclassWindow(GetDlgItem(IDC_PROGRESS));
 		// m_cbmBoxBackups.SubclassWindow(GetDlgItem(m_exporter));
 		// m_cbmBoxUsers.SubclassWindow(GetDlgItem(IDC_USERS));
 
@@ -973,14 +976,14 @@ protected:
 		::ShowWindow(GetDlgItem(IDC_LOGS), showLogs ? SW_SHOW : SW_HIDE);
 
 		::ShowWindow(GetDlgItem(IDC_GRP_USR_CHAT), showLogs ? SW_HIDE : SW_SHOW);
-		::ShowWindow(GetDlgItem(IDC_USERS), showLogs || m_viewState == VS_EXPORTING ? SW_HIDE : SW_SHOW);
+		::ShowWindow(GetDlgItem(IDC_USERS), showLogs ? SW_HIDE : SW_SHOW);
 		::ShowWindow(GetDlgItem(IDC_VERSIONS), showLogs || m_viewState == VS_EXPORTING ? SW_HIDE : SW_SHOW);
 		::ShowWindow(GetDlgItem(IDC_SESSIONS), showLogs || m_viewState == VS_EXPORTING ? SW_HIDE : SW_SHOW);
-
-		::ShowWindow(GetDlgItem(IDC_PROGRESS), showLogs || m_viewState != VS_EXPORTING ? SW_HIDE : SW_SHOW);
-		::ShowWindow(GetDlgItem(IDC_PROGRESS_TEXT), showLogs || m_viewState != VS_EXPORTING ? SW_HIDE : SW_SHOW);
 		::ShowWindow(GetDlgItem(IDC_SESS_PROGRESS), showLogs || m_viewState != VS_EXPORTING ? SW_HIDE : SW_SHOW);
 
+		::ShowWindow(GetDlgItem(IDC_PROGRESS), showLogs || m_viewState != VS_EXPORTING ? SW_HIDE : SW_SHOW);
+		// ::ShowWindow(GetDlgItem(IDC_PROGRESS_TEXT), showLogs || m_viewState != VS_EXPORTING ? SW_HIDE : SW_SHOW);
+		
 		::ShowWindow(GetDlgItem(IDC_CANCEL), m_viewState == VS_EXPORTING ? SW_SHOW : SW_HIDE);
 		::ShowWindow(GetDlgItem(IDC_CLOSE), m_viewState != VS_EXPORTING ? SW_SHOW : SW_HIDE);
 
@@ -1040,6 +1043,7 @@ protected:
 			// text.Format(TEXT("%d%%"), percent);
 			m_progressTextCtrl.SetWindowLongPtr(GWLP_USERDATA, value);
 			m_progressTextCtrl.SetWindowText(text);
+			m_progressBarCtrl.SetWindowText(text);
 		}
 	}
 

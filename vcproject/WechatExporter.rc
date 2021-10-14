@@ -92,7 +92,7 @@ BEGIN
     EDITTEXT        IDC_VERSIONS,270,76,109,14,ES_AUTOHSCROLL | ES_READONLY | NOT WS_BORDER
     CONTROL         "",IDC_SESSIONS,"SysListView32",LVS_REPORT | LVS_ALIGNLEFT | WS_BORDER | WS_TABSTOP,14,90,365,73
     LTEXT           "100%",IDC_PROGRESS_TEXT,14,76,121,8,NOT WS_VISIBLE,WS_EX_TRANSPARENT
-    CONTROL         "",IDC_PROGRESS,"msctls_progress32",NOT WS_VISIBLE | WS_BORDER,142,74,237,12
+    CONTROL         "",IDC_PROGRESS,"msctls_progress32",NOT WS_VISIBLE | WS_BORDER,270,74,109,12
     CONTROL         "",IDC_SESS_PROGRESS,"SysListView32",LVS_REPORT | LVS_SHOWSELALWAYS | LVS_ALIGNLEFT | NOT WS_VISIBLE | WS_BORDER | WS_TABSTOP,14,90,365,73
     GROUPBOX        "日志(CTRL+A：选中所有日志/CTRL+C：拷贝选中日志)",IDC_GRP_LOGS,7,62,379,108,NOT WS_VISIBLE,WS_EX_TRANSPARENT
     LISTBOX         IDC_LOGS,14,74,365,89,LBS_MULTIPLESEL | LBS_NOINTEGRALHEIGHT | NOT WS_VISIBLE | WS_VSCROLL | WS_HSCROLL | WS_TABSTOP
@@ -195,8 +195,8 @@ BEGIN
     IDS_NO_PREV_EXP         "输出目录下不存在前一次导出的信息，“增量导出”将被忽略。"
     IDS_PREV_EXP_FOUND      "输出目录下发现了%s的导出数据，本次导出将采用“增量导出”模式，并复用前一次的设置。"
     IDS_DELETED_SESSION     "(已删除)"
-    IDS_EXPORTING_MSGS      "正在导出聊天记录 (%d%%):"
-    IDS_DOWNLOADING_EMOJI   "正在下载表情文件 (%d):"
+    IDS_EXPORTING_MSGS      "正在导出聊天记录 (%d%%)"
+    IDS_DOWNLOADING_EMOJI   "正在下载表情文件，剩余: %d"
 END
 
 #endif    // Chinese (Simplified, PRC) resources
@@ -272,7 +272,7 @@ BEGIN
     EDITTEXT        IDC_VERSIONS,270,76,109,14,ES_AUTOHSCROLL | ES_READONLY | NOT WS_BORDER
     CONTROL         "",IDC_SESSIONS,"SysListView32",LVS_REPORT | LVS_ALIGNLEFT | WS_BORDER | WS_TABSTOP,14,90,365,73
     LTEXT           "100%",IDC_PROGRESS_TEXT,14,76,121,8,NOT WS_VISIBLE,WS_EX_TRANSPARENT
-    CONTROL         "",IDC_PROGRESS,"msctls_progress32",NOT WS_VISIBLE | WS_BORDER,142,74,237,12
+    CONTROL         "",IDC_PROGRESS,"msctls_progress32",NOT WS_VISIBLE | WS_BORDER,270,74,109,12
     CONTROL         "",IDC_SESS_PROGRESS,"SysListView32",LVS_REPORT | LVS_SHOWSELALWAYS | LVS_ALIGNLEFT | NOT WS_VISIBLE | WS_BORDER | WS_TABSTOP,14,90,365,73
     GROUPBOX        "Logs(CTRL+A:Select All Logs/CTRL+C:Copy Logs)",IDC_GRP_LOGS,7,62,379,108,NOT WS_VISIBLE,WS_EX_TRANSPARENT
     LISTBOX         IDC_LOGS,14,74,365,89,LBS_MULTIPLESEL | LBS_NOINTEGRALHEIGHT | NOT WS_VISIBLE | WS_VSCROLL | WS_HSCROLL | WS_TABSTOP
@@ -459,8 +459,8 @@ BEGIN
     IDS_NO_PREV_EXP         "There is no previous exporting in output directory and ""Incremental Exporting"" will be ignored."
     IDS_PREV_EXP_FOUND      "The previous exporting at %s found, will reuse previous options."
     IDS_DELETED_SESSION     "(Deleted)"
-    IDS_EXPORTING_MSGS      "Exporting Messages (%d%%):"
-    IDS_DOWNLOADING_EMOJI   "Downloading Emoji Files (%d):"
+    IDS_EXPORTING_MSGS      "Exporting Messages (%d%%)"
+    IDS_DOWNLOADING_EMOJI   "Downloading Emoji Files, Remaing: %d"
 END
 
 STRINGTABLE
