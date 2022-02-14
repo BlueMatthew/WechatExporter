@@ -4,9 +4,8 @@
 [Windows x64版本](https://github.com/BlueMatthew/WechatExporter/releases/download/v1.9.3.6/v1.9.3.6-x64-win.zip)   
 [MacOS x64版本](https://github.com/BlueMatthew/WechatExporter/releases/download/v1.9.3.6/v1.9.3.6-x64-macos.zip)
   
-<br />  
-BUG!!! 1.8.0.7以前的版本异步加载方式存在一个比较严重的小白bug：当设置为滚动到页面底部异步加载时，越靠后面的页码，加载的消息数量越少；设置为页面打开全部消息异步加载时，消息只能加载到一半。如果iTunes备份还存在，请使用版本1.8.0.8重新导出一遍。如果过往的备份已经清除了，可以下载补丁程序[Win64版本] (https://github.com/BlueMatthew/WechatExporter/releases/download/v1.8.0.8/patch_x64_win.zip)/[MacOS 64版本](https://github.com/BlueMatthew/WechatExporter/releases/download/v1.8.0.8/patch_x64_macos.zip)并解压，把wxexpatch.exe/wxexppatch拷贝到导出目录，并执行，来修复已经导出的页面（补丁修复的文件清单可查看日志文件 patch.log）。    
-<br /><br />  
+#### ***!!!BUG!!!*** 
+1.8.0.7以前的版本异步加载方式存在一个比较严重的小白bug：当设置为滚动到页面底部异步加载时，越靠后面的页码，加载的消息数量越少；设置为页面打开全部消息异步加载时，消息只能加载到一半。如果iTunes备份还存在，请使用版本1.8.0.8重新导出一遍。如果过往的备份已经清除了，可以下载补丁程序 [Win64版本](https://github.com/BlueMatthew/WechatExporter/releases/download/v1.8.0.8/patch_x64_win.zip) / [MacOS 64版本](https://github.com/BlueMatthew/WechatExporter/releases/download/v1.8.0.8/patch_x64_macos.zip) 并解压，把``wxexpatch.exe/wxexppatch``拷贝到导出目录，并执行，来修复已经导出的页面（补丁修复的文件清单可查看日志文件 patch.log）。     
 本程序参考 https://github.com/stomakun/WechatExport-iOS 修改成C++来实现，便于在各个平台以更少依赖运行。同时增加了聊天群名称的解析支持和更多消息类型的导出支持。导出支持Text、HTML、PDF三种格式。  
   
 - 导出的聊天记录页面可以设置为打开时一次性加载完成（默认方式）、打开时异步加载、页面滑动到底部时加载更多三种方式，可以在菜单“选项”中修改加载方式。  
