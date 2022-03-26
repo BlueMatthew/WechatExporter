@@ -77,4 +77,4 @@ Windows 10 + iTunes 12.11.3.17 + 微信 8.0.7
 Windows 7 + iTunes 12.10.9.3/Mac Catalina (Embedded iTunes) + 微信 7.0.2 + iOS 9.3.5  
 Windows + iTunes 12.10.3.1+ 微信 7.0.10 + iOS 13.3 (@lazybug163)  
 MacOS 11.6（Embedded iTunes）+ iOS Version: 15.0 + 微信 8.0.9  
-
+MacOS 11.6（Embedded iTunes）+ iOS Version: 15.4 + 微信 8.0.18  
