@@ -1,8 +1,8 @@
 # WechatExporter
   
 ### 最新版本下载：  
-[Windows x64版本](https://github.com/BlueMatthew/WechatExporter/releases/download/v1.9.5.11/v1.9.5.11-x64-win.zip)   
-[MacOS x64版本](https://github.com/BlueMatthew/WechatExporter/releases/download/v1.9.5.11/v1.9.5.11-x64-macos.zip)
+[Windows x64版本](https://github.com/BlueMatthew/WechatExporter/releases/download/v1.9.5.13/v1.9.5.13-x64-win.zip)   
+[MacOS x64版本](https://github.com/BlueMatthew/WechatExporter/releases/download/v1.9.5.13/v1.9.5.13-x64-macos.zip)
   
 <br />  
 BUG!!! 1.8.0.7以前的版本异步加载方式存在一个比较严重的小白bug：当设置为滚动到页面底部异步加载时，越靠后面的页码，加载的消息数量越少；设置为页面打开全部消息异步加载时，消息只能加载到一半。如果iTunes备份还存在，请使用版本1.8.0.8重新导出一遍。如果过往的备份已经清除了，可以下载补丁程序[Win64版本] (https://github.com/BlueMatthew/WechatExporter/releases/download/v1.8.0.8/patch_x64_win.zip)/[MacOS 64版本](https://github.com/BlueMatthew/WechatExporter/releases/download/v1.8.0.8/patch_x64_macos.zip)并解压，把wxexpatch.exe/wxexppatch拷贝到导出目录，并执行，来修复已经导出的页面（补丁修复的文件清单可查看日志文件 patch.log）。    
