@@ -84,6 +84,15 @@
     <ClCompile Include="..\WechatExporter\core\TaskManager.cpp">
       <Filter>core</Filter>
     </ClCompile>
+    <ClCompile Include="..\WechatExporter\core\ResManager.cpp">
+      <Filter>core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\WechatExporter\core\IDeviceBackup.cpp">
+      <Filter>core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\WechatExporter\core\Template.cpp">
+      <Filter>core</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="stdafx.h">
@@ -191,6 +200,30 @@
     <ClInclude Include="TextProgressBarCtrl.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\WechatExporter\core\ResManager.h">
+      <Filter>core</Filter>
+    </ClInclude>
+    <ClInclude Include="ToolTipButton.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\WechatExporter\core\IDeviceBackup.h">
+      <Filter>core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\WechatExporter\core\WechatSource.h">
+      <Filter>core</Filter>
+    </ClInclude>
+    <ClInclude Include="BackupDlg.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\WechatExporter\core\ExportContext.h">
+      <Filter>core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\WechatExporter\core\Template.h">
+      <Filter>core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\WechatExporter\core\ExportOption.h">
+      <Filter>core</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="WechatExporter.rc">
@@ -205,6 +238,12 @@
       <Filter>Resource Files</Filter>
     </Image>
     <Image Include="res\idr_main.ico">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="res\iPhone.ico">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="res\iTunes.ico">
       <Filter>Resource Files</Filter>
     </Image>
   </ItemGroup>

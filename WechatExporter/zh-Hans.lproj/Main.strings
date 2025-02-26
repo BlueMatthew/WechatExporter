@@ -17,6 +17,9 @@
 /* Class = "NSMenuItem"; title = "Incremental Exporting"; ObjectID = "5c2-wM-XIf"; */
 "5c2-wM-XIf.title" = "增量导出";
 
+/* Class = "NSMenuItem"; title = "Including Subscriptions"; ObjectID = "GbO-lL-BLb"; */
+"GbO-lL-BLb.title" = "保留公众号";
+
 /* Class = "NSMenuItem"; title = "About WechatExporter"; ObjectID = "5kV-Vb-QxS"; */
 "5kV-Vb-QxS.title" = "关于WechatExporter";
 
@@ -32,8 +35,8 @@
 /* Class = "NSButtonCell"; title = "Cancel"; ObjectID = "CHb-bh-1kG"; */
 "CHb-bh-1kG.title" = "取消";
 
-/* Class = "NSMenuItem"; title = "From Earlier To Newer"; ObjectID = "GbO-lL-BLb"; */
-"GbO-lL-BLb.title" = "按消息时间倒序导出";
+/* Class = "NSMenuItem"; title = "From Earlier To Newer"; ObjectID = "eJH-AO-QUD"; */
+"eJH-AO-QUD.title" = "按消息时间倒序导出";
 
 /* Class = "NSMenuItem"; title = "Text"; ObjectID = "GeM-zb-UkW"; */
 "GeM-zb-UkW.title" = "文本模式";
@@ -56,6 +59,12 @@
 /* Class = "NSMenuItem"; title = "Check Update Automatically"; ObjectID = "Pyu-qm-bT0"; */
 "Pyu-qm-bT0.title" = "自动检查更新";
 
+/* Class = "NSMenuItem"; title = "Output Detailed Logs"; ObjectID = "Pyu-qm-bT0"; */
+"Pyu-qm-bT0.title" = "输出更多日志";
+
+/* Class = "NSMenuItem"; title = "Open the Folder After Exporting"; ObjectID = "TWh-AV-CCF"; */
+"TWh-AV-CCF.title" = "导出后打开目录";
+
 /* Class = "NSTextFieldCell"; title = "Text Cell"; ObjectID = "Q3f-RG-97F"; */
 "Q3f-RG-97F.title" = "Text Cell";
 
@@ -70,6 +79,9 @@
 
 /* Class = "NSMenuItem"; title = "Load Messages Asynchronously(HTML Mode)"; ObjectID = "WOF-ft-ZWq"; */
 "WOF-ft-ZWq.title" = "异步加载聊天记录";
+
+/* Class = "NSButtonCell"; title = "Show Logs"; ObjectID = "WmO-MK-b5O"; */
+"WmO-MK-b5O.title" = "显示日志";
 
 /* Class = "NSTextFieldCell"; title = "Text Cell"; ObjectID = "X6v-WO-gkU"; */
 "X6v-WO-gkU.title" = "Text Cell";
@@ -104,11 +116,17 @@
 /* Class = "NSMenu"; title = "Format"; ObjectID = "or1-Xl-Us0"; */
 "or1-Xl-Us0.title" = "格式";
 
+/* Class = "NSTableColumn"; headerCell.title = "Last Message"; ObjectID = "hIY-8j-rpO"; */
+"hIY-8j-rpO.headerCell.title" = "最新消息";
+
 /* Class = "NSMenu"; title = "Help"; ObjectID = "pOf-8G-Ji8"; */
 "pOf-8G-Ji8.title" = "帮助";
 
 /* Class = "NSTextFieldCell"; title = "Table View Cell"; ObjectID = "qJ3-t0-qJh"; */
 "qJ3-t0-qJh.title" = "Table View Cell";
+
+/* Class = "NSTextFieldCell"; title = "Table View Cell"; ObjectID = "sWr-dF-dlL"; */
+"sWr-dF-dlL.title" = "Table View Cell";
 
 /* Class = "NSMenuItem"; title = "Save Avatar/Emoji in Chat Folder"; ObjectID = "tGU-e5-isp"; */
 "tGU-e5-isp.title" = "头像和表情存放到聊天记录子目录";

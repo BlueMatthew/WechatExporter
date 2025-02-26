@@ -80,9 +80,8 @@ bool parseMembers(const std::string& xml, T& f)
                 }
                 cur = cur->next;
             }
-        
-            std::string uidHash = md5(uid);
-            f.addMember(uidHash, std::make_pair(uid, displayName));
+
+            f.addMember(uid, displayName);
         }
     }
     
@@ -96,23 +95,22 @@ bool parseMembers(const std::string& xml, T& f)
     return result;
 }
 
-LoginInfo2Parser::LoginInfo2Parser(ITunesDb *iTunesDb
-#if !defined(NDEBUG) || defined(DBG_PERF)
-                                   , Logger* logger
-#endif
-                                   ) : m_iTunesDb(iTunesDb)
-#if !defined(NDEBUG) || defined(DBG_PERF)
-                                    , m_logger(logger)
-#endif
+LoginInfo2Parser::LoginInfo2Parser(ITunesDb *iTunesDb, Logger* logger) : m_iTunesDb(iTunesDb), m_logger(logger)
 {
 }
 
-#if !defined(NDEBUG) || defined(DBG_PERF)
+void LoginInfo2Parser::debugLog(const std::string& log)
+{
+    if (NULL != m_logger)
+    {
+        m_logger->debug(log);
+    }
+}
+
 std::string LoginInfo2Parser::getError() const
 {
     return m_error;
 }
-#endif
 
 bool LoginInfo2Parser::parse(std::vector<Friend>& users)
 {
@@ -125,9 +123,7 @@ bool LoginInfo2Parser::parse(std::vector<Friend>& users)
     }
     else
     {
-#if !defined(NDEBUG) || defined(DBG_PERF)
-        m_logger->debug("Documents/LoginInfo2.dat not exists.");
-#endif
+        debugLog("Documents/LoginInfo2.dat not exists.");
         // return false;
     }
     
@@ -144,9 +140,7 @@ bool LoginInfo2Parser::parse(std::vector<Friend>& users)
     std::map<std::string, std::string> mmsettingFiles;  // hash => usrName
     for (ITunesFilesConstIterator it = mmsettings.cbegin(); it != mmsettings.cend(); ++it)
     {
-#if !defined(NDEBUG) || defined(DBG_PERF)
-        m_logger->debug("mmsetting: " + (*it)->relativePath  + " => " + (*it)->fileId);
-#endif
+        debugLog("mmsetting: " + (*it)->relativePath  + " => " + (*it)->fileId);
         std::string fileName = filter.parse((*it));
         fileName = fileName.substr(filter.getPrefix().size());
         if (fileName.empty())
@@ -160,16 +154,14 @@ bool LoginInfo2Parser::parse(std::vector<Friend>& users)
     
     for (std::vector<Friend>::iterator it = users.begin(); it != users.end(); ++it)
     {
-#if !defined(NDEBUG) || defined(DBG_PERF)
-        m_logger->debug("Parse user:" + it->getUsrName() + "(" + it->getHash() + ") => " + it->getDisplayName());
-#endif
+        debugLog("Parse user:" + it->getUsrName() + "(" + it->getHash() + ") => " + it->getDisplayName());
         MMSettingParser mmsettingParser(m_iTunesDb);
         if (mmsettingParser.parse(it->getHash()))
         {
-#if !defined(NDEBUG) || defined(DBG_PERF)
-            m_logger->debug("Succeeded to parse mmsetting:" + it->getUsrName());
-#endif
+            debugLog("Succeeded to parse mmsetting:" + it->getUsrName());
+            
             it->setUsrName(mmsettingParser.getUsrName());
+            it->setWxName(mmsettingParser.getWxName());
             if (it->isDisplayNameEmpty())
             {
                 it->setDisplayName(mmsettingParser.getDisplayName());
@@ -179,9 +171,8 @@ bool LoginInfo2Parser::parse(std::vector<Friend>& users)
         }
         else
         {
-#if !defined(NDEBUG) || defined(DBG_PERF)
-            m_logger->debug("Failed to parse mmsetting:" + it->getUsrName());
-#endif
+            debugLog("Failed to parse mmsetting:" + it->getUsrName());
+
             // Check mmsettings.archive in MMappedKV folde
             if (it->getUsrName().empty())
             {
@@ -197,20 +188,15 @@ bool LoginInfo2Parser::parse(std::vector<Friend>& users)
                 std::string realCrcPath = m_iTunesDb->findRealPath("Documents/MMappedKV/mmsetting.archive." + it->getUsrName() + ".crc");
                 if (!realPath.empty() && !realCrcPath.empty())
                 {
-#if !defined(NDEBUG) || defined(DBG_PERF)
                     MMKVParser parser(m_logger);
-#else
-                    MMKVParser parser;
-#endif
-#if !defined(NDEBUG) || defined(DBG_PERF)
-                    m_logger->debug("Parse MMKV file: Documents/MMappedKV/mmsetting.archive." + it->getUsrName() + " => " + realPath);
-                    m_logger->debug("Parse MMKV file: Documents/MMappedKV/mmsetting.archive." + it->getUsrName() + ".crc => " + realCrcPath);
-#endif
+
+                    debugLog("Parse MMKV file: Documents/MMappedKV/mmsetting.archive." + it->getUsrName() + " => " + realPath);
+                    debugLog("Parse MMKV file: Documents/MMappedKV/mmsetting.archive." + it->getUsrName() + ".crc => " + realCrcPath);
+
                     if (parser.parse(realPath, realCrcPath))
                     {
-#if !defined(NDEBUG) || defined(DBG_PERF)
-                        m_logger->debug("Succeeded to parse mmkv:" + it->getUsrName());
-#endif
+                        debugLog("Succeeded to parse mmkv:" + it->getUsrName());
+                        
                         if (it->isDisplayNameEmpty())
                         {
                             it->setDisplayName(parser.getDisplayName());
@@ -220,16 +206,12 @@ bool LoginInfo2Parser::parse(std::vector<Friend>& users)
                     }
                     else
                     {
-#if !defined(NDEBUG) || defined(DBG_PERF)
-                        m_logger->debug("Failed to parse MMKV: Documents/MMappedKV/mmsetting.archive." + it->getUsrName());
-#endif
+                        debugLog("Failed to parse MMKV: Documents/MMappedKV/mmsetting.archive." + it->getUsrName());
                     }
                 }
                 else
                 {
-#if !defined(NDEBUG) || defined(DBG_PERF)
-                    m_logger->debug("MMKV file not exists: Documents/MMappedKV/mmsetting.archive." + it->getUsrName());
-#endif
+                    debugLog("MMKV file not exists: Documents/MMappedKV/mmsetting.archive." + it->getUsrName());
                 }
             }
         }
@@ -240,10 +222,8 @@ bool LoginInfo2Parser::parse(std::vector<Friend>& users)
     {
         if (it->getUsrName().empty())
         {
-#if !defined(NDEBUG) || defined(DBG_PERF)
-            m_logger->debug("Erase: md5=" + it->getHash() + "* dn=" + it->getDisplayName() + "*");
+            debugLog("Erase: md5=" + it->getHash() + "* dn=" + it->getDisplayName() + "*");
             m_error += "Erase: md5=" + it->getHash() + "* dn=" + it->getDisplayName() + "* ";
-#endif
             // erase() invalidates the iterator, use returned iterator
             it = users.erase(it);
 
@@ -262,32 +242,25 @@ bool LoginInfo2Parser::parse(const std::string& loginInfo2Path, std::vector<Frie
     RawMessage msg;
     if (!msg.mergeFile(loginInfo2Path))
     {
-#if !defined(NDEBUG) || defined(DBG_PERF)
-        m_logger->debug("Failed to parse Documents/LoginInfo2.dat(pb).");
-#endif
+        debugLog("Failed to parse Documents/LoginInfo2.dat(pb).");
         return false;
     }
     
     std::string value1;
     if (!msg.parse("1", value1))
     {
-#if !defined(NDEBUG) || defined(DBG_PERF)
-        m_logger->debug("Failed to parse field 1 in Documents/LoginInfo2.dat.");
-#endif
+        debugLog("Failed to parse field 1 in Documents/LoginInfo2.dat.");
         return false;
     }
     
     users.clear();
     int offset = 0;
     std::string::size_type length = value1.size();
-#if !defined(NDEBUG) || defined(DBG_PERF)
-    m_logger->debug("Length of field 1 in Documents/LoginInfo2.dat = " + std::to_string(length));
-#endif
+    debugLog("Length of field 1 in Documents/LoginInfo2.dat = " + std::to_string(length));
     while (offset < length)
     {
-#if !defined(NDEBUG) || defined(DBG_PERF)
-        m_logger->debug("Offset of field 1 in Documents/LoginInfo2.dat = " + std::to_string(offset) + "/" + std::to_string(length));
-#endif
+        debugLog("Offset of field 1 in Documents/LoginInfo2.dat = " + std::to_string(offset) + "/" + std::to_string(length));
+
         int res = parseUser(value1.c_str() + offset, static_cast<int>(length - offset), users);
         if (res < 0)
         {
@@ -297,12 +270,13 @@ bool LoginInfo2Parser::parse(const std::string& loginInfo2Path, std::vector<Frie
         offset += res;
     }
     
-#if !defined(NDEBUG) || defined(DBG_PERF)
-    for (std::vector<Friend>::iterator it = users.begin(); it != users.end(); ++it)
+    if (NULL != m_logger)
     {
-        m_logger->debug("User from Documents/LoginInfo2.dat:" + it->getUsrName() + "(" + it->getHash() + ") => " + it->getDisplayName());
+        for (std::vector<Friend>::iterator it = users.begin(); it != users.end(); ++it)
+        {
+            debugLog("User from Documents/LoginInfo2.dat:" + it->getUsrName() + "(" + it->getHash() + ") => " + it->getDisplayName());
+        }
     }
-#endif
     
     return true;
 }
@@ -316,6 +290,10 @@ int LoginInfo2Parser::parseUser(const char* data, int length, std::vector<Friend
     {
         return -1;
     }
+    
+#ifndef NDEBUG
+    writeFile("/Users/matthew/Documents/WxExp/LoginInfo2.user.data", (const unsigned char* )p, userBufferLen);
+#endif
     RawMessage msg;
     if (!msg.merge(p, userBufferLen))
     {
@@ -327,16 +305,16 @@ int LoginInfo2Parser::parseUser(const char* data, int length, std::vector<Friend
     std::string value;
     if (msg.parse("1", value))
     {
-#if !defined(NDEBUG) || defined(DBG_PERF)
-        m_logger->debug("UsrName from Documents/LoginInfo2.dat = " + value);
-#endif
+        debugLog("UsrName from Documents/LoginInfo2.dat = " + value);
         user.setUsrName(value);
+    }
+    if (msg.parse("2", value))
+    {
+        user.setWxName(value);
     }
     if (msg.parse("3", value))
     {
-#if !defined(NDEBUG) || defined(DBG_PERF)
-        m_logger->debug("DisplayName from Documents/LoginInfo2.dat = " + value);
-#endif
+        debugLog("DisplayName from Documents/LoginInfo2.dat = " + value);
         user.setDisplayName(value);
     }
 #ifndef NDEBUG
@@ -348,36 +326,29 @@ int LoginInfo2Parser::parseUser(const char* data, int length, std::vector<Friend
     }
 #endif
     users.push_back(user);
-    
-#if !defined(NDEBUG) || defined(DBG_PERF)
+
     m_error += "LoginInfo2.dat: *" + user.getDisplayName() + "* ";
-#endif
     
     return static_cast<int>(userBufferLen + (p - data));
 }
 
 bool LoginInfo2Parser::parseUserFromFolder(std::vector<Friend>& users)
 {
-#if !defined(NDEBUG) || defined(DBG_PERF)
-    m_logger->debug("parseUserFromFolder starts...");
-#endif
+    debugLog("parseUserFromFolder starts...");
+
     UserFolderFilter filter;
     ITunesFileVector folders = m_iTunesDb->filter(filter);
     
     for (ITunesFilesConstIterator it = folders.cbegin(); it != folders.cend(); ++it)
     {
         std::string fileName = filter.parse((*it));
-#if !defined(NDEBUG) || defined(DBG_PERF)
         m_error += "User Folder: *" + fileName + "*  ";
-#endif
         if (fileName == "00000000000000000000000000000000")
         {
             continue;
         }
-        
-#if !defined(NDEBUG) || defined(DBG_PERF)
-    m_logger->debug("Find User Folder:" + fileName);
-#endif
+
+        debugLog("Find User Folder:" + fileName);
         
         bool existing = false;
         std::vector<Friend>::const_iterator it2 = users.cbegin();
@@ -392,13 +363,9 @@ bool LoginInfo2Parser::parseUserFromFolder(std::vector<Friend>& users)
         
         if (!existing)
         {
-#if !defined(NDEBUG) || defined(DBG_PERF)
-            m_logger->debug("New User Folder:" + fileName);
-#endif
+            debugLog("New User Folder:" + fileName);
             users.emplace(users.end(), "", fileName);
-#if !defined(NDEBUG) || defined(DBG_PERF)
             m_error += "New User From Folder: *" + fileName + "*  ";
-#endif
         }
     }
 
@@ -418,6 +385,11 @@ std::string MMSettings::getUsrName() const
     return m_usrName;
 }
 
+std::string MMSettings::getWxName() const
+{
+    return m_wxName;
+}
+
 std::string MMSettings::getDisplayName() const
 {
     return m_displayName;
@@ -433,15 +405,16 @@ std::string MMSettings::getPortraitHD() const
     return m_portraitHD;
 }
 
-MMKVParser::MMKVParser(
-#if !defined(NDEBUG) || defined(DBG_PERF)
-                     Logger *logger
-#endif
-                       )
-#if !defined(NDEBUG) || defined(DBG_PERF)
-                    : m_logger(logger)
-#endif
+MMKVParser::MMKVParser(Logger *logger) : m_logger(logger)
 {
+}
+
+void MMKVParser::debugLog(const std::string& log)
+{
+    if (NULL != m_logger)
+    {
+        m_logger->debug(log);
+    }
 }
 
 bool MMKVParser::parse(const std::string& path, const std::string& crcPath)
@@ -449,43 +422,33 @@ bool MMKVParser::parse(const std::string& path, const std::string& crcPath)
     std::vector<unsigned char> contents;
     uint32_t lastActualSize = 0;
     // 86: usrName
-    // 87: name
+    // 87: wxName
     // 88: DisplayName
     if (readFile(crcPath, contents))
     {
         if (contents.size() >= 36)
         {
             memcpy(&lastActualSize, &contents[32], 4);
-#if !defined(NDEBUG) || defined(DBG_PERF)
-            m_logger->debug("MMKV lastActualSize from crc: " + std::to_string(lastActualSize) + " crc file size:" + std::to_string(contents.size()));
-#endif
+            debugLog("MMKV lastActualSize from crc: " + std::to_string(lastActualSize) + " crc file size:" + std::to_string(contents.size()));
         }
         else
         {
-#if !defined(NDEBUG) || defined(DBG_PERF)
-            m_logger->debug("MMKV crc file size:" + std::to_string(contents.size()));
-#endif
+            debugLog("MMKV crc file size:" + std::to_string(contents.size()));
         }
         contents.clear();
     }
     else
     {
-#if !defined(NDEBUG) || defined(DBG_PERF)
-        m_logger->debug("Failed to read MMKV crc file:" + crcPath);
-#endif
+        debugLog("Failed to read MMKV crc file:" + crcPath);
     }
     
     if (!readFile(path, contents))
     {
-#if !defined(NDEBUG) || defined(DBG_PERF)
-        m_logger->debug("Failed to read MMKV file:" + path);
-#endif
+        debugLog("Failed to read MMKV file:" + path);
         return false;
     }
     
-#if !defined(NDEBUG) || defined(DBG_PERF)
-    m_logger->debug("MMKV file size:" + std::to_string(contents.size()));
-#endif
+    debugLog("MMKV file size:" + std::to_string(contents.size()));
     
     uint32_t actualSize = 0;
     if (contents.size() >= 4)
@@ -499,18 +462,14 @@ bool MMKVParser::parse(const std::string& path, const std::string& crcPath)
     
     if (actualSize <= 0)
     {
-#if !defined(NDEBUG) || defined(DBG_PERF)
-        m_logger->debug("MMKV actualSize is less than 0: " + std::to_string(actualSize));
-#endif
+        debugLog("MMKV actualSize is less than 0: " + std::to_string(actualSize));
         return false;
     }
 
     actualSize += 4;
     if (contents.size() < actualSize)
     {
-#if !defined(NDEBUG) || defined(DBG_PERF)
-        m_logger->debug("MMKV contents size < actualSize: " + std::to_string(contents.size()) + "/" + std::to_string(actualSize));
-#endif
+        debugLog("MMKV contents size < actualSize: " + std::to_string(contents.size()) + "/" + std::to_string(actualSize));
     }
     
     MMKVReader reader(&contents[0], actualSize);
@@ -518,36 +477,28 @@ bool MMKVParser::parse(const std::string& path, const std::string& crcPath)
     
     while (!reader.isAtEnd())
     {
-#if !defined(NDEBUG) || defined(DBG_PERF)
-        // m_logger->debug("MMKV offset: " + std::to_string(reader.getPos()) + "/" + std::to_string(actualSize));
-#endif
-        //
+        // debugLog("MMKV offset: " + std::to_string(reader.getPos()) + "/" + std::to_string(actualSize));
+
         const auto k = reader.readKey();
         if (k.empty())
         {
-#if !defined(NDEBUG) || defined(DBG_PERF)
-            m_logger->debug("MMKV exception: empty key");
-#endif
+            debugLog("MMKV exception: empty key");
             break;
         }
         
         if (k == "86")
         {
             m_usrName = reader.readStringValue();
-#if !defined(NDEBUG) || defined(DBG_PERF)
-            // m_logger->debug("MMKV usrName: " + m_usrName);
-#endif
+            // debugLog("MMKV usrName: " + m_usrName);
         }
         else if (k == "87")
         {
-            m_name = reader.readStringValue();
+            m_wxName = reader.readStringValue();
         }
         else if (k == "88")
         {
             m_displayName = reader.readStringValue();
-#if !defined(NDEBUG) || defined(DBG_PERF)
-            // m_logger->debug("MMKV displayName: " + m_displayName);
-#endif
+            // debugLog("MMKV displayName: " + m_displayName);
         }
         else if (k == "headimgurl")
         {
@@ -630,10 +581,7 @@ bool MMSettingParser::parse(const std::string& usrNameHash)
             }
             else if (idx == 2)
             {
-                if (m_displayName.empty())
-                {
-                    m_displayName.assign(pValue, valueLength);
-                }
+                m_wxName.assign(pValue, valueLength);
             }
         }
     }
@@ -743,7 +691,7 @@ void FriendsParser::setOutputPath(const std::string& outputPath)
 bool FriendsParser::parseWcdb(const std::string& mmPath, Friends& friends)
 {
     sqlite3 *db = NULL;
-    int rc = openSqlite3ReadOnly(mmPath, &db);
+    int rc = openSqlite3Database(mmPath, &db);
     if (rc != SQLITE_OK)
     {
         sqlite3_close(db);
@@ -769,26 +717,81 @@ bool FriendsParser::parseWcdb(const std::string& mmPath, Friends& friends)
             continue;
         }
         std::string uid = val;
-        
+        /*
         if (Friend::isSubscription(uid))
         {
             continue;
         }
+         */
         
         Friend& f = friends.addFriend(uid);
         f.setUserType(userType);
         
         parseRemark(sqlite3_column_blob(stmt, 1), sqlite3_column_bytes(stmt, 1), f);
+        parseChatroom(sqlite3_column_blob(stmt, 2), sqlite3_column_bytes(stmt, 2), f);
         if (m_detailedInfo)
         {
             parseAvatar(sqlite3_column_blob(stmt, 3), sqlite3_column_bytes(stmt, 3), f);
-            parseChatroom(sqlite3_column_blob(stmt, 2), sqlite3_column_bytes(stmt, 2), f);
         }
     }
     
     sqlite3_finalize(stmt);
+    
+    sql = "SELECT userName,dbContactRemark,dbContactChatRoom,dbContactHeadImage,type FROM OpenIMContact";
+    stmt = NULL;
+    rc = sqlite3_prepare_v2(db, sql.c_str(), (int)(sql.size()), &stmt, NULL);
+    if (rc != SQLITE_OK)
+    {
+        std::string error = sqlite3_errmsg(db);
+        sqlite3_close(db);
+        return false;
+    }
+
+    while (sqlite3_step(stmt) == SQLITE_ROW)
+    {
+        int userType = sqlite3_column_int(stmt, 4);
+        const char* val = reinterpret_cast<const char*>(sqlite3_column_text(stmt, 0));
+        if (NULL == val)
+        {
+            continue;
+        }
+        std::string uid = val;
+        /*
+        if (Friend::isSubscription(uid))
+        {
+            continue;
+        }
+         */
+        
+        Friend& f = friends.addFriend(uid);
+        f.setUserType(userType);
+        
+        parseRemark(sqlite3_column_blob(stmt, 1), sqlite3_column_bytes(stmt, 1), f);
+        parseChatroom(sqlite3_column_blob(stmt, 2), sqlite3_column_bytes(stmt, 2), f);
+        if (m_detailedInfo)
+        {
+            parseAvatar(sqlite3_column_blob(stmt, 3), sqlite3_column_bytes(stmt, 3), f);
+        }
+    }
+    
+    sqlite3_finalize(stmt);
+    
     sqlite3_close(db);
     
+#ifndef NDEBUG
+    
+    if (!m_outputPath.empty())
+    {
+        std::string data = "usrName\tWxId\tAlias\r\n";
+        for (std::map<std::string, Friend>::const_iterator it = friends.friends.cbegin(); it != friends.friends.cend(); ++it)
+        {
+            data += it->second.m_usrName + "\t" + it->second.m_wxName + "\t" + it->second.m_displayName + "\r\n";
+        }
+        writeFile(combinePath(m_outputPath, "Friends.txt"), data);
+    }
+    
+#endif
+
     return true;
 }
 
@@ -810,19 +813,34 @@ bool FriendsParser::parseRemark(const void *data, int length, Friend& f)
     {
         f.setDisplayName(value);
     }
-    
+    if (msg.parse("2", value))
+    {
+        f.setWxName(value);
+    }
+
     /*
     if (msg.parse("6", value))
     {
     }
     */
     
+    if (m_detailedInfo)
+    {
+        // 8: Tags
+        // 8: "18,42"
+        f.clearTags();
+        if (msg.parse("8", value))
+        {
+            std::vector<std::string> tags = split(value, ",");
+            f.swapTags(tags);
+        }
+    }
+
     return true;
 }
 
 bool FriendsParser::parseAvatar(const void *data, int length, Friend& f)
 {
-
     RawMessage msg;
     if (!msg.merge(reinterpret_cast<const char *>(data), length))
     {
@@ -863,6 +881,121 @@ bool FriendsParser::parseChatroom(const void *data, int length, Friend& f)
     }
 
     return true;
+}
+
+bool FriendsParser::parseFriendTags(ITunesDb *iTunesDb, const std::string& uidHash, std::map<uint64_t, std::string>& tags)
+{
+    std::string tagFilePath = "Documents/" + uidHash + "/contactlabel.list";
+    tagFilePath = iTunesDb->findRealPath(tagFilePath);
+    if (tagFilePath.empty())
+    {
+        return false;
+    }
+    
+    std::vector<unsigned char> data;
+    if (!readFile(tagFilePath, data))
+    {
+        return false;
+    }
+    
+    plist_t node = NULL;
+    plist_from_memory(reinterpret_cast<const char *>(&data[0]), static_cast<uint32_t>(data.size()), &node);
+    if (NULL == node)
+    {
+        return false;
+    }
+
+    // std::unique_ptr<plist_t, decltype(::plist_free)> auotNode(node, plist_free);
+    bool res = false;
+    std::unique_ptr<void, decltype(&plist_free)> nodePtr(node, &plist_free);
+
+    plist_t topNode = plist_access_path(node, 1, "$top");
+    if (!PLIST_IS_DICT(topNode))
+    {
+        return false;
+    }
+    plist_t rootNode = plist_dict_get_item(topNode, "root");
+    if (!PLIST_IS_UID(rootNode))
+    {
+        return false;
+    }
+    uint64_t topIdx = 0;
+    plist_get_uid_val(rootNode, &topIdx);
+    
+    
+    plist_t arrayNode = plist_access_path(node, 1, "$objects");
+    
+    plist_type pt  = plist_get_node_type(arrayNode);
+    if (PLIST_IS_ARRAY(arrayNode))
+    {
+        plist_t keysAndObjectsNode = plist_array_get_item(arrayNode, (uint32_t)topIdx);
+        plist_t keysNode = plist_dict_get_item(keysAndObjectsNode, "NS.keys");
+        plist_t objectsNode = plist_dict_get_item(keysAndObjectsNode, "NS.objects");
+        
+        uint32_t numberOfKeys = plist_array_get_size(keysNode);
+        uint32_t numberOfObjects = plist_array_get_size(objectsNode);
+        
+        uint32_t numberOfCount = std::min(numberOfKeys, numberOfObjects);
+        uint64_t keyIdx = 0;
+        uint64_t objectIdx = 0;
+        uint64_t objValIdx = 0;
+        uint64_t strLength = 0;
+        uint64_t keyVal = 0;
+        
+        for (uint32_t idx = 0; idx < numberOfCount; ++idx)
+        {
+            plist_t keyIdxNode = plist_array_get_item(keysNode, idx);
+            plist_t objectIdxNode = plist_array_get_item(objectsNode, idx);
+            pt = plist_get_node_type(keyIdxNode);
+            pt = plist_get_node_type(objectIdxNode);
+
+            plist_get_uid_val(keyIdxNode, &keyIdx);
+            plist_get_uid_val(objectIdxNode, &objectIdx);
+            
+            plist_t keyNode = plist_array_get_item(arrayNode, keyIdx);
+            plist_t objectNode = plist_array_get_item(arrayNode, objectIdx);
+            
+            pt = plist_get_node_type(keyNode);
+            pt = plist_get_node_type(objectNode);
+            if (!PLIST_IS_UINT(keyNode))
+            {
+                // continue;
+            }
+            if (!PLIST_IS_DICT(objectNode))
+            {
+                continue;
+            }
+            
+            plist_t objValIdxNode = plist_dict_get_item(objectNode, "m_nsName");
+            if (!PLIST_IS_UID(objValIdxNode))
+            {
+                continue;
+            }
+            plist_get_uid_val(objValIdxNode, &objValIdx);
+            
+            plist_t objValNode = plist_array_get_item(arrayNode, (uint32_t)objValIdx);
+            if (!PLIST_IS_STRING(objValNode))
+            {
+                continue;
+            }
+
+            plist_get_uint_val(keyNode, &keyVal);
+            
+            strLength = 0;
+            const char* ptr = plist_get_string_ptr(objValNode, &strLength);
+            
+            std::string val;
+            if (NULL != ptr && strLength > 0)
+            {
+                val.assign(ptr, strLength);
+            }
+            
+            tags[keyVal] = val;
+            
+        }
+    }
+    
+    return res;
 }
 
 WechatInfoParser::WechatInfoParser(ITunesDb *iTunesDb) : m_iTunesDb(iTunesDb)
@@ -935,7 +1068,7 @@ bool WechatInfoParser::parsePreferences(WechatInfo& wechatInfo)
     return true;
 }
 
-SessionsParser::SessionsParser(ITunesDb *iTunesDb, ITunesDb *iTunesDbShare, const std::string& cellDataVersion, bool detailedInfo/* = true*/) : m_iTunesDb(iTunesDb), m_iTunesDbShare(iTunesDbShare), m_cellDataVersion(cellDataVersion), m_detailedInfo(detailedInfo)
+SessionsParser::SessionsParser(ITunesDb *iTunesDb, ITunesDb *iTunesDbShare, const Friends& friends, const std::string& cellDataVersion, Logger* logger, bool detailedInfo/* = true*/) : m_iTunesDb(iTunesDb), m_iTunesDbShare(iTunesDbShare), m_friends(friends), m_cellDataVersion(cellDataVersion), m_detailedInfo(detailedInfo), m_logger(logger)
 {
     if (cellDataVersion.empty())
     {
@@ -943,7 +1076,15 @@ SessionsParser::SessionsParser(ITunesDb *iTunesDb, ITunesDb *iTunesDbShare, cons
     }
 }
 
-bool SessionsParser::parse(const Friend& user, const Friends& friends, std::vector<Session>& sessions)
+void SessionsParser::debugLog(const std::string& log)
+{
+    if (NULL != m_logger)
+    {
+        m_logger->debug(log);
+    }
+}
+
+bool SessionsParser::parse(const Friend& user, std::vector<Session>& sessions)
 {
     std::string usrNameHash = user.getHash();
     std::string userRoot = "Documents/" + usrNameHash;
@@ -954,7 +1095,7 @@ bool SessionsParser::parse(const Friend& user, const Friends& friends, std::vect
     }
 
     sqlite3 *db = NULL;
-    int rc = openSqlite3ReadOnly(sessionDbPath, &db);
+    int rc = openSqlite3Database(sessionDbPath, &db);
     if (rc != SQLITE_OK)
     {
         sqlite3_close(db);
@@ -982,7 +1123,7 @@ bool SessionsParser::parse(const Friend& user, const Friends& friends, std::vect
 
         std::vector<Session>::iterator it = sessions.emplace(sessions.cend(), &user);
         Session& session = (*it);
-        
+
         session.setUsrName(usrName);
         session.setCreateTime(static_cast<unsigned int>(sqlite3_column_int(stmt, 1)));
         const char* extFileName = reinterpret_cast<const char*>(sqlite3_column_text(stmt, 0));
@@ -1003,6 +1144,12 @@ bool SessionsParser::parse(const Friend& user, const Friends& friends, std::vect
             
         }
         session.setUnreadCount(sqlite3_column_int(stmt, 2));
+        
+        const Friend* f = m_friends.getFriend(session.getHash());
+        if (NULL != f)
+        {
+            it->update(*f);
+        }
     }
     
     sqlite3_finalize(stmt);
@@ -1015,26 +1162,38 @@ bool SessionsParser::parse(const Friend& user, const Friends& friends, std::vect
         parseMessageDbs(user, userRoot, sessions);
     }
     
+#if !defined(NDEBUG) || defined(DBG_PERF)
+    std::set<std::string> displayNames;
+#endif
     for (std::vector<Session>::iterator it = sessions.begin(); it != sessions.end(); )
     {
         if (!it->isExtFileNameEmpty())
         {
             parseCellData(userRoot, *it);
         }
+#if !defined(NDEBUG) || defined(DBG_PERF)
+        if (!it->isDisplayNameEmpty())
+        {
+            std::set<std::string>::iterator itDN = displayNames.find(it->getDisplayName());
+            if (itDN == displayNames.end())
+            {
+                displayNames.insert(it->getDisplayName());
+            }
+            else
+            {
+                debugLog("Duplicate ChatGroup Name:" + it->getDisplayName() + "\t " + it->getUsrName());
+            }
+        }
+#endif
+        /*
         if (!it->isUsrNameEmpty() && it->isSubscription())
         {
             it = sessions.erase(it);
             continue;
         }
+         */
 
-        const Friend* f = friends.getFriend(it->getHash());
-        if (NULL != f)
-        {
-            // if (!it->isChatroom())
-            {
-                it->update(*f);
-            }
-        }
+        
         ++it;
     }
     
@@ -1049,10 +1208,12 @@ bool SessionsParser::parse(const Friend& user, const Friends& friends, std::vect
         {
             it->setEmptyUsrName("wxid_unknwn_" + std::to_string(sessionId++));
         }
+
         if (it->isDisplayNameEmpty() && !it->isMemberIdsEmpty())
         {
             // Combine the display name from member list
-            parseDisplayNameFromMembers(user, friends, *it);
+            debugLog("ChatGroup Name of " + it->getUsrName() + " is empty. Build it from members");
+            parseDisplayNameFromMembers(user, *it);
         }
     }
 
@@ -1071,15 +1232,44 @@ bool SessionsParser::parse(const Friend& user, const Friends& friends, std::vect
         // assert(false);
     }
 #endif
+    
+#if !defined(NDEBUG) || defined(DBG_PERF)
+    displayNames.clear();
+    int emptyDNCount = 0;
+    int duplicateDNCount = 0;
+    for (std::vector<Session>::iterator it = sessions.begin(); it != sessions.end(); )
+    {
+        if (!it->isDisplayNameEmpty())
+        {
+            std::set<std::string>::iterator itDN = displayNames.find(it->getDisplayName());
+            if (itDN == displayNames.end())
+            {
+                displayNames.insert(it->getDisplayName());
+            }
+            else
+            {
+                duplicateDNCount++;
+            }
+        }
+        else
+        {
+            emptyDNCount++;
+        }
+        ++it;
+    }
+    
+    debugLog("Duplicate ChatGroup Name:" + std::to_string(duplicateDNCount) + ", Empty ChatGroup Name:" + std::to_string(emptyDNCount));
+#endif
 
     return true;
 }
 
-bool SessionsParser::parseDisplayNameFromMembers(const Friend& user, const Friends& friends, Session& session)
+bool SessionsParser::parseDisplayNameFromMembers(const Friend& user, Session& session)
 {
-    std::vector<std::string> members = split(session.getMemberIds(), ";");
+    std::string memberIds = session.getMemberIds();
+    std::vector<std::string> members = memberIds.empty() ? session.getMemberUsrNames() : split(memberIds, ";");
     // std::vector<std::string displayName;
-    for (std::vector<std::string>::iterator it = members.begin(); it != members.end();)
+    for (auto it = members.begin(); it != members.end();)
     {
         if (user.getUsrName() == *it)
         {
@@ -1087,7 +1277,7 @@ bool SessionsParser::parseDisplayNameFromMembers(const Friend& user, const Frien
             continue;
         }
         
-        const Friend* member = friends.getFriendByUid(*it);
+        const Friend* member = m_friends.getFriendByUid(*it);
         if (NULL != member)
         {
             std::string displayName = member->getDisplayName();
@@ -1098,7 +1288,7 @@ bool SessionsParser::parseDisplayNameFromMembers(const Friend& user, const Frien
     }
     
     session.setDisplayName(join(members, ","));
-    
+
     return true;
 }
 
@@ -1106,7 +1296,7 @@ bool SessionsParser::parseUniversalSessions(const Friend& user, const std::strin
 {
     SessionUsrNameCompare comp;
     std::sort(sessions.begin(), sessions.end(), comp);
-    
+
     std::map<std::string, Session> newSessions;
     
     std::string items[] = {"BottleSession", "SubscribeSession", "SubscribeSessionList", "WASession"};
@@ -1120,7 +1310,7 @@ bool SessionsParser::parseUniversalSessions(const Friend& user, const std::strin
         }
 
         sqlite3 *db = NULL;
-        int rc = openSqlite3ReadOnly(sessionDbPath, &db);
+        int rc = openSqlite3Database(sessionDbPath, &db);
         if (rc != SQLITE_OK)
         {
             sqlite3_close(db);
@@ -1224,7 +1414,7 @@ bool SessionsParser::parseMessageDbs(const Friend& user, const std::string& user
 bool SessionsParser::parseMessageDb(const Friend& user, const std::string& mmPath, std::vector<Session>& sessions, std::vector<Session>& deletedSessions)
 {
     sqlite3 *db = NULL;
-    int rc = openSqlite3ReadOnly(mmPath, &db);
+    int rc = openSqlite3Database(mmPath, &db);
     if (rc != SQLITE_OK)
     {
         sqlite3_close(db);
@@ -1255,27 +1445,27 @@ bool SessionsParser::parseMessageDb(const Friend& user, const std::string& mmPat
         if (startsWith(name, "Chat_"))
         {
             std::string chatId = name.substr(5);
-            int recordCount = 0;
-            std::string sql2 = "SELECT COUNT(*) AS rc FROM " + name;
-            sqlite3_stmt* stmt2 = NULL;
-            rc = sqlite3_prepare_v2(db, sql2.c_str(), (int)(sql2.size()), &stmt2, NULL);
-            if (rc == SQLITE_OK)
+
+            std::vector<Session>::iterator it = std::lower_bound(sessions.begin(), sessions.end(), chatId, comp);
+            if (it != sessions.end() && it->getHash() == chatId)
             {
-                if (sqlite3_step(stmt2) == SQLITE_ROW)
-                {
-                    recordCount = sqlite3_column_int(stmt2, 0);
-                }
-                
-                sqlite3_finalize(stmt2);
-                
-                std::vector<Session>::iterator it = std::lower_bound(sessions.begin(), sessions.end(), chatId, comp);
-                if (it != sessions.end() && it->getHash() == chatId)
+                int recordCount = 0;
+                std::string sql2 = "SELECT COUNT(*) AS rc FROM " + name;
+                sqlite3_stmt* stmt2 = NULL;
+                rc = sqlite3_prepare_v2(db, sql2.c_str(), (int)(sql2.size()), &stmt2, NULL);
+                if (rc == SQLITE_OK)
                 {
                     it->setDbFile(mmPath);
-                    it->setRecordCount(recordCount);
-                }
-                else
-                {
+                    
+                    if (sqlite3_step(stmt2) == SQLITE_ROW)
+                    {
+                        recordCount = sqlite3_column_int(stmt2, 0);
+                        it->setRecordCount(recordCount);
+                    }
+                    
+                    sqlite3_finalize(stmt2);
+                    
+                    /*
                     uint32_t lastCreateTime = 0;
                     std::string sql3 = "SELECT MAX(CreateTime) AS lct FROM " + name;
                     sqlite3_stmt* stmt3 = NULL;
@@ -1293,10 +1483,92 @@ bool SessionsParser::parseMessageDb(const Friend& user, const std::string& mmPat
                     it->setDbFile(mmPath);
                     it->setLastMessageTime(lastCreateTime);
                     it->setRecordCount(recordCount);
+                    */
+                }
+                
+                sql2 = "SELECT CreateTime,Des,Message,Type FROM " + name + " ORDER BY CreateTime DESC LIMIT 1";
+                rc = sqlite3_prepare_v2(db, sql2.c_str(), (int)(sql2.size()), &stmt2, NULL);
+                if (rc == SQLITE_OK)
+                {
+                    if (sqlite3_step(stmt2) == SQLITE_ROW)
+                    {
+                        sqlite3_int64 lastCreateTime = sqlite3_column_int64(stmt2, 0);
+                        int des = sqlite3_column_int(stmt2, 1);
+                        const unsigned char *pMsg = sqlite3_column_text(stmt2, 2);
+                        int type = sqlite3_column_int(stmt2, 3);
+                        
+                        it->setLastMessageTime((unsigned int)lastCreateTime);
+                        if (NULL != pMsg)
+                        {
+                            std::string msg = (const char *)pMsg;
+                            if (it->isChatroom())
+                            {
+                                if (des != 0)
+                                {
+                                    std::string::size_type enter = msg.find(":\n");
+                                    if (enter != std::string::npos && enter + 2 < msg.size())
+                                    {
+                                        std::string senderId = msg.substr(0, enter);
+                                        
+                                        it->setLastMessageUsrName(senderId, m_friends);
+                                        if (type == 1)
+                                        {
+                                            msg = msg.substr(enter + 2);
+                                            it->setLastMessage(msg);
+                                        }
+                                        else
+                                        {
+                                            // it->setLastMessage("");
+                                        }
+                                    }
+                                }
+                                else
+                                {
+                                    // Me
+                                    
+                                    it->setLastMessageUsrName(user.getUsrName(), user.getDisplayName());
+                                    if (type == 1)
+                                    {
+                                        it->setLastMessage(msg);
+                                    }
+                                    else
+                                    {
+                                        // it->setLastMessage("-");
+                                    }
+                                }
+                            }
+                            else
+                            {
+                                if (des != 0)
+                                {
+                                    it->setLastMessageUsrName(it->getUsrName(), m_friends);
+                                }
+                                else
+                                {
+                                    // Me
+                                    it->setLastMessageUsrName(user.getUsrName(), user.getDisplayName());
+                                }
+                                if (type == 1)
+                                {
+                                    it->setLastMessage(msg);
+                                }
+                                else
+                                {
+                                    // it->setLastMessage("-");
+                                }
+                            }
+                        }
+                    }
+
+                    sqlite3_finalize(stmt2);
+                    
                 }
             }
+            else
+            {
+                // ASSERT (false)
+            }
             
-            // sessionIds.push_back(std::make_pair<>(chatId, recordCount));
         }
     }
     
@@ -1321,7 +1593,6 @@ bool SessionsParser::parseCellData(const std::string& userRoot, Session& session
         return false;
     }
 
-
     RawMessage msg;
     if (!msg.mergeFile(fileName))
     {
@@ -1337,7 +1608,7 @@ bool SessionsParser::parseCellData(const std::string& userRoot, Session& session
             session.setUsrName(value);
         }
     }
-    if (session.isMemberIdsEmpty() && msg.parse("1.3", value))
+    if (session.isMemberIdsEmpty() && msg.parse("1.3", value) && !value.empty())
     {
         session.setMemberIds(value);
     }
@@ -1365,7 +1636,7 @@ bool SessionsParser::parseCellData(const std::string& userRoot, Session& session
     }
     if (msg.parse("2.7", value2))
     {
-        session.setLastMessageTime(static_cast<unsigned int>(value2));
+        // session.setLastMessageTime(static_cast<unsigned int>(value2));
     }
     if (msg.parse("2.2", value2))
     {
@@ -1373,6 +1644,33 @@ bool SessionsParser::parseCellData(const std::string& userRoot, Session& session
         {
             session.setRecordCount(value2);
         }
+    }
+    
+    std::string lastMsg;
+    std::string lastMsgUser;
+    bool result1 = msg.parse("2.11", lastMsg);
+    bool result2 = msg.parse("2.10", lastMsgUser);
+    if (!result2 || lastMsgUser.empty())
+    {
+        result2 = msg.parse("2.8", lastMsgUser);
+    }
+    if (result1 || result2)
+    {
+#ifndef NDEBUG
+        if (startsWith(lastMsg, "17390608691"))
+        {
+            msg.parse("2.9", value);
+            msg.parse("2.10", value);
+        }
+#endif
+        
+        // session.setLastMessage(lastMsg, lastMsgUser, friends);
+    }
+    // 9: "wxid_tub3kj534ntk12"
+    //  10: "wxid_dsbf267m3a9o11"
+    // if (msg.parse("2.9", lastMsgUser))
+    {
+        // session.setLastMessageUsrName(lastMsgUser, friends);
     }
     
     if (session.isDisplayNameEmpty())
@@ -1575,7 +1873,7 @@ bool SessionsParser::parseSessionsInGroupApp(const std::string& userRoot, std::v
     for (std::vector<Session>::iterator it = sessions.begin(); it != sessions.end(); ++it)
     {
         std::string avatarPath = m_iTunesDbShare->findRealPath(combinePath(userRoot, "session", "headImg", it->getHash() + ".pic"));
-        if (!avatarPath.empty())
+        if (!avatarPath.empty() && !Friend::isDefaultAvatar(avatarPath))
         {
             it->setPortrait("file://" + avatarPath);
         }
@@ -1584,13 +1882,49 @@ bool SessionsParser::parseSessionsInGroupApp(const std::string& userRoot, std::v
     return true;
 }
 
-SessionParser::SessionParser(int options) : m_options(options)
+SessionParser::SessionParser(const ExportOption& options) : m_options(options)
 {
 }
 
 SessionParser::MessageEnumerator* SessionParser::buildMsgEnumerator(const Session& session, uint64_t minId)
 {
     return new MessageEnumerator(session, m_options, minId);
+}
+
+uint32_t SessionParser::calcNumberOfMessages(const Session& session, uint64_t minId)
+{
+    sqlite3* db = NULL;
+    int rc = openSqlite3Database(session.getDbFile(), &db);
+    if (rc != SQLITE_OK)
+    {
+        if (NULL != db)
+        {
+            sqlite3_close(db);
+            db = NULL;
+        }
+        return 0;
+    }
+    
+    std::string sql = "SELECT COUNT(MesLocalID) FROM Chat_" + session.getHash() + " WHERE MesLocalID>" + std::to_string(minId);
+    
+    sqlite3_stmt* stmt = NULL;
+    rc = sqlite3_prepare_v2(db, sql.c_str(), (int)(sql.size()), &stmt, NULL);
+    if (rc != SQLITE_OK)
+    {
+        sqlite3_close(db);
+        db = NULL;
+        return 0;
+    }
+    
+    uint32_t recordCount = 0;
+    if (sqlite3_step(stmt) == SQLITE_ROW)
+    {
+        recordCount = (uint32_t)sqlite3_column_int64(stmt, 0);
+    }
+    if (NULL != stmt) sqlite3_finalize(stmt);
+    if (NULL != db) sqlite3_close(db);
+    
+    return recordCount;
 }
 
 struct MSG_ENUMERATOR_CONTEXT
@@ -1610,12 +1944,12 @@ struct MSG_ENUMERATOR_CONTEXT
     }
 };
 
-SessionParser::MessageEnumerator::MessageEnumerator(const Session& session, int options, int64_t minId)
+SessionParser::MessageEnumerator::MessageEnumerator(const Session& session, const ExportOption& options, int64_t minId)
 {
     MSG_ENUMERATOR_CONTEXT* context = new MSG_ENUMERATOR_CONTEXT(NULL, NULL);
     m_context = context;
     
-    int rc = openSqlite3ReadOnly(session.getDbFile(), &(context->db));
+    int rc = openSqlite3Database(session.getDbFile(), &(context->db));
     if (rc != SQLITE_OK)
     {
         sqlite3_close(context->db);
@@ -1623,14 +1957,14 @@ SessionParser::MessageEnumerator::MessageEnumerator(const Session& session, int 
         return;
     }
     
-    std::string sql = "SELECT CreateTime,Message,Des,Type,MesLocalID FROM Chat_" + session.getHash();
+    std::string sql = "SELECT CreateTime,Des,MesLocalID,Message,MesSvrID,Status,TableVer,Type FROM Chat_" + session.getHash();
     if (minId > 0)
     {
         // Incremental Exporting
         sql += " WHERE MesLocalID>" + std::to_string(minId);
     }
     sql += " ORDER BY CreateTime";
-    if ((options & SPO_DESC) == SPO_DESC)
+    if (options.isDesc())
     {
         sql += " DESC";
     }
@@ -1686,8 +2020,11 @@ bool SessionParser::MessageEnumerator::nextMessage(WXMSG& msg)
     
     if (sqlite3_step(context->stmt) == SQLITE_ROW)
     {
-        msg.createTime = sqlite3_column_int(context->stmt, 0);
-        const unsigned char* pMessage = sqlite3_column_text(context->stmt, 1);
+        msg.createTime = (unsigned int)sqlite3_column_int(context->stmt, 0);
+        msg.des = sqlite3_column_int(context->stmt, 1);
+        msg.msgIdValue = sqlite3_column_int64(context->stmt, 2);
+        msg.msgId = std::to_string(msg.msgIdValue);
+        const unsigned char* pMessage = sqlite3_column_text(context->stmt, 3);
         if (pMessage != NULL)
         {
             msg.content = reinterpret_cast<const char*>(pMessage);
@@ -1696,10 +2033,10 @@ bool SessionParser::MessageEnumerator::nextMessage(WXMSG& msg)
         {
             msg.content.clear();
         }
-        msg.des = sqlite3_column_int(context->stmt, 2);
-        msg.type = sqlite3_column_int(context->stmt, 3);
-        msg.msgIdValue = sqlite3_column_int64(context->stmt, 4);
-        msg.msgId = std::to_string(msg.msgIdValue);
+        msg.msgSvrId = (sqlite_uint64)sqlite3_column_int64(context->stmt, 4);
+        msg.status = sqlite3_column_int(context->stmt, 5);
+        msg.tableVersion = sqlite3_column_int(context->stmt, 6);
+        msg.type = sqlite3_column_int(context->stmt, 7);
         
         return true;
     }

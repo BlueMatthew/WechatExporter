@@ -23,7 +23,9 @@
 
 #endif
 
-std::string md5(const std::string& s)
+#include "FileSystem.h"
+
+std::string md5Impl(const void* data, size_t dataSize)
 {
     std::stringstream stream;
     stream << std::setfill ('0') << std::hex;
@@ -39,7 +41,7 @@ std::string md5(const std::string& s)
     {
         if(CryptCreateHash(hCryptProv, CALG_MD5, 0, 0, &hHash))
         {
-            if(CryptHashData(hHash, reinterpret_cast<const BYTE*>(s.c_str()), static_cast<DWORD>(s.size()), 0))
+            if(CryptHashData(hHash, reinterpret_cast<const BYTE*>(data), static_cast<DWORD>(dataSize), 0))
             {
                 if(CryptGetHashParam(hHash, HP_HASHVAL, bHash, &dwHashLen, 0))
                 {
@@ -58,7 +60,7 @@ std::string md5(const std::string& s)
 
 #elif defined(__APPLE__)
     unsigned char digest[CC_MD5_DIGEST_LENGTH] = {0};
-    CC_MD5(s.c_str(), (CC_LONG)s.size(), digest); // This is the md5 call
+    CC_MD5(data, (CC_LONG)dataSize, digest); // This is the md5 call
 
     for (int idx = 0; idx < CC_MD5_DIGEST_LENGTH; idx++)
     {
@@ -69,6 +71,23 @@ std::string md5(const std::string& s)
 #endif
 
     return stream.str();
+}
+
+std::string md5(const std::string& s)
+{
+    return md5Impl(s.c_str(), s.size());
+}
+
+std::string md5File(const std::string& path)
+{
+    std::vector<unsigned char> data;
+    
+    if (readFile(path, data) && !data.empty())
+    {
+        return md5Impl(&data[0], data.size());
+    }
+    
+    return "";
 }
 
 std::string sha1(const std::string& s)

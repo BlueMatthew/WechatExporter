@@ -1,0 +1,71 @@
+[
+	{
+		"key": "Transfer_Subtype_1",
+		"value": "Transfer"
+	},
+	
+	{
+		"key": "Transfer_Subtype_3",
+		"value": "Accepted "
+	},
+	{
+		"key": "Transfer_Subtype_5",
+		"value": "Accepted "
+	},
+	{
+		"key": "Transfer_Subtype_4",
+		"value": "Rejected"
+	},
+
+	{
+		"key": "Transfer_Subtype_8",
+		"value": "Accepted"
+	},
+	{
+		"key": "Transfer_Subtype_9",
+		"value": "Rejected"
+	},
+	{
+		"key": "Transfer_Subtype_10",
+		"value": "Expired"
+	},
+
+	{
+		"key": "Transfer_Subtype_1",
+		"value": "Pay to %s"
+	},
+	
+	{
+		"key": "Group_Transfer_Subtype_3",
+		"value": "From %s - Accepted "
+	},
+	{
+		"key": "Group_Transfer_Subtype_5",
+		"value": "From %s - Accepted "
+	},
+	{
+		"key": "Group_Transfer_Subtype_4",
+		"value": "From %s - Rejected"
+	},
+
+	{
+		"key": "Group_Transfer_Subtype_8",
+		"value": "Pay to %s - Accepted"
+	},
+	{
+		"key": "Group_Transfer_Subtype_9",
+		"value": "Pay to %s - Rejected"
+	},
+	{
+		"key": "Group_Transfer_Subtype_10",
+		"value": "Expired"
+	},
+	{
+		"key": "",
+		"value": ""
+	},
+	{
+		"key": "",
+		"value": ""
+	}
+]

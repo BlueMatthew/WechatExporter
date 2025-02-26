@@ -7,7 +7,6 @@
 #include <thread>
 #include <future>
 #include <chrono>
-#include "Core.h"
 #include "LoggerImpl.h"
 #include "PdfConverterImpl.h"
 #include "ExportNotifierImpl.h"
@@ -32,23 +31,27 @@ private:
 		VS_EXPORTING
 	};
 
-	static const int SUBITEM_PROGRESS = 4;
+	static const int SUBITEM_PROGRESS = 5;
 	static const UINT_PTR EVENT_ID_PROGRESS = 1;
 
 	// CColoredComboBoxCtrl	m_cbmBoxBackups;
 	// CColoredComboBoxCtrl	m_cbmBoxUsers;
+	CImageList				m_sourceTypeIcons;
 	CLogListBox				m_logListBox;
 	CSortListViewCtrl		m_sessionsListCtrl;
 	CProgressListViewCtrl	m_progressListCtrl;
 	CStatic					m_progressTextCtrl;
 	CTextProgressBarCtrl	m_progressBarCtrl;
+	CToolTipButton			m_btnExpITunes;
 	
 	LoggerImpl*			m_logger;
 	PdfConverterImpl*	m_pdfConverter;
 	ExportNotifierImpl* m_notifier;
 	Exporter*			m_exporter;
 
-	std::vector<BackupManifest> m_manifests;
+	std::vector<WechatSource *> m_wechatSources;
+	// std::vector<DeviceInfo>	m_devices;
+	std::vector<BackupItem> m_manifests;
 	std::vector<std::pair<Friend, std::vector<Session>>> m_usersAndSessions;
 
 	int m_itemClicked;
@@ -79,6 +82,9 @@ private:
 
 		CLoadingHandler(HWND hWnd, const std::string& resDir, const std::string& backupDir, Logger* logger) : m_hWnd(hWnd), m_exp(resDir, backupDir, "", logger, NULL)
 		{
+			ExportOption options;
+			options.outputDebugLogs(AppConfiguration::OutputDebugLogs());
+			m_exp.setOptions(options);
 		}
 
 		~CLoadingHandler()
@@ -191,15 +197,26 @@ public:
 
 	LRESULT OnInitDialog(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 	{
+		m_sourceTypeIcons.Create(16, 16, ILC_COLOR32 | ILC_MASK, 2, 2);
+		int res = m_sourceTypeIcons.AddIcon(AtlLoadIcon(IDI_IPHONE));
+		res = m_sourceTypeIcons.AddIcon(AtlLoadIcon(IDI_ITUNES));
+
+		CComboBoxEx cmb = GetDlgItem(IDC_BACKUP);
+		cmb.SetImageList(m_sourceTypeIcons);
+
 		m_progressTextCtrl = GetDlgItem(IDC_PROGRESS_TEXT);
 		m_logListBox.SubclassWindow(GetDlgItem(IDC_LOGS));
 		m_progressBarCtrl.SubclassWindow(GetDlgItem(IDC_PROGRESS));
-		// m_cbmBoxBackups.SubclassWindow(GetDlgItem(m_exporter));
-		// m_cbmBoxUsers.SubclassWindow(GetDlgItem(IDC_USERS));
+		m_btnExpITunes.SubclassWindow(GetDlgItem(IDC_EXP_ITNS));
+		
 
 		// m_cbmBoxBackups.SetEditColors(CLR_INVALID, ::GetSysColor(COLOR_WINDOWTEXT));
 		// m_cbmBoxUsers.SetEditColors(CLR_INVALID, ::GetSysColor(COLOR_WINDOWTEXT));
 		
+		CString toolTip;
+		toolTip.LoadString(IDS_EXP_ITNS);
+		m_btnExpITunes.SetToolTipText(toolTip);
+
 		m_logger = NULL;
 		m_pdfConverter = NULL;
 		m_notifier = NULL;
@@ -224,28 +241,53 @@ public:
 
 		SetDlgItemText(IDC_OUTPUT, AppConfiguration::GetLastOrDefaultOutputDir());
 
+		std::vector<WechatSource *> wechatSources;
+		std::vector<DeviceInfo> devices;
+		IDeviceBackup::queryDevices(devices);
+		for (std::vector<DeviceInfo>::const_iterator it = devices.cbegin(); it != devices.cend(); ++it)
+		{
+			WechatSource* source = new WechatSource(*it);
+			wechatSources.push_back(source);
+		}
+
 		backupDir = AppConfiguration::GetDefaultBackupDir();
 #ifndef NDEBUG
 		CString lastBackupDir = AppConfiguration::GetLastBackupDir();
 #endif
-		std::vector<BackupManifest> manifests;
+		std::vector<BackupItem> backupItems;
 		if (!backupDir.IsEmpty())
 		{
 			CW2A backupDirU8(CT2W(backupDir), CP_UTF8);
-			ManifestParser parser((LPCSTR)backupDirU8);
-			parser.parse(manifests);
+#ifndef USING_DECODED_ITUNESBACKUP
+			std::unique_ptr<ManifestParser> parser(new ManifestParser((LPCSTR)backupDirU8, false));
+#else
+			std::unique_ptr<ManifestParser> parser(new DecodedManifestParser((LPCSTR)backupDirU8, false));
+#endif
+			// ManifestParser parser((LPCSTR)backupDirU8, false);
+			parser->parse(backupItems);
 		}
 #ifndef NDEBUG
 		if (!lastBackupDir.IsEmpty() && lastBackupDir != backupDir)
 		{
 			CW2A backupDirU8(CT2W(lastBackupDir), CP_UTF8);
-			ManifestParser parser((LPCSTR)backupDirU8);
-			parser.parse(manifests);
+			// ManifestParser parser((LPCSTR)backupDirU8, false);
+#ifndef USING_DECODED_ITUNESBACKUP
+			std::unique_ptr<ManifestParser> parser(new ManifestParser((LPCSTR)backupDirU8, false));
+#else
+			std::unique_ptr<ManifestParser> parser(new DecodedManifestParser((LPCSTR)backupDirU8, false));
+#endif
+			parser->parse(backupItems);
 		}
 #endif
-		if (!manifests.empty())
+		for (std::vector<BackupItem>::const_iterator it = backupItems.cbegin(); it != backupItems.cend(); ++it)
 		{
-			UpdateBackups(manifests);
+			WechatSource* source = new WechatSource(*it);
+			wechatSources.push_back(source);
+		}
+
+		if (!wechatSources.empty())
+		{
+			UpdateBackups(wechatSources);
 		}
 #if defined(NDEBUG) && !defined(DBG_PERF) 
 		if (!AppConfiguration::GetCheckingUpdateDisabled() && (getUnixTimeStamp() - AppConfiguration::GetLastCheckUpdateTime()) > 86400u)
@@ -287,6 +329,7 @@ public:
 		COMMAND_HANDLER(IDC_CHOOSE_OUTPUT, BN_CLICKED, OnBnClickedChooseOutput)
 		COMMAND_HANDLER(IDC_USERS, CBN_SELCHANGE, OnUserSelChange)
 		COMMAND_HANDLER(IDC_SHOW_LOGS, BN_CLICKED, OnBnClickedShowLogs)
+		COMMAND_HANDLER(IDC_EXP_ITNS, BN_CLICKED, OnBnClickedExpITunes)
 		COMMAND_HANDLER(IDC_EXPORT, BN_CLICKED, OnBnClickedExport)
 		COMMAND_HANDLER(IDC_CANCEL, BN_CLICKED, OnBnClickedCancel)
 		COMMAND_HANDLER(IDC_CLOSE, BN_CLICKED, OnBnClickedClose)
@@ -325,6 +368,7 @@ public:
 		DLGRESIZE_CONTROL(IDC_LOGS, DLSZ_SIZE_X | DLSZ_SIZE_Y)
 		DLGRESIZE_CONTROL(IDC_SHOW_LOGS, DLSZ_MOVE_Y)
 		DLGRESIZE_CONTROL(IDC_CANCEL, DLSZ_MOVE_X | DLSZ_MOVE_Y)
+		DLGRESIZE_CONTROL(IDC_EXP_ITNS, DLSZ_MOVE_Y)
 		DLGRESIZE_CONTROL(IDC_CLOSE, DLSZ_MOVE_X | DLSZ_MOVE_Y)
 		DLGRESIZE_CONTROL(IDC_EXPORT, DLSZ_MOVE_X | DLSZ_MOVE_Y)
 	END_DLGRESIZE_MAP()
@@ -436,18 +480,29 @@ public:
 		{
 			CW2A backupDir(CT2W(folder.m_szFolderPath), CP_UTF8);
 
-			ManifestParser parser((LPCSTR)backupDir);
-			std::vector<BackupManifest> manifests;
-			if (parser.parse(manifests) && !manifests.empty())
+			std::vector<WechatSource *> wechatSources;
+#ifndef USING_DECODED_ITUNESBACKUP
+			std::unique_ptr<ManifestParser> parser(new ManifestParser((LPCSTR)backupDir, false));
+#else
+			std::unique_ptr<ManifestParser> parser(new DecodedManifestParser((LPCSTR)backupDir, false));
+#endif
+			std::vector<BackupItem> backupItems;
+			if (parser->parse(backupItems) && !backupItems.empty())
 			{
-				UpdateBackups(manifests);
+				for (std::vector<BackupItem>::const_iterator it = backupItems.cbegin(); it != backupItems.cend(); ++it)
+				{
+					WechatSource* source = new WechatSource(*it);
+					wechatSources.push_back(source);
+				}
+
+				UpdateBackups(wechatSources);
 #ifndef NDEBUG
 				AppConfiguration::SetLastBackupDir(folder.m_szFolderPath);
 #endif
 			}
 			else
 			{
-				m_logger->debug(parser.getLastError());
+				m_logger->debug(parser->getLastError());
 				MsgBox(m_hWnd, IDS_FAILED_TO_LOAD_BKP);
 			}
 		}
@@ -475,8 +530,13 @@ public:
 			return 0;
 		}
 
-		const BackupManifest& manifest = m_manifests[cbmBox.GetCurSel()];
-		if (manifest.isEncrypted())
+		const WechatSource* wechatSource = m_wechatSources[cbmBox.GetCurSel()];
+		if (wechatSource->isDevice())
+		{
+			return 0;
+		}
+		const BackupItem& backupItem = wechatSource->getBackupItem();
+		if (backupItem.isEncrypted())
 		{
 			MsgBox(m_hWnd, IDS_ENC_BKP_NOT_SUPPORTED);
 			return 0;
@@ -497,7 +557,7 @@ public:
 
 		PostMessage(WM_UPD_VIEWSTATE, VS_LOADING, 1);
 		
-		std::string backup = manifest.getPath();
+		std::string backup = backupItem.getPath();
 		CLoadingHandler *handler = new CLoadingHandler(m_hWnd, (LPCSTR)resDir, backup, m_logger);
 		// _Module.GetMessageLoop()->AddIdleHandler(handler);
 		handler->startTask();
@@ -658,6 +718,106 @@ public:
 		return 0;
 	}
 
+	LRESULT OnBnClickedExpITunes(WORD /*wNotifyCode*/, WORD /*wID*/, HWND hWndCtl, BOOL& /*bHandled*/)
+	{
+		CComboBox cbmBox = GetDlgItem(IDC_BACKUP);
+		if (cbmBox.GetCurSel() == -1)
+		{
+			MsgBox(m_hWnd, IDS_SEL_BACKUP_DIR);
+			return 0;
+		}
+
+		const WechatSource* src = m_wechatSources[cbmBox.GetCurSel()];
+		const BackupItem& backupItem = src->getBackupItem();
+		if (backupItem.isEncrypted())
+		{
+			MsgBox(m_hWnd, IDS_ENC_BKP_NOT_SUPPORTED);
+			return 0;
+		}
+
+		std::string backup = backupItem.getPath();
+
+		TCHAR outputDir[MAX_PATH] = { 0 };
+		GetDlgItemText(IDC_OUTPUT, outputDir, MAX_PATH);
+		if (!::PathFileExists(outputDir))
+		{
+			MsgBox(m_hWnd, IDS_INVALID_OUTPUT_DIR);
+			return 0;
+		}
+		/*
+		else
+		{
+			DWORD dwAttributes = GetFileAttributes(outputDir);
+			if ((dwAttributes & FILE_ATTRIBUTE_READONLY) == FILE_ATTRIBUTE_READONLY)
+			{
+				MsgBox(m_hWnd, IDS_READONLY_OUTPUT_DIR);
+				return 0;
+			}
+		}
+		*/
+		CW2A output(CT2W(outputDir), CP_UTF8);
+
+		CWaitCursor waitCursor;
+
+		SendMessage(WM_UPD_VIEWSTATE, VS_EXPORTING, 1);
+
+		::EnableWindow(hWndCtl, FALSE);
+
+		ITunesDb iTunesDb(backup, "");
+		std::vector<std::string> domains;
+		domains.push_back("AppDomain-com.tencent.xin");
+		domains.push_back("AppDomainGroup-group.com.tencent.xin");
+
+		DWORD idx = 0;
+		std::function<bool(const ITunesDb*, const ITunesFile*)> func = std::bind(&CView::onCopyFile, this, std::placeholders::_1, std::placeholders::_2, idx);
+		bool ret = iTunesDb.copy((LPCSTR)output, backupItem.getBackupId(), domains, func);
+		::EnableWindow(hWndCtl, TRUE);
+
+		SendMessage(WM_UPD_VIEWSTATE, VS_IDLE, 1);
+
+		if (ret)
+		{
+			PathAppend(outputDir, TEXT("Backup"));
+			OpenFolder(outputDir);
+		}
+
+		if (!ret)
+		{
+#ifndef NDEBUG
+			std::string errMsg = iTunesDb.getLastError();
+			CW2T lpszErrMsg(CA2W(errMsg.c_str(), CP_UTF8));
+			MsgBox(m_hWnd, (LPCTSTR)lpszErrMsg);
+#endif
+		}
+		return 0;
+
+	}
+
+	bool onCopyFile(const ITunesDb* iTunesDb, const ITunesFile* file, DWORD& idx)
+	{
+		++idx;
+		if (idx % 32 != 0)
+		{
+			return true;
+		}
+
+		MSG msg;
+		while (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE))
+		{
+			if (msg.message == WM_QUIT)
+				return false;
+			TranslateMessage(&msg);
+			DispatchMessage(&msg);
+		}
+
+		return true;
+	}
+
+	void ExportITunesBackup()
+	{
+		PostMessage(WM_COMMAND, (BN_CLICKED << 16) | IDC_EXP_ITNS, (LPARAM)::GetDlgItem(m_hWnd, IDC_EXP_ITNS));
+	}
+
 	LRESULT OnBnClickedExport(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/)
 	{
 		if (NULL != m_exporter)
@@ -672,14 +832,15 @@ public:
 			return 0;
 		}
 
-		const BackupManifest& manifest = m_manifests[cbmBox.GetCurSel()];
-		if (manifest.isEncrypted())
+		const WechatSource* src = m_wechatSources[cbmBox.GetCurSel()];
+		const BackupItem& backupItem = src->getBackupItem();
+		if (backupItem.isEncrypted())
 		{
 			MsgBox(m_hWnd, IDS_ENC_BKP_NOT_SUPPORTED);
 			return 0;
 		}
 
-		std::string backup = manifest.getPath();
+		std::string backup = backupItem.getPath();
 
 		TCHAR outputDir[MAX_PATH] = { 0 };
 		GetDlgItemText(IDC_OUTPUT, outputDir, MAX_PATH);
@@ -691,19 +852,32 @@ public:
 		CW2A output(CT2W(outputDir), CP_UTF8);
 
 		TCHAR curDir[MAX_PATH] = { 0 };
-		DWORD dwRet = GetCurrentDirectory(MAX_PATH, curDir);
+		DWORD dwRet = GetModuleFileName(NULL, curDir, MAX_PATH);
 		if (dwRet == 0)
 		{
-			// printf("GetCurrentDirectory failed (%d)\n", GetLastError());
+			return 0;
+		}
+		if (!PathRemoveFileSpec(curDir))
+		{
 			return 0;
 		}
 
 		if (AppConfiguration::GetIncrementalExporting())
 		{
-			int options = 0;
+			uint64_t options = 0;
 			std::string exportTime;
-			if (Exporter::hasPreviousExporting((LPCSTR)output, options, exportTime))
+			std::string version;
+			if (Exporter::hasPreviousExporting((LPCSTR)output, options, exportTime, version))
 			{
+				if (version.empty() && m_usersAndSessions.size() > 1)
+				{
+					// First version of implementation has design issue
+					if (MsgBox(m_hWnd, IDS_INVLD_INCEXP_FOR_MULTI_USERS, MB_OK) == IDOK)
+					{
+						return 0;
+					}
+				}
+
 				CW2T exportTimeT(CA2W(exportTime.c_str(), CP_UTF8));
 				CString text;
 				text.Format(IDS_PREV_EXP_FOUND, (LPCTSTR)exportTimeT);
@@ -717,21 +891,25 @@ public:
 			}
 		}
 
+#if !defined(NDEBUG) || defined(DBG_PERF)
+		m_logger->setLogPath(outputDir);
+#endif
 		// CButton btn = GetDlgItem(IDC_DESC_ORDER);
-		bool descOrder = AppConfiguration::GetDescOrder();
-		bool saveFilesInSessionFolder = AppConfiguration::GetSavingInSession();
-		bool usingRemoteEmoji = AppConfiguration::GetUsingRemoteEmoji();
-		bool asyncLoading = AppConfiguration::GetAsyncLoading();
-		bool loadingDataOnScroll = AppConfiguration::GetLoadingDataOnScroll();
-		bool supportingFilter = AppConfiguration::GetSupportingFilter();
-		bool incrementalExp = AppConfiguration::GetIncrementalExporting();
+		ExportOption options = AppConfiguration::BuildOptions();
+		// bool descOrder = AppConfiguration::GetDescOrder();
+		// bool saveFilesInSessionFolder = AppConfiguration::GetSavingInSession();
+		// bool usingRemoteEmoji = AppConfiguration::GetUsingRemoteEmoji();
+		// bool asyncLoading = AppConfiguration::GetAsyncLoading();
+		// bool loadingDataOnScroll = AppConfiguration::GetLoadingDataOnScroll();
+		// bool supportingFilter = AppConfiguration::GetSupportingFilter();
+		// bool incrementalExp = AppConfiguration::GetIncrementalExporting();
 		UINT outputFormat = AppConfiguration::GetOutputFormat();
 
-		if (outputFormat == AppConfiguration::OUTPUT_FORMAT_PDF)
+		if (options.isPdfMode())
 		{
-			asyncLoading = false;
-			loadingDataOnScroll = false;
-			supportingFilter = false;
+			options.setSyncLoading();
+			// options.setLoadingDataOnScroll(false);
+			options.supportsFilter(false);
 		}
 
 		CListBox lstboxLogs = GetDlgItem(IDC_LOGS);
@@ -772,26 +950,29 @@ public:
 			m_exporter->setLanguageCode("zh-Hans");
 		}
 		m_exporter->setNotifier(m_notifier);
-		m_exporter->setOrder(!descOrder);
-		m_exporter->useRemoteEmoji(usingRemoteEmoji);
-		m_exporter->setSyncLoading(!asyncLoading);
-		m_exporter->setLoadingDataOnScroll(loadingDataOnScroll);
-		m_exporter->supportsFilter(supportingFilter);
-		m_exporter->setIncrementalExporting(incrementalExp);
-		if (saveFilesInSessionFolder)
+		
+		// m_exporter->setOrder(!descOrder);
+		// m_exporter->useRemoteEmoji(usingRemoteEmoji);
+		// m_exporter->setSyncLoading(!asyncLoading);
+		// m_exporter->setLoadingDataOnScroll(loadingDataOnScroll);
+		// m_exporter->supportsFilter(supportingFilter);
+		// m_exporter->setIncrementalExporting(incrementalExp);
+		// m_exporter->outputDebugLogs(AppConfiguration::OutputDebugLogs());
+		// if (AppConfiguration::IncludeSubscriptions())
 		{
-			m_exporter->saveFilesInSessionFolder();
+			// m_exporter->includesSubscription();
 		}
-		if (outputFormat == AppConfiguration::OUTPUT_FORMAT_TEXT)
+		// if (saveFilesInSessionFolder)
 		{
-			m_exporter->setTextMode();
+			// m_exporter->saveFilesInSessionFolder();
+		}
+		if (options.isTextMode())
+		{
 			m_exporter->setExtName("txt");
 			m_exporter->setTemplatesName("templates_txt");
 		}
-		else if (outputFormat == AppConfiguration::OUTPUT_FORMAT_PDF)
-		{
-			m_exporter->setPdfMode();
-		}
+
+		m_exporter->setOptions(options);
 		
 		m_exporter->filterUsersAndSessions(usersAndSessions);
 		if (m_exporter->run())
@@ -836,6 +1017,13 @@ public:
 		{
 			KillTimer(m_eventIdProgress);
 			m_eventIdProgress = 0;
+		}
+
+		if (!cancelled && AppConfiguration::GetOpenningFolderAfterExp())
+		{
+			TCHAR outputDir[MAX_PATH] = { 0 };
+			GetDlgItemText(IDC_OUTPUT, outputDir, MAX_PATH);
+			OpenFolder( (LPCTSTR)outputDir);
 		}
 
 		PostMessage(WM_UPD_VIEWSTATE, VS_IDLE, 1);
@@ -987,11 +1175,13 @@ protected:
 		::ShowWindow(GetDlgItem(IDC_CANCEL), m_viewState == VS_EXPORTING ? SW_SHOW : SW_HIDE);
 		::ShowWindow(GetDlgItem(IDC_CLOSE), m_viewState != VS_EXPORTING ? SW_SHOW : SW_HIDE);
 
-		UINT ids[] = { IDC_BACKUP, IDC_CHOOSE_BKP, IDC_CHOOSE_OUTPUT, IDC_USERS, IDC_CLOSE, IDC_EXPORT };
+		UINT ids[] = { IDC_BACKUP, IDC_CHOOSE_BKP, IDC_CHOOSE_OUTPUT, IDC_USERS/*, IDC_EXP_ITNS*/, IDC_CLOSE, IDC_EXPORT };
 		for (int idx = 0; idx < sizeof(ids) / sizeof(UINT); ++idx)
 		{
 			::EnableWindow(GetDlgItem(ids[idx]), m_viewState == VS_IDLE);
 		}
+
+		m_btnExpITunes.EnableWindow(m_viewState == VS_IDLE);
 
 		UINT state = (m_viewState == VS_IDLE) ? MF_ENABLED : (MF_DISABLED | MF_GRAYED);
 		::EnableMenuItem(::GetSystemMenu(::GetParent(m_hWnd), FALSE), SC_CLOSE, MF_BYCOMMAND | state);
@@ -1033,7 +1223,7 @@ protected:
 		UpdateProgressBarText(IDS_EXPORTING_MSGS, percent);
 	}
 
-	void UpdateProgressBarText(UINT stringId, int value, bool forceUpdate = false)
+	void UpdateProgressBarText(UINT stringId, DWORD value, bool forceUpdate = false)
 	{
 		if (forceUpdate || value != m_progressTextCtrl.GetWindowLongPtr(GWLP_USERDATA))
 		{
@@ -1047,18 +1237,18 @@ protected:
 		}
 	}
 
-	void UpdateBackups(const std::vector<BackupManifest>& manifests, BOOL onLaunch = FALSE)
+	void UpdateBackups(const std::vector<BackupItem>& backupItems, BOOL onLaunch = FALSE)
 	{
-		if (manifests.empty())
+		if (backupItems.empty())
 		{
 			return;
 		}
 
 		int selectedIndex = -1;
 		// Add default backup folder
-		for (std::vector<BackupManifest>::const_iterator it = manifests.cbegin(); it != manifests.cend(); ++it)
+		for (std::vector<BackupItem>::const_iterator it = backupItems.cbegin(); it != backupItems.cend(); ++it)
 		{
-			std::vector<BackupManifest>::const_iterator it2 = std::find(m_manifests.cbegin(), m_manifests.cend(), *it);
+			std::vector<BackupItem>::const_iterator it2 = std::find(m_manifests.cbegin(), m_manifests.cend(), *it);
 			if (it2 != m_manifests.cend())
 			{
 				if (selectedIndex == -1)
@@ -1077,14 +1267,76 @@ protected:
 		}
 
 		// Update
-		CComboBox cmb = GetDlgItem(IDC_BACKUP);
+		int res = -1;
+		CComboBoxEx cmb = GetDlgItem(IDC_BACKUP);
 		cmb.SetRedraw(FALSE);
 		cmb.ResetContent();
-		for (std::vector<BackupManifest>::const_iterator it = m_manifests.cbegin(); it != m_manifests.cend(); ++it)
+		for (std::vector<BackupItem>::const_iterator it = m_manifests.cbegin(); it != m_manifests.cend(); ++it)
 		{
-			std::string itemTitle = it->toString();
-			CW2T item(CA2W(it->toString().c_str(), CP_UTF8));
-			cmb.AddString((LPCTSTR)item);
+			COMBOBOXEXITEM item = { 0 };
+			item.mask = CBEIF_IMAGE | CBEIF_TEXT | CBEIF_SELECTEDIMAGE;
+			// item.mask = CBEIF_TEXT;
+			CW2T itemText(CA2W(it->toString().c_str(), CP_UTF8));
+			item.iItem = cmb.GetCount();
+			item.iImage = item.iItem % 2;
+			item.iSelectedImage = item.iImage;
+			item.pszText = (LPTSTR)itemText;
+			item.iIndent = 16;
+			res = cmb.InsertItem(&item);
+		}
+		cmb.SetRedraw(TRUE);
+		if (selectedIndex != -1 && selectedIndex < cmb.GetCount())
+		{
+			SetComboBoxCurSel(m_hWnd, cmb, selectedIndex);
+		}
+	}
+
+	void UpdateBackups(const std::vector<WechatSource*>& sources, BOOL onLaunch = FALSE)
+	{
+		if (sources.empty())
+		{
+			return;
+		}
+
+		int selectedIndex = -1;
+		// Add default backup folder
+		for (std::vector<WechatSource*>::const_iterator it = sources.cbegin(); it != sources.cend(); ++it)
+		{
+			std::vector<WechatSource*>::const_iterator it2 = std::find(m_wechatSources.cbegin(), m_wechatSources.cend(), *it);
+			if (it2 != m_wechatSources.cend())
+			{
+				if (selectedIndex == -1)
+				{
+					selectedIndex = static_cast<int>(std::distance(m_wechatSources.cbegin(), it2));
+				}
+			}
+			else
+			{
+				m_wechatSources.push_back(*it);
+				if (selectedIndex == -1)
+				{
+					selectedIndex = static_cast<int>(m_wechatSources.size() - 1);
+				}
+			}
+		}
+
+		// Update
+		int res = -1;
+		CComboBoxEx cmb = GetDlgItem(IDC_BACKUP);
+		cmb.SetRedraw(FALSE);
+		cmb.ResetContent();
+		for (std::vector<WechatSource*>::const_iterator it = m_wechatSources.cbegin(); it != m_wechatSources.cend(); ++it)
+		{
+			COMBOBOXEXITEM item = { 0 };
+			item.mask = CBEIF_IMAGE | CBEIF_TEXT | CBEIF_SELECTEDIMAGE | CBEIF_INDENT;
+			// item.mask = CBEIF_TEXT;
+			CW2T itemText(CA2W((*it)->getDisplayName().c_str(), CP_UTF8));
+			item.iItem = cmb.GetCount();
+			item.iImage = (*it)->isDevice() ? 0 : 1;
+			item.iSelectedImage = item.iImage;
+			item.pszText = (LPTSTR)itemText;
+			// item.iIndent = 4;
+			res = cmb.InsertItem(&item);
 		}
 		cmb.SetRedraw(TRUE);
 		if (selectedIndex != -1 && selectedIndex < cmb.GetCount())
@@ -1100,10 +1352,12 @@ protected:
 		CString strColumn1;
 		CString strColumn2;
 		CString strColumn3;
+		CString strColumn4;
 
 		strColumn1.LoadString(IDS_SESSION_NAME);
 		strColumn2.LoadString(IDS_SESSION_COUNT);
-		strColumn3.LoadString(IDS_SESSION_USER);
+		strColumn3.LoadString(IDS_SESSION_LAST_MSG);
+		strColumn4.LoadString(IDS_SESSION_USER);
 
 		DWORD dwStyle = m_sessionsListCtrl.GetExStyle();
 		dwStyle |= LVS_EX_FULLROWSELECT | LVS_EX_LABELTIP | LVS_EX_GRIDLINES | LVS_EX_CHECKBOXES | LVS_EX_DOUBLEBUFFER;
@@ -1122,8 +1376,12 @@ protected:
 		ListView_InsertColumn(m_sessionsListCtrl, 2, &lvc);
 		lvc.iSubItem++;
 		lvc.pszText = (LPTSTR)(LPCTSTR)strColumn3;
-		lvc.cx = 192;
+		lvc.cx = 320;
 		ListView_InsertColumn(m_sessionsListCtrl, 3, &lvc);
+		lvc.iSubItem++;
+		lvc.pszText = (LPTSTR)(LPCTSTR)strColumn4;
+		lvc.cx = 128;
+		ListView_InsertColumn(m_sessionsListCtrl, 4, &lvc);
 
 		// Set column widths
 		ListView_SetColumnWidth(m_sessionsListCtrl, 0, LVSCW_AUTOSIZE_USEHEADER);
@@ -1134,6 +1392,7 @@ protected:
 		m_sessionsListCtrl.SetColumnSortType(0, LVCOLSORT_NONE);
 		m_sessionsListCtrl.SetColumnSortType(2, LVCOLSORT_LONG);
 		m_sessionsListCtrl.SetColumnSortType(3, LVCOLSORT_NONE);
+		m_sessionsListCtrl.SetColumnSortType(4, LVCOLSORT_NONE);
 
 		HWND header = ListView_GetHeader(m_sessionsListCtrl);
 		DWORD dwHeaderStyle = ::GetWindowLong(header, GWL_STYLE);
@@ -1156,12 +1415,14 @@ protected:
 		CString strColumn2;
 		CString strColumn3;
 		CString strColumn4;
+		CString strColumn5;
 
 		strColumn0.LoadString(IDS_SESSION_NUMBER);
 		strColumn1.LoadString(IDS_SESSION_NAME);
 		strColumn2.LoadString(IDS_SESSION_COUNT);
-		strColumn3.LoadString(IDS_SESSION_USER);
-		strColumn4.LoadString(IDS_SESSION_STATUS);
+		strColumn3.LoadString(IDS_SESSION_LAST_MSG);
+		strColumn4.LoadString(IDS_SESSION_USER);
+		strColumn5.LoadString(IDS_SESSION_STATUS);
 
 		DWORD dwStyle = m_progressListCtrl.GetExStyle();
 		dwStyle |= LVS_EX_FULLROWSELECT | LVS_EX_LABELTIP | LVS_EX_GRIDLINES | LVS_EX_DOUBLEBUFFER;
@@ -1185,12 +1446,16 @@ protected:
 		ListView_InsertColumn(m_progressListCtrl, 2, &lvc);
 		lvc.iSubItem++;
 		lvc.pszText = (LPTSTR)(LPCTSTR)strColumn3;
-		lvc.cx = 192;
+		lvc.cx = 320;
 		ListView_InsertColumn(m_progressListCtrl, 3, &lvc);
 		lvc.iSubItem++;
 		lvc.pszText = (LPTSTR)(LPCTSTR)strColumn4;
-		lvc.cx = 192;
+		lvc.cx = 128;
 		ListView_InsertColumn(m_progressListCtrl, 4, &lvc);
+		lvc.iSubItem++;
+		lvc.pszText = (LPTSTR)(LPCTSTR)strColumn5;
+		lvc.cx = 192;
+		ListView_InsertColumn(m_progressListCtrl, 5, &lvc);
 
 		// Set column widths
 		ListView_SetColumnWidth(m_progressListCtrl, 0, LVSCW_AUTOSIZE_USEHEADER);
@@ -1238,7 +1503,7 @@ protected:
 			int newItem = m_progressListCtrl.InsertItem(&lvItem);
 
 			CString text;
-			for (int nSubItem = 1; nSubItem < 4; nSubItem++)
+			for (int nSubItem = 1; nSubItem < 5; nSubItem++)
 			{
 				listViewCtrl.GetItemText(nItem, nSubItem, text);
 				m_progressListCtrl.AddItem(newItem, nSubItem, text);
@@ -1296,10 +1561,12 @@ protected:
 
 	void LoadSessions(BOOL allUsers, const std::string& usrName)
 	{
+		m_sessionsListCtrl.SetSortColumn(-1);
 		CListViewCtrl listViewCtrl = GetDlgItem(IDC_SESSIONS);
 		CString strDeletedSession;
 		strDeletedSession.LoadStringW(RBN_DELETEDBAND);
 
+		BOOL includesSubscriptions = AppConfiguration::IncludeSubscriptions();
 		TCHAR recordCount[16] = { 0 };
 		for (std::vector<std::pair<Friend, std::vector<Session>>>::const_iterator it = m_usersAndSessions.cbegin(); it != m_usersAndSessions.cend(); ++it)
 		{
@@ -1316,6 +1583,11 @@ protected:
 
 			for (std::vector<Session>::const_iterator it2 = it->second.cbegin(); it2 != it->second.cend(); ++it2)
 			{
+				if (!includesSubscriptions && it2->isSubscription())
+				{
+					continue;
+				}
+
 				std::string displayName = it2->getDisplayName();
 				if (displayName.empty())
 				{
@@ -1345,7 +1617,28 @@ protected:
 					listViewCtrl.AddItem(nItem, 1, pszDisplayName);
 				}
 				listViewCtrl.AddItem(nItem, 2, recordCount);
-				listViewCtrl.AddItem(nItem, 3, pszUserDisplayName);
+
+				std::string msg;
+				if (it2->isTextMessage())
+				{
+					if (it2->hasLastMessageUserDisplayName())
+					{
+						msg = it2->getLastMessageUserDisplayName() + ": " + it2->getLastMessage();
+					}
+					else
+					{
+						msg = it2->getLastMessage();
+					}
+				}
+				else
+				{
+					msg = "-";
+				}
+
+				CW2T pszDisplayMsg(CA2W(msg.c_str(), CP_UTF8));
+				listViewCtrl.AddItem(nItem, 3, pszDisplayMsg);
+
+				listViewCtrl.AddItem(nItem, 4, pszUserDisplayName);
 				// BOOL bRet = listViewCtrl.SetItem(&lvSubItem);
 				listViewCtrl.SetCheckState(nItem, TRUE);
 			}
@@ -1371,5 +1664,7 @@ protected:
 
 		SetHeaderCheckState(listViewCtrl, fChecked);
 	}
+
+	
 
 };

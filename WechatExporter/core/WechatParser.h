@@ -18,11 +18,10 @@
 #include "Utils.h"
 #include "Downloader.h"
 #include "WechatObjects.h"
+#include "ExportOption.h"
 #include "ITunesParser.h"
 #include "MessageParser.h"
-#if !defined(NDEBUG) || defined(DBG_PERF)
 #include "Logger.h"
-#endif
 
 template<class T>
 class FilterBase
@@ -174,29 +173,23 @@ class LoginInfo2Parser
 {
 private:
     ITunesDb *m_iTunesDb;
-#if !defined(NDEBUG) || defined(DBG_PERF)
     std::string m_error;
     Logger*     m_logger;
-#endif
     
 public:
-    LoginInfo2Parser(ITunesDb *iTunesDb
-#if !defined(NDEBUG) || defined(DBG_PERF)
-                     , Logger* logger
-#endif
-    );
+    LoginInfo2Parser(ITunesDb *iTunesDb, Logger* logger);
     
     bool parse(std::vector<Friend>& users);
     bool parse(const std::string& loginInfo2Path, std::vector<Friend>& users);
     
-#if !defined(NDEBUG) || defined(DBG_PERF)
     std::string getError() const;
-#endif
     
 private:
     int parseUser(const char* data, int length, std::vector<Friend>& users);
     bool parseUserFromFolder(std::vector<Friend>& users);
     bool parseMMSettingsFromMMKV(std::map<std::string, std::pair<std::string, std::string>>& mmsettingFiles);
+    
+    void debugLog(const std::string& log);
 };
 
 class MMSettingInMMappedKVFilter : public FilterBase<MMSettingInMMappedKVFilter>
@@ -242,13 +235,14 @@ class MMSettings
 {
 protected:
     std::string m_usrName;
-    std::string m_name;
+    std::string m_wxName;
     std::string m_displayName;
     std::string m_portrait;
     std::string m_portraitHD;
 public:
     
     std::string getUsrName() const;
+    std::string getWxName() const;      // WeiXin Hao
     std::string getDisplayName() const;
     std::string getPortrait() const;
     std::string getPortraitHD() const;
@@ -260,17 +254,14 @@ protected:
 class MMKVParser : public MMSettings
 {
 private:
-#if !defined(NDEBUG) || defined(DBG_PERF)
     Logger*     m_logger;
-#endif
     
 public:
-    MMKVParser(
-#if !defined(NDEBUG) || defined(DBG_PERF)
-               Logger* logger
-#endif
-    );
+    MMKVParser(Logger* logger);
     bool parse(const std::string& path, const std::string& crcPath);
+    
+private:
+    void debugLog(const std::string& log);
 };
 
 class MMSettingParser : public MMSettings
@@ -292,6 +283,9 @@ public:
     void setOutputPath(const std::string& outputPath);
 #endif
     
+    bool parseFriendTags(ITunesDb *iTunesDb, const std::string& uidHash, std::map<uint64_t, std::string>& tags);
+    
+    
 private:
     bool parseRemark(const void *data, int length, Friend& f);
     bool parseAvatar(const void *data, int length, Friend& f);
@@ -307,15 +301,17 @@ private:
 class SessionsParser
 {
 private:
-    ITunesDb *m_iTunesDb;
-    ITunesDb *m_iTunesDbShare;
-    std::string m_cellDataVersion;
-    bool        m_detailedInfo;
+    ITunesDb        *m_iTunesDb;
+    ITunesDb        *m_iTunesDbShare;
+    std::string     m_cellDataVersion;
+    const Friends&  m_friends;
+    bool            m_detailedInfo;
+    Logger*         m_logger;
 
 public:
-    SessionsParser(ITunesDb *iTunesDb, ITunesDb *iTunesDbShare, const std::string& cellDataVersion, bool detailedInfo = true);
+    SessionsParser(ITunesDb *iTunesDb, ITunesDb *iTunesDbShare, const Friends& friends, const std::string& cellDataVersion, Logger* logger, bool detailedInfo = true);
     
-    bool parse(const Friend& user, const Friends& friends, std::vector<Session>& sessions);
+    bool parse(const Friend& user, std::vector<Session>& sessions);
 
 private:
     bool parseUniversalSessions(const Friend& user, const std::string& userRoot, std::vector<Session>& sessions);
@@ -325,7 +321,9 @@ private:
     
     bool parseSessionsInGroupApp(const std::string& userRoot, std::vector<Session>& sessions);
     
-    bool parseDisplayNameFromMembers(const Friend& user, const Friends& friends, Session& session);
+    bool parseDisplayNameFromMembers(const Friend& user, Session& session);
+    
+    void debugLog(const std::string& log);
 };
 
 class SessionParser
@@ -334,7 +332,7 @@ public:
     class MessageEnumerator
     {
     protected:
-        MessageEnumerator(const Session& session, int options, int64_t minId);
+        MessageEnumerator(const Session& session, const ExportOption& options, int64_t minId);
         
         friend SessionParser;
     public:
@@ -349,12 +347,13 @@ public:
     
 private:
     
-    int m_options;
+    ExportOption m_options;
     
 public:
-    SessionParser(int options);
+    SessionParser(const ExportOption& options);
 
     MessageEnumerator* buildMsgEnumerator(const Session& session, uint64_t minId);
+    static uint32_t calcNumberOfMessages(const Session& session, uint64_t minId);
 };
 
 

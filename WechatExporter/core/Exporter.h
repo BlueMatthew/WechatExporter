@@ -14,8 +14,10 @@
 #include "Logger.h"
 #include "PdfConverter.h"
 #include "WechatObjects.h"
+#include "ExportOption.h"
 #include "ITunesParser.h"
 #include "ExportNotifier.h"
+#include "ResManager.h"
 
 // #define USING_ASYNC_TASK_FOR_MP3
 
@@ -25,6 +27,7 @@
 class MessageParser;
 class TemplateValues;
 class ExportContext;
+class PageInfo;
 
 class Exporter
 {
@@ -43,6 +46,7 @@ protected:
     
     ITunesDb *m_iTunesDb;
     ITunesDb *m_iTunesDbShare;
+    ResManager m_resManager;
     
     std::map<std::string, std::string> m_templates;
     std::map<std::string, std::string> m_localeStrings;
@@ -50,8 +54,8 @@ protected:
     ExportNotifier* m_notifier;
     
     std::atomic<bool> m_cancelled;
-    int m_options;
-    bool m_loadingDataOnScroll;
+    ExportOption m_options;
+    // bool m_filterByName;
     std::string m_extName;
     std::string m_templatesName;
     
@@ -62,6 +66,8 @@ protected:
     ExportContext*  m_exportContext;
     
     std::string m_languageCode;
+    
+    std::map<uint64_t, std::string> m_tags;
 
 public:
     Exporter(const std::string& workDir, const std::string& backup, const std::string& output, Logger* logger, PdfConverter* pdfConverter);
@@ -77,19 +83,14 @@ public:
     void cancel();
     void waitForComplition();
     
+    void setOptions(const ExportOption& options);
+    
     void filterUsersAndSessions(const std::map<std::string, std::map<std::string, void *>>& usersAndSessions);
-    void setTextMode(bool textMode = true);
-    void setPdfMode(bool pdfMode = true);
-    void setOrder(bool asc = true);
-    void saveFilesInSessionFolder(bool flags = true);
-    void setSyncLoading(bool syncLoading = true);
-    void setLoadingDataOnScroll(bool loadingDataOnScroll = true);
-    void setIncrementalExporting(bool incrementalExporting);
-    void supportsFilter(bool supportsFilter = true);
-    void useRemoteEmoji(bool useEmojiUrl);
-    void outputDebugLogs(bool outputDebugLogs);
+    
     void setExtName(const std::string& extName);
     void setTemplatesName(const std::string& templatesName);
+    
+    void setFilterByName();
     
     void setLanguageCode(const std::string& languageCode);
     
@@ -100,25 +101,26 @@ public:
     static void initializeExporter();
     static void uninitializeExporter();
     
-    static bool hasPreviousExporting(const std::string& outputDir, int& options, std::string& exportTime);
+    static bool hasPreviousExporting(const std::string& outputDir, uint64_t& options, std::string& exportTime, std::string& version);
 
 protected:
     bool runImpl();
     bool exportUser(Friend& user, std::string& userOutputPath);
     // bool loadUserSessions(Friend& user, std::vector<Session>& sessions) const;
-    bool loadUserFriendsAndSessions(const Friend& user, Friends& friends, std::vector<Session>& sessions, bool detailedInfo = true) const;
+    bool loadUserFriendsAndSessions(const Friend& user, Friends& friends, std::vector<Session>& sessions, bool detailedInfo = true);
     int exportSession(const Friend& user, const MessageParser& msgParser, const Session& session, const std::string& userBase, const std::string& outputBase);
     
     bool exportMessage(const Session& session, const std::vector<TemplateValues>& tvs, std::vector<std::string>& messages);
 
-    bool fillSession(Session& session, const Friends& friends) const;
+    bool buildScriptFile(const std::string& fileName, std::vector<std::string>::const_iterator b, std::vector<std::string>::const_iterator e, const PageInfo& page) const;
+    
+    
     void releaseITunes();
     bool loadITunes(bool detailedInfo = true);
-    bool loadTemplates();
-    bool loadStrings();
-    std::string getTemplate(const std::string& key) const;
-    std::string getLocaleString(const std::string& key) const;
     
+    bool hasDebugLogs() const;
+    bool isSubscriptionIncluded() const;
+
     void notifyStart();
     void notifyComplete(bool cancelled = false);
     void notifyProgress(uint32_t numberOfMessages, uint32_t numberOfTotalMessages);
@@ -133,6 +135,7 @@ protected:
     
     bool filterITunesFile(const char * file, int flags) const;
     
+    bool exportPageToFile(const Friend& user, const Session& session, const std::vector<TemplateValues>& tvs, std::vector<std::string>& messages, const PageInfo& pagenfo, const std::string& outputBase);
     void serializeMessages(const std::string& fileName, const std::vector<std::string>& messages);
     void unserializeMessages(const std::string& fileName, std::vector<std::string>& messages);
     void mergeMessages(const std::string& fileName, std::vector<std::string>& messages);

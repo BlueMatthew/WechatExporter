@@ -21,3 +21,12 @@
 "txt-all-wechat-users" = "所有微信账户";
 "prompt-new-version-found" = "发现新版本：%@，是否下载？";
 "session-deleted" = "(已删除)";
+"grant-full-disk-access" = "因为WechatExporter程序需要读取iTunes备份数据，请先授权完全磁盘访问权限：苹果菜单 › 系统偏好设置... › 安全心与隐私 › 隐私 › 完全磁盘访问权限";
+"btn-grant-full-disk-access" = "授权完全磁盘访问权限";
+"not-text-msg" = "-";
+"show-logs" = "显示日志";
+"hide-logs" = "隐藏日志";
+"alert-update-options" = "你可以在主菜单中修改导出格式和选项：";
+"no-prev-exp-found" = "输出目录下不存在前一次导出的信息，【增量导出】将被忽略。";
+"prev-exp-found" = "输出目录下发现了%s的导出数据，本次导出将采用“增量导出”模式，并复用前一次的设置。";
+"invld-inc-exp-for-multi-users" = "由于设计错误，对于多个微信账号的增量备份复原可能产生错误，请更换新的目录导出。";

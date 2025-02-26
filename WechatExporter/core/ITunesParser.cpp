@@ -9,6 +9,8 @@
 #include "ITunesParser.h"
 #include <stdio.h>
 #include <map>
+#include <queue>
+#include <set>
 #include <sys/types.h>
 #include <sqlite3.h>
 #include <algorithm>
@@ -16,14 +18,21 @@
 #include <libxml/tree.h>
 #include <libxml/parser.h>
 
+#ifndef NDEBUG
+#include <assert.h>
+#endif
 #include <sys/stat.h>
 #if defined(_WIN32)
 // #define S_IFMT          0170000         /* [XSI] type of file mask */
 // #define S_IFDIR         0040000         /* [XSI] directory */
-#define S_ISDIR(m)      (((m) & S_IFMT) == S_IFDIR)     /* directory */
+
+#include <shlwapi.h>
+#include <atlstr.h>
 
 #else
 #include <unistd.h>
+#include <dirent.h>
+
 #endif
 
 #include "MbdbReader.h"
@@ -47,6 +56,27 @@ inline std::string getPlistStringValue(plist_t node)
     return value;
 }
 
+inline std::string getPlistStringValue(plist_t node, const char* key)
+{
+    std::string value;
+    
+    if (NULL != node)
+    {
+        plist_t subNode = plist_dict_get_item(node, key);
+        if (NULL != subNode)
+        {
+            uint64_t length = 0;
+            const char* ptr = plist_get_string_ptr(subNode, &length);
+            if (length > 0)
+            {
+                value.assign(ptr, length);
+            }
+        }
+    }
+    
+    return value;
+}
+
 struct __string_less
 {
     // _LIBCPP_INLINE_VISIBILITY _LIBCPP_CONSTEXPR_AFTER_CXX11
@@ -56,89 +86,311 @@ struct __string_less
     bool operator()(const ITunesFile* __x, const ITunesFile* __y) const {return __x->relativePath < __y->relativePath;}
 };
 
-struct PlistDictionary
+class SqliteITunesFileEnumerator : public ITunesDb::ITunesFileEnumerator
 {
-    PlistDictionary(const std::vector<std::string>& tags, const std::vector<std::string>& nodeNames) : m_tags(tags)
+public:
+    SqliteITunesFileEnumerator(const std::string& dbPath, const std::vector<std::string>& domains, bool onlyFile) : m_db(NULL), m_stmt(NULL), m_onlyFile(onlyFile)
     {
-        m_flags = 0;
-        for (std::vector<std::string>::const_iterator it = nodeNames.cbegin(); it != nodeNames.cend(); ++it)
+#ifndef NDEBUG
+        if (!existsFile(dbPath))
         {
-            m_values[*it] = "";
+            return;
         }
-    }
-    
-    // std::vector<std::string> m_tag;
-    
-    void startElementNs(const std::string& localName, const std::string& prefix, const std::string& URI, const std::vector<std::string>& namespaces, const std::map<std::string, std::string>& attrs);
-    void endElementNs(const std::string& localName, const std::string& prefix, const std::string& URI);
-    void characters(const std::string& ch);
-    
-    static void startElement(void * ctx, const xmlChar * fullName, const xmlChar ** attrs);
-    static void startElementNs(void * ctx, const xmlChar * localName, const xmlChar * prefix, const xmlChar * URI, int nb_namespaces, const xmlChar ** namespaces, int nb_attributes, int nb_defaulted, const xmlChar ** attrs);
-    static void endElementNs(void* ctx, const xmlChar* localname, const xmlChar* prefix, const xmlChar* URI);
-    static void characters(void* ctx, const xmlChar * ch, int len);
-    
-    static std::string toString(const xmlChar* ch);
-    static std::string toString(const xmlChar* ch, int len);
-    
-    std::string operator[](const std::string& key) const
-    {
-        std::map<std::string, std::string>::const_iterator it = m_values.find(key);
-        return it != m_values.cend() ? it->second : "";
-    }
-
-protected:
-    const std::string NodeKey = "key";
-    
-    std::vector<std::string> m_tags;
-    std::vector<std::string> m_tagStack;
-    std::string m_curKey;
-    std::string m_prevKey;
-    std::string m_valueBuffer;
-    
-    std::map<std::string, std::string> m_values;
-    
-    bool matchesPath() const
-    {
-        if (m_tagStack.size() != m_tags.size() + 1)
+#endif
+        int rc = openSqlite3Database(dbPath, &m_db);
+        if (rc != SQLITE_OK)
         {
-            return false;
+            // printf("Open database failed!");
+            closeDb();
+            return;
+        }
+
+        sqlite3_exec(m_db, "PRAGMA mmap_size=268435456;", NULL, NULL, NULL); // 256M:268435456  2M 2097152
+        sqlite3_exec(m_db, "PRAGMA synchronous=OFF;", NULL, NULL, NULL);
+        
+        std::string sql = "SELECT fileID,domain,relativePath,flags,file FROM Files";
+        if (domains.size() > 0)
+        {
+            sql += " WHERE ";
+            // domain=?";
+            std::vector<std::string> conditions(domains.size(), "domain=?");
+                
+            sql += join(conditions, " OR ");
+        }
+
+        rc = sqlite3_prepare_v2(m_db, sql.c_str(), (int)(sql.size()), &m_stmt, NULL);
+        if (rc != SQLITE_OK)
+        {
+            std::string error = sqlite3_errmsg(m_db);
+            closeDb();
+            return;
         }
         
-        for (int idx = 0; idx < m_tags.size(); ++idx)
+        int idx = 1;
+        for (std::vector<std::string>::const_iterator it = domains.cbegin(); it != domains.cend(); ++it, ++idx)
         {
-            if (m_tags[idx] != m_tagStack[idx])
+            rc = sqlite3_bind_text(m_stmt, idx, (*it).c_str(), (int)((*it).size()), NULL);
+            if (rc != SQLITE_OK)
             {
-                return false;
+                finalizeStmt();
+                closeDb();
+                return;
+            }
+        }
+    }
+    
+    virtual bool isInvalid() const
+    {
+        return NULL == m_db || NULL == m_stmt;
+    }
+    
+    virtual bool nextFile(ITunesFile& file)
+    {
+        while (sqlite3_step(m_stmt) == SQLITE_ROW)
+        {
+            int flags = sqlite3_column_int(m_stmt, 3);
+            if (m_onlyFile && flags != 1)
+            {
+                // Putting flags=1 into sql causes sqlite3 to use index of flags instead of domain and don't know why...
+                // So filter the directory with the code
+                continue;
+            }
+            
+            const char *relativePath = reinterpret_cast<const char*>(sqlite3_column_text(m_stmt, 2));
+            if (NULL != relativePath)
+            {
+                file.relativePath = relativePath;
+            }
+            else
+            {
+                file.relativePath.clear();
+            }
+            const char *domain = reinterpret_cast<const char*>(sqlite3_column_text(m_stmt, 1));
+            if (NULL != domain)
+            {
+                file.domain = domain;
+            }
+            else
+            {
+                file.domain.clear();
+            }
+            const char *fileId = reinterpret_cast<const char*>(sqlite3_column_text(m_stmt, 0));
+            if (NULL != fileId)
+            {
+                file.fileId = fileId;
+            }
+            else
+            {
+                file.fileId.clear();
+            }
+
+            file.flags = static_cast<unsigned int>(flags);
+            // Files
+            const unsigned char *blob = reinterpret_cast<const unsigned char*>(sqlite3_column_blob(m_stmt, 4));
+            int blobBytes = sqlite3_column_bytes(m_stmt, 4);
+            file.blob.clear();
+            file.size = 0;
+            file.modifiedTime = 0;
+            if (blobBytes > 0 && NULL != blob)
+            {
+                std::vector<unsigned char> blobVector(blob, blob + blobBytes);
+                file.blob.insert(file.blob.end(), blob, blob + blobBytes);
+            }
+            file.blobParsed = false;
+
+			return true;
+            // break;
+        }
+
+        return false;
+    }
+    
+    virtual ~SqliteITunesFileEnumerator()
+    {
+        finalizeStmt();
+        closeDb();
+    }
+    
+private:
+    void closeDb()
+    {
+        if (NULL != m_db)
+        {
+            sqlite3_close(m_db);
+            m_db = NULL;
+        }
+    }
+    
+    void finalizeStmt()
+    {
+        if (NULL != m_stmt)
+        {
+            sqlite3_finalize(m_stmt);
+            m_stmt = NULL;
+        }
+    }
+private:
+    sqlite3*        m_db;
+    sqlite3_stmt*   m_stmt;
+    
+    bool m_onlyFile;
+};
+
+class MbdbITunesFileEnumerator : public ITunesDb::ITunesFileEnumerator
+{
+public:
+    MbdbITunesFileEnumerator(const std::string& dbPath, const std::vector<std::string>& domains, bool onlyFile) : m_valid(false), m_domains(domains), m_onlyFile(onlyFile)
+    {
+        std::memset(m_fixedData, 0, 40);
+        if (!m_reader.open(dbPath))
+        {
+            return;
+        }
+        
+        m_valid = true;
+    }
+    
+    virtual bool isInvalid() const
+    {
+        return !m_valid;
+    }
+    
+    virtual bool nextFile(ITunesFile& file)
+    {
+        std::string domainInFile;
+        std::string path;
+        std::string linkTarget;
+        std::string dataHash;
+        std::string alwaysNull;
+        unsigned short fileMode = 0;
+        bool isDir = false;
+        bool skipped = false;
+        
+        // bool hasFilter = (bool)m_loadingFilter;
+
+        while (m_reader.hasMoreData())
+        {
+            if (!m_reader.read(domainInFile))
+            {
+                break;
+            }
+            
+            skipped = false;
+            if (!existsDomain(domainInFile))
+            {
+                skipped = true;
+            }
+            
+            if (skipped)
+            {
+                // will skip it
+                m_reader.skipString();    // path
+                m_reader.skipString();    // linkTarget
+                m_reader.skipString();    // dataHash
+                m_reader.skipString();    // alwaysNull;
+                
+                m_reader.read(m_fixedData, 40);
+                int propertyCount = m_fixedData[39];
+
+                for (int j = 0; j < propertyCount; ++j)
+                {
+                    m_reader.skipString();
+                    m_reader.skipString();
+                }
+            }
+            else
+            {
+                m_reader.read(path);
+                m_reader.read(linkTarget);
+                m_reader.readD(dataHash);
+                m_reader.readD(alwaysNull);
+                
+                m_reader.read(m_fixedData, 40);
+
+                fileMode = (m_fixedData[0] << 8) | m_fixedData[1];
+                
+                isDir = S_ISDIR(fileMode);
+                
+                // unsigned char flags = fixedData[38];
+                
+                if (m_onlyFile && isDir)
+                {
+                    skipped = true;
+                }
+                
+                unsigned int aTime = bigEndianToNative(*((uint32_t *)(m_fixedData + 18)));
+                unsigned int bTime = bigEndianToNative(*((uint32_t *)(m_fixedData + 22)));
+                // unsigned int cTime = bigEndianToNative(*((uint32_t *)(m_fixedData + 26)));
+                
+                file.size = bigEndianToNative(*((int64_t *)(m_fixedData + 30)));
+                
+                int propertyCount = m_fixedData[39];
+                
+                for (int j = 0; j < propertyCount; ++j)
+                {
+                    if (skipped)
+                    {
+                        m_reader.skipString(); // name
+                        m_reader.skipString(); // value
+                    }
+                    else
+                    {
+                        std::string name;
+                        std::string value;
+                        
+                        m_reader.read(name);
+                        m_reader.read(value);
+                    }
+                }
+                
+                if (!skipped)
+                {
+                    file.relativePath = path;
+                    file.domain = domainInFile;
+                    file.fileId = sha1(domainInFile + "-" + path);
+                    file.flags = isDir ? 2 : 1;
+                    file.modifiedTime = aTime != 0 ? aTime : bTime;
+                    file.blobParsed = true;
+                    // file.size =
+                    
+                    return true;
+                }
+                
             }
         }
         
-        return true;
+        return false;
     }
     
-    union
+    virtual ~MbdbITunesFileEnumerator()
     {
-        struct
+    }
+    
+private:
+    bool existsDomain(const std::string& domain) const
+    {
+        if (m_domains.empty())
         {
-            unsigned int m_nodeMatched : 1;
-            unsigned int m_isNodeKey : 1;
-            unsigned int m_isReceiveValue : 1;
-        };
-        unsigned m_flags;
-    };
+            return true;
+        }
+        
+        for (std::vector<std::string>::const_iterator it = m_domains.cbegin(); it != m_domains.cend(); ++it)
+        {
+            if (domain == *it)
+            {
+                return true;
+            }
+        }
+        return false;
+    }
+
+private:
+    MbdbReader                  m_reader;
+    bool                        m_valid;
+    std::vector<std::string>    m_domains;
+    bool                        m_onlyFile;
+    unsigned char               m_fixedData[40];
 };
-
-inline std::string PlistDictionary::toString(const xmlChar* ch)
-{
-    const char *p = reinterpret_cast<const char *>(ch);
-    return std::string(p, p + xmlStrlen(ch));
-}
-
-inline std::string PlistDictionary::toString(const xmlChar* ch, int len)
-{
-    const char *p = reinterpret_cast<const char *>(ch);
-    return std::string(p, p + len);
-}
 
 ITunesDb::ITunesDb(const std::string& rootPath, const std::string& manifestFileName) : m_isMbdb(false), m_rootPath(rootPath), m_manifestFileName(manifestFileName)
 {
@@ -147,6 +399,21 @@ ITunesDb::ITunesDb(const std::string& rootPath, const std::string& manifestFileN
     if (!endsWith(m_rootPath, DIR_SEP))
     {
         m_rootPath += DIR_SEP;
+    }
+    
+    m_version.clear();
+    BackupItem manifest;
+    if (ManifestParser::parseInfoPlist(m_rootPath, manifest, false))
+    {
+        m_version = manifest.getITunesVersion();
+        m_iOSVersion = manifest.getIOSVersion();
+    }
+    
+    std::string dbPath = combinePath(m_rootPath, "Manifest.mbdb");
+    if (existsFile(dbPath))
+    {
+        m_isMbdb = true;
+        
     }
 }
 
@@ -171,263 +438,213 @@ bool ITunesDb::load(const std::string& domain)
 
 bool ITunesDb::load(const std::string& domain, bool onlyFile)
 {
-    m_version.clear();
-    BackupManifest manifest;
-    if (ManifestParser::parseInfoPlist(m_rootPath, manifest))
+    std::vector<std::string> domains;
+    if (!domain.empty())
     {
-        m_version = manifest.getITunesVersion();
-        m_iOSVersion = manifest.getIOSVersion();
+        domains.push_back(domain);
     }
     
-    std::string dbPath = combinePath(m_rootPath, "Manifest.mbdb");
-    if (existsFile(dbPath))
-    {
-        m_isMbdb = true;
-        return loadMbdb(domain, onlyFile);
-    }
-    
-    m_isMbdb = false;
-    dbPath = combinePath(m_rootPath, "Manifest.db");
-    
-    sqlite3 *db = NULL;
-    int rc = openSqlite3ReadOnly(dbPath, &db);
-    if (rc != SQLITE_OK)
-    {
-        // printf("Open database failed!");
-        sqlite3_close(db);
-        return false;
-    }
-
 #if !defined(NDEBUG) || defined(DBG_PERF)
     printf("PERF: start.....%s\r\n", getTimestampString(false, true).c_str());
 #endif
-
-    sqlite3_exec(db, "PRAGMA mmap_size=2097152;", NULL, NULL, NULL); // 8M:8388608  2M 2097152
-    sqlite3_exec(db, "PRAGMA synchronous=OFF;", NULL, NULL, NULL);
     
-    std::string sql = "SELECT fileID,relativePath,flags,file FROM Files";
-    if (domain.size() > 0)
+    std::unique_ptr<ITunesFileEnumerator> enumerator(buildEnumerator(domains, onlyFile));
+    if (enumerator->isInvalid())
     {
-        sql += " WHERE domain=?";
-    }
-    
-    sqlite3_stmt* stmt = NULL;
-    rc = sqlite3_prepare_v2(db, sql.c_str(), (int)(sql.size()), &stmt, NULL);
-    if (rc != SQLITE_OK)
-    {
-        std::string error = sqlite3_errmsg(db);
-        sqlite3_close(db);
         return false;
     }
-    
-    if (domain.size() > 0)
-    {
-        rc = sqlite3_bind_text(stmt, 1, domain.c_str(), (int)(domain.size()), NULL);
-        if (rc != SQLITE_OK)
-        {
-            sqlite3_finalize(stmt);
-            sqlite3_close(db);
-            return false;
-        }
-    }
-    
-#if !defined(NDEBUG) || defined(DBG_PERF)
-    printf("PERF: %s sql=%s, domain=%s\r\n", getTimestampString(false, true).c_str(), sql.c_str(), domain.c_str());
-#endif
-    
+
     bool hasFilter = (bool)m_loadingFilter;
     
+    ITunesFile file;
     m_files.reserve(2048);
-    while (sqlite3_step(stmt) == SQLITE_ROW)
+    while (enumerator->nextFile(file))
     {
-        int flags = sqlite3_column_int(stmt, 2);
-        if (onlyFile && flags == 2)
-        {
-            // Putting flags=1 into sql causes sqlite3 to use index of flags instead of domain and don't know why...
-            // So filter the directory with the code
-            continue;
-        }
-        
-        const char *relativePath = reinterpret_cast<const char*>(sqlite3_column_text(stmt, 1));
-        if (hasFilter && !m_loadingFilter(relativePath, flags))
+        if (hasFilter && !m_loadingFilter(file.relativePath.c_str(), file.flags))
         {
             continue;
         }
-        
-        ITunesFile *file = new ITunesFile();
-        const char *fileId = reinterpret_cast<const char*>(sqlite3_column_text(stmt, 0));
-        if (NULL != fileId)
-        {
-            file->fileId = fileId;
-        }
-        
-        if (NULL != relativePath)
-        {
-            file->relativePath = relativePath;
-        }
-        file->flags = static_cast<unsigned int>(flags);
-        if (flags == 1)
-        {
-            // Files
-            int blobBytes = sqlite3_column_bytes(stmt, 3);
-            const unsigned char *blob = reinterpret_cast<const unsigned char*>(sqlite3_column_blob(stmt, 3));
-            if (blobBytes > 0 && NULL != blob)
-            {
-                std::vector<unsigned char> blobVector(blob, blob + blobBytes);
-                file->blob.swap(blobVector);
-            }
-        }
-        
-        m_files.push_back(file);
+        m_files.push_back(new ITunesFile(file));
     }
-    
-    sqlite3_finalize(stmt);
-    sqlite3_close(db);
 
 #if !defined(NDEBUG) || defined(DBG_PERF)
     printf("PERF: end.....%s, size=%lu\r\n", getTimestampString(false, true).c_str(), m_files.size());
 #endif
     
     std::sort(m_files.begin(), m_files.end(), __string_less());
-    
+
 #if !defined(NDEBUG) || defined(DBG_PERF)
     printf("PERF: after sort.....%s\r\n", getTimestampString(false, true).c_str());
 #endif
     return true;
 }
 
-bool ITunesDb::loadMbdb(const std::string& domain, bool onlyFile)
+ITunesDb::ITunesFileEnumerator* ITunesDb::buildEnumerator(const std::vector<std::string>& domains, bool onlyFile) const
 {
-    MbdbReader reader;
-    if (!reader.open(combinePath(m_rootPath, "Manifest.mbdb")))
+    std::string dbPath = combinePath(m_rootPath, m_isMbdb ? "Manifest.mbdb" : "Manifest.db");
+    ITunesFileEnumerator* enumerator = m_isMbdb ? (ITunesFileEnumerator*)(new MbdbITunesFileEnumerator(dbPath, domains, onlyFile)) : (ITunesFileEnumerator*)(new SqliteITunesFileEnumerator(dbPath, domains, onlyFile));
+    return enumerator;
+}
+
+ITunesDb::ITunesFileEnumerator* ITunesDb::buildEnumerator(const std::string& dbPath, const std::vector<std::string>& domains, bool onlyFile) const
+{
+    ITunesFileEnumerator* enumerator = m_isMbdb ? (ITunesFileEnumerator*)(new MbdbITunesFileEnumerator(dbPath, domains, onlyFile)) : (ITunesFileEnumerator*)(new SqliteITunesFileEnumerator(dbPath, domains, onlyFile));
+    return enumerator;
+}
+
+bool ITunesDb::copy(const std::string& destPath, const std::string& backupId, std::vector<std::string>& domains, std::function<bool(const ITunesDb*, const ITunesFile*)>& func) const
+{
+    std::string destBackupPath = backupId.empty() ? combinePath(destPath, "Backup") : combinePath(destPath, "Backup", backupId);
+    if (!existsDirectory(destBackupPath))
+    {
+        makeDirectory(destBackupPath);
+    }
+    
+    // Copy control files
+    const char* files[] = {"Info.plist", (m_isMbdb ? "Manifest.mbdb" : "Manifest.db"), "Manifest.plist", "Status.plist"};
+    for (int idx = 0; idx < sizeof(files) / sizeof(const char *); ++idx)
+    {
+        ::copyFile(combinePath(m_rootPath, files[idx]), combinePath(destBackupPath, files[idx]));
+    }
+    
+    std::unique_ptr<ITunesFileEnumerator> enumerator;
+    if (m_isMbdb)
+    {
+        enumerator.reset(buildEnumerator(combinePath(destBackupPath, "Manifest.mbdb"), domains, false));
+    }
+    else
+    {
+        std::string dbPath = combinePath(destBackupPath, "Manifest.db");
+        
+        sqlite3 *db = NULL;
+        int rc = openSqlite3Database(dbPath, &db, false);
+        if (rc != SQLITE_OK)
+        {
+            // printf("Open database failed!");
+            sqlite3_close(db);
+            return false;
+        }
+
+        sqlite3_exec(db, "PRAGMA mmap_size=268435456;", NULL, NULL, NULL); // 256M:268435456  2M 2097152
+        sqlite3_exec(db, "PRAGMA synchronous=OFF;", NULL, NULL, NULL);
+        
+        std::string sql = "DELETE FROM Files";
+        
+        if (domains.size() > 0)
+        {
+            sql += " WHERE ";
+            // domain=?";
+            std::vector<std::string> conditions(domains.size(), "domain<>?");
+                
+            sql += join(conditions, " AND ");
+        }
+
+        sqlite3_stmt* stmt = NULL;
+        rc = sqlite3_prepare_v2(db, sql.c_str(), (int)(sql.size()), &stmt, NULL);
+        if (rc != SQLITE_OK)
+        {
+            std::string error = sqlite3_errmsg(db);
+            sqlite3_close(db);
+            return false;
+        }
+
+        int idx = 1;
+        for (std::vector<std::string>::const_iterator it = domains.cbegin(); it != domains.cend(); ++it, ++idx)
+        {
+            rc = sqlite3_bind_text(stmt, idx, (*it).c_str(), (int)((*it).size()), NULL);
+            if (rc != SQLITE_OK)
+            {
+                sqlite3_finalize(stmt);
+                sqlite3_close(db);
+                return false;
+            }
+        }
+        
+    #if !defined(NDEBUG)
+    #ifdef __APPLE__
+        if (__builtin_available(macOS 10.12, *))
+        {
+    #endif
+            char *expandedSql = sqlite3_expanded_sql(stmt);
+            printf("PERF: %s sql=%s\r\n", getTimestampString(false, true).c_str(), sqlite3_expanded_sql(stmt));
+    #ifdef __APPLE__
+        }
+    #endif
+    #endif
+        
+        if ((rc = sqlite3_step(stmt)) != SQLITE_DONE)
+        {
+    #ifndef NDEBUG
+            const char *errMsg = sqlite3_errmsg(db);
+            m_lastError = std::string(errMsg);
+    #endif
+            sqlite3_finalize(stmt);
+            sqlite3_close(db);
+            return false;
+        }
+        
+        sqlite3_finalize(stmt);
+        
+        sqlite3_exec(db, "VACUUM;", NULL, NULL, NULL);
+		sqlite3_close(db);
+        
+        enumerator.reset(buildEnumerator(dbPath, std::vector<std::string>(), false));
+    }
+    
+    if (enumerator->isInvalid())
     {
         return false;
     }
     
-    // unsigned char mdbxBuffer[26];           // buffer for .mbdx record
-    unsigned char fixedData[40] = { 0 };    // buffer for the fixed part of .mbdb record
-    // SHA1CryptoServiceProvider hasher = new SHA1CryptoServiceProvider();
-
-    // System.DateTime unixEpoch = new System.DateTime(1970, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc);
-
-    std::string domainInFile;
-    std::string path;
-    std::string linkTarget;
-    std::string dataHash;
-    std::string alwaysNull;
-    unsigned short fileMode = 0;
-    bool isDir = false;
-    bool skipped = false;
-    
-    bool hasFilter = (bool)m_loadingFilter;
-
-    while (reader.hasMoreData())
+    std::string subPath;
+    std::string prefix;
+    std::string srcFilePath;
+    std::set<std::string> subFolders;
+    ITunesFile file;
+    while (enumerator->nextFile(file))
     {
-        if (!reader.read(domainInFile))
+        if (file.fileId.empty())
         {
-            break;
+            continue;
         }
         
-        skipped = false;
-        if (!domain.empty() && domain != domainInFile)
-        {
-            skipped = true;
-        }
+		prefix = file.fileId.substr(0, 2);
         
-        if (skipped)
+        srcFilePath = combinePath(m_rootPath, prefix, file.fileId);
+        if (!existsFile(srcFilePath))
         {
-            // will skip it
-            reader.skipString();    // path
-            reader.skipString();    // linkTarget
-            reader.skipString();    // dataHash
-            reader.skipString();    // alwaysNull;
-            
-            reader.read(fixedData, 40);
-            int propertyCount = fixedData[39];
+#ifndef NDEBUG
+            // assert(!"Source file not exists.");
+#endif
+            continue;
+        }
 
-            for (int j = 0; j < propertyCount; ++j)
-            {
-                reader.skipString();
-                reader.skipString();
-            }
-        }
-        else
+        subPath = combinePath(destBackupPath, prefix);
+        if (subFolders.find(prefix) == subFolders.cend())
         {
-            reader.read(path);
-            reader.read(linkTarget);
-            reader.readD(dataHash);
-            reader.readD(alwaysNull);
-            
-            reader.read(fixedData, 40);
-
-            fileMode = (fixedData[0] << 8) | fixedData[1];
-            
-            isDir = S_ISDIR(fileMode);
-            
-            // unsigned char flags = fixedData[38];
-            
-            if (onlyFile && isDir)
+            if (!existsDirectory(subPath))
             {
-                skipped = true;
+                makeDirectory(subPath);
             }
-            
-            if (hasFilter && !m_loadingFilter(path.c_str(), (isDir ? 2 : 1)))
-            {
-                skipped = true;
-            }
-            
-            unsigned int aTime = GetBigEndianInteger(fixedData, 18);
-            unsigned int bTime = GetBigEndianInteger(fixedData, 22);
-            // unsigned int cTime = GetBigEndianInteger(fixedData, 26);
-            
-            int propertyCount = fixedData[39];
-            
-            // rec.Properties = new MBFileRecord.Property[rec.PropertyCount];
-            for (int j = 0; j < propertyCount; ++j)
-            {
-                if (skipped)
-                {
-                    reader.skipString(); // name
-                    reader.skipString(); // value
-                }
-                else
-                {
-                    std::string name;
-                    std::string value;
-                    
-                    reader.read(name);
-                    reader.read(value);
-                }
-                
-            }
-            /*
-            StringBuilder fileName = new StringBuilder();
-            byte[] fb = hasher.ComputeHash(ASCIIEncoding.UTF8.GetBytes(rec.Domain + "-" + rec.Path));
-            for (int k = 0; k < fb.Length; k++)
-            {
-                fileName.Append(fb[k].ToString("x2"));
-            }
-
-            rec.key = fileName.ToString();
-             */
-            
-            if (!skipped)
-            {
-                ITunesFile *file = new ITunesFile();
-                file->relativePath = path;
-                file->fileId = sha1(domain + "-" + path);
-                file->flags = isDir ? 2 : 1;
-                file->modifiedTime = aTime != 0 ? aTime : bTime;
-                
-                m_files.push_back(file);
-            }
-            
+            subFolders.insert(prefix);
         }
+        bool ret = ::copyFile(srcFilePath, combinePath(subPath, file.fileId));
+#ifndef NDEBUG
+        if (!ret)
+        {
+            std::string msg = "Failed to copy file" + combinePath(subPath, file.fileId);
+            assert(!msg.c_str());
+        }
+#endif
         
-        
+        if (func)
+        {
+            if (!func(this, &file))
+            {
+                break;
+            }
+        }
     }
-    
-    std::sort(m_files.begin(), m_files.end(), __string_less());
 
     return true;
 }
@@ -453,6 +670,49 @@ unsigned int ITunesDb::parseModifiedTime(const std::vector<unsigned char>& data)
     }
 
     return static_cast<unsigned int>(val);
+}
+
+bool ITunesDb::parseFileInfo(const ITunesFile* file)
+{
+    if (NULL == file || file->blob.empty())
+    {
+        return false;
+    }
+    
+    if (file->blobParsed)
+    {
+        return true;
+    }
+    
+    file->blobParsed = true;
+    
+    uint64_t val = 0;
+    plist_t node = NULL;
+    plist_from_memory(reinterpret_cast<const char *>(&file->blob[0]), static_cast<uint32_t>(file->blob.size()), &node);
+    if (NULL != node)
+    {
+        plist_t lastModifiedNode = plist_access_path(node, 3, "$objects", 1, "LastModified");
+        if (NULL != lastModifiedNode)
+        {
+            plist_type pt = plist_get_node_type(lastModifiedNode);
+            plist_get_uint_val(lastModifiedNode, &val);
+            file->modifiedTime = (unsigned int)val;
+        }
+        
+        plist_t sizeNode = plist_access_path(node, 3, "$objects", 1, "Size");
+        if (NULL != sizeNode)
+        {
+            plist_type pt = plist_get_node_type(sizeNode);
+            val = 0;
+            plist_get_uint_val(sizeNode, &val);
+            file->size = val;
+        }
+        
+        plist_free(node);
+        return true;
+    }
+    
+    return false;
 }
 
 std::string ITunesDb::findFileId(const std::string& relativePath) const
@@ -571,7 +831,192 @@ bool ITunesDb::copyFile(const std::string& vpath, const std::string& destPath, c
     return false;
 }
 
-ManifestParser::ManifestParser(const std::string& manifestPath) : m_manifestPath(manifestPath)
+DecodedWechatITunesDb::DecodedWechatITunesDb(const std::string& rootPath, const std::string& manifestFileName) : ITunesDb(rootPath, manifestFileName)
+{
+    
+}
+
+DecodedWechatITunesDb::~DecodedWechatITunesDb()
+{
+    
+}
+
+bool DecodedWechatITunesDb::load(const std::string& domain, bool onlyFile)
+{
+    return loadFiles(m_rootPath, onlyFile);
+}
+
+bool DecodedWechatITunesDb::loadFiles(const std::string& root, bool onlyFile)
+{
+#ifdef _WIN32
+	std::queue<CString> directories;
+	directories.push("");
+	
+	TCHAR szRoot[MAX_PATH] = { 0 };
+	_tcscpy(szRoot, CW2T(CA2W(root.c_str(), CP_UTF8)));
+	PathAddBackslash(szRoot);
+	
+	TCHAR szPath[MAX_PATH] = { 0 };
+	TCHAR szRelativePath[MAX_PATH] = { 0 };
+	ULARGE_INTEGER ull;
+
+	while (!directories.empty())
+	{
+		const CString& dirName = directories.front();
+
+		PathCombine(szPath, szRoot, dirName);
+		PathAddBackslash(szPath);
+		PathAppend(szPath, TEXT("*.*"));
+
+		WIN32_FIND_DATA FindFileData;
+		HANDLE hFind = INVALID_HANDLE_VALUE;
+
+		hFind = FindFirstFile((LPTSTR)szPath, &FindFileData);
+		if (hFind == INVALID_HANDLE_VALUE)
+		{
+			return false;
+		}
+		do
+		{
+			if (_tcscmp(FindFileData.cFileName, TEXT(".")) == 0 || _tcscmp(FindFileData.cFileName, TEXT("..")) == 0)
+			{
+				continue;
+			}
+			bool isDir = ((FindFileData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) != 0);
+			
+			PathCombine(szRelativePath, dirName, FindFileData.cFileName);
+			
+			if (!onlyFile || !isDir)
+			{
+				CString relativePath = szRelativePath;
+				relativePath.Replace(DIR_SEP, ALT_DIR_SEP);
+
+				CW2A pszU8(CT2W(szRelativePath), CP_UTF8);
+
+				ITunesFile *file = new ITunesFile();
+				file->relativePath = (LPCSTR)CW2A(CT2W(relativePath), CP_UTF8);;
+				file->fileId = (LPCSTR)pszU8;
+				file->flags = isDir ? 2 : 1;
+
+				ull.LowPart = FindFileData.ftLastWriteTime.dwLowDateTime;
+				ull.HighPart = FindFileData.ftLastWriteTime.dwHighDateTime;
+
+				file->modifiedTime = static_cast<unsigned int>(ull.QuadPart / 10000000ULL - 11644473600ULL);
+				
+				m_files.push_back(file);
+			}
+
+			if (isDir)
+			{
+				PathAddBackslash(szRelativePath);
+				directories.emplace(szRelativePath);
+			}
+
+		} while (::FindNextFile(hFind, &FindFileData));
+		FindClose(hFind);
+
+		directories.pop();
+	}
+    
+#else
+	std::queue<std::string> directories;
+	directories.push("");
+    struct stat statbuf;
+    
+    while (!directories.empty())
+    {
+        const std::string& dirName = directories.front();
+        std::string path = combinePath(root, dirName);
+        
+        struct dirent *entry = NULL;
+        DIR *dir = opendir(path.c_str());
+        if (dir == NULL)
+        {
+            return false;
+        }
+
+        while ((entry = readdir(dir)) != NULL)
+        {
+            if (strcmp(entry->d_name, ".") == 0 || strcmp(entry->d_name, "..") == 0)
+            {
+                continue;
+            }
+            
+            if (filterFile(dirName, entry->d_name))
+            {
+                continue;
+            }
+            
+            bool isDir = false;
+            
+            std::string relativePath = dirName + entry->d_name;
+
+            lstat(combinePath(path, entry->d_name).c_str(), &statbuf);
+            isDir = S_ISDIR(statbuf.st_mode);
+            
+            if (!onlyFile || !isDir)
+            {
+				std::string fileId = relativePath;
+
+                ITunesFile *file = new ITunesFile();
+                file->relativePath = relativePath;
+                file->fileId = fileId;
+                file->flags = isDir ? 2 : 1;
+                file->modifiedTime = static_cast<unsigned int>(statbuf.st_mtimespec.tv_sec);
+                
+                m_files.push_back(file);
+            }
+            if (isDir)
+            {
+                directories.push(endsWith(relativePath, "/") ? relativePath : (relativePath + "/"));
+            }
+        }
+        closedir(dir);
+        directories.pop();
+    }
+    
+#endif
+    
+    std::sort(m_files.begin(), m_files.end(), __string_less());
+    
+    return true;
+}
+
+std::string DecodedWechatITunesDb::fileIdToRealPath(const std::string& fileId) const
+{
+    if (!fileId.empty())
+    {
+        return combinePath(m_rootPath, fileId);
+    }
+    
+    return std::string();
+}
+
+bool DecodedWechatITunesDb::filterFile(const std::string& relativeDir, const std::string& fileName)
+{
+    return (relativeDir.empty() && fileName.compare("Shared") == 0);
+}
+
+DecodedSharedWechatITunesDb::DecodedSharedWechatITunesDb(const std::string& rootPath, const std::string& manifestFileName) : DecodedWechatITunesDb(rootPath, manifestFileName)
+{
+    m_rootPath = combinePath(m_rootPath, "Shared", "group.com.tencent.xin");
+}
+
+DecodedSharedWechatITunesDb::~DecodedSharedWechatITunesDb()
+{
+}
+
+bool DecodedSharedWechatITunesDb::load(const std::string& domain, bool onlyFile)
+{
+    return loadFiles(m_rootPath, onlyFile);
+}
+
+bool DecodedSharedWechatITunesDb::filterFile(const std::string& relativeDir, const std::string& fileName)
+{
+    return false;
+}
+
+ManifestParser::ManifestParser(const std::string& manifestPath, bool incudingApps) : m_manifestPath(manifestPath), m_incudingApps(incudingApps)
 {
 }
 
@@ -580,7 +1025,7 @@ std::string ManifestParser::getLastError() const
 	return m_lastError;
 }
 
-bool ManifestParser::parse(std::vector<BackupManifest>& manifests) const
+bool ManifestParser::parse(std::vector<BackupItem>& manifests) const
 {
     bool res = false;
     
@@ -592,7 +1037,7 @@ bool ManifestParser::parse(std::vector<BackupManifest>& manifests) const
     }
     else if (isValidBackupItem(path))
     {
-        BackupManifest manifest;
+        BackupItem manifest;
         if (parse(path, manifest) && manifest.isValid())
         {
             manifests.push_back(manifest);
@@ -608,7 +1053,7 @@ bool ManifestParser::parse(std::vector<BackupManifest>& manifests) const
     return res;
 }
 
-bool ManifestParser::parseDirectory(const std::string& path, std::vector<BackupManifest>& manifests) const
+bool ManifestParser::parseDirectory(const std::string& path, std::vector<BackupItem>& manifests) const
 {
     std::vector<std::string> subDirectories;
     if (!listSubDirectories(path, subDirectories))
@@ -628,7 +1073,8 @@ bool ManifestParser::parseDirectory(const std::string& path, std::vector<BackupM
 			continue;
 		}
         
-        BackupManifest manifest;
+        BackupItem manifest;
+        manifest.setBackupId(*it);
         if (parse(backupPath, manifest) && manifest.isValid())
         {
             manifests.push_back(manifest);
@@ -674,7 +1120,7 @@ bool ManifestParser::isValidBackupItem(const std::string& path) const
 bool ManifestParser::isValidMobileSync(const std::string& path) const
 {
     std::string backupPath = combinePath(path, "Backup");
-    if (!existsFile(backupPath))
+    if (!existsDirectory(backupPath))
     {
         m_lastError += "Backup folder not found\r\n";
         return false;
@@ -683,10 +1129,10 @@ bool ManifestParser::isValidMobileSync(const std::string& path) const
     return true;
 }
 
-bool ManifestParser::parse(const std::string& path, BackupManifest& manifest) const
+bool ManifestParser::parse(const std::string& path, BackupItem& manifest) const
 {
     //Info.plist is a xml file
-    if (!parseInfoPlist(path, manifest))
+    if (!parseInfoPlist(path, manifest, m_incudingApps))
     {
 		m_lastError += "Failed to parse xml: Info.plist\r\n";
         return false;
@@ -711,15 +1157,7 @@ bool ManifestParser::parse(const std::string& path, BackupManifest& manifest) co
             if (manifest.getIOSVersion().empty())
             {
                 plist_t iOSVersionNode = plist_access_path(node, 2, "Lockdown", "ProductVersion");
-                if (NULL != iOSVersionNode)
-                {
-                    uint64_t length = 0;
-                    const char* ptr = plist_get_string_ptr(iOSVersionNode, &length);
-                    if (ptr != NULL && length > 0)
-                    {
-                        manifest.setIOSVersion(std::string(ptr));
-                    }
-                }
+                manifest.setIOSVersion(getPlistStringValue(iOSVersionNode));
             }
             
             plist_free(node);
@@ -734,152 +1172,220 @@ bool ManifestParser::parse(const std::string& path, BackupManifest& manifest) co
     return true;
 }
 
-bool ManifestParser::parseInfoPlist(const std::string& backupIdPath, BackupManifest& manifest)
+bool ManifestParser::parseInfoPlist(const std::string& backupIdPath, BackupItem& manifest, bool includingApps)
 {
-    //Info.plist is a xml file
-    xmlSAXHandler saxHander;
-    memset(&saxHander, 0, sizeof(xmlSAXHandler));
-
-    saxHander.initialized = XML_SAX2_MAGIC;
-    saxHander.startElementNs = PlistDictionary::startElementNs;
-    saxHander.startElement = PlistDictionary::startElement;
-    saxHander.endElementNs = PlistDictionary::endElementNs;
-    saxHander.characters = PlistDictionary::characters;
-
     std::string fileName = combinePath(backupIdPath, "Info.plist");
-
-    const std::string NodePlist = "plist";
-    const std::string NodeDict = "dict";
-    
-    const std::string NodeValueString = "string";
-    const std::string NodeValueDate = "date";
-    const std::string ValueLastBackupDate = "Last Backup Date";
-    const std::string ValueDisplayName = "Display Name";
-    const std::string ValueDeviceName = "Device Name";
-    const std::string ValueITunesVersion = "iTunes Version";
-    const std::string ValueMacOSVersion = "macOS Version";
-    const std::string ValueProductVersion = "Product Version";
-    
-    std::vector<std::string> tags = {NodePlist, NodeDict};
-    std::vector<std::string> keys = {ValueLastBackupDate, ValueDisplayName, ValueDeviceName, ValueITunesVersion, ValueMacOSVersion, ValueProductVersion};
-    
-    PlistDictionary plistDict(tags, keys);
-    int res = xmlSAXUserParseFile(&saxHander, &plistDict, fileName.c_str());
-    xmlCleanupParser();
-    if (res != 0)
+    std::string contents = readFile(fileName);
+    plist_t node = NULL;
+    plist_from_memory(contents.c_str(), static_cast<uint32_t>(contents.size()), &node);
+    if (NULL == node)
     {
-        // m_lastError += "Failed to parse xml: Info.plist\r\n";
         return false;
     }
     
     manifest.setPath(backupIdPath);
-    manifest.setDeviceName(plistDict[ValueDeviceName]);
-    manifest.setDisplayName(plistDict[ValueDisplayName]);
-    manifest.setITunesVersion(plistDict[ValueITunesVersion]);
-    manifest.setMacOSVersion(plistDict[ValueMacOSVersion]);    // Embeded iTunes
-    manifest.setIOSVersion(plistDict[ValueProductVersion]);    // Embeded iTunes
-    std::string localDate = utcToLocal(plistDict[ValueLastBackupDate]);
-    manifest.setBackupTime(localDate);
+    
+    const char* ptr = NULL;
+    uint64_t length = 0;
+    std::string val;
+
+    const char* ValueLastBackupDate = "Last Backup Date";
+    const char* ValueDisplayName = "Display Name";
+    const char* ValueDeviceName = "Device Name";
+    const char* ValueITunesVersion = "iTunes Version";
+    const char* ValueMacOSVersion = "macOS Version";
+    const char* ValueProductVersion = "Product Version";
+    const char* ValueInstalledApps = "Installed Applications";
+    const char* ValueUniqueIdentifier = "Unique Identifier";
+    const char* ValueTargetIdentifier = "Target Identifier";
+    
+    plist_t subNode = NULL;
+    
+    manifest.setDeviceName(getPlistStringValue(node, ValueDeviceName));
+    manifest.setDisplayName(getPlistStringValue(node, ValueDisplayName));
+    
+    subNode = plist_dict_get_item(node, ValueLastBackupDate);
+    if (NULL != subNode)
+    {
+        int32_t sec = 0, usec = 0;
+        plist_get_date_val(subNode, &sec, &usec);
+        manifest.setBackupTime(fromUnixTime(sec + 978278400, false));
+    }
+    
+    manifest.setITunesVersion(getPlistStringValue(node, ValueITunesVersion));
+    manifest.setIOSVersion(getPlistStringValue(node, ValueProductVersion));
+    manifest.setMacOSVersion(getPlistStringValue(node, ValueMacOSVersion));
+    
+    std::string uniqueId = getPlistStringValue(node, ValueUniqueIdentifier);
+    std::string targetId = getPlistStringValue(node, ValueTargetIdentifier);
+    std::string uniqueIdUpper = toUpper(uniqueId);
+    if (toUpper(manifest.getBackupId()) != uniqueIdUpper)
+    {
+        if (toUpper(targetId) != uniqueIdUpper)
+        {
+            manifest.setBackupId(targetId);
+        }
+        else
+        {
+            manifest.setBackupId(toLower(uniqueId));
+        }
+    }
+    
+    if (includingApps)
+    {
+        subNode = plist_dict_get_item(node, ValueInstalledApps);
+        if (NULL != subNode && PLIST_IS_ARRAY(subNode))
+        {
+            uint32_t arraySize = plist_array_get_size(subNode);
+            plist_t itemNode = NULL;
+            for (uint32_t idx = 0; idx < arraySize; ++idx)
+            {
+                itemNode = plist_array_get_item(subNode, idx);
+                if (itemNode == NULL)
+                {
+                    continue;
+                }
+                std::string bundleId = getPlistStringValue(itemNode);
+                if (!bundleId.empty())
+                {
+                    plist_t appNode = plist_access_path(node, 2, "Applications", bundleId.c_str());
+                    
+                    if (NULL != appNode)
+                    {
+                        plist_t appSubNode = NULL;
+                        
+                        appSubNode = plist_dict_get_item(appNode, "iTunesMetadata");
+                        if (NULL != appSubNode)
+                        {
+                            plist_type ptype = plist_get_node_type(appSubNode);
+                            ptr = plist_get_data_ptr(appSubNode, &length);
+                            if (ptr != NULL && length > 0)
+                            {
+                                std::string metadata(ptr, length);
+                                BackupItem::AppInfo appInfo;
+                                appInfo.bundleId = bundleId;
+                                parseITunesMetadata(metadata, appInfo);
+                                manifest.addApp(appInfo);
+                            }
+                            
+                        }
+                        
+                    }
+                }
+                
+            }
+        
+        }
+    }
+    
+    plist_free(node);
+
+    return true;
+}
+
+bool ManifestParser::parseITunesMetadata(const std::string& metadata, BackupItem::AppInfo& appInfo)
+{
+    plist_t node = NULL;
+    plist_from_memory(metadata.c_str(), static_cast<uint32_t>(metadata.size()), &node);
+    if (NULL == node)
+    {
+        return false;
+    }
+    
+    /*
+    plist_dict_iter it = NULL;
+    char *key = NULL;
+    plist_t plistVal = NULL;
+    
+    plist_dict_new_iter(node, &it);
+
+    while (1)
+    {
+        plist_dict_next_item(node, it, &key, &plistVal);
+        
+        if (NULL == key)
+        {
+            break;
+        }
+        std::string keyString = key;
+        int aa = 0;
+    }
+    */
+
+    appInfo.name = getPlistStringValue(node, "itemName");
+    appInfo.bundleShortVersion = getPlistStringValue(node, "bundleShortVersionString");
+    appInfo.bundleVersion = getPlistStringValue(node, "bundleVersion");
+    
+    plist_free(node);
     
     return true;
 }
 
-void PlistDictionary::startElement(void * ctx, const xmlChar * fullName, const xmlChar ** attrs)
+DecodedManifestParser::DecodedManifestParser(const std::string& manifestPath, bool includingApps) : ManifestParser(manifestPath, includingApps)
 {
-    // NSLog(@"%@", [NSString stringWithUTF8String:localName]);
-    std::string fullNameStr = toString(fullName);
 }
 
-void PlistDictionary::startElementNs(void * ctx, const xmlChar * localName, const xmlChar * prefix, const xmlChar * URI, int nb_namespaces, const xmlChar ** namespaces, int nb_attributes, int nb_defaulted, const xmlChar ** attrs)
+bool DecodedManifestParser::parse(std::vector<BackupItem>& manifests) const
 {
-    // NSLog(@"%@", [NSString stringWithUTF8String:localName]);
+    bool res = false;
     
-    std::vector<std::string> ns;
-    std::map<std::string, std::string> as;
-    
-    int idx;
-    ns.reserve(nb_namespaces);
-    for (idx = 0; idx < nb_namespaces; ++idx)
+    std::string path = normalizePath(m_manifestPath);
+    if (isValidBackupItem(path))
     {
-        ns.push_back(toString(namespaces[idx]));
-    }
-    // as.reserve(nb_attributes + nb_defaulted);
-    for (idx = 0; idx < nb_namespaces; ++idx)
-    {
-        // ns(toString(attrs[idx]));
-    }
-    
-    // xmlParserCtxtPtr ctxt = reinterpret_cast<xmlParserCtxtPtr>(ctx);
-    // __ManifestUserData* userData = reinterpret_cast<__ManifestUserData*>(ctxt->userData);
-    PlistDictionary* userData = reinterpret_cast<PlistDictionary*>(ctx);
-    if (userData)
-    {
-        userData->startElementNs(toString(localName), toString(prefix), toString(URI), ns, as);
-    }
-}
-
-void PlistDictionary::endElementNs(void* ctx, const xmlChar* localname, const xmlChar* prefix, const xmlChar* URI)
-{
-    // xmlParserCtxtPtr ctxt = reinterpret_cast<xmlParserCtxtPtr>(ctx);
-    PlistDictionary* userData = reinterpret_cast<PlistDictionary*>(ctx);
-    if (userData)
-    {
-        userData->endElementNs(toString(localname), toString(prefix), toString(URI));
-    }
-}
-
-void PlistDictionary::characters(void* ctx, const xmlChar* ch, int len)
-{
-    // xmlParserCtxtPtr ctxt = reinterpret_cast<xmlParserCtxtPtr>(ctx);
-    PlistDictionary* userData = reinterpret_cast<PlistDictionary*>(ctx);
-    if (userData)
-    {
-        userData->characters(toString(ch, len));
-    }
-}
-
-void PlistDictionary::startElementNs(const std::string& localName, const std::string& prefix, const std::string& URI, const std::vector<std::string>& namespaces, const std::map<std::string, std::string>& attrs)
-{
-    m_tagStack.push_back(localName);
-    
-    m_curKey = "";
-    m_valueBuffer.clear();
-
-    m_nodeMatched = matchesPath();
-    m_isNodeKey = m_nodeMatched && m_tagStack.back() == NodeKey;
-    m_isReceiveValue = m_nodeMatched && !m_prevKey.empty() && m_values.find(m_prevKey) != m_values.cend();
-}
-
-void PlistDictionary::endElementNs(const std::string& localName, const std::string& prefix, const std::string& URI)
-{
-    if (m_nodeMatched)
-    {
-        if (m_isNodeKey)
+        BackupItem manifest;
+        if (parse(path, manifest) && manifest.isValid())
         {
-            m_prevKey = m_valueBuffer;
-        }
-        else
-        {
-            if (!m_valueBuffer.empty())
-            {
-                std::map<std::string, std::string>::iterator it = m_values.find(m_prevKey);
-                if (it != m_values.cend())
-                {
-                    it->second = m_valueBuffer;
-                    it->second.erase(it->second.find_last_not_of(" \n\r\t") + 1);
-                }
-            }
+            manifests.push_back(manifest);
+            res = true;
         }
     }
-
-    m_tagStack.pop_back();
-    // m_prevKey = m_curKey;
+    
+    return res;
 }
 
-void PlistDictionary::characters(const std::string& ch)
+bool DecodedManifestParser::isValidBackupItem(const std::string& path) const
 {
-    if (m_flags)
+    std::string fileName = combinePath(path, "Documents", "LoginInfo2.dat");
+    if (!existsFile(fileName))
     {
-        m_valueBuffer.append(ch);
+        m_lastError += "LoginInfo2.dat not found:" + fileName + "\r\n";
+        return false;
     }
+
+    return true;
+}
+
+bool DecodedManifestParser::parse(const std::string& path, BackupItem& manifest) const
+{
+    std::string fileName = combinePath(path, "Documents", "LoginInfo2.dat");
+    if (!existsFile(fileName))
+    {
+        m_lastError += "LoginInfo2.dat not found\r\n";
+        return false;
+    }
+    
+	manifest.setPath(path);
+    
+#ifdef _WIN32
+	struct _stat statbuf;
+	CA2W wpath(path.c_str(), CP_UTF8);
+	_wstat((LPCWSTR)wpath, &statbuf);
+	std::time_t ts = statbuf.st_mtime;
+#else
+    struct stat statbuf;
+    lstat(fileName.c_str(), &statbuf);
+    std::time_t ts = statbuf.st_mtimespec.tv_sec;
+    
+#endif
+	std::tm * ptm = std::localtime(&ts);
+
+    char buffer[32];
+	std::strftime(buffer, 32, "%Y-%m-%d %H:%M", ptm);
+    
+    manifest.setDeviceName("localhost");
+    manifest.setDisplayName("Wechat Backup");
+    
+    manifest.setBackupTime(buffer);
+
+    return true;
 }

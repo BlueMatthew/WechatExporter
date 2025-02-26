@@ -20,8 +20,14 @@
 #include <winsock.h>
 #endif
 
-#define WXEXP_DATA_FOLDER   ".wxexp"
-#define WXEXP_DATA_FILE   "wxexp.dat"
+
+#define USING_NEW_TEMPLATE 1
+
+#ifndef NDEBUG
+static const size_t PAGE_SIZE = 100;
+#else
+static const size_t PAGE_SIZE = 1000;
+#endif
 
 Exporter::Exporter(const std::string& workDir, const std::string& backup, const std::string& output, Logger* logger, PdfConverter* pdfConverter)
 {
@@ -36,7 +42,7 @@ Exporter::Exporter(const std::string& workDir, const std::string& backup, const 
     m_notifier = NULL;
     m_cancelled = false;
     m_options = 0;
-    m_loadingDataOnScroll = false; // disabled by default
+    // m_filterByName = false;
     m_extName = "html";
     m_templatesName = "templates";
     m_exportContext = NULL;
@@ -56,6 +62,8 @@ Exporter::~Exporter()
 
 void Exporter::initializeExporter()
 {
+    // Disable Memory Stats in sqlite
+    sqlite3_config(SQLITE_CONFIG_MEMSTATUS, 0);
 #ifdef USING_DOWNLOADER
     Downloader::initialize();
 #else
@@ -72,7 +80,29 @@ void Exporter::uninitializeExporter()
 #endif
 }
 
-bool Exporter::hasPreviousExporting(const std::string& outputDir, int& options, std::string& exportTime)
+void Exporter::setOptions(const ExportOption& options)
+{
+    m_options = options;
+}
+
+/*
+void Exporter::includesSubscription()
+{
+    m_options.includesSubscription();
+}
+*/
+
+bool Exporter::hasDebugLogs() const
+{
+    return m_options.isOutputtingDebugLogs();
+}
+
+bool Exporter::isSubscriptionIncluded() const
+{
+    return m_options.isIncludingSubscription();
+}
+
+bool Exporter::hasPreviousExporting(const std::string& outputDir, uint64_t& options, std::string& exportTime, std::string& version)
 {
     std::string fileName = combinePath(outputDir, WXEXP_DATA_FOLDER, WXEXP_DATA_FILE);
     if (!existsFile(fileName))
@@ -87,10 +117,11 @@ bool Exporter::hasPreviousExporting(const std::string& outputDir, int& options, 
     }
     
     options = context.getOptions();
+	version = context.getVersion();
     std::time_t ts = context.getExportTime();
     std::tm * ptm = std::localtime(&ts);
     char buffer[32];
-    std::strftime(buffer, 32, "%Y-%m-%d %H:%M", ptm);
+	std::strftime(buffer, 32, "%Y-%m-%d %H:%M", ptm);
     
     exportTime = buffer;
     
@@ -138,84 +169,6 @@ void Exporter::waitForComplition()
     m_thread.join();
 }
 
-void Exporter::setTextMode(bool textMode/* = true*/)
-{
-    if (textMode)
-        m_options |= SPO_TEXT_MODE;
-    else
-        m_options &= ~SPO_TEXT_MODE;
-}
-
-void Exporter::setPdfMode(bool pdfMode/* = true*/)
-{
-    setTextMode(!pdfMode);  // html mode
-    if (pdfMode)
-        m_options |= SPO_PDF_MODE;
-    else
-        m_options &= ~SPO_PDF_MODE;
-}
-
-void Exporter::setOrder(bool asc/* = true*/)
-{
-    if (asc)
-        m_options &= ~SPO_DESC;
-    else
-        m_options |= SPO_DESC;
-}
-
-void Exporter::saveFilesInSessionFolder(bool flag/* = true*/)
-{
-    if (flag)
-        m_options |= SPO_ICON_IN_SESSION;
-    else
-        m_options &= ~SPO_ICON_IN_SESSION;
-}
-
-void Exporter::setSyncLoading(bool syncLoading/* = true*/)
-{
-    if (syncLoading)
-        m_options |= SPO_SYNC_LOADING;
-    else
-        m_options &= ~SPO_SYNC_LOADING;
-}
-
-void Exporter::setLoadingDataOnScroll(bool loadingDataOnScroll/* = true*/)
-{
-    m_loadingDataOnScroll = loadingDataOnScroll;
-}
-
-void Exporter::setIncrementalExporting(bool incrementalExporting)
-{
-    if (incrementalExporting)
-        m_options |= SPO_INCREMENTAL_EXP;
-    else
-        m_options &= ~SPO_INCREMENTAL_EXP;
-}
-
-void Exporter::supportsFilter(bool supportsFilter/* = true*/)
-{
-    if (supportsFilter)
-        m_options |= SPO_SUPPORT_FILTER;
-    else
-        m_options &= ~SPO_SUPPORT_FILTER;
-}
-
-void Exporter::outputDebugLogs(bool outputDebugLogs)
-{
-    if (outputDebugLogs)
-        m_options |= SPO_OUTPUT_DBG_LOGS;
-    else
-        m_options &= ~SPO_OUTPUT_DBG_LOGS;
-}
-
-void Exporter::useRemoteEmoji(bool useEmojiUrl)
-{
-    if (useEmojiUrl)
-        m_options |= SPO_USING_REMOTE_EMOJI;
-    else
-        m_options &= ~SPO_USING_REMOTE_EMOJI;
-}
-
 void Exporter::setExtName(const std::string& extName)
 {
     m_extName = extName;
@@ -240,14 +193,14 @@ bool Exporter::run()
 {
     if (isRunning() || m_thread.joinable())
     {
-        m_logger->write(getLocaleString("Previous task has not completed."));
+        m_logger->write(m_resManager.getLocaleString("Previous task has not completed."));
         
         return false;
     }
 
     if (!existsDirectory(m_output))
     {
-        m_logger->write(formatString(getLocaleString("Can't access output directory: %s"), m_output.c_str()));
+        m_logger->write(formatString(m_resManager.getLocaleString("Can't access output directory: %s"), m_output.c_str()));
         return false;
     }
     
@@ -263,11 +216,11 @@ bool Exporter::loadUsersAndSessions()
 {
     m_usersAndSessions.clear();
     
-    loadStrings();
-    
+    m_resManager.initLocaleResource(m_workDir, m_languageCode);
+
     if (!loadITunes(false))
     {
-        m_logger->write(formatString(getLocaleString("Failed to parse the backup data of iTunes in the directory: %s"), m_backup.c_str()));
+        m_logger->write(formatString(m_resManager.getLocaleString("Failed to parse the backup data of iTunes in the directory: %s"), m_backup.c_str()));
         notifyComplete();
         return false;
     }
@@ -276,24 +229,22 @@ bool Exporter::loadUsersAndSessions()
     WechatInfoParser wechatInfoParser(m_iTunesDb);
     if (wechatInfoParser.parse(m_wechatInfo))
     {
-        m_logger->write(formatString(getLocaleString("iTunes Version: %s, iOS Version: %s, Wechat Version: %s"), m_iTunesDb->getVersion().c_str(), m_iTunesDb->getIOSVersion().c_str(), m_wechatInfo.getShortVersion().c_str()));
+        m_logger->write(formatString(m_resManager.getLocaleString("iTunes Version: %s, iOS Version: %s, WeChat Version: %s"), m_iTunesDb->getVersion().c_str(), m_iTunesDb->getIOSVersion().c_str(), m_wechatInfo.getShortVersion().c_str()));
     }
     
     std::vector<Friend> users;
-#if !defined(NDEBUG) || defined(DBG_PERF)
-    LoginInfo2Parser loginInfo2Parser(m_iTunesDb, m_logger);
-#else
-    LoginInfo2Parser loginInfo2Parser(m_iTunesDb);
-#endif
+    
+    LoginInfo2Parser loginInfo2Parser(m_iTunesDb, hasDebugLogs() ? m_logger : NULL);
     if (!loginInfo2Parser.parse(users))
     {
-#if !defined(NDEBUG) || defined(DBG_PERF)
-		m_logger->debug(loginInfo2Parser.getError());
-#endif
+        if (hasDebugLogs())
+        {
+            m_logger->debug(loginInfo2Parser.getError());
+        }
         return false;
     }
 
-    m_logger->debug("Wechat Users loaded.");
+    m_logger->debug("WeChat Users loaded.");
     m_usersAndSessions.reserve(users.size()); // Avoid re-allocation and causing the pointer changed
     for (std::vector<Friend>::const_iterator it = users.cbegin(); it != users.cend(); ++it)
     {
@@ -322,14 +273,26 @@ bool Exporter::runImpl()
 #if !defined(NDEBUG) || defined(DBG_PERF)
     makeDirectory(combinePath(m_output, "dbg"));
 #endif
-    loadStrings();
-    loadTemplates();
     
-    m_logger->write(formatString(getLocaleString("iTunes Backup: %s"), m_backup.c_str()));
+    if (!m_resManager.initResources(m_workDir, m_languageCode, m_templatesName))
+    {
+        m_logger->write(formatString("Failed to load resources in %s.", m_workDir.c_str()));
+
+        if (hasDebugLogs())
+        {
+            std::string emptyTemplates = m_resManager.checkEmptyTemplates();
+            if (!emptyTemplates.empty())
+            {
+                m_logger->write("Empty template: " + emptyTemplates);
+            }
+        }
+    }
+
+    m_logger->write(formatString(m_resManager.getLocaleString("iTunes Backup: %s"), m_backup.c_str()));
 
     if (!loadITunes())
     {
-        m_logger->write(formatString(getLocaleString("Failed to parse the backup data of iTunes in the directory: %s"), m_backup.c_str()));
+        m_logger->write(formatString(m_resManager.getLocaleString("Failed to parse the backup data of iTunes in the directory: %s"), m_backup.c_str()));
         notifyComplete();
         return false;
     }
@@ -338,31 +301,28 @@ bool Exporter::runImpl()
     WechatInfoParser wechatInfoParser(m_iTunesDb);
     if (wechatInfoParser.parse(m_wechatInfo))
     {
-        m_logger->write(formatString(getLocaleString("iTunes Version: %s, Wechat Version: %s"), m_iTunesDb->getVersion().c_str(), m_wechatInfo.getShortVersion().c_str()));
+        m_logger->write(formatString(m_resManager.getLocaleString("iTunes Version: %s, WeChat Version: %s"), m_iTunesDb->getVersion().c_str(), m_wechatInfo.getShortVersion().c_str()));
     }
 
-    m_logger->write(getLocaleString("Finding Wechat accounts..."));
+    m_logger->write(m_resManager.getLocaleString("Finding WeChat accounts..."));
 
     std::vector<Friend> users;
-    
-#if !defined(NDEBUG) || defined(DBG_PERF)
-    LoginInfo2Parser loginInfo2Parser(m_iTunesDb, m_logger);
-#else
-    LoginInfo2Parser loginInfo2Parser(m_iTunesDb);
-#endif
+
+    LoginInfo2Parser loginInfo2Parser(m_iTunesDb, hasDebugLogs() ? m_logger : NULL);
     if (!loginInfo2Parser.parse(users))
     {
-        m_logger->write(getLocaleString("Failed to find Wechat account."));
-#if !defined(NDEBUG) || defined(DBG_PERF)
-        m_logger->debug(loginInfo2Parser.getError());
-#endif
+        m_logger->write(m_resManager.getLocaleString("Failed to find WeChat account."));
+        if (hasDebugLogs())
+        {
+            m_logger->debug(loginInfo2Parser.getError());
+        }
         notifyComplete();
         return false;
     }
 
-    m_logger->write(formatString(getLocaleString("%d Wechat account(s) found."), (int)(users.size())));
+    m_logger->write(formatString(m_resManager.getLocaleString("%d WeChat account(s) found."), (int)(users.size())));
 
-    // if (m_options & SPO_INCREMENTAL_EXP)
+    // if (m_options.isIncrementalExporting())
     {
         std::string path = combinePath(m_output, WXEXP_DATA_FOLDER);
         makeDirectory(path);
@@ -371,12 +331,14 @@ bool Exporter::runImpl()
     {
         m_exportContext = new ExportContext();
     }
-    int orgOptions = m_options;
+    uint64_t orgOptions = m_options;
     std::string contextFileName = combinePath(m_output, WXEXP_DATA_FOLDER, WXEXP_DATA_FILE);
-    if ((m_options & SPO_INCREMENTAL_EXP) && loadExportContext(contextFileName, m_exportContext))
+    if ((m_options.isIncrementalExporting()) && loadExportContext(contextFileName, m_exportContext))
     {
         // Use the previous options
-        m_options = m_exportContext->getOptions() | SPO_INCREMENTAL_EXP;
+        m_options = m_exportContext->getOptions();
+        m_options.setIncrementalExporting(true);
+        m_logger->write(m_resManager.getLocaleString("Incremental Exporting"));
     }
     else
     {
@@ -396,7 +358,8 @@ bool Exporter::runImpl()
         
         if (!m_usersAndSessionsFilter.empty())
         {
-            if (m_usersAndSessionsFilter.find(it->getUsrName()) == m_usersAndSessionsFilter.cend())
+            const std::string& nameForFilter = m_options.isFilteredByName() ? it->getDisplayName() : it->getUsrName();
+            if (m_usersAndSessionsFilter.find(nameForFilter) == m_usersAndSessionsFilter.cend())
             {
                 continue;
             }
@@ -404,16 +367,16 @@ bool Exporter::runImpl()
         
         if (!buildFileNameForUser(*it, userFileNames))
         {
-            m_logger->write(formatString(getLocaleString("Can't build directory name for user: %s. Skip it."), it->getUsrName().c_str()));
+            m_logger->write(formatString(m_resManager.getLocaleString("Can't build directory name for user: %s. Skip it."), it->getUsrName().c_str()));
             continue;
         }
 
         std::string userOutputPath;
         exportUser(*it, userOutputPath);
         
-        std::string userItem = getTemplate("listitem");
+        std::string userItem = m_resManager.getTemplate("listitem");
         replaceAll(userItem, "%%ITEMPICPATH%%", userOutputPath + "/Portrait/" + it->getLocalPortrait());
-        if ((m_options & SPO_IGNORE_HTML_ENC) == 0)
+        if (!m_options.isTextMode())
         {
             replaceAll(userItem, "%%ITEMLINK%%", encodeUrl(it->getOutputFileName()) + "/index." + m_extName);
             replaceAll(userItem, "%%ITEMTEXT%%", safeHTML(it->getDisplayName()));
@@ -429,7 +392,8 @@ bool Exporter::runImpl()
     
     std::string fileName = combinePath(m_output, "index." + m_extName);
 
-    std::string html = getTemplate("listframe");
+    std::string html = m_resManager.getTemplate("listframe");
+    
     replaceAll(html, "%%USERNAME%%", "");
     replaceAll(html, "%%TBODY%%", htmlBody);
     
@@ -457,7 +421,7 @@ bool Exporter::runImpl()
         << std::setfill('0') << std::setw(2) << (minutes % 60) << ':'
         << std::setfill('0') << std::setw(2) << (seconds % 60);
     
-    m_logger->write(formatString(getLocaleString((m_cancelled ? "Cancelled in %s." : "Completed in %s.")), stream.str().c_str()));
+    m_logger->write(formatString(m_resManager.getLocaleString((m_cancelled ? "Cancelled in %s." : "Completed in %s.")), stream.str().c_str()));
     
     notifyComplete(m_cancelled);
     
@@ -488,34 +452,39 @@ bool Exporter::exportUser(Friend& user, std::string& userOutputPath)
         }
     }
     
-    if ((m_options & SPO_IGNORE_AVATAR) == 0)
+    if (!m_options.isTextMode())
     {
         std::string portraitPath = combinePath(outputBase, "Portrait");
         makeDirectory(portraitPath);
-        std::string defaultPortrait = combinePath(portraitPath, "DefaultProfileHead@2x.png");
-        copyFile(combinePath(m_workDir, "res", "DefaultProfileHead@2x.png"), defaultPortrait, true);
+        std::string defaultPortrait = combinePath(portraitPath, "DefaultAvatar.png");
+        copyFile(combinePath(m_workDir, "res", "DefaultAvatar.png"), defaultPortrait, true);
     }
-    if ((m_options & SPO_ICON_IN_SESSION) == 0 && (m_options & SPO_IGNORE_EMOJI) == 0)
+    /*
+    if (false && (m_options & SPO_IGNORE_EMOJI) == 0)
     {
         std::string emojiPath = combinePath(outputBase, "Emoji");
         makeDirectory(emojiPath);
     }
-    // if (m_options & SPO_INCREMENTAL_EXP)
+     */
+    
+    // if (m_options.isIncrementalExporting())
     {
         std::string path = combinePath(m_output, WXEXP_DATA_FOLDER, user.getUsrName());
         makeDirectory(path);
+        
+        m_exportContext->prepareUserDatabase(user, m_output);
     }
     
-    m_logger->write(formatString(getLocaleString("Handling account: %s, Wechat Id: %s"), user.getDisplayName().c_str(), user.getUsrName().c_str()));
+    m_logger->write(formatString(m_resManager.getLocaleString("Handling account: %s, WeChat Id: %s"), user.getDisplayName().c_str(), user.getUsrName().c_str()));
     
-    m_logger->write(getLocaleString("Reading account info."));
-    m_logger->write(getLocaleString("Reading chat info"));
+    m_logger->write(m_resManager.getLocaleString("Reading account info."));
+    m_logger->write(m_resManager.getLocaleString("Reading chat info"));
     
     Friends friends;
     std::vector<Session> sessions;
     loadUserFriendsAndSessions(user, friends, sessions);
     
-    m_logger->write(formatString(getLocaleString("%d chats found."), (int)(sessions.size())));
+    m_logger->write(formatString(m_resManager.getLocaleString("%d chats found."), (int)(sessions.size())));
     
     Friend* myself = friends.getFriend(user.getHash());
     if (NULL == myself)
@@ -530,10 +499,11 @@ bool Exporter::exportUser(Friend& user, std::string& userOutputPath)
     std::map<std::string, std::map<std::string, void *>>::const_iterator itUser = m_usersAndSessionsFilter.cend();
     if (!m_usersAndSessionsFilter.empty())
     {
-        itUser = m_usersAndSessionsFilter.find(user.getUsrName());
+        std::string nameForFilter = m_options.isFilteredByName() ? user.getDisplayName() : user.getUsrName();
+        itUser = m_usersAndSessionsFilter.find(nameForFilter);
     }
     
-    bool pdfOutput = (m_options & SPO_PDF_MODE && NULL != m_pdfConverter);
+    bool pdfOutput = (m_options.isPdfMode() && NULL != m_pdfConverter);
     if (pdfOutput)
     {
         m_pdfConverter->makeUserDirectory(userOutputPath);
@@ -553,11 +523,10 @@ bool Exporter::exportUser(Friend& user, std::string& userOutputPath)
 #else
     taskManager.setUserAgent(m_wechatInfo.buildUserAgent());
 #endif
+
+    MessageParser msgParser(*m_iTunesDb, *m_iTunesDbShare, taskManager, friends, *myself, m_options, m_workDir, outputBase, m_resManager);
     
-    std::function<std::string(const std::string&)> localeFunction = std::bind(&Exporter::getLocaleString, this, std::placeholders::_1);
-    MessageParser msgParser(*m_iTunesDb, *m_iTunesDbShare, taskManager, friends, *myself, m_options, m_workDir, outputBase, localeFunction);
-    
-    if ((m_options & SPO_IGNORE_AVATAR) == 0)
+    if (!m_options.isTextMode())
     {
 #ifndef NDEBUG
         m_logger->debug("Download avatar: *" + user.getPortrait() + "* => " + combinePath(outputBase, "Portrait", user.getLocalPortrait()));
@@ -565,6 +534,44 @@ bool Exporter::exportUser(Friend& user, std::string& userOutputPath)
         msgParser.copyPortraitIcon(NULL, user, combinePath(outputBase, "Portrait"));
         // downloader.addTask(user.getPortrait(), combinePath(outputBase, "Portrait", user.getLocalPortrait()), 0);
     }
+    
+    // Export Contacts
+    // std::map<std::string, Friend>
+    // WeChat Id/Display Name/Portrait URL
+    // csv
+    std::string csvContents;
+    std::vector<const Friend *>friendList;
+    friends.toArraySortedByDisplayName(friendList);
+    std::string oneQuato = "\"";
+    std::string twoQuatos = "\"\"";
+    std::string twoQuatos2 = "\",\"";
+    for (auto it = friendList.cbegin(); it != friendList.cend(); ++it)
+    {
+#ifdef NDEBUG   // Release
+        if ((*it)->isSubscription() || (*it)->isChatroom())
+        {
+            continue;
+        }
+
+        std::string wechatId = (*it)->getWxName();
+        std::string displayName = (*it)->getDisplayName();
+        replaceAll(displayName, oneQuato, twoQuatos);
+        csvContents += oneQuato + wechatId + twoQuatos2 + displayName + twoQuatos2 + (*it)->getPortrait() + twoQuatos2 + (*it)->buildTagDesc(m_tags) + "\"\r\n";
+#else
+        std::string wechatId = (*it)->getWxName();
+        if (wechatId == (*it)->getUsrName())
+        {
+            wechatId.clear();
+        }
+        std::string displayName = (*it)->getDisplayName();
+        replaceAll(displayName, oneQuato, twoQuatos);
+        csvContents += oneQuato + (*it)->getUsrName() + twoQuatos2 + wechatId + twoQuatos2 + displayName + twoQuatos2 + (*it)->buildTagDesc(m_tags) + twoQuatos2 + (*it)->getPortrait() + "\"\r\n";
+#endif
+    }
+    std::string contactPath = combinePath(m_output, userOutputPath + "_Contacts.csv");
+    writeFile(contactPath, csvContents);
+    
+    std::string weChatIdFormat = m_resManager.getLocaleString(" (WeChat ID: %s)");
 
     std::set<std::string> sessionFileNames;
     for (std::vector<Session>::iterator it = sessions.begin(); it != sessions.end(); ++it)
@@ -574,60 +581,83 @@ bool Exporter::exportUser(Friend& user, std::string& userOutputPath)
             break;
         }
         
-        if (!m_usersAndSessionsFilter.empty())
+        if (!m_usersAndSessionsFilter.empty() && itUser != m_usersAndSessionsFilter.cend() && !(itUser->second.empty()))
         {
             std::map<std::string, void *>::const_iterator itSession = itUser->second.cend();
-            if (itUser == m_usersAndSessionsFilter.cend() || (itSession = itUser->second.find(it->getUsrName())) == itUser->second.cend())
+            const std::string& nameForFilter = m_options.isFilteredByName() ? it->getDisplayName() : it->getUsrName();
+            if ((itSession = itUser->second.find(nameForFilter)) == itUser->second.cend())
             {
                 continue;
             }
             
             it->setData(itSession->second);
         }
+        
+        int recordCount = it->getRecordCount();
+        if (m_options.isIncrementalExporting())
+        {
+            int64_t maxMsgId = 0;
+            m_exportContext->getMaxId(user.getUsrName(), it->getUsrName(), maxMsgId);
+            if (maxMsgId > 0)
+            {
+                recordCount = SessionParser::calcNumberOfMessages(*it, maxMsgId);
+            }
+        }
 
-		notifySessionStart(it->getUsrName(), it->getData(), it->getRecordCount());
+		notifySessionStart(it->getUsrName(), it->getData(), recordCount);
         
         if (!buildFileNameForUser(*it, sessionFileNames))
         {
-            m_logger->write(formatString(getLocaleString("Can't build directory name for chat: %s. Skip it."), it->getDisplayName().c_str()));
+            m_logger->write(formatString(m_resManager.getLocaleString("Can't build directory name for chat: %s. Skip it."), it->getDisplayName().c_str()));
 			notifySessionComplete(it->getUsrName(), it->getData(), m_cancelled);
             continue;
         }
         
         std::string sessionDisplayName = it->getDisplayName();
 #ifndef NDEBUG
-        m_logger->write(formatString(getLocaleString("%d/%d: Handling the chat with %s"), (std::distance(sessions.begin(), it) + 1), sessions.size(), sessionDisplayName.c_str()) + " uid:" + it->getUsrName());
+        m_logger->write(formatString(m_resManager.getLocaleString("%d/%d: Handling the chat with %s"), (std::distance(sessions.begin(), it) + 1), sessions.size(), sessionDisplayName.c_str()) + " uid:" + it->getUsrName());
 #else
-        m_logger->write(formatString(getLocaleString("%d/%d: Handling the chat with %s"), (std::distance(sessions.begin(), it) + 1), sessions.size(), sessionDisplayName.c_str()));
+        m_logger->write(formatString(m_resManager.getLocaleString("%d/%d: Handling the chat with %s"), (std::distance(sessions.begin(), it) + 1), sessions.size(), sessionDisplayName.c_str()));
 #endif
-        if (it->isSubscription())
+        if (!isSubscriptionIncluded() && it->isSubscription())
         {
-            m_logger->write(formatString(getLocaleString("Skip subscription: %s"), sessionDisplayName.c_str()));
+            m_logger->write(formatString(m_resManager.getLocaleString("Skip subscription: %s"), sessionDisplayName.c_str()));
 			notifySessionComplete(it->getUsrName(), it->getData(), m_cancelled);
             continue;
         }
-        if ((m_options & SPO_IGNORE_AVATAR) == 0)
+        if (!m_options.isTextMode())
         {
             // Download avatar for session
             msgParser.copyPortraitIcon(&(*it), *it, combinePath(outputBase, "Portrait"));
         }
         int count = exportSession(*myself, msgParser, *it, userBase, outputBase);
         
-        m_logger->write(formatString(getLocaleString("Succeeded handling %d messages."), count));
+        m_logger->write(formatString(m_resManager.getLocaleString("Succeeded handling %d messages."), count));
 
         if (count > 0)
         {
-            std::string userItem = getTemplate("listitem");
-            replaceAll(userItem, "%%ITEMPICPATH%%", "Portrait/" + it->getLocalPortrait());
-            if ((m_options & SPO_IGNORE_HTML_ENC) == 0)
+            std::string userItem = m_resManager.getTemplate("listitem");
+            
+            std::string userItemText = sessionDisplayName;
+            if (!it->isChatroom())
             {
-                replaceAll(userItem, "%%ITEMLINK%%", encodeUrl(it->getOutputFileName()) + "." + m_extName);
-                replaceAll(userItem, "%%ITEMTEXT%%", safeHTML(sessionDisplayName));
+                std::string wxName = it->isWxNameEmpty() ? "" : it->getWxName();
+                if (!wxName.empty() && userItemText != wxName)
+                {
+                    userItemText += formatString(weChatIdFormat, wxName.c_str());
+                }
+            }
+            
+            replaceAll(userItem, "%%ITEMPICPATH%%", "Portrait/" + it->getLocalPortrait());
+            if (!m_options.isTextMode())
+            {
+                replaceAll(userItem, "%%ITEMLINK%%", encodeUrl(it->getOutputFileName()) + "/index." + m_extName);
+                replaceAll(userItem, "%%ITEMTEXT%%", safeHTML(userItemText));
             }
             else
             {
                 replaceAll(userItem, "%%ITEMLINK%%", it->getOutputFileName() + "." + m_extName);
-                replaceAll(userItem, "%%ITEMTEXT%%", sessionDisplayName);
+                replaceAll(userItem, "%%ITEMTEXT%%", userItemText);
             }
             
             userBody += userItem;
@@ -638,7 +668,7 @@ bool Exporter::exportUser(Friend& user, std::string& userOutputPath)
         if (pdfOutput)
         {
             // std::string 
-            std::string htmlFileName = combinePath(outputBase, it->getOutputFileName() + "." + m_extName);
+            std::string htmlFileName = combinePath(outputBase, it->getOutputFileName(), "index." + m_extName);
             if (existsFile(htmlFileName))
             {
                 std::string pdfFileName = combinePath(m_output, "pdf", userOutputPath, it->getOutputFileName() + ".pdf");
@@ -648,7 +678,7 @@ bool Exporter::exportUser(Friend& user, std::string& userOutputPath)
         }
     }
 
-    std::string html = getTemplate("listframe");
+    std::string html = m_resManager.getTemplate("listframe");
     replaceAll(html, "%%USERNAME%%", " - " + user.getDisplayName());
     replaceAll(html, "%%TBODY%%", userBody);
     
@@ -731,30 +761,78 @@ bool Exporter::exportUser(Friend& user, std::string& userOutputPath)
     return true;
 }
 
-bool Exporter::loadUserFriendsAndSessions(const Friend& user, Friends& friends, std::vector<Session>& sessions, bool detailedInfo/* = true*/) const
+bool Exporter::loadUserFriendsAndSessions(const Friend& user, Friends& friends, std::vector<Session>& sessions, bool detailedInfo/* = true*/)
 {
     std::string uidMd5 = user.getHash();
     std::string userBase = combinePath("Documents", uidMd5);
-    
-    // if (detailedInfo)
-    {
-        std::string wcdbPath = m_iTunesDb->findRealPath(combinePath(userBase, "DB", "WCDB_Contact.sqlite"));
-        FriendsParser friendsParser(detailedInfo);
-#ifndef NDEBUG
-        friendsParser.setOutputPath(m_output);
-#endif
-        friendsParser.parseWcdb(wcdbPath, friends);
 
-        m_logger->debug("Wechat Friends(" + std::to_string(friends.friends.size()) + ") for: " + user.getDisplayName() + " loaded.");
+    std::string wcdbPath = m_iTunesDb->findRealPath(combinePath(userBase, "DB", "WCDB_Contact.sqlite"));
+    FriendsParser friendsParser(detailedInfo);
+#ifndef NDEBUG
+    friendsParser.setOutputPath(m_output);
+#endif
+    friendsParser.parseWcdb(wcdbPath, friends);
+
+    m_logger->debug("WeChat Friends(" + std::to_string(friends.friends.size()) + ") for: " + user.getDisplayName() + " loaded.");
+    
+    m_tags.clear();
+    if (detailedInfo)
+    {
+        friendsParser.parseFriendTags(m_iTunesDb, user.getHash(), m_tags);
     }
 
-    SessionsParser sessionsParser(m_iTunesDb, m_iTunesDbShare, m_wechatInfo.getCellDataVersion(), detailedInfo);
+    SessionsParser sessionsParser(m_iTunesDb, m_iTunesDbShare, friends, m_wechatInfo.getCellDataVersion(), m_logger, detailedInfo);
     
-    sessionsParser.parse(user, friends, sessions);
+    sessionsParser.parse(user, sessions);
  
     std::sort(sessions.begin(), sessions.end(), SessionLastMsgTimeCompare());
     
-    // m_logger->debug("Wechat Sessions for: " + user.getDisplayName() + " loaded.");
+#ifndef NDEBUG
+    int idx = 0;
+    for (auto it = sessions.cbegin(); it != sessions.cend(); ++it)
+    {
+        if (it->isSubscription())
+        {
+            continue;
+        }
+        
+        printf("%u : %s\t%s\r\n",it->getLastMessageTime(), it->getDisplayName().c_str(), it->getUsrName().c_str());
+        idx ++;
+        if (idx > 20)
+        {
+            // break;
+        }
+    }
+    
+    idx = 0;
+#endif
+    
+    // m_logger->debug("WeChat Sessions for: " + user.getDisplayName() + " loaded.");
+    return true;
+}
+
+bool Exporter::buildScriptFile(const std::string& fileName, std::vector<std::string>::const_iterator b, std::vector<std::string>::const_iterator e, const PageInfo& page) const
+{
+    std::string scripts = m_resManager.getTemplate("scripts");
+    Json::Value jsonMsgs(Json::arrayValue);
+    for (auto it = b; it != e; ++it)
+    {
+        jsonMsgs.append(*it);
+    }
+    Json::StreamWriterBuilder builder;
+#ifndef NDEBUG
+    builder["indentation"] = "\t";  // assume default for comments is None
+    builder["emitUTF8"] = true;
+#else
+    builder["indentation"] = "";
+#endif
+    std::string moreMsgs = Json::writeString(builder, jsonMsgs);
+
+    replaceAll(scripts, "%%JSON_DATA%%", moreMsgs);
+    
+    // std::string dataFileName = combinePath(dataPath, "msg-" + page.getFileName() + ".js");
+    writeFile(fileName, scripts);
+    
     return true;
 }
 
@@ -765,79 +843,260 @@ int Exporter::exportSession(const Friend& user, const MessageParser& msgParser, 
         return 0;
     }
     
-    std::string sessionBasePath = combinePath(outputBase, session.getOutputFileName() + "_files");
-    if ((m_options & SPO_IGNORE_AVATAR) == 0)
+    std::string sessionBasePath = combinePath(outputBase, session.getOutputFileName(), "Files");
+    if (!m_options.isTextMode())
     {
         std::string portraitPath = combinePath(sessionBasePath, "Portrait");
         makeDirectory(portraitPath);
-        // std::string defaultPortrait = combinePath(portraitPath, "DefaultProfileHead@2x.png");
-        // copyFile(combinePath(m_workDir, "res", "DefaultProfileHead@2x.png"), defaultPortrait, true);
-    }
-    if ((m_options & SPO_IGNORE_EMOJI) == 0)
-    {
+        // std::string defaultPortrait = combinePath(portraitPath, "DefaultAvatar.png");
+        // copyFile(combinePath(m_workDir, "res", "DefaultAvatar.png"), defaultPortrait, true);
+        
         makeDirectory(combinePath(sessionBasePath, "Emoji"));
     }
 
     std::vector<std::string> messages;
+    std::vector<std::string>::size_type numberOfExportedMsgs = 0;
     if (session.getRecordCount() > 0)
     {
         messages.reserve(session.getRecordCount());
     }
     
     int64_t maxMsgId = 0;
-    m_exportContext->getMaxId(session.getUsrName(), maxMsgId);
+    m_exportContext->getMaxId(user.getUsrName(), session.getUsrName(), maxMsgId);
+    if (m_options.isIncrementalExporting())
+    {
+        m_exportContext->prepareSessionTable(session);
+    }
+
+#if !defined(NDEBUG) || defined(DBG_PERF)
+    m_logger->debug("DB: " + session.getDbFile() + " Table: Chat_" + session.getHash());
+#endif
     
     int numberOfMsgs = 0;
     SessionParser sessionParser(m_options);
     std::unique_ptr<SessionParser::MessageEnumerator> enumerator(sessionParser.buildMsgEnumerator(session, maxMsgId));
     std::vector<TemplateValues> tvs;
+    std::unique_ptr<Pager> pager;
+    uint16_t year = 0;
+    uint16_t month = 0;
+    size_t msgPosOfPage = 0;
+    
+    std::string dataPath = combinePath(outputBase, session.getOutputFileName(), "Files", "Data");
+    makeDirectory(dataPath);
+    
+    if (m_options.isAsyncLoading())
+    {
+        if (m_options.isPagerByYear())
+        {
+            pager.reset((Pager *)(new YearPager()));
+        }
+        else if (m_options.isPagerByMonth())
+        {
+            pager.reset((Pager *)(new YearMonthPager()));
+        }
+        else
+        {
+            pager.reset((Pager *)(new NumberPager(PAGE_SIZE)));
+        }
+    }
+    else
+    {
+        pager.reset(new Pager());
+    }
+    
     WXMSG msg;
+#if !defined(NDEBUG) || defined(DBG_PERF)
+    m_logger->debug("Start exporting session");
+#endif
     while (enumerator->nextMessage(msg))
     {
+#if !defined(NDEBUG) || defined(DBG_PERF)
+        // m_logger->debug("Export msg: " + msg.msgId);
+#endif
+        if (m_options.isIncrementalExporting())
+        {
+            m_exportContext->insertMessage(session, msg);
+        }
+        
         if (msg.msgIdValue > maxMsgId)
         {
             maxMsgId = msg.msgIdValue;
         }
         
         tvs.clear();
-        msgParser.parse(msg, session, tvs);
+        if (!msgParser.parse(msg, session, tvs))
+        {
+            if (hasDebugLogs() && msgParser.hasError())
+            {
+                m_logger->debug(msgParser.getError());
+            }
+        }
+
         exportMessage(session, tvs, messages);
         ++numberOfMsgs;
+
+        pager->buildNewPage(&msg, messages);
         
         notifySessionProgress(session.getUsrName(), session.getData(), numberOfMsgs, session.getRecordCount());
+#if !defined(NDEBUG) || defined(DBG_PERF)
+        // m_logger->debug("Finish exporting msg: " + msg.msgId);
+#endif
         if (m_cancelled)
         {
             break;
         }
     }
-    
+
+#if !defined(NDEBUG) || defined(DBG_PERF)
+    m_logger->debug("Finish exporting session");
+#endif
+
     if (maxMsgId > 0)
     {
-        m_exportContext->setMaxId(session.getUsrName(), maxMsgId);
+        m_exportContext->setMaxId(user.getUsrName(), session.getUsrName(), maxMsgId);
+    }
+    
+    if (numberOfMsgs == 0)  // no messages or no new messages for incremental exporting
+    {
+        return (maxMsgId > 0) ? 1 : numberOfMsgs;
+    }
+    
+    std::string contentOfMembers;
+    if (session.isChatroom())
+    {
+        // Export memebers
     }
     
     std::string rawMsgFileName = combinePath(m_output, WXEXP_DATA_FOLDER, session.getOwner()->getUsrName(), session.getUsrName() + ".dat");
-    if (m_options & SPO_INCREMENTAL_EXP)
+    if (m_options.isIncrementalExporting())
     {
+        m_logger->debug("Merge incremental messages.");
         mergeMessages(rawMsgFileName, messages);
     }
+    
+    m_logger->debug("Save messages for incremental exporting.");
     serializeMessages(rawMsgFileName, messages);
+    
+    // m_logger->debug("After serializeMessages.");
 
-    if (numberOfMsgs > 0 && !messages.empty())
+    if (numberOfMsgs > 0)
     {
+        Json::Value jsonPages(Json::arrayValue);
+        
+        if (pager->hasPages())
+        {
+            numberOfExportedMsgs = 0;
+            auto pages = pager->getPages();
+            for (auto it = pages.cbegin(); it != pages.cend(); ++it)
+            {
+                auto b = messages.cbegin() + numberOfExportedMsgs;
+                auto e = b + it->getCount();
+                buildScriptFile(combinePath(dataPath, "msg-" + it->getFileName() + ".js"), b, e, *it);
+                numberOfExportedMsgs += it->getCount();
+                
+                Json::Value jsonPage(Json::objectValue);
+                jsonPage["numnberOfMsgs"] = it->getCount();
+                jsonPage["text"] = it->getText();
+                jsonPage["page"] = it->getPage() + 1;
+                if (it->getYear() > 0)
+                {
+                    jsonPage["year"] = it->getYear();
+                }
+                if (it->getMonth() > 0)
+                {
+                    jsonPage["month"] = it->getMonth();
+                }
+                jsonPages.append(jsonPage);
+            }
+        }
+        
+        Json::StreamWriterBuilder builder;
 #ifndef NDEBUG
-        const size_t pageSize = 500;
+        builder["indentation"] = "\t";  // assume default for comments is None
+        builder["emitUTF8"] = true;
 #else
-        const size_t pageSize = 1000;
+        builder["indentation"] = "";
 #endif
+        std::string pageData = Json::writeString(builder, jsonPages);
+
         auto b = messages.cbegin();
         // No page for text mode
-        auto e = (((m_options & (SPO_TEXT_MODE | SPO_SYNC_LOADING)) != 0) || (messages.size() <= pageSize)) ? messages.cend() : (b + pageSize);
+        auto e = (m_options.isTextMode() || m_options.isSyncLoading() || (messages.size() <= PAGE_SIZE)) ? messages.cend() : (b + PAGE_SIZE);
         
-        const size_t numberOfMessages = std::distance(e, messages.cend());
-        const size_t numberOfPages = (numberOfMessages + pageSize - 1) / pageSize;
+        // const size_t numberOfMessages = std::distance(e, messages.cend());
+        const size_t numberOfMessages = numberOfMsgs;
+        const size_t numberOfPages = (messages.size() + PAGE_SIZE - 1) / PAGE_SIZE;
         
-        std::string html = getTemplate("frame");
+#if USING_NEW_TEMPLATE
+        std::map<std::string, std::string> values;
+        
+#ifndef NDEBUG
+        values["%%USRNAME%%"] = user.getUsrName() + " - " + user.getHash();
+        values["%%SESSION_USRNAME%%"] = session.getUsrName() + " - " + session.getHash();
+#else
+        values["%%USRNAME%%"] = "";
+        values["%%SESSION_USRNAME%%"] = "";
+#endif
+        values["%%DISPLAYNAME%%"] = session.getDisplayName();
+        values["%%WX_CHAT_HISTORY%%"] = m_resManager.getLocaleString("WeChat Chat History");
+        values["%%ASYNC_LOADING_TYPE%%"] = m_options.getLoadingDataOnScroll() ? "onscroll" : "initial";
+        
+        if (m_options.isAsyncLoading())
+        {
+            if (m_options.hasPager())
+            {
+                values["%%ASYNC_LOADING_TYPE%%"] = "pager";
+                if (m_options.isPagerByYear())
+                {
+                    values["%%PAGER_TYPE%%"] = "2";
+                }
+                else if (m_options.isPagerByMonth())
+                {
+                    values["%%PAGER_TYPE%%"] = "3";
+                }
+                else
+                {
+                    values["%%PAGER_TYPE%%"] = "1";
+                }
+            }
+            else
+            {
+                values["%%ASYNC_LOADING_TYPE%%"] = "onscroll";
+            }
+        }
+        else
+        {
+            values["%%ASYNC_LOADING_TYPE%%"] = "";
+        }
+
+        values["%%SIZE_OF_PAGE%%"] = std::to_string(PAGE_SIZE);
+        values["%%NUMBER_OF_MSGS%%"] = std::to_string(numberOfMessages);
+        values["%%NUMBER_OF_PAGES%%"] = std::to_string(numberOfPages);
+
+        values["%%DATA_PATH%%"] = "Files/Data";
+        values["%%PAGE_DATA%%"] = pageData;
+        
+        // m_logger->debug("Before join");
+        if (!m_options.isHtmlMode() || m_options.isSyncLoading())
+        {
+            values["%%BODY%%"] = join(messages.cbegin(), messages.cend(), "");
+        }
+        // m_logger->debug("After join");
+        values["%%HEADER_FILTER%%"] = m_options.isSupportingFilter() ? m_resManager.getTemplate("filter") : "";
+
+        const std::string& html = m_resManager.buildFromTemplate("frame", values);
+        m_logger->debug("After build html from template");
+        
+#else   // NOT USING_NEW_TEMPLATE
+        
+        std::string html = m_resManager.getTemplate("frame");
+#if !defined(NDEBUG) || defined(DBG_PERF)
+        if (html.empty())
+        {
+            m_logger->write("Template file is empty: frame");
+        }
+#endif
+        
 #ifndef NDEBUG
         replaceAll(html, "%%USRNAME%%", user.getUsrName() + " - " + user.getHash());
         replaceAll(html, "%%SESSION_USRNAME%%", session.getUsrName() + " - " + session.getHash());
@@ -846,52 +1105,31 @@ int Exporter::exportSession(const Friend& user, const MessageParser& msgParser, 
         replaceAll(html, "%%SESSION_USRNAME%%", "");
 #endif
         replaceAll(html, "%%DISPLAYNAME%%", session.getDisplayName());
-        replaceAll(html, "%%WX_CHAT_HISTORY%%", getLocaleString("Wechat Chat History"));
-        replaceAll(html, "%%ASYNC_LOADING_TYPE%%", m_loadingDataOnScroll ? "onscroll" : "initial");
+        replaceAll(html, "%%WX_CHAT_HISTORY%%", m_resManager.getLocaleString("WeChat Chat History"));
+        replaceAll(html, "%%ASYNC_LOADING_TYPE%%", m_options.getLoadingDataOnScroll() ? "onscroll" : "initial");
         
-        replaceAll(html, "%%SIZE_OF_PAGE%%", std::to_string(pageSize));
+        replaceAll(html, "%%SIZE_OF_PAGE%%", std::to_string(PAGE_SIZE));
         replaceAll(html, "%%NUMBER_OF_MSGS%%", std::to_string(numberOfMessages));
         replaceAll(html, "%%NUMBER_OF_PAGES%%", std::to_string(numberOfPages));
         
-        replaceAll(html, "%%DATA_PATH%%", encodeUrl(session.getOutputFileName() + "_files") + "/Data");
+        replaceAll(html, "%%DATA_PATH%%", "Files/Data");
+        
+        replaceAll(html, "%%PAGE_DATA%%", pageData);
         
         replaceAll(html, "%%BODY%%", join(b, e, ""));
-        replaceAll(html, "%%HEADER_FILTER%%", (m_options & SPO_SUPPORT_FILTER) ? getTemplate("filter") : "");
+        replaceAll(html, "%%HEADER_FILTER%%", m_options.isSupportingFilter() ? m_resManager.getTemplate("filter") : "");
         
-        std::string fileName = combinePath(outputBase, session.getOutputFileName() + "." + m_extName);
-        writeFile(fileName, html);
-        
-        if ((m_options & SPO_SYNC_LOADING) == 0 && numberOfPages > 0)
-        {
-            std::string dataPath = combinePath(outputBase, session.getOutputFileName() + "_files", "Data");
-            makeDirectory(dataPath);
-
-            for (size_t page = 0; page < numberOfPages; ++page)
-            {
-                b = e;
-                std::string scripts = getTemplate("scripts");
-                e = (page == (numberOfPages - 1)) ? messages.cend() : (b + pageSize);
-                Json::Value jsonMsgs(Json::arrayValue);
-                for (auto it = b; it != e; ++it)
-                {
-                    jsonMsgs.append(*it);
-                }
-                Json::StreamWriterBuilder builder;
-                builder["indentation"] = "";  // assume default for comments is None
-#ifndef NDEBUG
-                builder["emitUTF8"] = true;
 #endif
-                std::string moreMsgs = Json::writeString(builder, jsonMsgs);
-
-                replaceAll(scripts, "%%JSON_DATA%%", moreMsgs);
-                
-                fileName = combinePath(dataPath, "msg-" + std::to_string(page + 1) + ".js");
-                writeFile(fileName, scripts);
-            }
+        
+        std::string fileName = combinePath(outputBase, session.getOutputFileName(), "index." + m_extName);
+        if (!writeFile(fileName, html))
+        {
+            m_logger->write("Failed to write chat history file: " + fileName);
         }
-        
-        
+        // m_logger->debug("Finish writing html file");
     }
+    
+    // m_logger->debug("Session exporting ends.");
     
     return numberOfMsgs;
 }
@@ -901,24 +1139,166 @@ bool Exporter::exportMessage(const Session& session, const std::vector<TemplateV
     std::string content;
     for (std::vector<TemplateValues>::const_iterator it = tvs.cbegin(); it != tvs.cend(); ++it)
     {
+#if USING_NEW_TEMPLATE
+        content.append(m_resManager.buildFromTemplate(it->getName(), it->getValues()));
+#else
         content.append(buildContentFromTemplateValues(*it));
+#endif
     }
     
     messages.push_back(content);
     return m_cancelled;
 }
 
+bool Exporter::exportPageToFile(const Friend& user, const Session& session, const std::vector<TemplateValues>& tvs, std::vector<std::string>& messages, const PageInfo& pageInfo, const std::string& outputBase)
+{
+    if (messages.empty())
+    {
+        return true;
+    }
+    
+    std::string dataPath = combinePath(outputBase, session.getOutputFileName(), "Files", "Data");
+    makeDirectory(dataPath);
+    
+    std::string rawMsgFileName = combinePath(m_output, WXEXP_DATA_FOLDER, session.getOwner()->getUsrName(), session.getUsrName() + ".dat");
+    if (m_options.isIncrementalExporting())
+    {
+        m_logger->debug("Merge incremental messages.");
+        mergeMessages(rawMsgFileName, messages);
+    }
+    
+    m_logger->debug("Save messages for incremental exporting.");
+    serializeMessages(rawMsgFileName, messages);
+    
+    // m_logger->debug("After serializeMessages.");
+
+    // auto b = messages.cbegin();
+    // No page for text mode
+    // auto e = (((m_options & (SPO_TEXT_MODE | SPO_SYNC_LOADING)) != 0) || (messages.size() <= PAGE_SIZE)) ? messages.cend() : (b + PAGE_SIZE);
+    
+    // const size_t numberOfMessages = std::distance(e, messages.cend());
+    // const size_t numberOfPages = (numberOfMessages + PAGE_SIZE - 1) / PAGE_SIZE;
+    
+#if USING_NEW_TEMPLATE
+    std::map<std::string, std::string> values;
+    
+#ifndef NDEBUG
+    values["%%USRNAME%%"] = user.getUsrName() + " - " + user.getHash();
+    values["%%SESSION_USRNAME%%"] = session.getUsrName() + " - " + session.getHash();
+#else
+    values["%%USRNAME%%"] = "";
+    values["%%SESSION_USRNAME%%"] = "";
+#endif
+    values["%%DISPLAYNAME%%"] = session.getDisplayName();
+    values["%%WX_CHAT_HISTORY%%"] = m_resManager.getLocaleString("WeChat Chat History");
+    values["%%ASYNC_LOADING_TYPE%%"] = m_options.getLoadingDataOnScroll() ? "onscroll" : "initial";
+    
+    values["%%SIZE_OF_PAGE%%"] = std::to_string(PAGE_SIZE);
+    // values["%%NUMBER_OF_MSGS%%"] = std::to_string(numberOfMessages);
+    // values["%%NUMBER_OF_PAGES%%"] = std::to_string(numberOfPages);
+
+    values["%%DATA_PATH%%"] = "Files/Data";
+
+    // m_logger->debug("Before join");
+    values["%%BODY%%"] = join(messages.cbegin(), messages.cend(), "");
+    // m_logger->debug("After join");
+    values["%%HEADER_FILTER%%"] = m_options.isSupportingFilter() ? m_resManager.getTemplate("filter") : "";
+
+    const std::string& html = m_resManager.buildFromTemplate("frame", values);
+    m_logger->debug("After build html from template");
+#else   // NOT USING_NEW_TEMPLATE
+    std::string html = m_resManager.getTemplate("frame");
+#if !defined(NDEBUG) || defined(DBG_PERF)
+    if (html.empty())
+    {
+        m_logger->write("Template file is empty: frame");
+    }
+#endif
+#ifndef NDEBUG
+    replaceAll(html, "%%USRNAME%%", user.getUsrName() + " - " + user.getHash());
+    replaceAll(html, "%%SESSION_USRNAME%%", session.getUsrName() + " - " + session.getHash());
+#else
+    replaceAll(html, "%%USRNAME%%", "");
+    replaceAll(html, "%%SESSION_USRNAME%%", "");
+#endif
+    replaceAll(html, "%%DISPLAYNAME%%", session.getDisplayName());
+    replaceAll(html, "%%WX_CHAT_HISTORY%%", m_resManager.getLocaleString("WeChat Chat History"));
+    replaceAll(html, "%%ASYNC_LOADING_TYPE%%", m_options.getLoadingDataOnScroll() ? "onscroll" : "initial");
+    
+    replaceAll(html, "%%SIZE_OF_PAGE%%", std::to_string(PAGE_SIZE));
+    // replaceAll(html, "%%NUMBER_OF_MSGS%%", std::to_string(numberOfMessages));
+    // replaceAll(html, "%%NUMBER_OF_PAGES%%", std::to_string(numberOfPages));
+    
+    replaceAll(html, "%%DATA_PATH%%", "Files/Data");
+    
+    replaceAll(html, "%%BODY%%", join(messages.cbegin(), messages.cend(), ""));
+    replaceAll(html, "%%HEADER_FILTER%%", m_options.isSupportingFilter() ? m_resManager.getTemplate("filter") : "");
+    
+#endif
+
+    std::string outputFileName = "index";
+    if (pageInfo.getPage() > 0)
+    {
+        outputFileName += "-" + std::to_string(pageInfo.getPage());
+    }
+    outputFileName += m_extName;
+    
+    std::string fullFileName = combinePath(outputBase, session. getOutputFileName(), outputFileName);
+    if (!writeFile(fullFileName, html))
+    {
+        m_logger->write("Failed to write chat history file: " + fullFileName);
+    }
+    // m_logger->debug("Finish writing html file");
+    
+    // if ((m_options & SPO_SYNC_LOADING) == 0 && numberOfPages > 0)
+    {
+        // makeDirectory(dataPath);
+
+        // for (size_t page = 0; page < numberOfPages; ++page)
+        {
+            // b = e;
+            std::string scripts = m_resManager.getTemplate("scripts");
+            // e = (page == (numberOfPages - 1)) ? messages.cend() : (b + PAGE_SIZE);
+            Json::Value jsonMsgs(Json::arrayValue);
+            for (auto it = messages.cbegin(); it != messages.cend(); ++it)
+            {
+                jsonMsgs.append(*it);
+            }
+            Json::StreamWriterBuilder builder;
+#ifndef NDEBUG
+            builder["indentation"] = "\t";  // assume default for comments is None
+            builder["emitUTF8"] = true;
+#else
+            builder["indentation"] = "";
+#endif
+            std::string moreMsgs = Json::writeString(builder, jsonMsgs);
+
+            replaceAll(scripts, "%%JSON_DATA%%", moreMsgs);
+            
+            fullFileName = combinePath(dataPath, "msg-" + std::to_string(pageInfo.getPage() + 1) + ".js");
+            writeFile(fullFileName, scripts);
+        }
+    }
+    
+    return true;
+}
+
 void Exporter::serializeMessages(const std::string& fileName, const std::vector<std::string>& messages)
 {
-    uint32_t size = htonl(static_cast<uint32_t>(messages.size()));
-    writeFile(fileName, "");
-    appendFile(fileName, reinterpret_cast<const unsigned char *>(&size), sizeof(size));
-    
-    for (std::vector<std::string>::const_iterator it = messages.cbegin(); it != messages.cend(); ++it)
+    File file;
+    size_t byteWriten = 0;
+    if (file.open(fileName, false))
     {
-        size = htonl(static_cast<uint32_t>(it->size()));
-        appendFile(fileName, reinterpret_cast<const unsigned char *>(&size), sizeof(size));
-        appendFile(fileName, *it);
+        uint32_t size = htonl(static_cast<uint32_t>(messages.size()));
+        file.write(reinterpret_cast<const unsigned char *>(&size), sizeof(size), byteWriten);
+        for (std::vector<std::string>::const_iterator it = messages.cbegin(); it != messages.cend(); ++it)
+        {
+            size = htonl(static_cast<uint32_t>(it->size()));
+            file.write(reinterpret_cast<const unsigned char *>(&size), sizeof(size), byteWriten);
+            // appendFile(fileName, reinterpret_cast<const unsigned char *>(&size), sizeof(size));
+            file.write(reinterpret_cast<const unsigned char *>(it->c_str()), it->size(), byteWriten);
+        }
+        file.close();
     }
 }
 
@@ -972,9 +1352,10 @@ void Exporter::mergeMessages(const std::string& fileName, std::vector<std::strin
     std::vector<std::string> orgMessages;
     unserializeMessages(fileName, orgMessages);
     
-    std::string contents = readFile(fileName);
-    if ((m_options & SPO_DESC) == 0)
+    // std::string contents = readFile(fileName);
+    if (!m_options.isDesc())
     {
+        // ASC
         messages.swap(orgMessages);
     }
     
@@ -1014,20 +1395,6 @@ bool Exporter::buildFileNameForUser(Friend& user, std::set<std::string>& existin
     return succeeded;
 }
 
-bool Exporter::fillSession(Session& session, const Friends& friends) const
-{
-    if (session.isDisplayNameEmpty())
-    {
-        const Friend* f = friends.getFriend(session.getHash());
-        if (NULL != f && !f->isDisplayNameEmpty())
-        {
-            session.setDisplayName(f->getDisplayName());
-        }
-    }
-
-    return true;
-}
-
 void Exporter::releaseITunes()
 {
     if (NULL != m_iTunesDb)
@@ -1046,7 +1413,11 @@ bool Exporter::loadITunes(bool detailedInfo/* = true*/)
 {
     releaseITunes();
     
+#ifndef USING_DECODED_ITUNESBACKUP
     m_iTunesDb = new ITunesDb(m_backup, "Manifest.db");
+#else
+    m_iTunesDb = new DecodedWechatITunesDb(m_backup, "Manifest.db");
+#endif
     if (!detailedInfo)
     {
         std::function<bool(const char*, int)> fn = std::bind(&Exporter::filterITunesFile, this, std::placeholders::_1, std::placeholders::_2);
@@ -1056,7 +1427,11 @@ bool Exporter::loadITunes(bool detailedInfo/* = true*/)
     {
         return false;
     }
+#ifndef USING_DECODED_ITUNESBACKUP
     m_iTunesDbShare = new ITunesDb(m_backup, "Manifest.db");
+#else
+    m_iTunesDbShare = new DecodedWechatITunesDb(m_backup, "Manifest.db");
+#endif
     
     if (!m_iTunesDbShare->load("AppDomainGroup-group.com.tencent.xin"))
     {
@@ -1082,67 +1457,12 @@ std::string Exporter::getWechatVersion() const
     return m_wechatInfo.getVersion();
 }
 
-bool Exporter::loadTemplates()
-{
-    const char* names[] = {"frame", "msg", "video", "notice", "system", "audio", "image", "card", "emoji", "plainshare", "share", "thumb", "listframe", "listitem", "scripts", "filter", "refermsg", "channels"};
-    for (int idx = 0; idx < sizeof(names) / sizeof(const char*); idx++)
-    {
-        std::string name = names[idx];
-        std::string path = combinePath(m_workDir, "res", m_templatesName, name + ".html");
-        m_templates[name] = readFile(path);
-    }
-    return true;
-}
-
-bool Exporter::loadStrings()
-{
-    m_localeStrings.clear();
-
-    std::string path = combinePath(m_workDir, "res", m_languageCode + ".txt");
-    if (!existsFile(path))
-    {
-        return false;
-    }
-
-    Json::Reader reader;
-    Json::Value value;
-    if (reader.parse(readFile(path), value))
-    {
-        int sz = value.size();
-        for (int idx = 0; idx < sz; ++idx)
-        {
-            std::string k = value[idx]["key"].asString();
-            std::string v = value[idx]["value"].asString();
-            if (m_localeStrings.find(k) != m_localeStrings.cend())
-            {
-                // return false;
-            }
-            m_localeStrings[k] = v;
-        }
-    }
-
-    return true;
-}
-
-std::string Exporter::getTemplate(const std::string& key) const
-{
-    std::map<std::string, std::string>::const_iterator it = m_templates.find(key);
-    return (it == m_templates.cend()) ? "" : it->second;
-}
-
-std::string Exporter::getLocaleString(const std::string& key) const
-{
-    // std::string value = key;
-    std::map<std::string, std::string>::const_iterator it = m_localeStrings.find(key);
-    return it == m_localeStrings.cend() ? key : it->second;
-}
-
 std::string Exporter::buildContentFromTemplateValues(const TemplateValues& tv) const
 {
 #if !defined(NDEBUG) && defined(SAMPLING_TMPL)
     std::string alignment = "";
 #endif
-    std::string content = getTemplate(tv.getName());
+    std::string content = m_resManager.getTemplate(tv.getName());
     for (TemplateValues::const_iterator it = tv.cbegin(); it != tv.cend(); ++it)
     {
         if (startsWith(it->first, "%"))

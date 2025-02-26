@@ -18,6 +18,15 @@
 "err-exp-is-running" = "Export is running.";
 "err-failed-to-parse-backup" = "Failed to parse iTunes Backup file.";
 "err-wrong-param" = "Wrong parameters.";
-"txt-all-wechat-users" = "All Wechat Accounts";
+"txt-all-wechat-users" = "All WeChat Accounts";
 "prompt-new-version-found" = "Found a new version: %@. Download it now?";
 "session-deleted" = "(Deleted)";
+"grant-full-disk-access" = "You should grant Full Disk Access to WechatExporter program as it reads data from iTunes Backup: Apple Menu › System Preferences › Security & Privacy › Privacy › Full Disk Access";
+"btn-grant-full-disk-access" = "Grant Full Disk Access";
+"not-text-msg" = "-";
+"show-logs" = "Show Logs";
+"hide-logs" = "Hide Logs";
+"alert-update-options" = "You may change exporting format and options in main menu:";
+"no-prev-exp-found" = "There is no previous exporting in output directory and [Incremental Exporting] will be ignored.";
+"prev-exp-found" = "The previous exporting at %@ found, will reuse previous options.";
+"invld-inc-exp-for-multi-users" = "Incremental Exporting will be invalid for multiple WeChat accounts as for wrong design. \rPlease choose another directory for exporting.";

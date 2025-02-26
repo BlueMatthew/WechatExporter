@@ -1,0 +1,237 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\WechatExporter\core\AsyncExecutor.cpp" />
+    <ClCompile Include="..\WechatExporter\core\AsyncTask.cpp" />
+    <ClCompile Include="..\WechatExporter\core\Downloader.cpp" />
+    <ClCompile Include="..\WechatExporter\core\Exporter.cpp" />
+    <ClCompile Include="..\WechatExporter\core\FileSystem.cpp" />
+    <ClCompile Include="..\WechatExporter\core\IDeviceBackup.cpp" />
+    <ClCompile Include="..\WechatExporter\core\ITunesParser.cpp" />
+    <ClCompile Include="..\WechatExporter\core\MessageParser.cpp" />
+    <ClCompile Include="..\WechatExporter\core\RawMessage.cpp" />
+    <ClCompile Include="..\WechatExporter\core\ResManager.cpp" />
+    <ClCompile Include="..\WechatExporter\core\TaskManager.cpp" />
+    <ClCompile Include="..\WechatExporter\core\Template.cpp" />
+    <ClCompile Include="..\WechatExporter\core\Updater.cpp" />
+    <ClCompile Include="..\WechatExporter\core\Utils.cpp" />
+    <ClCompile Include="..\WechatExporter\core\Utils_audio.cpp" />
+    <ClCompile Include="..\WechatExporter\core\Utils_md5.cpp" />
+    <ClCompile Include="..\WechatExporter\core\Utils_protobuf.cpp" />
+    <ClCompile Include="..\WechatExporter\core\Utils_silk.cpp" />
+    <ClCompile Include="..\WechatExporter\core\Utils_thread.cpp" />
+    <ClCompile Include="..\WechatExporter\core\WechatParser.cpp" />
+    <ClCompile Include="..\WechatExporter\core\XmlParser.cpp" />
+    <ClCompile Include="WechatExporterCmd.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\WechatExporter\core\AsyncExecutor.h" />
+    <ClInclude Include="..\WechatExporter\core\AsyncTask.h" />
+    <ClInclude Include="..\WechatExporter\core\Downloader.h" />
+    <ClInclude Include="..\WechatExporter\core\endianness.h" />
+    <ClInclude Include="..\WechatExporter\core\ExportContext.h" />
+    <ClInclude Include="..\WechatExporter\core\Exporter.h" />
+    <ClInclude Include="..\WechatExporter\core\ExportNotifier.h" />
+    <ClInclude Include="..\WechatExporter\core\ExportOption.h" />
+    <ClInclude Include="..\WechatExporter\core\FileSystem.h" />
+    <ClInclude Include="..\WechatExporter\core\IDeviceBackup.h" />
+    <ClInclude Include="..\WechatExporter\core\ITunesParser.h" />
+    <ClInclude Include="..\WechatExporter\core\Logger.h" />
+    <ClInclude Include="..\WechatExporter\core\MbdbReader.h" />
+    <ClInclude Include="..\WechatExporter\core\MessageParser.h" />
+    <ClInclude Include="..\WechatExporter\core\MMKVReader.h" />
+    <ClInclude Include="..\WechatExporter\core\PdfConverter.h" />
+    <ClInclude Include="..\WechatExporter\core\RawMessage.h" />
+    <ClInclude Include="..\WechatExporter\core\ResManager.h" />
+    <ClInclude Include="..\WechatExporter\core\semaphore.h" />
+    <ClInclude Include="..\WechatExporter\core\TaskManager.h" />
+    <ClInclude Include="..\WechatExporter\core\Template.h" />
+    <ClInclude Include="..\WechatExporter\core\Updater.h" />
+    <ClInclude Include="..\WechatExporter\core\Utils.h" />
+    <ClInclude Include="..\WechatExporter\core\WechatObjects.h" />
+    <ClInclude Include="..\WechatExporter\core\WechatParser.h" />
+    <ClInclude Include="..\WechatExporter\core\WechatSource.h" />
+    <ClInclude Include="..\WechatExporter\core\XmlParser.h" />
+    <ClInclude Include="Core.h" />
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <VCProjectVersion>15.0</VCProjectVersion>
+    <ProjectGuid>{C0637D9A-3C23-495C-B661-5FDCD2169583}</ProjectGuid>
+    <Keyword>Win32Proj</Keyword>
+    <RootNamespace>WechatExporterCmd</RootNamespace>
+    <WindowsTargetPlatformVersion>10.0.17763.0</WindowsTargetPlatformVersion>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v141</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v141</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v141</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v141</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="Shared">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <LinkIncremental>false</LinkIncremental>
+    <IncludePath>$(ProjectDir)..\WechatExporterCmd;$(ProjectDir)..\WechatExporter\core;$(ProjectDir)..\releases\windows-libs\include;$(IncludePath)</IncludePath>
+    <LibraryPath>$(ProjectDir)..\releases\windows-libs\x64\rel\lib;$(LibraryPath)</LibraryPath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <LinkIncremental>true</LinkIncremental>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <LinkIncremental>true</LinkIncremental>
+    <IncludePath>$(ProjectDir)..\WechatExporterCmd;$(ProjectDir)..\WechatExporter\core;$(ProjectDir)..\releases\windows-libs\include;$(IncludePath)</IncludePath>
+    <LibraryPath>$(ProjectDir)..\releases\windows-libs\x64\dbg\lib;$(LibraryPath)</LibraryPath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <LinkIncremental>false</LinkIncremental>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <ClCompile>
+      <PrecompiledHeader>
+      </PrecompiledHeader>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>MaxSpeed</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <SDLCheck>true</SDLCheck>
+      <PreprocessorDefinitions>NDEBUG;_CONSOLE;NOMINMAX;_CRT_SECURE_NO_WARNINGS;CURL_STATICLIB;COMPILE_SDK;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ConformanceMode>true</ConformanceMode>
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+    </ClCompile>
+    <Link>
+      <SubSystem>Console</SubSystem>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalDependencies>Shell32.lib;Ws2_32.lib;Wldap32.lib;Crypt32.lib;Rpcrt4.lib;libprotobuf.lib;libcrypto.lib;charset.lib;iconv.lib;zlib.lib;lzma.lib;libssl.lib;libcurl.lib;libxml2.lib;sqlite3.lib;jsoncpp.lib;libamr.lib;SKP_Silk_FIX.lib;libmp3lame.lib;libplist-2.0.lib;libimobiledevice-1.0.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <DelayLoadDLLs>libcrypto-1_1-x64.dll;libssl-1_1-x64.dll;libimobiledevice-1.0.dll;libplist-2.0.dll;libmp3lame.dll;iconv-2.dll;lzma.dll</DelayLoadDLLs>
+    </Link>
+    <PostBuildEvent>
+      <Command>if not exist "$(OutDir)res" mkdir "$(OutDir)res"
+xcopy "$(ProjectDir)..\WechatExporter\res"  "$(OutDir)res"  /Y /S /E /D
+
+xcopy "$(ProjectDir)..\WechatExporter\LICENSES"  "$(OutDir)LICENSES"  /Y /S /E /D /I
+
+if not exist "$(OutDir)Dlls" mkdir "$(OutDir)Dlls"
+xcopy "$(ProjectDir)..\releases\windows-libs\x64\rel\bin\*.dll"  "$(OutDir)Dlls\"  /Y /D</Command>
+    </PostBuildEvent>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <PrecompiledHeader>
+      </PrecompiledHeader>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>Disabled</Optimization>
+      <SDLCheck>true</SDLCheck>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ConformanceMode>true</ConformanceMode>
+    </ClCompile>
+    <Link>
+      <SubSystem>Console</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <ClCompile>
+      <PrecompiledHeader>
+      </PrecompiledHeader>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>Disabled</Optimization>
+      <SDLCheck>true</SDLCheck>
+      <PreprocessorDefinitions>_DEBUG;_CONSOLE;NOMINMAX;_CRT_SECURE_NO_WARNINGS;CURL_STATICLIB;COMPILE_SDK;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ConformanceMode>true</ConformanceMode>
+      <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
+    </ClCompile>
+    <Link>
+      <SubSystem>Console</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalDependencies>Ws2_32.lib;Crypt32.lib;Rpcrt4.lib;libprotobufd.lib;libcrypto.lib;charset.lib;iconv.lib;lzmad.lib;zlibd.lib;libssl.lib;libcurl-d.lib;libxml2.lib;sqlite3.lib;jsoncpp.lib;libamr.lib;SKP_Silk_FIX.lib;libmp3lame.lib;libplist-2.0.lib;libimobiledevice-1.0.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <DelayLoadDLLs>libcrypto-1_1-x64.dll;libssl-1_1-x64.dll;libimobiledevice-1.0.dll;libplist-2.0.dll;libmp3lame.dll;iconv-2.dll;lzmad.dll</DelayLoadDLLs>
+    </Link>
+    <PostBuildEvent>
+      <Command>if not exist "$(OutDir)res" mkdir "$(OutDir)res"
+xcopy "$(ProjectDir)..\WechatExporter\res"  "$(OutDir)res"  /Y /S /E /D
+
+if not exist "$(OutDir)Dlls" mkdir "$(OutDir)Dlls"
+xcopy "$(ProjectDir)..\releases\windows-libs\x64\dbg\bin\*.dll"  "$(OutDir)Dlls"  /Y /S /E /D
+xcopy "$(ProjectDir)..\releases\windows-libs\x64\dbg\bin\*.pdb"  "$(OutDir)Dlls\"  /Y /S /E /D</Command>
+    </PostBuildEvent>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <ClCompile>
+      <PrecompiledHeader>
+      </PrecompiledHeader>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>MaxSpeed</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <SDLCheck>true</SDLCheck>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ConformanceMode>true</ConformanceMode>
+    </ClCompile>
+    <Link>
+      <SubSystem>Console</SubSystem>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+    </Link>
+  </ItemDefinitionGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>

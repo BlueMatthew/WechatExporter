@@ -217,6 +217,8 @@ bool DownloadTask::downloadFile(const std::string& url)
     
     std::string userAgent = m_userAgent.empty() ? "WeChat/7.0.15.33 CFNetwork/978.0.7 Darwin/18.6.0" : m_userAgent;
     
+    long httpStatus = 0;
+    
 #ifndef FAKE_DOWNLOAD
     // User-Agent: WeChat/7.0.15.33 CFNetwork/978.0.7 Darwin/18.6.0
     curl = curl_easy_init();
@@ -234,7 +236,6 @@ bool DownloadTask::downloadFile(const std::string& url)
     curl_easy_setopt(curl, CURLOPT_STDERR, logFile);
 #endif
 
-    long httpStatus = 0;
     res = curl_easy_perform(curl);
     if (res != CURLE_OK)
     {
@@ -261,7 +262,6 @@ bool DownloadTask::downloadFile(const std::string& url)
 #endif
     }
     curl_easy_cleanup(curl);
-#endif // no FAKE_DOWNLOAD
 
 #ifndef NDEBUG
     if (NULL != logFile)
@@ -282,6 +282,9 @@ bool DownloadTask::downloadFile(const std::string& url)
 #endif
         return true;
     }
+#else
+    return true;
+#endif // no FAKE_DOWNLOAD
 
     if (m_error.empty())
     {
@@ -339,23 +342,35 @@ void Mp3Task::swapBuffer(std::vector<unsigned char>& buffer)
 bool Mp3Task::run()
 {
     std::vector<unsigned char> pcmData;
-    if (silkToPcm(m_pcm, pcmData) && !pcmData.empty())
+    bool isSilk = false;
+    bool res = silkToPcm(m_pcm, pcmData, isSilk, &m_error) && !pcmData.empty();
+    if (res)
     {
-        if (pcmToMp3(pcmData, m_mp3))
+        res = pcmToMp3(pcmData, m_mp3);
+    }
+    else if (!isSilk)
+    {
+        res = amrToPcm(m_pcm, pcmData) && !pcmData.empty();
+        if (res)
         {
-            updateFileTime(m_mp3, m_mtime);
-            // std::this_thread::sleep_for(std::chrono::milliseconds(192));
-            return true;
+            res = amrPcmToMp3(pcmData, m_mp3);
         }
-        else
-        {
-            m_error = "Failed pcmToMp3: " + m_pcm + " => " + m_mp3;
-        }
+    }
+    if (res)
+    {
+        updateFileTime(m_mp3, m_mtime);
+        return true;
+    }
+    /*
+    if (res)
+    {
+        m_error = "Failed pcmToMp3: " + m_pcm + " => " + m_mp3;
     }
     else
     {
         m_error = "Failed silkTpPcm: " + m_pcm;
     }
+     */
     return false;
 }
 

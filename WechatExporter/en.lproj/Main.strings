@@ -17,6 +17,9 @@
 /* Class = "NSMenuItem"; title = "Incremental Exporting"; ObjectID = "5c2-wM-XIf"; */
 "5c2-wM-XIf.title" = "Incremental Exporting";
 
+/* Class = "NSMenuItem"; title = "Including Subscriptions"; ObjectID = "GbO-lL-BLb"; */
+"GbO-lL-BLb.title" = "Including Subscriptions";
+
 /* Class = "NSMenuItem"; title = "About WechatExporter"; ObjectID = "5kV-Vb-QxS"; */
 "5kV-Vb-QxS.title" = "About WechatExporter";
 
@@ -32,8 +35,8 @@
 /* Class = "NSButtonCell"; title = "Cancel"; ObjectID = "CHb-bh-1kG"; */
 "CHb-bh-1kG.title" = "Cancel";
 
-/* Class = "NSMenuItem"; title = "From Newer To Earlier"; ObjectID = "GbO-lL-BLb"; */
-"GbO-lL-BLb.title" = "Sort by Time in Descending Order";
+/* Class = "NSMenuItem"; title = "From Newer To Earlier"; ObjectID = "eJH-AO-QUD"; */
+"eJH-AO-QUD.title" = "Sort by Time in Descending Order";
 
 /* Class = "NSMenuItem"; title = "Text"; ObjectID = "GeM-zb-UkW"; */
 "GeM-zb-UkW.title" = "Text";
@@ -56,6 +59,12 @@
 /* Class = "NSMenuItem"; title = "Check Update Automatically"; ObjectID = "Pyu-qm-bT0"; */
 "Pyu-qm-bT0.title" = "Check Update Automatically";
 
+/* Class = "NSMenuItem"; title = "Output Detailed Logs"; ObjectID = "Pyu-qm-bT0"; */
+"Pyu-qm-bT0.title" = "Output Detailed Logs";
+
+/* Class = "NSMenuItem"; title = "Open the Folder After Exporting"; ObjectID = "TWh-AV-CCF"; */
+"TWh-AV-CCF.title" = "Open the Folder After Exporting";
+
 /* Class = "NSTextFieldCell"; title = "Text Cell"; ObjectID = "Q3f-RG-97F"; */
 "Q3f-RG-97F.title" = "Text Cell";
 
@@ -70,6 +79,9 @@
 
 /* Class = "NSMenuItem"; title = "Load Messages Asynchronously(HTML Mode)"; ObjectID = "WOF-ft-ZWq"; */
 "WOF-ft-ZWq.title" = "Load Messages Asynchronously(HTML Mode)";
+
+/* Class = "NSButtonCell"; title = "Show Logs"; ObjectID = "WmO-MK-b5O"; */
+"WmO-MK-b5O.title" = "Show Logs";
 
 /* Class = "NSTextFieldCell"; title = "Text Cell"; ObjectID = "X6v-WO-gkU"; */
 "X6v-WO-gkU.title" = "Text Cell";
@@ -95,11 +107,14 @@
 /* Class = "NSTextFieldCell"; title = "Text Cell"; ObjectID = "gtr-oV-Pno"; */
 "gtr-oV-Pno.title" = "Text Cell";
 
+/* Class = "NSTableColumn"; headerCell.title = "Last Message"; ObjectID = "hIY-8j-rpO"; */
+"hIY-8j-rpO.headerCell.title" = "Last Message";
+
 /* Class = "NSMenuItem"; title = "Help"; ObjectID = "k5c-yf-BQl"; */
 "k5c-yf-BQl.title" = "Help";
 
-/* Class = "NSTableColumn"; headerCell.title = "Wechat Account"; ObjectID = "mqg-xB-lDI"; */
-"mqg-xB-lDI.headerCell.title" = "Wechat Account";
+/* Class = "NSTableColumn"; headerCell.title = "WeChat Account"; ObjectID = "mqg-xB-lDI"; */
+"mqg-xB-lDI.headerCell.title" = "WeChat Account";
 
 /* Class = "NSMenu"; title = "Format"; ObjectID = "or1-Xl-Us0"; */
 "or1-Xl-Us0.title" = "Format";
@@ -109,6 +124,9 @@
 
 /* Class = "NSTextFieldCell"; title = "Table View Cell"; ObjectID = "qJ3-t0-qJh"; */
 "qJ3-t0-qJh.title" = "Table View Cell";
+
+/* Class = "NSTextFieldCell"; title = "Table View Cell"; ObjectID = "sWr-dF-dlL"; */
+"sWr-dF-dlL.title" = "Table View Cell";
 
 /* Class = "NSMenuItem"; title = "Save Avatar/Emoji in Chat Folder"; ObjectID = "tGU-e5-isp"; */
 "tGU-e5-isp.title" = "Save Avatar/Emoji in Chat Folder";

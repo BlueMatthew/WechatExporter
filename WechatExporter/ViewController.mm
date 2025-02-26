@@ -16,6 +16,8 @@
 #include "PdfConverterImpl.h"
 #include "Utils.h"
 #include "Exporter.h"
+#include "IDeviceBackup.h"
+#include "WechatSource.h"
 #include "Updater.h"
 
 @interface ViewController() <NSTableViewDelegate>
@@ -26,10 +28,14 @@
     
     Exporter* m_exporter;
     
-    std::vector<BackupManifest> m_manifests;
+    // std::vector<BackupManifest> m_manifests;
+    std::vector<BackupItem> m_manifests;
     std::vector<std::pair<Friend, std::vector<Session>>> m_usersAndSessions;
     
     SessionDataSource   *m_dataSource;
+    
+    NSIndexSet *m_columns;
+    NSColor *m_orgTextColor;
 }
 @end
 
@@ -40,6 +46,7 @@
     if (self = [super init])
     {
         m_dataSource = [[SessionDataSource alloc] init];
+        m_orgTextColor = [NSColor clearColor];
     }
     
     return self;
@@ -50,6 +57,7 @@
     if (self = [super initWithCoder:coder])
     {
         m_dataSource = [[SessionDataSource alloc] init];
+        m_orgTextColor = [NSColor clearColor];
     }
     
     return self;
@@ -60,6 +68,7 @@
     if (self = [super initWithNibName:nibNameOrNil bundle:nibBundleOrNil])
     {
         m_dataSource = [[SessionDataSource alloc] init];
+        m_orgTextColor = [NSColor clearColor];
     }
     
     return self;
@@ -113,13 +122,22 @@
     [self.popupBackup setTarget:nil];
     [self.popupUsers setAction:nil];
     [self.popupUsers setTarget:nil];
+    [self.btnShowLogs setTarget:nil];
+    [self.btnShowLogs setAction:nil];
     [self.btnToggleAll setAction:nil];
     [self.btnToggleAll setTarget:nil];
+    
+#ifndef NDEBUG
+    [self.btnBackupDevice setAction:nil];
+    [self.btnBackupDevice setTarget:nil];
+#endif
 }
 
 - (void)viewDidLoad
 {
     [super viewDidLoad];
+    
+    m_columns = [NSIndexSet indexSetWithIndexesInRange:NSMakeRange(0, self.tblSessions.numberOfColumns)];
     
     self.popupBackup.autoresizingMask = NSViewMinYMargin | NSViewWidthSizable;
     self.btnBackup.autoresizingMask = NSViewMinXMargin | NSViewMinYMargin;
@@ -129,19 +147,25 @@
     
     self.popupUsers.autoresizingMask = NSViewMinYMargin;
     self.tblSessions.autoresizingMask = NSViewWidthSizable | NSViewHeightSizable;
-    self.sclSessions.autoresizingMask = NSViewHeightSizable;
+    self.sclSessions.autoresizingMask = NSViewWidthSizable | NSViewHeightSizable;
     
+    self.btnShowLogs.autoresizingMask = NSViewMinXMargin | NSViewMinYMargin;
     self.sclViewLogs.autoresizingMask = NSViewWidthSizable | NSViewHeightSizable;
     
     self.progressBar.autoresizingMask = NSViewMaxYMargin;
     self.btnCancel.autoresizingMask = NSViewMinXMargin | NSViewMaxYMargin;
     self.btnQuit.autoresizingMask = NSViewMinXMargin | NSViewMaxYMargin;
     self.btnExport.autoresizingMask = NSViewMinXMargin | NSViewMaxYMargin;
+    
+#ifndef NDEBUG
+    self.btnBackupDevice.autoresizingMask = NSViewMinXMargin | NSViewMaxYMargin;
+    self.btnBackupDevice.hidden = NO;
+#endif
 
     m_logger = new LoggerImpl(self);
     m_notifier = new ExportNotifierImpl(self);
     m_exporter = NULL;
-    
+
     [self.btnBackup setTarget:self];
     [self.btnBackup setAction:@selector(btnBackupClicked:)];
     [self.btnOutput setTarget:self];
@@ -152,6 +176,8 @@
     [self.btnCancel setAction:@selector(btnCancelClicked:)];
     [self.btnQuit setTarget:self];
     [self.btnQuit setAction:@selector(btnQuitClicked:)];
+    [self.btnShowLogs setTarget:self];
+    [self.btnShowLogs setAction:@selector(btnShowLogsClicked:)];
     [self.popupBackup setTarget:self];
     [self.popupBackup setAction:@selector(handlePopupButton:)];
     [self.popupUsers setTarget:self];
@@ -161,6 +187,11 @@
 #ifndef NDEBUG
     [self.tblSessions setTarget:self];
     [self.tblSessions setDoubleAction:@selector(tableViewDoubleClick:)];
+#endif
+    
+#ifndef NDEBUG
+    [self.btnBackupDevice setTarget:self];
+    [self.btnBackupDevice setAction:@selector(btnBackupDeviceClicked:)];
 #endif
 
     NSRect frame = [self.tblSessions.headerView headerRectOfColumn:0];
@@ -183,17 +214,49 @@
 
     self.txtboxOutput.stringValue = [AppConfiguration getLastOrDefaultOutputDir];
 
+#ifdef NDEBUG
+    NSString *previoudBackupDir = [AppConfiguration getLastBackupDir];
+    previoudBackupDir = nil;
+    if (nil != previoudBackupDir)
+    {
+#ifndef USING_DECODED_ITUNESBACKUP
+        std::unique_ptr<ManifestParser> parser(new ManifestParser([previoudBackupDir UTF8String], false));
+#else
+        std::unique_ptr<ManifestParser> parser(new DecodedManifestParser([previoudBackupDir UTF8String], false));
+#endif
+        std::vector<BackupItem> manifests;
+        if (parser->parse(manifests))
+        {
+            [self updateBackups:manifests withPreviousPath:previoudBackupDir];
+        }
+        else
+        {
+            m_logger->debug(parser->getLastError());
+        }
+    }
+#else
     NSString *backupDir = [AppConfiguration getDefaultBackupDir:YES];
     if (nil != backupDir)
     {
-        ManifestParser parser([backupDir UTF8String]);
-        std::vector<BackupManifest> manifests;
-        if (parser.parse(manifests))
+#ifndef USING_DECODED_ITUNESBACKUP
+        std::unique_ptr<ManifestParser> parser(new ManifestParser([backupDir UTF8String], false));
+#else
+        std::unique_ptr<ManifestParser> parser(new DecodedManifestParser([backupDir UTF8String], false));
+#endif
+        // std::unique_ptr<ManifestParser> parser(new ManifestParser([backupDir UTF8String], false));
+        
+        std::vector<BackupItem> manifests;
+        if (parser->parse(manifests))
         {
             NSString *previoudBackupDir = [AppConfiguration getLastBackupDir];
             [self updateBackups:manifests withPreviousPath:previoudBackupDir];
         }
+        else
+        {
+            m_logger->debug(parser->getLastError());
+        }
     }
+#endif
     
     BOOL checkUpdateDisabled = [AppConfiguration isCheckingUpdateDisabled];
     NSInteger lastChkUpdateTime = [AppConfiguration getLastCheckUpdateTime];
@@ -208,9 +271,45 @@
         [self performSelector:@selector(checkUpdate) withObject:nil afterDelay:5];
 #endif
     }
+    
+#ifndef NDEBUG
+    [self performSelector:@selector(showGuide) withObject:nil afterDelay:1.0];
+#endif
+    
+    if (@available(macOS 10.14, *))
+    {
+        if (self.popupBackup.itemArray.count == 0)
+        {
+            NSFileManager * fm = [NSFileManager defaultManager];
+            NSString *backupDir = [AppConfiguration getDefaultBackupDir:NO];
+            BOOL readable = [fm isReadableFileAtPath:backupDir];
+            if (!readable)
+            {
+                typeof(self) __weak weakSelf = self;
+                dispatch_async(dispatch_get_main_queue(), ^{
+                    __strong typeof(weakSelf) strongSelf = weakSelf;  // strong by default
+                    if (nil == strongSelf)
+                    {
+                        return;
+                    }
+
+                    NSAlert *alert = [[NSAlert alloc] init];
+                    alert.messageText = NSLocalizedString(@"grant-full-disk-access", nil);
+                    alert.window.title = [NSRunningApplication currentApplication].localizedName;
+                    NSButton *btnGrant = [alert addButtonWithTitle:NSLocalizedString(@"btn-grant-full-disk-access", nil)];
+                    [btnGrant setTarget:strongSelf];
+                    [btnGrant setAction:@selector(btnGrantClicked:)];
+                    [alert addButtonWithTitle:NSLocalizedString(@"btn-ok", nil)];
+                    [alert runModal];
+                    [btnGrant setTarget:nil];
+                    [btnGrant setAction:nil];
+                });
+            }
+        }
+    }
 }
 
-- (void)updateBackups:(const std::vector<BackupManifest>&) manifests withPreviousPath:(NSString *)previousPath
+- (void)updateBackups:(const std::vector<BackupItem>&) manifests withPreviousPath:(NSString *)previousPath
 {
     if (manifests.empty())
     {
@@ -218,9 +317,9 @@
     }
     
     size_t selectedIndex = (size_t)self.popupBackup.indexOfSelectedItem;
-    for (std::vector<BackupManifest>::const_iterator it = manifests.cbegin(); it != manifests.cend(); ++it)
+    for (std::vector<BackupItem>::const_iterator it = manifests.cbegin(); it != manifests.cend(); ++it)
     {
-        std::vector<BackupManifest>::const_iterator it2 = std::find(m_manifests.cbegin(), m_manifests.cend(), *it);
+        std::vector<BackupItem>::const_iterator it2 = std::find(m_manifests.cbegin(), m_manifests.cend(), *it);
         if (it2 == m_manifests.cend())
         {
             m_manifests.push_back(*it);
@@ -229,7 +328,7 @@
     
     // update
     [self.popupBackup removeAllItems];
-    for (std::vector<BackupManifest>::const_iterator it = m_manifests.cbegin(); it != m_manifests.cend(); ++it)
+    for (std::vector<BackupItem>::const_iterator it = m_manifests.cbegin(); it != m_manifests.cend(); ++it)
     {
         std::string itemTitle = it->toString();
         NSString* item = [NSString stringWithUTF8String:itemTitle.c_str()];
@@ -265,7 +364,7 @@
         [self.popupUsers removeAllItems];
         self.txtViewLogs.string = @"";
         // Clear Users and Sessions
-        [m_dataSource loadData:&m_usersAndSessions withAllUsers:YES indexOfSelectedUser:-1];
+        [m_dataSource loadData:&m_usersAndSessions withAllUsers:YES indexOfSelectedUser:-1 includesSubscription:[AppConfiguration includeSubscriptions]];
         [self.tblSessions reloadData];
         
         if (self.popupBackup.indexOfSelectedItem == -1 || self.popupBackup.indexOfSelectedItem >= m_manifests.size())
@@ -273,7 +372,7 @@
             return;
         }
         
-        const BackupManifest& manifest = m_manifests[self.popupBackup.indexOfSelectedItem];
+        const BackupItem& manifest = m_manifests[self.popupBackup.indexOfSelectedItem];
             
         if (manifest.isEncrypted())
         {
@@ -295,7 +394,7 @@
         {
             indexOfSelectedItem--;
         }
-        [m_dataSource loadData:&m_usersAndSessions withAllUsers:allUsers indexOfSelectedUser:indexOfSelectedItem];
+        [m_dataSource loadData:&m_usersAndSessions withAllUsers:allUsers indexOfSelectedUser:indexOfSelectedItem includesSubscription:[AppConfiguration includeSubscriptions]];
         self.btnToggleAll.state = NSControlStateValueOn;
         [self.tblSessions reloadData];
     }
@@ -318,7 +417,11 @@
         if (nil != strongSelf)
         {
             Exporter exp([workDir UTF8String], [backupDir UTF8String], "", strongSelf->m_logger, NULL);
+            ExportOption options;
+            options.outputDebugLogs([AppConfiguration outputDebugLogs]);
+            exp.setOptions(options);
             exp.setLanguageCode([[self getCurrentLanguageCode] UTF8String]);
+            // exp.setLanguageCode([[self getCurrentLanguageCode] UTF8String]);
             exp.loadUsersAndSessions();
             exp.swapUsersAndSessions(strongSelf->m_usersAndSessions);
         }
@@ -336,6 +439,14 @@
         });
     });
     
+}
+
+- (void)filterSubscriptions
+{
+    if ([AppConfiguration includeSubscriptions])
+    {
+        
+    }
 }
 
 - (void)toggleAllSessions:(id)sender
@@ -368,7 +479,7 @@
 - (void)tableViewDoubleClick:(id)sender
 {
     NSTableView *tableView = (NSTableView *)sender;
-    if (1 != tableView.clickedColumn)
+    if (1 != tableView.clickedColumn && 3 != tableView.clickedColumn)
     {
         return;
     }
@@ -385,6 +496,39 @@
     }
 }
 
+- (void)btnGrantClicked:(id)sender
+{
+    [[NSWorkspace sharedWorkspace] openURL:[NSURL URLWithString:@"x-apple.systempreferences:com.apple.preference.security?Privacy_AllFiles"]];
+}
+
+- (void)btnShowLogsClicked:(id)sender
+{
+    BOOL logsHidden = self.sclViewLogs.hidden;
+    self.sclViewLogs.hidden = !logsHidden;
+    self.sclSessions.hidden = logsHidden;
+    self.btnShowLogs.title = NSLocalizedString((logsHidden ? @"hide-logs" : @"show-logs"), comment: "");
+}
+
+#ifndef NDEBUG
+- (void)btnBackupDeviceClicked:(id)sender
+{
+    NSButton* btn = (NSButton*)sender;
+    
+    std::vector<DeviceInfo> devices;
+    IDeviceBackup::queryDevices(devices);
+    [btn setEnabled:NO];
+    if (!devices.empty())
+    {
+        NSString *outputPath = self.txtboxOutput.stringValue;
+        outputPath = [outputPath stringByAppendingPathComponent:@"Backup"];
+        
+        IDeviceBackup deviceBackup(devices.front(), [outputPath UTF8String]);
+        deviceBackup.backup();
+    }
+    [btn setEnabled:YES];
+}
+#endif
+
 - (void)btnBackupClicked:(id)sender
 {
     NSOpenPanel *panel = [NSOpenPanel openPanel];
@@ -394,17 +538,21 @@
     panel.canCreateDirectories = NO;
     panel.showsHiddenFiles = YES;
     
-    [panel setDirectoryURL:[NSURL URLWithString:NSHomeDirectory()]]; // Set panel's default directory.
-    // [panel setDirectoryURL:[NSURL URLWithString:@"/Users/matthew/Documents/reebes/Backup"]]; // Set panel's default directory.
+    NSString *backupDir = [AppConfiguration getDefaultBackupDir:NO];
+    [panel setDirectoryURL:[NSURL fileURLWithPath:backupDir]]; // Set panel's default directory.
     
     [panel beginSheetModalForWindow:[self.view window] completionHandler: (^(NSInteger result) {
         if (result == NSOKButton)
         {
             NSURL *backupUrl = panel.URL;
             
-            ManifestParser parser([backupUrl.path UTF8String]);
-            std::vector<BackupManifest> manifests;
-            if (parser.parse(manifests) && !manifests.empty())
+#ifndef USING_DECODED_ITUNESBACKUP
+            std::unique_ptr<ManifestParser> parser(new ManifestParser([backupUrl.path UTF8String], false));
+#else
+            std::unique_ptr<ManifestParser> parser(new DecodedManifestParser([backupUrl.path UTF8String], false));
+#endif
+            std::vector<BackupItem> manifests;
+            if (parser->parse(manifests) && !manifests.empty())
             {
                 [self updateBackups:manifests withPreviousPath:nil];
             }
@@ -450,20 +598,20 @@
 {
     if (NULL != m_exporter)
     {
-        [self msgBox:NSLocalizedString(@"err-exp-is-running", comment: "")];
+        [self msgBox:NSLocalizedString(@"err-exp-is-running", nil)];
         return;
     }
     
     if (self.popupBackup.indexOfSelectedItem == -1 || self.popupBackup.indexOfSelectedItem >= m_manifests.size())
     {
-        [self msgBox:NSLocalizedString(@"err-no-backup-dir", comment: "")];
+        [self msgBox:NSLocalizedString(@"err-no-backup-dir", nil)];
         return;
     }
     
-    const BackupManifest& manifest = m_manifests[self.popupBackup.indexOfSelectedItem];
+    const BackupItem& manifest = m_manifests[self.popupBackup.indexOfSelectedItem];
     if (manifest.isEncrypted())
     {
-        [self msgBox:NSLocalizedString(@"err-encrypted-bkp-not-supported", comment: "")];
+        [self msgBox:NSLocalizedString(@"err-encrypted-bkp-not-supported", nil)];
         return;
     }
     
@@ -472,7 +620,7 @@
     BOOL isDir = NO;
     if (![[NSFileManager defaultManager] fileExistsAtPath:backupPath isDirectory:&isDir] || !isDir)
     {
-        [self msgBox:NSLocalizedString(@"err-backup-dir-doesnt-exist", comment: "")];
+        [self msgBox:NSLocalizedString(@"err-backup-dir-doesnt-exist", nil)];
         return;
     }
     
@@ -489,10 +637,48 @@
         // self.txtboxOutput focus
         return;
     }
+    
+    if ([AppConfiguration getIncrementalExporting])
+    {
+        uint64_t options = 0;
+        std::string exportTime;
+        std::string version;
+        if (Exporter::hasPreviousExporting([outputPath UTF8String], options, exportTime, version))
+        {
+            if (version.empty() && (m_usersAndSessions.size() > 1))
+            {
+                [self msgBox:NSLocalizedString(@"invld-inc-exp-for-multi-users", comment: "")];
+                return;
+            }
+            
+            NSString* prevExpFound = [NSString stringWithFormat:NSLocalizedString(@"prev-exp-found", comment: ""), [NSString stringWithUTF8String:exportTime.c_str()]];
+#ifdef NDEBUG
+            [self msgBox:prevExpFound];
+#endif
+        }
+        else
+        {
+#ifdef NDEBUG
+            [self msgBox:NSLocalizedString(@"no-prev-exp-found", comment: "")];
+#endif
+            // MessageBoxTimeout(m_hWnd, text, TEXT(""), MB_OK, 0, 4000);
+        }
+    }
+    
+#ifndef NDEBUG
+    // ITunesDb iTunesDb(backup, "");
+    // std::vector<std::string> domains;
+    // domains.push_back("AppDomain-com.tencent.xin");
+    // domains.push_back("AppDomainGroup-group.com.tencent.xin");
+    // iTunesDb.copy([outputPath UTF8String], domains);
+#endif
 
+#if !defined(NDEBUG) || defined(DBG_PERF)
+    m_logger->setLogPath([outputPath UTF8String]);
+#endif
     BOOL descOrder = [AppConfiguration getDescOrder];
     BOOL textMode = [AppConfiguration isTextMode];
-    BOOL syncLoading = ![AppConfiguration getAsyncLoading];
+    BOOL syncLoading = ![AppConfiguration getSyncLoading];
     BOOL saveFilesInSessionFolder = [AppConfiguration getSavingInSession];
     
     NSInteger outputFormat = [AppConfiguration getOutputFormat];
@@ -508,6 +694,8 @@
     NSDictionary *dict = @{@"backup": backupPath, @"output": outputPath, @"descOrder": @(descOrder), @"textMode": @(textMode), @"syncLoading": @(syncLoading), @"saveFilesInSessionFolder": @(saveFilesInSessionFolder)};
     // [NSThread detachNewThreadSelector:@selector(run:) toTarget:self withObject:dict];
     [self run:dict];
+    
+    [self performSelector:@selector(showGuide) withObject:nil afterDelay:1.0];
 }
 
 - (void)btnCancelClicked:(id)sender
@@ -538,6 +726,8 @@
         return;
     }
     
+    ExportOption options = [AppConfiguration buildOptions];
+    
     // NSString *iTunesVersion = [dict objectForKey:@"iTunesVersion"];
     NSNumber *textMode = [dict objectForKey:@"textMode"];
     NSNumber *descOrder = [dict objectForKey:@"descOrder"];
@@ -564,40 +754,29 @@
 
     m_exporter = new Exporter([workDir UTF8String], [backup UTF8String], [output UTF8String], m_logger, m_pdfConverter);
     m_exporter->setLanguageCode([[self getCurrentLanguageCode] UTF8String]);
-    if (nil != descOrder && [descOrder boolValue])
-    {
-        m_exporter->setOrder(false);
-    }
-    if (nil != saveFilesInSessionFolder && [saveFilesInSessionFolder boolValue])
-    {
-        m_exporter->saveFilesInSessionFolder();
-    }
-    if (nil != syncLoading && [syncLoading boolValue])
-    {
-        m_exporter->setSyncLoading();
-    }
-    else
-    {
-        m_exporter->setLoadingDataOnScroll([AppConfiguration getLoadingDataOnScroll]);
-    }
-    m_exporter->setIncrementalExporting([AppConfiguration getIncrementalExporting]);
-    m_exporter->supportsFilter([AppConfiguration getSupportingFilter]);
 
-    if (nil != textMode && textMode.boolValue)
+    // m_exporter->setIncrementalExporting([AppConfiguration getIncrementalExporting]);
+    // m_exporter->supportsFilter([AppConfiguration getSupportingFilter]);
+    
+    // m_exporter->outputDebugLogs([AppConfiguration outputDebugLogs]);
+    // if ([AppConfiguration includeSubscriptions])
     {
-        m_exporter->setTextMode();
+        // m_exporter->includesSubscription();
+    }
+
+    if (options.isTextMode())
+    {
         m_exporter->setExtName("txt");
         m_exporter->setTemplatesName("templates_txt");
     }
 
-    if ([AppConfiguration isPdfMode])
+    if (options.isPdfMode())
     {
-        m_exporter->setPdfMode();
-        m_exporter->setSyncLoading(true);
-        m_exporter->setLoadingDataOnScroll(false);
-        m_exporter->supportsFilter(false);
+        options.setSyncLoading();
+        options.supportsFilter(false);
     }
     
+    m_exporter->setOptions(options);
     m_exporter->setNotifier(m_notifier);
     
     m_exporter->filterUsersAndSessions(usersAndSessions);
@@ -649,11 +828,23 @@
     {
         self.view.window.styleMask |= NSClosableWindowMask;
         [self.progressBar stopAnimation:nil];
+        
+        for (NSTableColumn *tableColumn in self.tblSessions.tableColumns)
+        {
+            NSSortDescriptor *sortDescriptor = [NSSortDescriptor sortDescriptorWithKey:tableColumn.identifier ascending:YES selector:@selector(compare:)];
+            [tableColumn setSortDescriptorPrototype:sortDescriptor];
+        }
     }
     else
     {
         self.view.window.styleMask &= ~NSClosableWindowMask;
         [self.progressBar startAnimation:nil];
+        
+        for (NSTableColumn *tableColumn in self.tblSessions.tableColumns)
+        {
+            // NSSortDescriptor *sortDescriptor = [NSSortDescriptor sortDescriptorWithKey:tableColumn.identifier ascending:YES selector:@selector(compare:)];
+            [tableColumn setSortDescriptorPrototype:nil];
+        }
     }
     
     [self.popupBackup setEnabled:enabled];
@@ -666,6 +857,8 @@
     // [self.chkboxDesc setEnabled:enabled];
     // [self.chkboxTextMode setEnabled:enabled];
     // [self.chkboxSaveFilesInSessionFolder setEnabled:enabled];
+    
+    // self.tblSessions.allowsColumnReordering = enabled;
 }
 
 - (void)onStart
@@ -673,8 +866,61 @@
     [self setUIEnabled:NO withCancellable:YES];
 }
 
+- (void)onSessionStart:(NSString *)usrName row:(NSInteger)row
+{
+    [self updateRow:row];
+}
+
+- (void)onSessionProgress:(NSString *)sessionUsrName row:(NSInteger)row numberOfMessages:(NSUInteger)numberOfMessages numberOfTotalMessages:(NSUInteger)numberOfTotalMessages
+{
+    m_dataSource.numberOfMsgExported = numberOfMessages;
+    
+    NSTableCellView *cellView = [self.tblSessions viewAtColumn:2 row:row makeIfNecessary:NO];
+    if (nil != cellView)
+    {
+        cellView.textField.stringValue = [NSString stringWithFormat:@"%ld / %ld", (long)numberOfMessages, (long)numberOfTotalMessages];
+        // tableViewCell.textField.stringValue = [NSString stringWithFormat:@"%ld", (long)sessionItem.recordCount];
+    }
+}
+
+- (void)onSessionComplete:(NSString *)usrName
+{
+    [self updateRow:-1];
+}
+
+- (void)updateRow:(NSInteger)row
+{
+    if (row == m_dataSource.rowInProgress)
+    {
+        return;
+    }
+    
+    NSMutableIndexSet *rows = (row != -1) ? [NSMutableIndexSet indexSetWithIndex:row] : [NSMutableIndexSet indexSet];
+    if (m_dataSource.rowInProgress != -1)
+    {
+        [rows addIndex:m_dataSource.rowInProgress];
+    }
+    
+    m_dataSource.rowInProgress = row;
+    
+    BOOL rowVisible = NO;
+    NSRange visibleRange = [self.tblSessions rowsInRect:self.tblSessions.visibleRect];
+    if (row >= visibleRange.location && row < (visibleRange.location + visibleRange.length))
+    {
+        rowVisible = YES;
+    }
+    if (!rowVisible)
+    {
+        [self.tblSessions scrollRowToVisible:row];
+    }
+    
+    [self.tblSessions reloadDataForRowIndexes:rows columnIndexes:m_columns];
+}
+
 - (void)onComplete:(BOOL)cancelled
 {
+    [self updateRow:-1];
+    
     if (NULL != m_pdfConverter)
     {
         if (!cancelled)
@@ -694,6 +940,16 @@
         delete m_exporter;
         m_exporter = NULL;
     }
+    
+#ifdef NDEBUG
+    // Don't open the folder on debug mode
+    if (!cancelled && [AppConfiguration getOpenningFolderAfterExp])
+    {
+        NSString *outputPath = self.txtboxOutput.stringValue;
+        NSURL *url = [NSURL fileURLWithPath:outputPath];
+        [[NSWorkspace sharedWorkspace] openURL: url];
+    }
+#endif
 }
 
 - (void)writeLog:(NSString *)log
@@ -740,6 +996,25 @@
     }
     
     [m_dataSource bindCellView:cellView atRow:row andColumnId:[tableColumn identifier]];
+    
+    BOOL clearClr = (m_orgTextColor == [NSColor clearColor]);
+    if (m_dataSource.rowInProgress == row)
+    {
+        if (clearClr)
+        {
+            m_orgTextColor = cellView.textField.textColor;
+        }
+        cellView.textField.textColor = [NSColor redColor];
+        
+    }
+    else
+    {
+        if (!clearClr)
+        {
+            cellView.textField.textColor = m_orgTextColor;
+        }
+    }
+    
     return cellView;
 }
 
@@ -781,6 +1056,55 @@
         }
     }];
     
+}
+
+- (void)showGuide
+{
+    if ([AppConfiguration getSkipGuide])
+    {
+        return;
+    }
+    
+    __block NSAlert *alert = [[NSAlert alloc] init];
+    [alert setAlertStyle:NSInformationalAlertStyle];
+    
+    alert.messageText = NSLocalizedString(@"alert-update-options", nil);
+    alert.window.title = [NSRunningApplication currentApplication].localizedName;
+    // NSButton *btnGrant = [alert addButtonWithTitle:NSLocalizedString(@"btn-grant-full-disk-access", nil)];
+    // [btnGrant setTarget:strongSelf];
+    // [btnGrant setAction:@selector(btnGrantClicked:)];
+    
+    BOOL isCN = [self isCurrentLanguageCN];
+    NSString *resName = isCN ? @"MainMenuCN" : @"MainMenuEN";
+    NSRect frame = isCN ? NSMakeRect(0, 0, 480, 183) : NSMakeRect(0, 0, 545, 183);
+    NSImageView *imageView = [[NSImageView alloc] initWithFrame:frame];
+
+    NSBundle *bundle = [NSBundle mainBundle];
+    imageView.image = [bundle imageForResource:resName];
+    
+    alert.accessoryView = imageView;
+    alert.showsSuppressionButton = YES;
+    [alert addButtonWithTitle:NSLocalizedString(@"btn-ok", nil)];
+    [alert layout];
+    NSRect frame1 = alert.accessoryView.superview.frame;
+    NSRect frame2 = alert.suppressionButton.frame;
+    if (frame2.origin.y > frame1.origin.y)
+    {
+        NSRect frame = frame1;
+        frame1.origin = NSMakePoint(frame1.origin.x, frame2.origin.y + frame2.size.height - frame1.size.height);
+        frame2.origin = NSMakePoint(frame2.origin.x, frame.origin.y);
+        
+        alert.accessoryView.superview.frame = frame1;
+        alert.suppressionButton.frame = frame2;
+    }
+    [alert beginSheetModalForWindow:self.view.window completionHandler:^(NSModalResponse returnCode) {
+        if (alert.suppressionButton.state == NSOnState)
+        {
+            [AppConfiguration setSkipGuide:YES];
+        }
+    }];
+    // [btnGrant setTarget:nil];
+    // [btnGrant setAction:nil];
 }
     
 - (void)checkUpdate
@@ -832,8 +1156,20 @@
     {
         preferredLanguage = @"zh-Hans";
     }
+    else
+    {
+        preferredLanguage = @"en";
+    }
     
+#ifndef NDEBUG
+    preferredLanguage = @"zh-Hans";
+#endif
     return preferredLanguage;
+}
+
+- (BOOL)isCurrentLanguageCN
+{
+    return [@"zh-Hans" isEqualToString:[self getCurrentLanguageCode]];
 }
 
 @end

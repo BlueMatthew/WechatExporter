@@ -1,0 +1,567 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 50;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		340E16BA2823B83600ECB4CD /* Template.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 340E16B82823B83600ECB4CD /* Template.cpp */; };
+		3410714127D1AF0600CAC805 /* WechatExporter.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 3410714027D1AF0600CAC805 /* WechatExporter.cpp */; };
+		3410717E27D1AFD900CAC805 /* WechatParser.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 3410714B27D1AFD700CAC805 /* WechatParser.cpp */; };
+		3410717F27D1AFD900CAC805 /* Utils_md5.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 3410714D27D1AFD700CAC805 /* Utils_md5.cpp */; };
+		3410718027D1AFD900CAC805 /* Utils_protobuf.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 3410714F27D1AFD700CAC805 /* Utils_protobuf.cpp */; };
+		3410718127D1AFD900CAC805 /* Updater.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 3410715027D1AFD700CAC805 /* Updater.cpp */; };
+		3410718327D1AFD900CAC805 /* AsyncTask.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 3410715227D1AFD800CAC805 /* AsyncTask.cpp */; };
+		3410718427D1AFD900CAC805 /* RawMessage.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 3410715527D1AFD800CAC805 /* RawMessage.cpp */; };
+		3410718627D1AFD900CAC805 /* MessageParser.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 3410715727D1AFD800CAC805 /* MessageParser.cpp */; };
+		3410718727D1AFD900CAC805 /* TaskManager.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 3410715927D1AFD800CAC805 /* TaskManager.cpp */; };
+		3410718827D1AFD900CAC805 /* XmlParser.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 3410715F27D1AFD800CAC805 /* XmlParser.cpp */; };
+		3410718927D1AFD900CAC805 /* AsyncExecutor.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 3410716127D1AFD800CAC805 /* AsyncExecutor.cpp */; };
+		3410718A27D1AFD900CAC805 /* IDeviceBackup.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 3410716827D1AFD800CAC805 /* IDeviceBackup.cpp */; };
+		3410718B27D1AFD900CAC805 /* Downloader.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 3410716927D1AFD900CAC805 /* Downloader.cpp */; };
+		3410718C27D1AFD900CAC805 /* Utils_audio.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 3410716A27D1AFD900CAC805 /* Utils_audio.cpp */; };
+		3410718D27D1AFD900CAC805 /* FileSystem.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 3410716B27D1AFD900CAC805 /* FileSystem.cpp */; };
+		3410718E27D1AFD900CAC805 /* Exporter.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 3410716E27D1AFD900CAC805 /* Exporter.cpp */; };
+		3410718F27D1AFD900CAC805 /* Utils_silk.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 3410716F27D1AFD900CAC805 /* Utils_silk.cpp */; };
+		3410719027D1AFD900CAC805 /* Utils.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 3410717127D1AFD900CAC805 /* Utils.cpp */; };
+		3410719127D1AFD900CAC805 /* ResManager.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 3410717527D1AFD900CAC805 /* ResManager.cpp */; };
+		3410719327D1AFD900CAC805 /* ITunesParser.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 3410717A27D1AFD900CAC805 /* ITunesParser.cpp */; };
+		3410719427D1AFD900CAC805 /* Utils_thread.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 3410717D27D1AFD900CAC805 /* Utils_thread.cpp */; };
+		3410719927D1B04300CAC805 /* libcurl.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 3410719727D1B01700CAC805 /* libcurl.tbd */; };
+		3410719C27D1B05500CAC805 /* libxml2.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 3410719B27D1B04A00CAC805 /* libxml2.tbd */; };
+		341071A527D1B18F00CAC805 /* libmp3lame.0.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 3410719E27D1B18F00CAC805 /* libmp3lame.0.dylib */; };
+		341071A627D1B18F00CAC805 /* libmp3lame.0.dylib in Embed Libraries */ = {isa = PBXBuildFile; fileRef = 3410719E27D1B18F00CAC805 /* libmp3lame.0.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+		341071A727D1B18F00CAC805 /* libusbmuxd-2.0.6.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 3410719F27D1B18F00CAC805 /* libusbmuxd-2.0.6.dylib */; };
+		341071A827D1B18F00CAC805 /* libusbmuxd-2.0.6.dylib in Embed Libraries */ = {isa = PBXBuildFile; fileRef = 3410719F27D1B18F00CAC805 /* libusbmuxd-2.0.6.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+		341071A927D1B18F00CAC805 /* libimobiledevice-1.0.6.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 341071A027D1B18F00CAC805 /* libimobiledevice-1.0.6.dylib */; };
+		341071AA27D1B18F00CAC805 /* libimobiledevice-1.0.6.dylib in Embed Libraries */ = {isa = PBXBuildFile; fileRef = 341071A027D1B18F00CAC805 /* libimobiledevice-1.0.6.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+		341071AB27D1B19000CAC805 /* libplist-2.0.3.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 341071A127D1B18F00CAC805 /* libplist-2.0.3.dylib */; };
+		341071AC27D1B19000CAC805 /* libplist-2.0.3.dylib in Embed Libraries */ = {isa = PBXBuildFile; fileRef = 341071A127D1B18F00CAC805 /* libplist-2.0.3.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+		341071AD27D1B19000CAC805 /* libssl.1.1.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 341071A227D1B18F00CAC805 /* libssl.1.1.dylib */; };
+		341071AE27D1B19000CAC805 /* libssl.1.1.dylib in Embed Libraries */ = {isa = PBXBuildFile; fileRef = 341071A227D1B18F00CAC805 /* libssl.1.1.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+		341071AF27D1B19000CAC805 /* libimobiledevice-glue-1.0.0.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 341071A327D1B18F00CAC805 /* libimobiledevice-glue-1.0.0.dylib */; };
+		341071B027D1B19000CAC805 /* libimobiledevice-glue-1.0.0.dylib in Embed Libraries */ = {isa = PBXBuildFile; fileRef = 341071A327D1B18F00CAC805 /* libimobiledevice-glue-1.0.0.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+		341071B127D1B19000CAC805 /* libcrypto.1.1.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 341071A427D1B18F00CAC805 /* libcrypto.1.1.dylib */; };
+		341071B227D1B19000CAC805 /* libcrypto.1.1.dylib in Embed Libraries */ = {isa = PBXBuildFile; fileRef = 341071A427D1B18F00CAC805 /* libcrypto.1.1.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+		341071B627D1B1AE00CAC805 /* libiconv.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 341071B527D1B1A300CAC805 /* libiconv.tbd */; };
+		341071B727D1B1B600CAC805 /* libz.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 341071B427D1B19600CAC805 /* libz.tbd */; };
+		341071C427D1B5A000CAC805 /* res in CopyFiles */ = {isa = PBXBuildFile; fileRef = 341071C327D1B58800CAC805 /* res */; };
+		341071C527D1B5A500CAC805 /* LICENSES in CopyFiles */ = {isa = PBXBuildFile; fileRef = 341071C227D1B56800CAC805 /* LICENSES */; };
+		341071C727D1B5D500CAC805 /* libsqlite3.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 341071C627D1B5CB00CAC805 /* libsqlite3.tbd */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		3410713B27D1AF0600CAC805 /* CopyFiles */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 12;
+			dstPath = "";
+			dstSubfolderSpec = 16;
+			files = (
+				341071C527D1B5A500CAC805 /* LICENSES in CopyFiles */,
+				341071C427D1B5A000CAC805 /* res in CopyFiles */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		341071B327D1B19000CAC805 /* Embed Libraries */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = Frameworks;
+			dstSubfolderSpec = 16;
+			files = (
+				341071AA27D1B18F00CAC805 /* libimobiledevice-1.0.6.dylib in Embed Libraries */,
+				341071A827D1B18F00CAC805 /* libusbmuxd-2.0.6.dylib in Embed Libraries */,
+				341071B227D1B19000CAC805 /* libcrypto.1.1.dylib in Embed Libraries */,
+				341071A627D1B18F00CAC805 /* libmp3lame.0.dylib in Embed Libraries */,
+				341071B027D1B19000CAC805 /* libimobiledevice-glue-1.0.0.dylib in Embed Libraries */,
+				341071AC27D1B19000CAC805 /* libplist-2.0.3.dylib in Embed Libraries */,
+				341071AE27D1B19000CAC805 /* libssl.1.1.dylib in Embed Libraries */,
+			);
+			name = "Embed Libraries";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
+/* Begin PBXFileReference section */
+		340E16B82823B83600ECB4CD /* Template.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = Template.cpp; path = WechatExporter/core/Template.cpp; sourceTree = SOURCE_ROOT; };
+		340E16B92823B83600ECB4CD /* Template.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Template.h; path = WechatExporter/core/Template.h; sourceTree = SOURCE_ROOT; };
+		3410713D27D1AF0600CAC805 /* WechatExporterCmd */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = WechatExporterCmd; sourceTree = BUILT_PRODUCTS_DIR; };
+		3410714027D1AF0600CAC805 /* WechatExporter.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = WechatExporter.cpp; sourceTree = "<group>"; };
+		3410714B27D1AFD700CAC805 /* WechatParser.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = WechatParser.cpp; path = WechatExporter/core/WechatParser.cpp; sourceTree = SOURCE_ROOT; };
+		3410714C27D1AFD700CAC805 /* WechatObjects.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = WechatObjects.h; path = WechatExporter/core/WechatObjects.h; sourceTree = SOURCE_ROOT; };
+		3410714D27D1AFD700CAC805 /* Utils_md5.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = Utils_md5.cpp; path = WechatExporter/core/Utils_md5.cpp; sourceTree = SOURCE_ROOT; };
+		3410714E27D1AFD700CAC805 /* ITunesParser.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = ITunesParser.h; path = WechatExporter/core/ITunesParser.h; sourceTree = SOURCE_ROOT; };
+		3410714F27D1AFD700CAC805 /* Utils_protobuf.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = Utils_protobuf.cpp; path = WechatExporter/core/Utils_protobuf.cpp; sourceTree = SOURCE_ROOT; };
+		3410715027D1AFD700CAC805 /* Updater.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = Updater.cpp; path = WechatExporter/core/Updater.cpp; sourceTree = SOURCE_ROOT; };
+		3410715227D1AFD800CAC805 /* AsyncTask.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = AsyncTask.cpp; path = WechatExporter/core/AsyncTask.cpp; sourceTree = SOURCE_ROOT; };
+		3410715327D1AFD800CAC805 /* WechatSource.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = WechatSource.h; path = WechatExporter/core/WechatSource.h; sourceTree = SOURCE_ROOT; };
+		3410715427D1AFD800CAC805 /* Downloader.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Downloader.h; path = WechatExporter/core/Downloader.h; sourceTree = SOURCE_ROOT; };
+		3410715527D1AFD800CAC805 /* RawMessage.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = RawMessage.cpp; path = WechatExporter/core/RawMessage.cpp; sourceTree = SOURCE_ROOT; };
+		3410715727D1AFD800CAC805 /* MessageParser.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = MessageParser.cpp; path = WechatExporter/core/MessageParser.cpp; sourceTree = SOURCE_ROOT; };
+		3410715827D1AFD800CAC805 /* MbdbReader.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = MbdbReader.h; path = WechatExporter/core/MbdbReader.h; sourceTree = SOURCE_ROOT; };
+		3410715927D1AFD800CAC805 /* TaskManager.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = TaskManager.cpp; path = WechatExporter/core/TaskManager.cpp; sourceTree = SOURCE_ROOT; };
+		3410715B27D1AFD800CAC805 /* FileSystem.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = FileSystem.h; path = WechatExporter/core/FileSystem.h; sourceTree = SOURCE_ROOT; };
+		3410715C27D1AFD800CAC805 /* Utils.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Utils.h; path = WechatExporter/core/Utils.h; sourceTree = SOURCE_ROOT; };
+		3410715D27D1AFD800CAC805 /* MMKVReader.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = MMKVReader.h; path = WechatExporter/core/MMKVReader.h; sourceTree = SOURCE_ROOT; };
+		3410715F27D1AFD800CAC805 /* XmlParser.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = XmlParser.cpp; path = WechatExporter/core/XmlParser.cpp; sourceTree = SOURCE_ROOT; };
+		3410716027D1AFD800CAC805 /* WechatParser.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = WechatParser.h; path = WechatExporter/core/WechatParser.h; sourceTree = SOURCE_ROOT; };
+		3410716127D1AFD800CAC805 /* AsyncExecutor.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = AsyncExecutor.cpp; path = WechatExporter/core/AsyncExecutor.cpp; sourceTree = SOURCE_ROOT; };
+		3410716227D1AFD800CAC805 /* Exporter.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Exporter.h; path = WechatExporter/core/Exporter.h; sourceTree = SOURCE_ROOT; };
+		3410716327D1AFD800CAC805 /* MessageParser.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = MessageParser.h; path = WechatExporter/core/MessageParser.h; sourceTree = SOURCE_ROOT; };
+		3410716427D1AFD800CAC805 /* AsyncTask.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = AsyncTask.h; path = WechatExporter/core/AsyncTask.h; sourceTree = SOURCE_ROOT; };
+		3410716527D1AFD800CAC805 /* XmlParser.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = XmlParser.h; path = WechatExporter/core/XmlParser.h; sourceTree = SOURCE_ROOT; };
+		3410716627D1AFD800CAC805 /* TaskManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = TaskManager.h; path = WechatExporter/core/TaskManager.h; sourceTree = SOURCE_ROOT; };
+		3410716827D1AFD800CAC805 /* IDeviceBackup.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = IDeviceBackup.cpp; path = WechatExporter/core/IDeviceBackup.cpp; sourceTree = SOURCE_ROOT; };
+		3410716927D1AFD900CAC805 /* Downloader.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = Downloader.cpp; path = WechatExporter/core/Downloader.cpp; sourceTree = SOURCE_ROOT; };
+		3410716A27D1AFD900CAC805 /* Utils_audio.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = Utils_audio.cpp; path = WechatExporter/core/Utils_audio.cpp; sourceTree = SOURCE_ROOT; };
+		3410716B27D1AFD900CAC805 /* FileSystem.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = FileSystem.cpp; path = WechatExporter/core/FileSystem.cpp; sourceTree = SOURCE_ROOT; };
+		3410716C27D1AFD900CAC805 /* ExportContext.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = ExportContext.h; path = WechatExporter/core/ExportContext.h; sourceTree = SOURCE_ROOT; };
+		3410716D27D1AFD900CAC805 /* Logger.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Logger.h; path = WechatExporter/core/Logger.h; sourceTree = SOURCE_ROOT; };
+		3410716E27D1AFD900CAC805 /* Exporter.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = Exporter.cpp; path = WechatExporter/core/Exporter.cpp; sourceTree = SOURCE_ROOT; };
+		3410716F27D1AFD900CAC805 /* Utils_silk.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = Utils_silk.cpp; path = WechatExporter/core/Utils_silk.cpp; sourceTree = SOURCE_ROOT; };
+		3410717027D1AFD900CAC805 /* ExportNotifier.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = ExportNotifier.h; path = WechatExporter/core/ExportNotifier.h; sourceTree = SOURCE_ROOT; };
+		3410717127D1AFD900CAC805 /* Utils.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = Utils.cpp; path = WechatExporter/core/Utils.cpp; sourceTree = SOURCE_ROOT; };
+		3410717227D1AFD900CAC805 /* ResManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = ResManager.h; path = WechatExporter/core/ResManager.h; sourceTree = SOURCE_ROOT; };
+		3410717327D1AFD900CAC805 /* RawMessage.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = RawMessage.h; path = WechatExporter/core/RawMessage.h; sourceTree = SOURCE_ROOT; };
+		3410717427D1AFD900CAC805 /* Updater.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Updater.h; path = WechatExporter/core/Updater.h; sourceTree = SOURCE_ROOT; };
+		3410717527D1AFD900CAC805 /* ResManager.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = ResManager.cpp; path = WechatExporter/core/ResManager.cpp; sourceTree = SOURCE_ROOT; };
+		3410717827D1AFD900CAC805 /* AsyncExecutor.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = AsyncExecutor.h; path = WechatExporter/core/AsyncExecutor.h; sourceTree = SOURCE_ROOT; };
+		3410717927D1AFD900CAC805 /* PdfConverter.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = PdfConverter.h; path = WechatExporter/core/PdfConverter.h; sourceTree = SOURCE_ROOT; };
+		3410717A27D1AFD900CAC805 /* ITunesParser.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = ITunesParser.cpp; path = WechatExporter/core/ITunesParser.cpp; sourceTree = SOURCE_ROOT; };
+		3410717B27D1AFD900CAC805 /* IDeviceBackup.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = IDeviceBackup.h; path = WechatExporter/core/IDeviceBackup.h; sourceTree = SOURCE_ROOT; };
+		3410717C27D1AFD900CAC805 /* semaphore.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = semaphore.h; path = WechatExporter/core/semaphore.h; sourceTree = SOURCE_ROOT; };
+		3410717D27D1AFD900CAC805 /* Utils_thread.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = Utils_thread.cpp; path = WechatExporter/core/Utils_thread.cpp; sourceTree = SOURCE_ROOT; };
+		3410719727D1B01700CAC805 /* libcurl.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libcurl.tbd; path = usr/lib/libcurl.tbd; sourceTree = SDKROOT; };
+		3410719B27D1B04A00CAC805 /* libxml2.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libxml2.tbd; path = usr/lib/libxml2.tbd; sourceTree = SDKROOT; };
+		3410719E27D1B18F00CAC805 /* libmp3lame.0.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libmp3lame.0.dylib; path = "releases/windows-libs/x64/rel/cmd/libmp3lame.0.dylib"; sourceTree = "<group>"; };
+		3410719F27D1B18F00CAC805 /* libusbmuxd-2.0.6.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = "libusbmuxd-2.0.6.dylib"; path = "releases/windows-libs/x64/rel/cmd/libusbmuxd-2.0.6.dylib"; sourceTree = "<group>"; };
+		341071A027D1B18F00CAC805 /* libimobiledevice-1.0.6.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = "libimobiledevice-1.0.6.dylib"; path = "releases/windows-libs/x64/rel/cmd/libimobiledevice-1.0.6.dylib"; sourceTree = "<group>"; };
+		341071A127D1B18F00CAC805 /* libplist-2.0.3.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = "libplist-2.0.3.dylib"; path = "releases/windows-libs/x64/rel/cmd/libplist-2.0.3.dylib"; sourceTree = "<group>"; };
+		341071A227D1B18F00CAC805 /* libssl.1.1.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libssl.1.1.dylib; path = "releases/windows-libs/x64/rel/cmd/libssl.1.1.dylib"; sourceTree = "<group>"; };
+		341071A327D1B18F00CAC805 /* libimobiledevice-glue-1.0.0.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = "libimobiledevice-glue-1.0.0.dylib"; path = "releases/windows-libs/x64/rel/cmd/libimobiledevice-glue-1.0.0.dylib"; sourceTree = "<group>"; };
+		341071A427D1B18F00CAC805 /* libcrypto.1.1.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libcrypto.1.1.dylib; path = "releases/windows-libs/x64/rel/cmd/libcrypto.1.1.dylib"; sourceTree = "<group>"; };
+		341071B427D1B19600CAC805 /* libz.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libz.tbd; path = usr/lib/libz.tbd; sourceTree = SDKROOT; };
+		341071B527D1B1A300CAC805 /* libiconv.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libiconv.tbd; path = usr/lib/libiconv.tbd; sourceTree = SDKROOT; };
+		341071C227D1B56800CAC805 /* LICENSES */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = LICENSES; path = WechatExporter/LICENSES; sourceTree = SOURCE_ROOT; };
+		341071C327D1B58800CAC805 /* res */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = res; path = WechatExporter/res; sourceTree = SOURCE_ROOT; };
+		341071C627D1B5CB00CAC805 /* libsqlite3.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libsqlite3.tbd; path = usr/lib/libsqlite3.tbd; sourceTree = SDKROOT; };
+		3455A17027E949BF006B0797 /* WechatExporterCmd.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = WechatExporterCmd.h; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		3410713A27D1AF0600CAC805 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				341071A727D1B18F00CAC805 /* libusbmuxd-2.0.6.dylib in Frameworks */,
+				341071B727D1B1B600CAC805 /* libz.tbd in Frameworks */,
+				341071A927D1B18F00CAC805 /* libimobiledevice-1.0.6.dylib in Frameworks */,
+				341071A527D1B18F00CAC805 /* libmp3lame.0.dylib in Frameworks */,
+				3410719927D1B04300CAC805 /* libcurl.tbd in Frameworks */,
+				341071B627D1B1AE00CAC805 /* libiconv.tbd in Frameworks */,
+				341071C727D1B5D500CAC805 /* libsqlite3.tbd in Frameworks */,
+				341071AD27D1B19000CAC805 /* libssl.1.1.dylib in Frameworks */,
+				341071AF27D1B19000CAC805 /* libimobiledevice-glue-1.0.0.dylib in Frameworks */,
+				3410719C27D1B05500CAC805 /* libxml2.tbd in Frameworks */,
+				341071AB27D1B19000CAC805 /* libplist-2.0.3.dylib in Frameworks */,
+				341071B127D1B19000CAC805 /* libcrypto.1.1.dylib in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		3410713427D1AF0600CAC805 = {
+			isa = PBXGroup;
+			children = (
+				3410713F27D1AF0600CAC805 /* WechatExporterCmd */,
+				3410713E27D1AF0600CAC805 /* Products */,
+				3410719627D1B01700CAC805 /* Frameworks */,
+			);
+			sourceTree = "<group>";
+		};
+		3410713E27D1AF0600CAC805 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				3410713D27D1AF0600CAC805 /* WechatExporterCmd */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		3410713F27D1AF0600CAC805 /* WechatExporterCmd */ = {
+			isa = PBXGroup;
+			children = (
+				3455A17027E949BF006B0797 /* WechatExporterCmd.h */,
+				341071C327D1B58800CAC805 /* res */,
+				341071C227D1B56800CAC805 /* LICENSES */,
+				3410714927D1AFC600CAC805 /* core */,
+				3410714027D1AF0600CAC805 /* WechatExporter.cpp */,
+			);
+			path = WechatExporterCmd;
+			sourceTree = "<group>";
+		};
+		3410714927D1AFC600CAC805 /* core */ = {
+			isa = PBXGroup;
+			children = (
+				340E16B82823B83600ECB4CD /* Template.cpp */,
+				340E16B92823B83600ECB4CD /* Template.h */,
+				3410716127D1AFD800CAC805 /* AsyncExecutor.cpp */,
+				3410717827D1AFD900CAC805 /* AsyncExecutor.h */,
+				3410715227D1AFD800CAC805 /* AsyncTask.cpp */,
+				3410716427D1AFD800CAC805 /* AsyncTask.h */,
+				3410716927D1AFD900CAC805 /* Downloader.cpp */,
+				3410715427D1AFD800CAC805 /* Downloader.h */,
+				3410716C27D1AFD900CAC805 /* ExportContext.h */,
+				3410716E27D1AFD900CAC805 /* Exporter.cpp */,
+				3410716227D1AFD800CAC805 /* Exporter.h */,
+				3410717027D1AFD900CAC805 /* ExportNotifier.h */,
+				3410716B27D1AFD900CAC805 /* FileSystem.cpp */,
+				3410715B27D1AFD800CAC805 /* FileSystem.h */,
+				3410716827D1AFD800CAC805 /* IDeviceBackup.cpp */,
+				3410717B27D1AFD900CAC805 /* IDeviceBackup.h */,
+				3410717A27D1AFD900CAC805 /* ITunesParser.cpp */,
+				3410714E27D1AFD700CAC805 /* ITunesParser.h */,
+				3410716D27D1AFD900CAC805 /* Logger.h */,
+				3410715827D1AFD800CAC805 /* MbdbReader.h */,
+				3410715727D1AFD800CAC805 /* MessageParser.cpp */,
+				3410716327D1AFD800CAC805 /* MessageParser.h */,
+				3410715D27D1AFD800CAC805 /* MMKVReader.h */,
+				3410717927D1AFD900CAC805 /* PdfConverter.h */,
+				3410715527D1AFD800CAC805 /* RawMessage.cpp */,
+				3410717327D1AFD900CAC805 /* RawMessage.h */,
+				3410717527D1AFD900CAC805 /* ResManager.cpp */,
+				3410717227D1AFD900CAC805 /* ResManager.h */,
+				3410717C27D1AFD900CAC805 /* semaphore.h */,
+				3410715927D1AFD800CAC805 /* TaskManager.cpp */,
+				3410716627D1AFD800CAC805 /* TaskManager.h */,
+				3410715027D1AFD700CAC805 /* Updater.cpp */,
+				3410717427D1AFD900CAC805 /* Updater.h */,
+				3410716A27D1AFD900CAC805 /* Utils_audio.cpp */,
+				3410714D27D1AFD700CAC805 /* Utils_md5.cpp */,
+				3410714F27D1AFD700CAC805 /* Utils_protobuf.cpp */,
+				3410716F27D1AFD900CAC805 /* Utils_silk.cpp */,
+				3410717D27D1AFD900CAC805 /* Utils_thread.cpp */,
+				3410717127D1AFD900CAC805 /* Utils.cpp */,
+				3410715C27D1AFD800CAC805 /* Utils.h */,
+				3410714C27D1AFD700CAC805 /* WechatObjects.h */,
+				3410714B27D1AFD700CAC805 /* WechatParser.cpp */,
+				3410716027D1AFD800CAC805 /* WechatParser.h */,
+				3410715327D1AFD800CAC805 /* WechatSource.h */,
+				3410715F27D1AFD800CAC805 /* XmlParser.cpp */,
+				3410716527D1AFD800CAC805 /* XmlParser.h */,
+			);
+			name = core;
+			sourceTree = "<group>";
+		};
+		3410719627D1B01700CAC805 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				341071C627D1B5CB00CAC805 /* libsqlite3.tbd */,
+				341071B527D1B1A300CAC805 /* libiconv.tbd */,
+				341071B427D1B19600CAC805 /* libz.tbd */,
+				341071A427D1B18F00CAC805 /* libcrypto.1.1.dylib */,
+				341071A027D1B18F00CAC805 /* libimobiledevice-1.0.6.dylib */,
+				341071A327D1B18F00CAC805 /* libimobiledevice-glue-1.0.0.dylib */,
+				3410719E27D1B18F00CAC805 /* libmp3lame.0.dylib */,
+				341071A127D1B18F00CAC805 /* libplist-2.0.3.dylib */,
+				341071A227D1B18F00CAC805 /* libssl.1.1.dylib */,
+				3410719F27D1B18F00CAC805 /* libusbmuxd-2.0.6.dylib */,
+				3410719B27D1B04A00CAC805 /* libxml2.tbd */,
+				3410719727D1B01700CAC805 /* libcurl.tbd */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		3410713C27D1AF0600CAC805 /* WechatExporterCmd */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 3410714427D1AF0600CAC805 /* Build configuration list for PBXNativeTarget "WechatExporterCmd" */;
+			buildPhases = (
+				3410713927D1AF0600CAC805 /* Sources */,
+				3410713A27D1AF0600CAC805 /* Frameworks */,
+				3410713B27D1AF0600CAC805 /* CopyFiles */,
+				341071B327D1B19000CAC805 /* Embed Libraries */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = WechatExporterCmd;
+			productName = WechatExporterCmd;
+			productReference = 3410713D27D1AF0600CAC805 /* WechatExporterCmd */;
+			productType = "com.apple.product-type.tool";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		3410713527D1AF0600CAC805 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				LastUpgradeCheck = 1200;
+				TargetAttributes = {
+					3410713C27D1AF0600CAC805 = {
+						CreatedOnToolsVersion = 12.0.1;
+					};
+				};
+			};
+			buildConfigurationList = 3410713827D1AF0600CAC805 /* Build configuration list for PBXProject "WechatExporterCmd" */;
+			compatibilityVersion = "Xcode 9.3";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = 3410713427D1AF0600CAC805;
+			productRefGroup = 3410713E27D1AF0600CAC805 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				3410713C27D1AF0600CAC805 /* WechatExporterCmd */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXSourcesBuildPhase section */
+		3410713927D1AF0600CAC805 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				3410718E27D1AFD900CAC805 /* Exporter.cpp in Sources */,
+				3410719427D1AFD900CAC805 /* Utils_thread.cpp in Sources */,
+				3410718D27D1AFD900CAC805 /* FileSystem.cpp in Sources */,
+				3410718627D1AFD900CAC805 /* MessageParser.cpp in Sources */,
+				3410719027D1AFD900CAC805 /* Utils.cpp in Sources */,
+				3410718727D1AFD900CAC805 /* TaskManager.cpp in Sources */,
+				3410719127D1AFD900CAC805 /* ResManager.cpp in Sources */,
+				3410718C27D1AFD900CAC805 /* Utils_audio.cpp in Sources */,
+				3410718927D1AFD900CAC805 /* AsyncExecutor.cpp in Sources */,
+				3410718327D1AFD900CAC805 /* AsyncTask.cpp in Sources */,
+				3410718127D1AFD900CAC805 /* Updater.cpp in Sources */,
+				3410718A27D1AFD900CAC805 /* IDeviceBackup.cpp in Sources */,
+				3410718827D1AFD900CAC805 /* XmlParser.cpp in Sources */,
+				3410718F27D1AFD900CAC805 /* Utils_silk.cpp in Sources */,
+				3410718027D1AFD900CAC805 /* Utils_protobuf.cpp in Sources */,
+				3410718B27D1AFD900CAC805 /* Downloader.cpp in Sources */,
+				3410717E27D1AFD900CAC805 /* WechatParser.cpp in Sources */,
+				3410717F27D1AFD900CAC805 /* Utils_md5.cpp in Sources */,
+				3410718427D1AFD900CAC805 /* RawMessage.cpp in Sources */,
+				340E16BA2823B83600ECB4CD /* Template.cpp in Sources */,
+				3410719327D1AFD900CAC805 /* ITunesParser.cpp in Sources */,
+				3410714127D1AF0600CAC805 /* WechatExporter.cpp in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		3410714227D1AF0600CAC805 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 10.10;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = macosx;
+			};
+			name = Debug;
+		};
+		3410714327D1AF0600CAC805 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 10.10;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				SDKROOT = macosx;
+			};
+			name = Release;
+		};
+		3410714527D1AF0600CAC805 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_IDENTITY = "-";
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = L848BW5698;
+				ENABLE_HARDENED_RUNTIME = YES;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				HEADER_SEARCH_PATHS = (
+					/usr/local/include/,
+					"${SDKROOT}/usr/include/libxml2/",
+					"releases/windows-libs/include",
+				);
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)/releases/windows-libs/x64/rel/cmd",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 10.10;
+				OTHER_LDFLAGS = (
+					"-L/usr/local/lib",
+					"-lprotobufd",
+					"-ljsoncpp",
+					"-lSKP_SILK_SDK",
+					"-lopencore-amrnb",
+				);
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
+			};
+			name = Debug;
+		};
+		3410714627D1AF0600CAC805 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_IDENTITY = "-";
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = L848BW5698;
+				ENABLE_HARDENED_RUNTIME = YES;
+				GCC_PREPROCESSOR_DEFINITIONS = "NDEBUG=1";
+				HEADER_SEARCH_PATHS = (
+					/usr/local/include/,
+					"${SDKROOT}/usr/include/libxml2/",
+					"releases/windows-libs/include",
+				);
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)/releases/windows-libs/x64/rel/cmd",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 10.10;
+				ONLY_ACTIVE_ARCH = YES;
+				OTHER_LDFLAGS = (
+					"-L/usr/local/lib",
+					"-lprotobuf",
+					"-ljsoncpp",
+					"-lSKP_SILK_SDK",
+					"-lopencore-amrnb",
+				);
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		3410713827D1AF0600CAC805 /* Build configuration list for PBXProject "WechatExporterCmd" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				3410714227D1AF0600CAC805 /* Debug */,
+				3410714327D1AF0600CAC805 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		3410714427D1AF0600CAC805 /* Build configuration list for PBXNativeTarget "WechatExporterCmd" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				3410714527D1AF0600CAC805 /* Debug */,
+				3410714627D1AF0600CAC805 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 3410713527D1AF0600CAC805 /* Project object */;
+}

@@ -2,8 +2,11 @@
 					<div class="avatar-box">
 						<img src="%%AVATAR%%" class="avatar" />
 					</div>
-					<div class="nt-box"><span class="dspname %%ALIGNMENT%%">%%NAME%%</span> %%TIME%%</div>
+					<div class="nt-box"><span class="dspname %%ALIGNMENT%%" wxId="%%WXNAME%%">%%NAME%%</span> %%TIME%%</div>
 					<div class="content-box">
-						<audio controls><source src="%%AUDIOPATH%%" type="audio/mpeg"><a href="%%AUDIOPATH%%">播放</a></audio>
+						<div class="voicebox" style="width:%%AUDIOLENGTH%%px" audio="%%AUDIOPATH%%" onclick="javascript:playAudio(this, '%%MSGID%%');">
+							<div class="voiceimg" id="voiceimg-%%MSGID%%"></div>
+							<div class="voicetime">%%AUDIOTIME%%</div>
+						</div>
 					</div>
 				</div>

@@ -58,7 +58,12 @@ public:
 
     void download(const Session* session, const std::string &url, const std::string &backupUrl, const std::string& output, time_t mtime, const std::string& defaultFile = "", std::string type = "");
 #ifdef USING_ASYNC_TASK_FOR_MP3
-    void convertAudio(const Session* session, const std::string& pcmPath, const std::string& mp3Path, unsigned int mtime);
+    enum AUDIO_FORMAT
+    {
+        AUDIO_FORMAT_AMR,
+        AUDIO_FORMAT_SILK
+    };
+    void convertAudio(const Session* session, const std::string& pcmPath, const std::string& mp3Path, AUDIO_FORMAT format, unsigned int mtime);
 #endif
     
 private:

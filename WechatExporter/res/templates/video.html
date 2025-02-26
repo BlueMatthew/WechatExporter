@@ -2,8 +2,8 @@
 					<div class="avatar-box">
 						<img src="%%AVATAR%%" class="avatar" />
 					</div>
-					<div class="nt-box"><span class="dspname %%ALIGNMENT%%">%%NAME%%</span> %%TIME%%</div>
+					<div class="nt-box"><span class="dspname %%ALIGNMENT%%" wxId="%%WXNAME%%">%%NAME%%</span> %%TIME%%</div>
 					<div class="content-box">
-						<video controls poster="%%THUMBPATH%%"><source src="%%VIDEOPATH%%" type="video/mp4"><a href="%%VIDEOPATH%%">播放</a></video>
+						<video controls preload="none" autoplay="false" data-poster="%%THUMBPATH%%" class="lazyload"><source src="%%VIDEOPATH%%" type="video/mp4"><a href="%%VIDEOPATH%%">%%ML:Play%%</a></video>
 					</div>
 				</div>

@@ -196,7 +196,7 @@ protected:
 
         std::string aliasCmd = [m_assemblyPath UTF8String];
         replaceAll(aliasCmd, " ", "\\ ");
-        aliasCmd = "#/bin/sh" + NEW_LINE + NEW_LINE + "alias chrome=\"" + aliasCmd + "\"" + NEW_LINE + NEW_LINE;
+        aliasCmd = "#!/bin/sh" + NEW_LINE + NEW_LINE + "alias chrome=\"" + aliasCmd + "\"" + NEW_LINE + NEW_LINE;
         
         std::string output = m_output;
         // replaceAll(output, " ", "\\ ");

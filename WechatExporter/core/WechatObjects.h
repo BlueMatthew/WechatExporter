@@ -16,6 +16,7 @@
 #include <cassert>
 #endif
 #include "Utils.h"
+#include "FileSystem.h"
 
 #ifndef WechatObjects_h
 #define WechatObjects_h
@@ -208,8 +209,13 @@ protected:
 
 class Friend
 {
+#ifndef NDEBUG
+public:
+#else
 protected:
+#endif
     std::string m_usrName;
+    std::string m_wxName;   // WeiXin Hao
     std::string m_uidHash;
     std::string m_displayName;
     int m_userType;
@@ -219,8 +225,12 @@ protected:
     std::string m_portraitHD;
 
     std::string m_outputFileName; // Use displayName first and then usrName
+    std::string m_encodedOutputFileName; // Use displayName first and then usrName
     
-    std::map<std::string, std::pair<std::string, std::string>> m_members; // uidHash => <uid,NickName>
+    // std::map<std::string, std::pair<std::string, std::string>> m_members; // uidHash => <uid,NickName>
+    std::map<std::string, std::string> m_members; // uid => NickName
+    std::vector<std::string> m_memberUsrNames; // uid
+    std::vector<std::string> m_tags;
     
 public:
     
@@ -236,12 +246,16 @@ public:
     static bool isSubscription(const std::string& usrName);
     static bool isChatroom(const std::string& usrName);
     
+    static bool isDefaultAvatar(const std::string& path);
+    static bool isDefaultAvatar(size_t fileSize, const std::string& path);
+    
     inline bool isSubscription() const
     {
         return isSubscription(m_usrName);
     }
     
     inline std::string getUsrName() const { return m_usrName; }
+    inline std::string getWxName() const { return m_wxName.empty() ? m_usrName : m_wxName; }
     inline std::string getHash() const { return m_uidHash; }
     void setUsrName(const std::string& usrName) { this->m_usrName = usrName; m_uidHash = md5(usrName);  m_outputFileName = m_uidHash; m_isChatroom = isChatroom(usrName); }
     inline bool isUsrNameEmpty() const
@@ -265,42 +279,55 @@ public:
 		m_deleted = deleted;
 	}
 
-    bool containMember(const std::string& uidHash) const
+    bool containMember(const std::string& usrName) const
     {
-        std::map<std::string, std::pair<std::string, std::string>>::const_iterator it = m_members.find(uidHash);
+        auto it = m_members.find(usrName);
         return it != m_members.cend();
     }
     
-    std::string getMemberName(const std::string& uidHash) const
+    std::string getMemberName(const std::string& usrName) const
     {
-        std::map<std::string, std::pair<std::string, std::string>>::const_iterator it = m_members.find(uidHash);
-        return it != m_members.cend() ? it->second.second : "";
+        auto it = m_members.find(usrName);
+        return it != m_members.cend() ? it->second : "";
     }
 
-    void addMember(const std::string& uidHash, const std::pair<std::string, std::string>& uidAndDisplayName)
+    void addMember(const std::string& usrName, const std::string& displayName)
     {
-        typename std::map<std::string, std::pair<std::string, std::string>>::iterator it = m_members.find(uidHash);
+        auto it = m_members.find(usrName);
         if (it != m_members.end())
         {
-            if (it->second.second != uidAndDisplayName.second)
-            {
-                it->second.second = uidAndDisplayName.second;
-            }
+            it->second = displayName;
         }
         else
         {
-            m_members[uidHash] = uidAndDisplayName;
+            m_members[usrName] = displayName;
+            m_memberUsrNames.push_back(usrName);
         }
+    }
+    
+    std::vector<std::string> getMemberUsrNames() const
+    {
+        return m_memberUsrNames;
     }
     
     inline std::string getDisplayName() const
     {
-        return m_displayName.empty() ? m_usrName : m_displayName;
+        return m_displayName.empty() ? (m_wxName.empty() ? m_usrName : m_wxName) : m_displayName;
     }
     
     inline bool isDisplayNameEmpty() const
     {
         return m_displayName.empty();
+    }
+    
+    inline bool isWxNameEmpty() const
+    {
+        return m_wxName.empty();
+    }
+    
+    inline void setWxName(const std::string& wxName)
+    {
+        m_wxName = wxName;
     }
     
     inline void setDisplayName(const std::string& displayName)
@@ -339,6 +366,12 @@ public:
     inline void setOutputFileName(const std::string& outputFileName)
     {
         m_outputFileName = outputFileName;
+        m_encodedOutputFileName = encodeUrl(outputFileName);
+    }
+    
+    inline std::string getEncodedOutputFileName() const
+    {
+        return m_encodedOutputFileName;
     }
     
     inline bool isChatroom() const
@@ -366,43 +399,112 @@ public:
         return m_usrName + ".jpg";
     }
     
+    void clearTags()
+    {
+        m_tags.clear();
+    }
+    
+    void swapTags(std::vector<std::string> tags)
+    {
+        m_tags.swap(tags);
+    }
+    
+    std::string buildTagDesc(const std::map<uint64_t, std::string>& tags) const
+    {
+        if (m_tags.empty())
+        {
+            return "";
+        }
+        
+        std::vector<std::string> tagDesc(m_tags.size());
+        for (auto it = m_tags.cbegin(); it != m_tags.cend(); ++it)
+        {
+            auto it2 = tags.find(std::stoull(*it));
+            if (it2 != tags.cend())
+            {
+                tagDesc.push_back(it2->second);
+            }
+        }
+        return join(tagDesc, " ");
+    }
+    
 protected:
     bool update(const Friend& f)
     {
-        if (!f.isUsrNameEmpty() && m_usrName != f.m_usrName)
+        if (m_usrName.empty() && m_uidHash.empty())
         {
+            // Can't compare the object
             return false;
         }
-        else if (isUsrNameEmpty())
+        if (!m_usrName.empty())
+        {
+            if (m_usrName != f.m_usrName)
+            {
+                return false;
+            }
+        }
+        else
+        {
+            if (m_uidHash != f.m_uidHash)
+            {
+                return false;
+            }
+        }
+        
+        bool result = false;
+        
+        if (isUsrNameEmpty())
         {
             setUsrName(f.getUsrName());
+            result = true;
+        }
+        if (m_wxName.empty() && !f.m_wxName.empty())
+        {
+            m_wxName = f.m_wxName;
+            result = true;
         }
         
         if (m_displayName.empty() && !f.m_displayName.empty())
         {
             m_displayName = f.m_displayName;
+            result = true;
         }
         if (m_portrait.empty() && !f.m_portrait.empty())
         {
             m_portrait = f.m_portrait;
+            result = true;
         }
         if (m_portraitHD.empty() && !f.m_portraitHD.empty())
         {
             m_portraitHD = f.m_portraitHD;
+            result = true;
         }
-        for (std::map<std::string, std::pair<std::string, std::string>>::iterator it = m_members.begin(); it != m_members.end(); ++it)
+        
+        if (m_members.empty())
         {
-            if (it->second.second.empty())
+            if (!f.m_members.empty())
             {
-                std::map<std::string, std::pair<std::string, std::string>>::const_iterator it2 = f.m_members.find(it->first);
-                if (it2 != f.m_members.cend())
+                m_members = f.m_members;
+                m_memberUsrNames = f.m_memberUsrNames;
+            }
+        }
+        else
+        {
+            for (auto it = m_members.begin(); it != m_members.end(); ++it)
+            {
+                if (it->second.empty())
                 {
-                    it->second.second = it2->second.second;
+                    auto it2 = f.m_members.find(it->first);
+                    if (it2 != f.m_members.cend())
+                    {
+                        it->second = it2->second;
+                        result = true;
+                    }
                 }
             }
         }
-        
-        return true;
+
+        return result;
     }
     
 };
@@ -425,10 +527,43 @@ inline bool Friend::isChatroom(const std::string& usrName)
         || endsWith(usrName, "@im.chatroom");
 }
 
+inline bool Friend::isDefaultAvatar(const std::string& path)
+{
+    return isDefaultAvatar(getFileSize(path), path);
+}
+
+inline bool Friend::isDefaultAvatar(size_t fileSize, const std::string& path)
+{
+    return (fileSize == 5875) && (md5File(path) == "e3e807760b01d24760eba724bac616d6");
+}
+
 inline bool Friend::isInvalidPortrait(const std::string& portrait)
 {
     return !portrait.empty() && (!startsWith(portrait, "http://") && !startsWith(portrait, "https://") && !startsWith(portrait, "file://"));
 }
+
+struct FriendDisplayNameCompare
+{
+    bool operator()(const Friend& f1, const Friend& f2) const
+    {
+        return f1.getDisplayName().compare(f2.getDisplayName()) < 0;
+    }
+    
+    bool operator()(const Friend& f1, const std::string& s2) const
+    {
+        return f1.getDisplayName().compare(s2) < 0;
+    }
+    
+    bool operator()(const Friend* f1, const Friend* f2) const
+    {
+        return f1->getDisplayName().compare(f2->getDisplayName()) < 0;
+    }
+    
+    bool operator()(const Friend* f1, const std::string& s2) const
+    {
+        return f1->getDisplayName().compare(s2) < 0;
+    }
+};
 
 class Friends
 {
@@ -446,6 +581,17 @@ public:
         }
     }
      */
+    
+    void toArraySortedByDisplayName(std::vector<const Friend *>& friends) const
+    {
+        friends.reserve(this->friends.size());
+        for (auto it = this->friends.cbegin(); it != this->friends.cend(); ++it)
+        {
+            friends.push_back(&(it->second));
+        }
+        
+        std::sort(friends.begin(), friends.end(), FriendDisplayNameCompare());
+    }
     
     bool hasFriend(const std::string& hash) const { return friends.find(hash) != friends.end(); }
     const Friend* getFriend(const std::string& uidHash) const
@@ -525,13 +671,15 @@ protected:
     
     unsigned int m_createTime;
     unsigned int m_lastMessageTime;
+    std::string m_lastMessage;
+    std::string m_lastMessageUsrName;
+    std::string m_lastMessageUserDisplayName;
     std::string m_extFileName;
     std::string m_dbFile;
     std::string m_memberIds;
     void *m_data;
     const Friend* m_owner;
-    
-    
+
 public:
     Session(const Friend* owner) : Friend(), m_unreadCount(0), m_recordCount(0), m_createTime(0), m_lastMessageTime(0), m_data(NULL), m_owner(owner)
     {
@@ -561,6 +709,80 @@ public:
         m_lastMessageTime = lastMessageTime;
     }
     
+    inline std::string getLastMessage() const
+    {
+        return m_lastMessage;
+    }
+    
+    inline void setLastMessage(const std::string& lastMessage)
+    {
+        m_lastMessage = lastMessage;
+    }
+    
+    inline void setLastMessage(const std::string& lastMessage, const std::string& lastMessageUsrName, const Friends& friends)
+    {
+        if (startsWith(lastMessage, lastMessageUsrName + ":\n"))
+        {
+            m_lastMessage = lastMessage.substr(lastMessageUsrName.size() + 2);
+        }
+        else
+        {
+            m_lastMessage = lastMessage;
+        }
+        setLastMessageUsrName(lastMessageUsrName, friends);
+    }
+    
+    inline std::string getLastMessageUsrName() const
+    {
+        return m_lastMessageUsrName;
+    }
+    
+    bool isTextMessage() const
+    {
+        return !m_lastMessage.empty() && !startsWith(m_lastMessage, "<?xml") && !startsWith(m_lastMessage, "<msg>") && !startsWith(m_lastMessage, "<voipinvitemsg>") && !startsWith(m_lastMessage, "{\"msgLocalID\":") && !startsWith(m_lastMessage, "<sysmsg");
+    }
+    
+    inline void setLastMessageUsrName(const std::string& lastMessageUsrName, const Friends& friends)
+    {
+        m_lastMessageUsrName = lastMessageUsrName;
+        // std::string uidHash = md5(m_lastMessageUsrName);
+        auto it = m_members.find(m_lastMessageUsrName);
+        // std::map<std::string, std::pair<std::string, std::string>> m_members; // uidHash => <uid,NickName>
+        if (it != m_members.cend() && !it->second.empty())  // "Empty display name" means there is no specified nick name for chat group
+        {
+            m_lastMessageUserDisplayName = it->second;
+        }
+        else
+        {
+            const Friend* f = friends.getFriendByUid(m_lastMessageUsrName);
+            if (NULL != f)
+            {
+                m_lastMessageUserDisplayName = f->getDisplayName();
+            }
+        }
+    }
+    
+    inline void setLastMessageUsrName(const std::string& lastMessageUsrName, const std::string& lastMessageUserDsiplayName)
+    {
+        m_lastMessageUsrName = lastMessageUsrName;
+        m_lastMessageUserDisplayName = lastMessageUserDsiplayName;
+    }
+    
+    inline bool hasLastMessageUserDisplayName() const
+    {
+        return !m_lastMessageUserDisplayName.empty();
+    }
+    
+    inline std::string getLastMessageUserDisplayName() const
+    {
+        return m_lastMessageUserDisplayName;
+    }
+    
+    inline void setLastMessageUserDisplayName(const std::string& lastMessageUserDispalayName)
+    {
+        m_lastMessageUserDisplayName = lastMessageUserDispalayName;
+    }
+    
     inline bool isExtFileNameEmpty() const
     {
         return m_extFileName.empty();
@@ -578,7 +800,7 @@ public:
     
     inline bool isMemberIdsEmpty() const
     {
-        return m_memberIds.empty();
+        return m_members.empty() && m_memberUsrNames.empty();
     }
     
     inline std::string getMemberIds() const
@@ -638,15 +860,25 @@ public:
 
     bool update(const Friend& f)
     {
-        return Friend::update(f);
+        bool result = Friend::update(f);
+        if (!m_lastMessageUsrName.empty() && m_lastMessageUserDisplayName.empty())
+        {
+            std::string memberName = f.getMemberName(m_lastMessageUsrName);
+            if (!memberName.empty())
+            {
+                m_lastMessageUserDisplayName = memberName;
+                result = true;
+            }
+        }
+
+        return result;
     }
     
     const Friend* getOwner() const
     {
         return m_owner;
     }
-    
-    
+
 };
 
 struct SessionUsrNameCompare
@@ -681,6 +913,47 @@ struct SessionLastMsgTimeCompare
     {
         return s1.getLastMessageTime() > s2.getLastMessageTime();
     }
+};
+
+struct WXMSG
+{
+    unsigned int createTime;
+    std::string content;
+    int des;
+    int type;
+    std::string msgId;
+    int64_t msgIdValue;
+    uint64_t msgSvrId;
+    int status;
+    int tableVersion;
+};
+
+struct WXAPPMSG
+{
+    const WXMSG *msg;
+    int appMsgType;
+    std::string appId;
+    std::string appName;
+    std::string localAppIcon;
+    std::string senderUsrName;
+};
+
+struct WXFWDMSG
+{
+    const WXMSG *msg;
+    std::string usrName;
+    std::string displayName;
+    std::string portrait;
+    std::string portraitLD;
+    std::string dataType;
+    std::string subType;
+    std::string dataId;
+    std::string dataFormat;
+    std::string msgTime;
+    std::string srcMsgTime;
+#if !defined(NDEBUG) || defined(DBG_PERF)
+    std::string rawMessage;
+#endif
 };
 
 

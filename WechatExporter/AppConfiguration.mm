@@ -9,8 +9,25 @@
 #import "AppConfiguration.h"
 #include "Utils.h"
 #include "PdfConverterImpl.h"
+#include "ExportOption.h"
+
+#define ASYNC_NONE              0
+#define ASYNC_ONSCROLL          1
+#define ASYNC_PAGER_NORMAL      2
+#define ASYNC_PAGER_ON_YEAR     3
+#define ASYNC_PAGER_ON_MONTH    4
 
 @implementation AppConfiguration
+
++ (NSInteger)getAsyncLoadingValue
+{
+    NSObject *obj = [[NSUserDefaults standardUserDefaults] objectForKey:@"AsyncLoading"];
+    if (nil == obj)
+    {
+        return ASYNC_ONSCROLL;
+    }
+    return [[NSUserDefaults standardUserDefaults] integerForKey:@"AsyncLoading"];
+}
 
 + (void)setDescOrder:(BOOL)descOrder
 {
@@ -63,14 +80,14 @@
     return ![[NSUserDefaults standardUserDefaults] boolForKey:@"UniversalFolder"];
 }
 
-+ (void)setAsyncLoading:(BOOL)asyncLoading
++ (void)setSyncLoading
 {
-    [[NSUserDefaults standardUserDefaults] setBool:(!asyncLoading) forKey:@"SyncLoading"];
+    [[NSUserDefaults standardUserDefaults] setInteger:ASYNC_NONE forKey:@"AsyncLoading"];
 }
 
-+ (BOOL)getAsyncLoading
++ (BOOL)getSyncLoading
 {
-    return ![[NSUserDefaults standardUserDefaults] boolForKey:@"SyncLoading"];
+    return [AppConfiguration getAsyncLoadingValue] == ASYNC_NONE;
 }
 
 + (void)setIncrementalExporting:(BOOL)incrementalExp
@@ -177,19 +194,44 @@
     return [[NSUserDefaults standardUserDefaults] boolForKey:@"ChkUpdateDisabled"];
 }
 
-+ (void)setLoadingDataOnScroll // YES
++ (void)setLoadingDataOnScroll
 {
-    [self setLoadingDataOnScroll:YES];
-}
-
-+ (void)setLoadingDataOnScroll:(BOOL)loadingDataOnScroll
-{
-    [[NSUserDefaults standardUserDefaults] setBool:loadingDataOnScroll forKey:@"LoadingOnScroll"];
+    [[NSUserDefaults standardUserDefaults] setInteger:ASYNC_ONSCROLL forKey:@"AsyncLoading"];
 }
 
 + (BOOL)getLoadingDataOnScroll
 {
-    return [[NSUserDefaults standardUserDefaults] boolForKey:@"LoadingOnScroll"];
+    return [AppConfiguration getAsyncLoadingValue] == ASYNC_ONSCROLL;
+}
+
++ (void)setNormalPagination
+{
+    [[NSUserDefaults standardUserDefaults] setInteger:ASYNC_PAGER_NORMAL forKey:@"AsyncLoading"];
+}
+
++ (BOOL)getNormalPagination
+{
+    return [AppConfiguration getAsyncLoadingValue] == ASYNC_PAGER_NORMAL;
+}
+
++ (void)setPaginationOnYear
+{
+    [[NSUserDefaults standardUserDefaults] setInteger:ASYNC_PAGER_ON_YEAR forKey:@"AsyncLoading"];
+}
+
++ (BOOL)getPaginationOnYear
+{
+    return [AppConfiguration getAsyncLoadingValue] == ASYNC_PAGER_ON_YEAR;
+}
+
++ (void)setPaginationOnMonth
+{
+    [[NSUserDefaults standardUserDefaults] setInteger:ASYNC_PAGER_ON_MONTH forKey:@"AsyncLoading"];
+}
+
++ (BOOL)getPaginationOnMonth
+{
+    return [AppConfiguration getAsyncLoadingValue] == ASYNC_PAGER_ON_MONTH;
 }
 
 + (void)setSupportingFilter:(BOOL)supportingFilter
@@ -200,6 +242,128 @@
 + (BOOL)getSupportingFilter
 {
     return ![[NSUserDefaults standardUserDefaults] boolForKey:@"NoFilter"];
+}
+
++ (void)setOutputDebugLogs:(BOOL)dbgLogs
+{
+    [[NSUserDefaults standardUserDefaults] setBool:dbgLogs forKey:@"OutputDebugLogs"];
+}
+
++ (BOOL)outputDebugLogs
+{
+    return [[NSUserDefaults standardUserDefaults] boolForKey:@"OutputDebugLogs"];
+}
+
++ (void)setIncludingSubscriptions:(BOOL)includingSubscriptions
+{
+    [[NSUserDefaults standardUserDefaults] setBool:includingSubscriptions forKey:@"IncludingSubscriptions"];
+}
+
++ (BOOL)includeSubscriptions
+{
+    return [[NSUserDefaults standardUserDefaults] boolForKey:@"IncludingSubscriptions"];
+}
+
++ (void)setOpenningFolderAfterExp:(BOOL)openningFolderAfterExp
+{
+    [[NSUserDefaults standardUserDefaults] setBool:openningFolderAfterExp forKey:@"OpenningFolderAfterExp"];
+}
+
++ (BOOL)getOpenningFolderAfterExp
+{
+    NSObject *obj = [[NSUserDefaults standardUserDefaults] objectForKey:@"OpenningFolderAfterExp"];
+    return (nil == obj) ? YES : [[NSUserDefaults standardUserDefaults] boolForKey:@"OpenningFolderAfterExp"];
+}
+
++ (void)setSkipGuide:(BOOL)skipGuide
+{
+    [[NSUserDefaults standardUserDefaults] setBool:skipGuide forKey:@"SkipGuide"];
+}
+
++ (BOOL)getSkipGuide
+{
+    return [[NSUserDefaults standardUserDefaults] boolForKey:@"SkipGuide"];
+}
+
++ (void)upgrade
+{
+    NSObject *obj = [[NSUserDefaults standardUserDefaults] objectForKey:@"SyncLoading"];
+    if (obj != nil)
+    {
+        BOOL val = [[NSUserDefaults standardUserDefaults] boolForKey:@"SyncLoading"];
+        [[NSUserDefaults standardUserDefaults] removeObjectForKey:@"SyncLoading"];
+        if (val)
+        {
+            [[NSUserDefaults standardUserDefaults] setInteger:ASYNC_NONE forKey:@"AsyncLoading"];
+        }
+    }
+    
+    obj = [[NSUserDefaults standardUserDefaults] objectForKey:@"LoadingOnScroll"];
+    if (obj != nil)
+    {
+        BOOL val = [[NSUserDefaults standardUserDefaults] boolForKey:@"LoadingOnScroll"];
+        [[NSUserDefaults standardUserDefaults] removeObjectForKey:@"LoadingOnScroll"];
+        if (val)
+        {
+            [[NSUserDefaults standardUserDefaults] setInteger:ASYNC_ONSCROLL forKey:@"AsyncLoading"];
+        }
+    }
+    
+}
+
++ (uint64_t)buildOptions
+{
+    ExportOption options;
+
+    if ([AppConfiguration isTextMode])
+    {
+        options.setTextMode();
+    }
+    if ([AppConfiguration isPdfMode])
+    {
+        options.setPdfMode();
+    }
+    
+    options.setOrder(![AppConfiguration getDescOrder]);
+
+    // getSavingInSession
+    
+    if ([AppConfiguration getSyncLoading])
+    {
+        options.setSyncLoading();
+    }
+    else
+    {
+        // options.setSyncLoading(false);
+        if ([AppConfiguration getLoadingDataOnScroll])
+        {
+            options.setLoadingDataOnScroll([AppConfiguration getLoadingDataOnScroll]);
+        }
+        if ([AppConfiguration getNormalPagination])
+        {
+            options.setPager();
+        }
+        if ([AppConfiguration getPaginationOnYear])
+        {
+            options.setPagerByYear();
+        }
+        if ([AppConfiguration getPaginationOnMonth])
+        {
+            options.setPagerByMonth();
+        }
+        // options.set([AppConfiguration getLoadingDataOnScroll]);
+    }
+    
+    options.setIncrementalExporting([AppConfiguration getIncrementalExporting]);
+    options.supportsFilter([AppConfiguration getSupportingFilter]);
+    
+    options.outputDebugLogs([AppConfiguration outputDebugLogs]);
+    if ([AppConfiguration includeSubscriptions])
+    {
+        options.includesSubscription();
+    }
+
+    return (uint64_t)options;
 }
 
 

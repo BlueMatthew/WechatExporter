@@ -69,28 +69,28 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
-    <LibraryPath>$(ProjectDir)..\release\windows-static\x86\dbg\lib;$(LibraryPath)</LibraryPath>
-    <IncludePath>$(ProjectDir)..\release\windows-static\include;$(ProjectDir)..\WechatExporter\core;$(IncludePath)</IncludePath>
+    <LibraryPath>$(ProjectDir)..\releases\windows-static\x86\dbg\lib;$(LibraryPath)</LibraryPath>
+    <IncludePath>$(ProjectDir)..\releases\windows-static\include;$(ProjectDir)..\WechatExporter\core;$(IncludePath)</IncludePath>
     <OutDir>$(SolutionDir)$(Platform)\$(Configuration)\</OutDir>
     <IntDir>$(Platform)\$(Configuration)\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
     <ExecutablePath>$(ExecutablePath)</ExecutablePath>
-    <IncludePath>$(ProjectDir)..\WechatExporter\core;$(ProjectDir)..\release\windows-static\include;$(IncludePath)</IncludePath>
-    <LibraryPath>$(ProjectDir)..\release\windows-static\x64\dbg\lib;$(LibraryPath)</LibraryPath>
+    <IncludePath>$(ProjectDir)..\WechatExporter\core;$(ProjectDir)..\releases\windows-libs\include;$(IncludePath)</IncludePath>
+    <LibraryPath>$(ProjectDir)..\releases\windows-libs\x64\dbg\lib;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
-    <LibraryPath>$(ProjectDir)..\release\windows-static\x86\lib;$(LibraryPath)</LibraryPath>
-    <IncludePath>$(ProjectDir)..\release\windows-static\include;$(ProjectDir)..\WechatExporter\core;$(IncludePath)</IncludePath>
+    <LibraryPath>$(ProjectDir)..\releases\windows-static\x86\lib;$(LibraryPath)</LibraryPath>
+    <IncludePath>$(ProjectDir)..\releases\windows-static\include;$(ProjectDir)..\WechatExporter\core;$(IncludePath)</IncludePath>
     <OutDir>$(SolutionDir)$(Platform)\$(Configuration)\</OutDir>
     <IntDir>$(Platform)\$(Configuration)\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
-    <LibraryPath>$(ProjectDir)..\release\windows-static\x64\lib;$(LibraryPath)</LibraryPath>
-    <IncludePath>$(ProjectDir)..\WechatExporter\core;$(ProjectDir)..\release\windows-static\include;$(IncludePath)</IncludePath>
+    <LibraryPath>$(ProjectDir)..\releases\windows-libs\x64\rel\lib;$(LibraryPath)</LibraryPath>
+    <IncludePath>$(ProjectDir)..\WechatExporter\core;$(ProjectDir)..\releases\windows-libs\include;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Label="Vcpkg" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <VcpkgEnabled>false</VcpkgEnabled>
@@ -145,11 +145,13 @@ xcopy "$(ProjectDir)..\WechatExporter\res"  "$(OutDir)res"  /Y /S /E</Command>
       <PreprocessorDefinitions>_WINDOWS;STRICT;_DEBUG;CURL_STATICLIB;COMPILE_SDK;NOMINMAX;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalOptions>/source-charset:utf-8 %(AdditionalOptions)</AdditionalOptions>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <AssemblerOutput>NoListing</AssemblerOutput>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>Shell32.lib;Ws2_32.lib;Wldap32.lib;Version.lib;Crypt32.lib;Urlmon.lib;libprotobufd.lib;libcrypto.lib;libcharset.lib;libiconv.lib;lzmad.lib;zlibd.lib;libssl.lib;libcurl-d.lib;libxml2.lib;sqlite3.lib;jsoncpp.lib;SKP_Silk_FIX.lib;libmp3lame-static.lib;libmpghip-static.lib;libplist.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>Shell32.lib;Ws2_32.lib;Wldap32.lib;Version.lib;Crypt32.lib;Urlmon.lib;Rpcrt4.lib;libprotobufd.lib;libcrypto.lib;charset.lib;iconv.lib;lzmad.lib;zlibd.lib;libssl.lib;libcurl-d.lib;libxml2.lib;sqlite3.lib;jsoncpp.lib;libamr.lib;SKP_Silk_FIX.lib;libmp3lame.lib;libplist-2.0.lib;libimobiledevice-1.0.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <DelayLoadDLLs>libcrypto-1_1-x64.dll;libssl-1_1-x64.dll;libimobiledevice-1.0.dll;libplist-2.0.dll;libmp3lame.dll;iconv-2.dll;lzmad.dll</DelayLoadDLLs>
     </Link>
     <ResourceCompile>
       <Culture>0x0409</Culture>
@@ -168,7 +170,11 @@ xcopy "$(ProjectDir)..\WechatExporter\res"  "$(OutDir)res"  /Y /S /E</Command>
     </Midl>
     <PostBuildEvent>
       <Command>if not exist "$(OutDir)res" mkdir "$(OutDir)res"
-xcopy "$(ProjectDir)..\WechatExporter\res"  "$(OutDir)res"  /Y /S /E</Command>
+xcopy "$(ProjectDir)..\WechatExporter\res"  "$(OutDir)res"  /Y /S /E /D
+
+if not exist "$(OutDir)Dlls" mkdir "$(OutDir)Dlls"
+xcopy "$(ProjectDir)..\releases\windows-libs\x64\dbg\bin\*.dll"  "$(OutDir)Dlls"  /Y /S /E /D
+xcopy "$(ProjectDir)..\releases\windows-libs\x64\dbg\bin\*.pdb"  "$(OutDir)Dlls\"  /Y /S /E /D</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -212,10 +218,12 @@ xcopy "$(ProjectDir)..\WechatExporter\res"  "$(OutDir)res"  /Y /S /E</Command>
       <ExceptionHandling />
       <DebugInformationFormat />
       <PreprocessorDefinitions>_WINDOWS;STRICT;NDEBUG;CURL_STATICLIB;COMPILE_SDK;NOMINMAX;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AssemblerOutput>NoListing</AssemblerOutput>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
-      <AdditionalDependencies>Shell32.lib;Ws2_32.lib;Wldap32.lib;Version.lib;Crypt32.lib;Urlmon.lib;libprotobuf.lib;libcrypto.lib;libcharset.lib;libiconv.lib;zlib.lib;lzma.lib;libssl.lib;libcurl.lib;libxml2.lib;sqlite3.lib;jsoncpp.lib;SKP_Silk_FIX.lib;libmp3lame-static.lib;libmpghip-static.lib;libplist.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>Shell32.lib;Ws2_32.lib;Wldap32.lib;Version.lib;Crypt32.lib;Urlmon.lib;Rpcrt4.lib;libprotobuf.lib;libcrypto.lib;charset.lib;iconv.lib;zlib.lib;lzma.lib;libssl.lib;libcurl.lib;libxml2.lib;sqlite3.lib;jsoncpp.lib;libamr.lib;SKP_Silk_FIX.lib;libmp3lame.lib;libplist-2.0.lib;libimobiledevice-1.0.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <DelayLoadDLLs>libcrypto-1_1-x64.dll;libssl-1_1-x64.dll;libimobiledevice-1.0.dll;libplist-2.0.dll;libmp3lame.dll;iconv-2.dll;lzma.dll</DelayLoadDLLs>
     </Link>
     <ResourceCompile>
       <Culture>0x0409</Culture>
@@ -234,7 +242,12 @@ xcopy "$(ProjectDir)..\WechatExporter\res"  "$(OutDir)res"  /Y /S /E</Command>
     </Midl>
     <PostBuildEvent>
       <Command>if not exist "$(OutDir)res" mkdir "$(OutDir)res"
-xcopy "$(ProjectDir)..\WechatExporter\res"  "$(OutDir)res"  /Y /S /E</Command>
+xcopy "$(ProjectDir)..\WechatExporter\res"  "$(OutDir)res"  /Y /S /E /D
+
+xcopy "$(ProjectDir)..\WechatExporter\LICENSES"  "$(OutDir)LICENSES"  /Y /S /E /D /I
+
+if not exist "$(OutDir)Dlls" mkdir "$(OutDir)Dlls"
+xcopy "$(ProjectDir)..\releases\windows-libs\x64\rel\bin\*.dll"  "$(OutDir)Dlls\"  /Y /D</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
@@ -243,10 +256,13 @@ xcopy "$(ProjectDir)..\WechatExporter\res"  "$(OutDir)res"  /Y /S /E</Command>
     <ClCompile Include="..\WechatExporter\core\Downloader.cpp" />
     <ClCompile Include="..\WechatExporter\core\Exporter.cpp" />
     <ClCompile Include="..\WechatExporter\core\FileSystem.cpp" />
+    <ClCompile Include="..\WechatExporter\core\IDeviceBackup.cpp" />
     <ClCompile Include="..\WechatExporter\core\ITunesParser.cpp" />
     <ClCompile Include="..\WechatExporter\core\MessageParser.cpp" />
     <ClCompile Include="..\WechatExporter\core\RawMessage.cpp" />
+    <ClCompile Include="..\WechatExporter\core\ResManager.cpp" />
     <ClCompile Include="..\WechatExporter\core\TaskManager.cpp" />
+    <ClCompile Include="..\WechatExporter\core\Template.cpp" />
     <ClCompile Include="..\WechatExporter\core\Updater.cpp" />
     <ClCompile Include="..\WechatExporter\core\Utils.cpp" />
     <ClCompile Include="..\WechatExporter\core\Utils_audio.cpp" />
@@ -270,26 +286,33 @@ xcopy "$(ProjectDir)..\WechatExporter\res"  "$(OutDir)res"  /Y /S /E</Command>
     <ClInclude Include="..\WechatExporter\core\AsyncExecutor.h" />
     <ClInclude Include="..\WechatExporter\core\AsyncTask.h" />
     <ClInclude Include="..\WechatExporter\core\Downloader.h" />
+    <ClInclude Include="..\WechatExporter\core\ExportContext.h" />
     <ClInclude Include="..\WechatExporter\core\Exporter.h" />
     <ClInclude Include="..\WechatExporter\core\ExportNotifier.h" />
+    <ClInclude Include="..\WechatExporter\core\ExportOption.h" />
     <ClInclude Include="..\WechatExporter\core\FileSystem.h" />
+    <ClInclude Include="..\WechatExporter\core\IDeviceBackup.h" />
     <ClInclude Include="..\WechatExporter\core\ITunesParser.h" />
     <ClInclude Include="..\WechatExporter\core\Logger.h" />
     <ClInclude Include="..\WechatExporter\core\MbdbReader.h" />
     <ClInclude Include="..\WechatExporter\core\MessageParser.h" />
     <ClInclude Include="..\WechatExporter\core\RawMessage.h" />
+    <ClInclude Include="..\WechatExporter\core\ResManager.h" />
     <ClInclude Include="..\WechatExporter\core\semaphore.h" />
     <ClInclude Include="..\WechatExporter\core\TaskManager.h" />
+    <ClInclude Include="..\WechatExporter\core\Template.h" />
     <ClInclude Include="..\WechatExporter\core\Updater.h" />
     <ClInclude Include="..\WechatExporter\core\Utils.h" />
     <ClInclude Include="..\WechatExporter\core\WechatObjects.h" />
     <ClInclude Include="..\WechatExporter\core\WechatParser.h" />
+    <ClInclude Include="..\WechatExporter\core\WechatSource.h" />
     <ClInclude Include="..\WechatExporter\core\XmlParser.h" />
     <ClInclude Include="AboutDlg.h" />
     <ClInclude Include="ColoredControls.h" />
     <ClInclude Include="Core.h" />
     <ClInclude Include="AppConfiguration.h" />
     <ClInclude Include="PdfConverterImpl.h" />
+    <ClInclude Include="BackupDlg.h" />
     <ClInclude Include="ProgressListViewCtrl.h" />
     <ClInclude Include="ExportNotifierImpl.h" />
     <ClInclude Include="ITunesDetector.h" />
@@ -299,6 +322,7 @@ xcopy "$(ProjectDir)..\WechatExporter\res"  "$(OutDir)res"  /Y /S /E</Command>
     <ClInclude Include="resource.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="TextProgressBarCtrl.h" />
+    <ClInclude Include="ToolTipButton.h" />
     <ClInclude Include="VersionDetector.h" />
     <ClInclude Include="View.h" />
     <ClInclude Include="ViewHelper.h" />
@@ -308,6 +332,8 @@ xcopy "$(ProjectDir)..\WechatExporter\res"  "$(OutDir)res"  /Y /S /E</Command>
   </ItemGroup>
   <ItemGroup>
     <Image Include="res\idr_main.ico" />
+    <Image Include="res\iPhone.ico" />
+    <Image Include="res\iTunes.ico" />
     <Image Include="res\toolbar.bmp" />
     <Image Include="res\WechatExporter.ico" />
   </ItemGroup>

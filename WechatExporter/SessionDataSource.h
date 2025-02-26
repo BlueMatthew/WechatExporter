@@ -26,6 +26,10 @@
 @property (assign) NSInteger recordCount;
 @property (strong) NSString *userDisplayName;
 @property (strong) NSString *usrName;
+@property (strong) NSString *lastMessage;
+#ifndef NDEBUG
+@property (assign) NSUInteger lastMessageTime;
+#endif
 // @property (assign) NSInteger userPointer;
 // @property (assign) NSInteger sessionPointer;
 
@@ -39,7 +43,10 @@
 
 @interface SessionDataSource : NSObject<NSTableViewDataSource>
 
-- (void)loadData:(const std::vector<std::pair<Friend, std::vector<Session>>> *)usersAndSessions withAllUsers:(BOOL)allUsers indexOfSelectedUser:(NSInteger)indexOfSelectedUser;
+@property (nonatomic, assign) NSInteger rowInProgress;
+@property (nonatomic, assign) NSUInteger numberOfMsgExported;
+
+- (void)loadData:(const std::vector<std::pair<Friend, std::vector<Session>>> *)usersAndSessions withAllUsers:(BOOL)allUsers indexOfSelectedUser:(NSInteger)indexOfSelectedUser includesSubscription:(BOOL)includesSubscriptions;
 - (void)getSelectedUserAndSessions:(std::map<std::string, std::map<std::string, void *>>&)usersAndSessions;
 
 - (void)bindCellView:(NSTableCellView *)cellView atRow:(NSInteger)row andColumnId:(NSString *)identifier;

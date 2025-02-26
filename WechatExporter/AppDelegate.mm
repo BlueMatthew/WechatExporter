@@ -25,46 +25,96 @@
 
 - (void)applicationDidFinishLaunching:(NSNotification *)notification
 {
+    [AppConfiguration upgrade];
+    
     Exporter::initializeExporter();
     
     m_pdfSupported = [AppConfiguration IsPdfSupported];
     
-    NSMenuItem *menuItem = nil;
     NSMenu *mainMenu = [[NSApplication sharedApplication] mainMenu];
     NSMenuItem *fileMenu = [mainMenu itemAtIndex:1];
-    menuItem = [fileMenu.submenu itemAtIndex:0];
-    menuItem.state = [AppConfiguration isCheckingUpdateDisabled] ? NSControlStateValueOff : NSControlStateValueOn;
+    for (NSMenuItem *menuItem in fileMenu.submenu.itemArray)
+    {
+        if ([@"updater" isEqual:menuItem.identifier])
+        {
+            menuItem.state = [AppConfiguration isCheckingUpdateDisabled] ? NSControlStateValueOff : NSControlStateValueOn;
+        }
+        else if ([@"openFolder" isEqual:menuItem.identifier])
+        {
+            menuItem.state = [AppConfiguration getOpenningFolderAfterExp] ? NSControlStateValueOn : NSControlStateValueOff;
+        }
+        else if ([@"outputDbgLogs" isEqual:menuItem.identifier])
+        {
+            menuItem.state = [AppConfiguration outputDebugLogs] ? NSControlStateValueOn : NSControlStateValueOff;
+        }
+    }
     
-    NSMenuItem *formatMenu = [mainMenu itemAtIndex:2];
-    menuItem = [formatMenu.submenu itemAtIndex:0];
     BOOL htmlMode = [AppConfiguration isHtmlMode];
-    menuItem.state = htmlMode ? NSControlStateValueOn : NSControlStateValueOff;
-    menuItem = [formatMenu.submenu itemAtIndex:1];
-    menuItem.state = [AppConfiguration isTextMode] ? NSControlStateValueOn : NSControlStateValueOff;
-    menuItem = [formatMenu.submenu itemAtIndex:2];
-    menuItem.state = [AppConfiguration isPdfMode] && m_pdfSupported ? NSControlStateValueOn : NSControlStateValueOff;
+    NSMenuItem *formatMenu = [mainMenu itemAtIndex:2];
+    for (NSMenuItem *menuItem in formatMenu.submenu.itemArray)
+    {
+        if ([@"htmlMode" isEqual:menuItem.identifier])
+        {
+            menuItem.state = htmlMode ? NSControlStateValueOn : NSControlStateValueOff;
+        }
+        else if ([@"textMode" isEqual:menuItem.identifier])
+        {
+            menuItem.state = [AppConfiguration isTextMode] ? NSControlStateValueOn : NSControlStateValueOff;
+        }
+        else if ([@"pdfMode" isEqual:menuItem.identifier])
+        {
+            menuItem.state = [AppConfiguration isPdfMode] && m_pdfSupported ? NSControlStateValueOn : NSControlStateValueOff;
+        }
+    }
     
     NSMenuItem *optionsMenu = [mainMenu itemAtIndex:3];
-    // [optionsMenu.submenu setAutoenablesItems:NO]; // Set in storyboard
-    menuItem = [optionsMenu.submenu itemAtIndex:0];
-    menuItem.state = [AppConfiguration getDescOrder] ? NSControlStateValueOn : NSControlStateValueOff;
-    menuItem = [optionsMenu.submenu itemAtIndex:1];
-    menuItem.state = [AppConfiguration getSavingInSession] ? NSControlStateValueOn : NSControlStateValueOff;
-    
-    menuItem = [optionsMenu.submenu itemAtIndex:3];
-    menuItem.state = [AppConfiguration getAsyncLoading] ? NSControlStateValueOn : NSControlStateValueOff;
-    menuItem.enabled = htmlMode;
-    menuItem = [optionsMenu.submenu itemAtIndex:4];
-    menuItem.state = [AppConfiguration getLoadingDataOnScroll] ? NSControlStateValueOn : NSControlStateValueOff;
-    menuItem.enabled = htmlMode && [AppConfiguration getAsyncLoading];
-    
-    menuItem = [optionsMenu.submenu itemAtIndex:6];
-    menuItem.state = [AppConfiguration getSupportingFilter] ? NSControlStateValueOn : NSControlStateValueOff;
-    menuItem.enabled = htmlMode;
-    
-    menuItem = [optionsMenu.submenu itemAtIndex:8];
-    menuItem.state = [AppConfiguration getIncrementalExporting] ? NSControlStateValueOn : NSControlStateValueOff;
-
+    for (NSMenuItem *menuItem in optionsMenu.submenu.itemArray)
+    {
+        if ([@"descOrder" isEqual:menuItem.identifier])
+        {
+            menuItem.state = [AppConfiguration getDescOrder] ? NSControlStateValueOn : NSControlStateValueOff;
+        }
+        else if ([@"asyncLoadingOnScroll" isEqual:menuItem.identifier])
+        {
+            menuItem.state = [AppConfiguration getLoadingDataOnScroll] ? NSControlStateValueOn : NSControlStateValueOff;
+            menuItem.enabled = htmlMode;
+        }
+        else if ([@"asyncPagerNormal" isEqual:menuItem.identifier])
+        {
+            menuItem.state = [AppConfiguration getNormalPagination] ? NSControlStateValueOn : NSControlStateValueOff;
+            menuItem.enabled = htmlMode;
+        }
+        else if ([@"asyncPagerYear" isEqual:menuItem.identifier])
+        {
+            menuItem.state = [AppConfiguration getPaginationOnYear] ? NSControlStateValueOn : NSControlStateValueOff;
+            menuItem.enabled = htmlMode;
+        }
+        else if ([@"asyncPagerMonth" isEqual:menuItem.identifier])
+        {
+            menuItem.state = [AppConfiguration getPaginationOnMonth] ? NSControlStateValueOn : NSControlStateValueOff;
+            menuItem.enabled = htmlMode;
+        }
+        else if ([@"filter" isEqual:menuItem.identifier])
+        {
+            menuItem.state = [AppConfiguration getSupportingFilter] ? NSControlStateValueOn : NSControlStateValueOff;
+            menuItem.enabled = htmlMode;
+        }
+        else if ([@"incrementalExp" isEqual:menuItem.identifier])
+        {
+            menuItem.state = [AppConfiguration getIncrementalExporting] ? NSControlStateValueOn : NSControlStateValueOff;
+        }
+        else if ([@"includingSubscriptions" isEqual:menuItem.identifier])
+        {
+            menuItem.state = [AppConfiguration includeSubscriptions] ? NSControlStateValueOn : NSControlStateValueOff;
+#ifndef NDEBUG
+            menuItem.hidden = NO;
+#endif
+        }
+        else
+        {
+            
+        }
+    }
 }
 
 - (void)applicationWillTerminate:(NSNotification *)aNotification
@@ -80,13 +130,22 @@
 
 - (IBAction)fileMenuItemClick:(NSMenuItem *)sender
 {
-    if ([sender.identifier isEqualToString:@"updater"])
+    if ([sender.identifier isEqualToString:@"openFolder"])
+    {
+        [AppConfiguration setOpenningFolderAfterExp:(sender.state == NSControlStateValueOff)];
+        sender.state = (sender.state == NSControlStateValueOff) ? NSControlStateValueOn : NSControlStateValueOff;
+    }
+    else if ([sender.identifier isEqualToString:@"outputDbgLogs"])
+    {
+        [AppConfiguration setOutputDebugLogs:(sender.state == NSControlStateValueOff)];
+        sender.state = (sender.state == NSControlStateValueOff) ? NSControlStateValueOn : NSControlStateValueOff;
+    }
+    else if ([sender.identifier isEqualToString:@"updater"])
     {
         [AppConfiguration setCheckingUpdateDisabled:(sender.state == NSControlStateValueOn)];
         sender.state = (sender.state == NSControlStateValueOff) ? NSControlStateValueOn : NSControlStateValueOff;
     }
 }
-
 
 - (IBAction)formatMenuItemClick:(NSMenuItem *)sender
 {
@@ -97,8 +156,6 @@
             NSInteger outputFormat = [sender.identifier isEqualToString:@"htmlMode"] ? OUTPUT_FORMAT_HTML : ([sender.identifier isEqualToString:@"pdfMode"] ? OUTPUT_FORMAT_PDF : OUTPUT_FORMAT_TEXT);
             [AppConfiguration setOutputFormat:outputFormat];
             BOOL htmlMode = [AppConfiguration isHtmlMode];
-            
-            // sender.state = NSControlStateValueOn;
             
             NSMenuItem *menuItem = nil;
             NSMenu *mainMenu = [[NSApplication sharedApplication] mainMenu];
@@ -111,13 +168,17 @@
             }
 
             NSMenuItem *optionsMenu = [mainMenu itemAtIndex:3];
-            menuItem = [optionsMenu.submenu itemAtIndex:3];
-            menuItem.enabled = htmlMode;
-            menuItem = [optionsMenu.submenu itemAtIndex:4];
-            menuItem.enabled = htmlMode && [AppConfiguration getAsyncLoading];
-            
-            menuItem = [optionsMenu.submenu itemAtIndex:6];
-            menuItem.enabled = htmlMode;
+            for (NSMenuItem *menuItem in optionsMenu.submenu.itemArray)
+            {
+                if ([menuItem.identifier hasPrefix:@"async"])
+                {
+                    menuItem.enabled = htmlMode;
+                }
+                else if ([@"filter" isEqual:menuItem.identifier])
+                {
+                    menuItem.enabled = htmlMode;
+                }
+            }
         }
     }
 }
@@ -125,8 +186,16 @@
 - (IBAction)optionsMenuItemClick:(NSMenuItem *)sender
 {
     BOOL newValue = sender.state == NSControlStateValueOff;
-    sender.state = newValue ? NSControlStateValueOn : NSControlStateValueOff;
-    if ([sender.identifier isEqualToString:@"descOrder"])
+    // if (![sender.identifier hasPrefix:@"pager"])
+    {
+        sender.state = newValue ? NSControlStateValueOn : NSControlStateValueOff;
+    }
+    
+    if ([sender.identifier isEqualToString:@"includingSubscriptions"])
+    {
+        [AppConfiguration setIncludingSubscriptions:newValue];
+    }
+    else if ([sender.identifier isEqualToString:@"descOrder"])
     {
         [AppConfiguration setDescOrder:newValue];
     }
@@ -134,21 +203,28 @@
     {
         [AppConfiguration setSavingInSession:newValue];
     }
+    /*
     else if ([sender.identifier isEqualToString:@"asyncLoading"])
     {
         [AppConfiguration setAsyncLoading:newValue];
 
-        NSMenuItem *menuItem = nil;
         NSMenu *mainMenu = [[NSApplication sharedApplication] mainMenu];
         NSMenuItem *optionsMenu = [mainMenu itemAtIndex:3];
         
-        menuItem = [optionsMenu.submenu itemAtIndex:4];
-        menuItem.enabled = [AppConfiguration isHtmlMode] && [AppConfiguration getAsyncLoading];
+        for (NSMenuItem *menuItem in optionsMenu.submenu.itemArray)
+        {
+            if ([@"loadingOnScroll" isEqual:menuItem.identifier])
+            {
+                menuItem.enabled = [AppConfiguration isHtmlMode] && [AppConfiguration getAsyncLoading];
+            }
+        }
     }
-    else if ([sender.identifier isEqualToString:@"loadingOnScroll"])
+     
+    else if ([sender.identifier isEqualToString:@"asyncLoadingOnScroll"])
     {
         [AppConfiguration setLoadingDataOnScroll:newValue];
     }
+     */
     else if ([sender.identifier isEqualToString:@"filter"])
     {
         [AppConfiguration setSupportingFilter:newValue];
@@ -157,6 +233,44 @@
     {
         [AppConfiguration setIncrementalExporting:newValue];
     }
+    else if ([sender.identifier hasPrefix:@"async"])
+    {
+        if (newValue)
+        {
+            for (NSMenuItem *menuItem in sender.parentItem.submenu.itemArray)
+            {
+                if ((menuItem != sender) && [menuItem.identifier hasPrefix:@"async"])
+                {
+                    if (menuItem.state == NSControlStateValueOn)
+                    {
+                        menuItem.state = NSControlStateValueOff;
+                    }
+                }
+            }
+            
+            if ([sender.identifier isEqualToString:@"asyncLoadingOnScroll"])
+            {
+                [AppConfiguration setLoadingDataOnScroll];
+            }
+            else if ([sender.identifier isEqualToString:@"asyncPagerNormal"])
+            {
+                [AppConfiguration setNormalPagination];
+            }
+            else if ([sender.identifier isEqualToString:@"asyncPagerYear"])
+            {
+                [AppConfiguration setPaginationOnYear];
+            }
+            else if ([sender.identifier isEqualToString:@"asyncPagerMonth"])
+            {
+                [AppConfiguration setPaginationOnMonth];
+            }
+        }
+        else
+        {
+            [AppConfiguration setSyncLoading];
+        }
+    }
 }
+
 
 @end

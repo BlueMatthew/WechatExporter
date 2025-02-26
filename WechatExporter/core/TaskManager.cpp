@@ -235,7 +235,11 @@ void TaskManager::onTaskComplete(const AsyncExecutor* executor, const AsyncExecu
         lock.unlock();
         
 #ifndef NDEBUG
-        if (succeeded)
+        if (succeeded
+#ifdef FAKE_DOWNLOAD
+            && task->getType() != TASK_TYPE_DOWNLOAD
+#endif
+            )
         {
             assert(existsFile(downloadTask->getOutput()));
         }
@@ -329,7 +333,7 @@ void TaskManager::download(const Session* session, const std::string &url, const
 }
 
 #ifdef USING_ASYNC_TASK_FOR_MP3
-void TaskManager::convertAudio(const Session* session, const std::string& pcmPath, const std::string& mp3Path, unsigned int mtime)
+void TaskManager::convertAudio(const Session* session, const std::string& pcmPath, const std::string& mp3Path, TaskManager::AUDIO_FORMAT format, unsigned int mtime)
 {
     if (NULL == session)
     {
@@ -337,9 +341,13 @@ void TaskManager::convertAudio(const Session* session, const std::string& pcmPat
     }
     
     Mp3Task *task = new Mp3Task(pcmPath, mp3Path, mtime);
-    task->setTaskId(AsyncExecutor::genNextTaskId());
-    task->setUserData(reinterpret_cast<const void *>(session));
+    if (NULL != task)
+    {
+        task->setTaskId(AsyncExecutor::genNextTaskId());
+        task->setUserData(reinterpret_cast<const void *>(session));
+        
+        m_audioExecutor->addTask(task);
+    }
     
-    m_audioExecutor->addTask(task);
 }
 #endif

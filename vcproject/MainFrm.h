@@ -39,14 +39,19 @@ public:
 		COMMAND_ID_HANDLER(ID_APP_ABOUT, OnAppAbout)
 		COMMAND_ID_HANDLER(ID_HELP_HOMEPAGE, OnHelpHomePage)
 		COMMAND_ID_HANDLER(ID_FILE_CHK_UPDATE, OnCheckUpdate)
+		COMMAND_ID_HANDLER(ID_FILE_EXP_ITUNES, OnExportITunes)
+		COMMAND_ID_HANDLER(ID_FILE_DBG_LOGS, OnOutputDbgLogs)
+		COMMAND_ID_HANDLER(ID_FILE_OPEN_FOLDER, OnOpenFolder)
 		COMMAND_RANGE_HANDLER(ID_FORMAT_HTML, ID_FORMAT_PDF, OnOutputFormat)
-		COMMAND_ID_HANDLER(ID_OPT_SAVING_IN_SESSION, OnSavingInSession)
 		COMMAND_ID_HANDLER(ID_OPT_DESC_ORDER, OnDescOrder)
 		COMMAND_ID_HANDLER(ID_OPT_DL_EMOJI, OnDownloadingEmoji)
+		COMMAND_ID_HANDLER(ID_OPT_LM_ONSCROLL, OnAsyncLoading)
+		COMMAND_ID_HANDLER(ID_OPT_NORMALPAGINATION, OnAsyncLoading)
+		COMMAND_ID_HANDLER(ID_OPT_PAGINATION_YEAR, OnAsyncLoading)
+		COMMAND_ID_HANDLER(ID_OPT_PAGINATION_MONTH, OnAsyncLoading)
 		COMMAND_ID_HANDLER(ID_OPT_FILTER, OnFilter)
-		COMMAND_ID_HANDLER(ID_OPT_ASYNC_LOADING, OnAsyncFormat)
-		COMMAND_ID_HANDLER(ID_OPT_LM_ONSCROLL, OnLoadingDataOnScroll)
 		COMMAND_ID_HANDLER(ID_OPT_INCREMENTALEXP, OnIncrementalExporting)
+		COMMAND_ID_HANDLER(ID_OPT_SUBSCRIPTIONS, OnIncludeSubscriptions)
 		CHAIN_MSG_MAP(CUpdateUI<CMainFrame>)
 		CHAIN_MSG_MAP(CFrameWindowImpl<CMainFrame>)
 	END_MSG_MAP()
@@ -69,28 +74,30 @@ public:
 		pLoop->AddMessageFilter(this);
 		pLoop->AddIdleHandler(this);
 
+		AppConfiguration::upgrade();
+
 		CMenuHandle menu = GetMenu();
 		CMenuHandle subMenuFile = menu.GetSubMenu(0);
 		subMenuFile.CheckMenuItem(ID_FILE_CHK_UPDATE, MF_BYCOMMAND | (AppConfiguration::GetCheckingUpdateDisabled() ? MF_UNCHECKED : MF_CHECKED));
+		subMenuFile.CheckMenuItem(ID_FILE_DBG_LOGS, MF_BYCOMMAND | (AppConfiguration::OutputDebugLogs() ? MF_CHECKED : MF_UNCHECKED));
+		subMenuFile.CheckMenuItem(ID_FILE_OPEN_FOLDER, MF_BYCOMMAND | (AppConfiguration::GetOpenningFolderAfterExp() ? MF_CHECKED : MF_UNCHECKED));
+		AppConfiguration::upgrade();
 
 		CMenuHandle subMenuFormat = menu.GetSubMenu(1);
 		UINT outputFormat = AppConfiguration::GetOutputFormat();
 		subMenuFormat.CheckMenuRadioItem(ID_FORMAT_HTML, ID_FORMAT_PDF, ID_FORMAT_HTML + outputFormat, MF_BYCOMMAND | MFT_RADIOCHECK);
-		
+
 		CMenuHandle subMenuOptions = menu.GetSubMenu(2);
 		subMenuOptions.CheckMenuItem(ID_OPT_DESC_ORDER, MF_BYCOMMAND | (AppConfiguration::GetDescOrder() ? MF_CHECKED : MF_UNCHECKED));
-		subMenuOptions.CheckMenuItem(ID_OPT_SAVING_IN_SESSION, MF_BYCOMMAND | (AppConfiguration::GetSavingInSession() ? MF_CHECKED : MF_UNCHECKED));
+		// subMenuOptions.CheckMenuItem(ID_OPT_SAVING_IN_SESSION, MF_BYCOMMAND | (AppConfiguration::GetSavingInSession() ? MF_CHECKED : MF_UNCHECKED));
 		subMenuOptions.CheckMenuItem(ID_OPT_DL_EMOJI, MF_BYCOMMAND | (AppConfiguration::GetUsingRemoteEmoji() ? MF_UNCHECKED : MF_CHECKED));
 		subMenuOptions.CheckMenuItem(ID_OPT_FILTER, MF_BYCOMMAND | (AppConfiguration::GetSupportingFilter() ? MF_CHECKED : MF_UNCHECKED));
 
-		BOOL asyncLoading = AppConfiguration::GetAsyncLoading();
-		subMenuOptions.CheckMenuItem (ID_OPT_ASYNC_LOADING, MF_BYCOMMAND | (asyncLoading ? MF_CHECKED : MF_UNCHECKED));
-		subMenuOptions.EnableMenuItem(ID_OPT_ASYNC_LOADING, MF_BYCOMMAND | ((outputFormat != AppConfiguration::OUTPUT_FORMAT_HTML) ? MF_DISABLED : MF_ENABLED));
-		
-		subMenuOptions.EnableMenuItem(ID_OPT_LM_ONSCROLL, MF_BYCOMMAND | ((outputFormat == AppConfiguration::OUTPUT_FORMAT_HTML) && asyncLoading ? MF_ENABLED : MF_DISABLED));
-		subMenuOptions.CheckMenuItem(ID_OPT_LM_ONSCROLL, MF_BYCOMMAND | (AppConfiguration::GetLoadingDataOnScroll() ? MF_CHECKED : MF_UNCHECKED));
+		InitAsyncLoadingMenu(subMenuOptions, TRUE);
 
 		subMenuOptions.CheckMenuItem(ID_OPT_INCREMENTALEXP, MF_BYCOMMAND | (AppConfiguration::GetIncrementalExporting() ? MF_CHECKED : MF_UNCHECKED));
+		subMenuOptions.CheckMenuItem(ID_OPT_SUBSCRIPTIONS, MF_BYCOMMAND | (AppConfiguration::IncludeSubscriptions() ? MF_CHECKED : MF_UNCHECKED));
+		subMenuOptions.RemoveMenu(ID_OPT_SUBSCRIPTIONS, MF_BYCOMMAND);
 
 		return 0;
 	}
@@ -110,9 +117,12 @@ public:
 	LRESULT OnInitMenu(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& bHandled)
 	{
 		BOOL enabled = m_view.IsViewIdle();
-		
+
 		CMenuHandle menu = GetMenu();
 		CMenuHandle subMenuFile = menu.GetSubMenu(0);
+		subMenuFile.EnableMenuItem(ID_FILE_EXP_ITUNES, MF_BYCOMMAND | (enabled ? MF_ENABLED : MF_DISABLED));
+		subMenuFile.EnableMenuItem(ID_FILE_DBG_LOGS, MF_BYCOMMAND | (enabled ? MF_ENABLED : MF_DISABLED));
+		subMenuFile.EnableMenuItem(ID_FILE_OPEN_FOLDER, MF_BYCOMMAND | (enabled ? MF_ENABLED : MF_DISABLED));
 
 		CMenuHandle subMenuFormat = menu.GetSubMenu(1);
 		subMenuFormat.EnableMenuItem(ID_FORMAT_HTML, MF_BYCOMMAND | (enabled ? MF_ENABLED : MF_DISABLED));
@@ -121,35 +131,36 @@ public:
 
 		CMenuHandle subMenuOptions = menu.GetSubMenu(2);
 		subMenuOptions.EnableMenuItem(ID_OPT_DESC_ORDER, MF_BYCOMMAND | (enabled ? MF_ENABLED : MF_DISABLED));
-		subMenuOptions.EnableMenuItem(ID_OPT_SAVING_IN_SESSION, MF_BYCOMMAND | (enabled ? MF_ENABLED : MF_DISABLED));
+		// subMenuOptions.EnableMenuItem(ID_OPT_SAVING_IN_SESSION, MF_BYCOMMAND | (enabled ? MF_ENABLED : MF_DISABLED));
 		subMenuOptions.EnableMenuItem(ID_OPT_DL_EMOJI, MF_BYCOMMAND | (enabled ? MF_ENABLED : MF_DISABLED));
 		subMenuOptions.EnableMenuItem(ID_OPT_FILTER, MF_BYCOMMAND | (enabled ? MF_ENABLED : MF_DISABLED));
 
-		UINT outputFormat = AppConfiguration::GetOutputFormat();
-		BOOL asyncLoadingEnabled = (outputFormat == AppConfiguration::OUTPUT_FORMAT_HTML);
-		if (asyncLoadingEnabled)
-		{
-			asyncLoadingEnabled = enabled;
-		}
-		subMenuOptions.EnableMenuItem(ID_OPT_ASYNC_LOADING, MF_BYCOMMAND | (asyncLoadingEnabled ? MF_ENABLED : MF_DISABLED));
-		subMenuOptions.EnableMenuItem(ID_OPT_LM_ONSCROLL, MF_BYCOMMAND | (asyncLoadingEnabled && AppConfiguration::GetAsyncLoading() ? MF_ENABLED : MF_DISABLED));
-		subMenuOptions.CheckMenuItem(ID_OPT_LM_ONSCROLL, MF_BYCOMMAND | (AppConfiguration::GetLoadingDataOnScroll() ? MF_CHECKED : MF_UNCHECKED));
+		InitAsyncLoadingMenu(subMenuOptions, enabled);
 
 		subMenuOptions.CheckMenuItem(ID_OPT_INCREMENTALEXP, MF_BYCOMMAND | (AppConfiguration::GetIncrementalExporting() ? MF_CHECKED : MF_UNCHECKED));
+		subMenuOptions.CheckMenuItem(ID_OPT_SUBSCRIPTIONS, MF_BYCOMMAND | (AppConfiguration::IncludeSubscriptions() ? MF_CHECKED : MF_UNCHECKED));
 
 		return 1;
 	}
 
-	LRESULT OnSavingInSession(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& /*bHandled*/)
+	void InitAsyncLoadingMenu(CMenuHandle& subMenuOptions, BOOL isIdle)
 	{
-		CMenuHandle menu = GetMenu();
-		CMenuHandle subMenu = menu.GetSubMenu(2);
-		UINT menuState = subMenu.GetMenuState(ID_OPT_SAVING_IN_SESSION, MF_BYCOMMAND);
-		BOOL curSavingInSesstion = (menuState != 0xFFFFFFFF) && ((menuState & MF_CHECKED) == MF_CHECKED) ? TRUE : FALSE;
-		subMenu.CheckMenuItem(ID_OPT_SAVING_IN_SESSION, MF_BYCOMMAND | (curSavingInSesstion ? MF_UNCHECKED : MF_CHECKED));
-		AppConfiguration::SetSavingInSession(!curSavingInSesstion);
-		
-		return 0;
+		UINT outputFormat = AppConfiguration::GetOutputFormat();
+		BOOL asyncLoadingEnabled = (outputFormat == AppConfiguration::OUTPUT_FORMAT_HTML);
+		if (asyncLoadingEnabled)
+		{
+			asyncLoadingEnabled = isIdle;
+		}
+
+		DWORD asyncLoading = AppConfiguration::GetAsyncLoading();
+		UINT ids[] = { ID_OPT_LM_ONSCROLL, ID_OPT_NORMALPAGINATION, ID_OPT_PAGINATION_YEAR, ID_OPT_PAGINATION_MONTH };
+		UINT asyncLoadingStates[] = { ASYNC_ONSCROLL, ASYNC_PAGER_NORMAL, ASYNC_PAGER_ON_YEAR, ASYNC_PAGER_ON_MONTH };
+
+		for (int idx = 0; idx < (sizeof(ids) / sizeof(UINT)); ++idx)
+		{
+			subMenuOptions.EnableMenuItem(ids[idx], MF_BYCOMMAND | (asyncLoadingEnabled ? MF_ENABLED : MF_DISABLED));
+			subMenuOptions.CheckMenuItem(ids[idx], MF_BYCOMMAND | ((asyncLoading == asyncLoadingStates[idx]) ? MF_CHECKED : MF_UNCHECKED));
+		}
 	}
 
 	LRESULT OnFilter(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& /*bHandled*/)
@@ -196,57 +207,110 @@ public:
 		UINT outputFormat = wID - ID_FORMAT_HTML;
 		AppConfiguration::SetOutputFormat(outputFormat);
 
-		subMenuFormat.EnableMenuItem(ID_OPT_ASYNC_LOADING, MF_BYCOMMAND | ((outputFormat != AppConfiguration::OUTPUT_FORMAT_HTML) ? MF_DISABLED : MF_ENABLED));
+		// subMenuFormat.EnableMenuItem(ID_OPT_ASYNC_LOADING, MF_BYCOMMAND | ((outputFormat != AppConfiguration::OUTPUT_FORMAT_HTML) ? MF_DISABLED : MF_ENABLED));
 		
 		return 0;
 	}
 
-	LRESULT OnAsyncFormat(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/)
+	LRESULT OnIncrementalExporting(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/, BOOL& /*bHandled*/)
 	{
 		CMenuHandle menu = GetMenu();
 		CMenuHandle subMenu = menu.GetSubMenu(2);
-		UINT menuState = subMenu.GetMenuState(ID_OPT_ASYNC_LOADING, MF_BYCOMMAND);
-		BOOL asyncLoading = (menuState != 0xFFFFFFFF) && ((menuState & MF_CHECKED) == MF_CHECKED) ? TRUE : FALSE;
-		subMenu.CheckMenuItem(ID_OPT_ASYNC_LOADING, MF_BYCOMMAND | (asyncLoading ? MF_UNCHECKED : MF_CHECKED));
-		AppConfiguration::SetAsyncLoading(!asyncLoading);
-
-		subMenu.EnableMenuItem(ID_OPT_LM_ONSCROLL, MF_BYCOMMAND | ((!asyncLoading) ? MF_ENABLED : MF_DISABLED));
-
-		return 0;
-	}
-
-	LRESULT OnIncrementalExporting(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/)
-	{
-		CMenuHandle menu = GetMenu();
-		CMenuHandle subMenu = menu.GetSubMenu(2);
-		UINT menuState = subMenu.GetMenuState(ID_OPT_INCREMENTALEXP, MF_BYCOMMAND);
+		UINT menuState = subMenu.GetMenuState(wID, MF_BYCOMMAND);
 		BOOL incrementalExporting = (menuState != 0xFFFFFFFF) && ((menuState & MF_CHECKED) == MF_CHECKED) ? TRUE : FALSE;
-		subMenu.CheckMenuItem(ID_OPT_ASYNC_LOADING, MF_BYCOMMAND | (incrementalExporting ? MF_UNCHECKED : MF_CHECKED));
+		subMenu.CheckMenuItem(wID, MF_BYCOMMAND | (incrementalExporting ? MF_UNCHECKED : MF_CHECKED));
 		AppConfiguration::SetIncrementalExporting(!incrementalExporting);
 
 		return 0;
 	}
 
-	LRESULT OnLoadingDataOnScroll(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/)
+	LRESULT OnIncludeSubscriptions(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/, BOOL& /*bHandled*/)
 	{
 		CMenuHandle menu = GetMenu();
 		CMenuHandle subMenu = menu.GetSubMenu(2);
-		UINT menuState = subMenu.GetMenuState(ID_OPT_LM_ONSCROLL, MF_BYCOMMAND);
-		BOOL loadingDataOnScroll = (menuState != 0xFFFFFFFF) && ((menuState & MF_CHECKED) == MF_CHECKED) ? TRUE : FALSE;
-		subMenu.CheckMenuItem(ID_OPT_LM_ONSCROLL, MF_BYCOMMAND | (loadingDataOnScroll ? MF_UNCHECKED : MF_CHECKED));
-		AppConfiguration::SetLoadingDataOnScroll(!loadingDataOnScroll);
+		UINT menuState = subMenu.GetMenuState(wID, MF_BYCOMMAND);
+		BOOL stateValue = (menuState != 0xFFFFFFFF) && ((menuState & MF_CHECKED) == MF_CHECKED) ? TRUE : FALSE;
+		subMenu.CheckMenuItem(wID, MF_BYCOMMAND | (stateValue ? MF_UNCHECKED : MF_CHECKED));
+		AppConfiguration::SetIncludingSubscriptions(!stateValue);
 
 		return 0;
 	}
 
-	LRESULT OnCheckUpdate(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/)
+	LRESULT OnAsyncLoading(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& /*bHandled*/)
+	{
+		UINT ids[] = { ID_OPT_LM_ONSCROLL, ID_OPT_NORMALPAGINATION, ID_OPT_PAGINATION_YEAR, ID_OPT_PAGINATION_MONTH};
+		UINT asyncLoading[] = { ASYNC_ONSCROLL, ASYNC_PAGER_NORMAL, ASYNC_PAGER_ON_YEAR, ASYNC_PAGER_ON_MONTH };
+
+		CMenuHandle menu = GetMenu();
+		CMenuHandle subMenu = menu.GetSubMenu(2);
+		UINT menuState = subMenu.GetMenuState(wID, MF_BYCOMMAND);
+		BOOL asyncState = (menuState != 0xFFFFFFFF) && ((menuState & MF_CHECKED) == MF_CHECKED) ? TRUE : FALSE;
+
+		int selectedIdx = 0;
+		for (int idx = 0; idx < sizeof(ids) / sizeof(UINT); ++idx)
+		{
+			if (ids[idx] != wID)
+			{
+				subMenu.CheckMenuItem(ids[idx], MF_BYCOMMAND | MF_UNCHECKED);
+			}
+			else
+			{
+				selectedIdx = idx;
+				subMenu.CheckMenuItem(ids[idx], MF_BYCOMMAND | (asyncState ? MF_UNCHECKED : MF_CHECKED));
+			}
+		}
+
+		if (asyncState)
+		{
+			AppConfiguration::SetSyncLoading();
+		}
+		else
+		{
+			AppConfiguration::SetAsyncLoading(asyncLoading[selectedIdx]);
+		}
+		
+		return 0;
+	}
+
+	LRESULT OnCheckUpdate(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/, BOOL& /*bHandled*/)
 	{
 		CMenuHandle menu = GetMenu();
 		CMenuHandle subMenu = menu.GetSubMenu(0);
-		UINT menuState = subMenu.GetMenuState(ID_FILE_CHK_UPDATE, MF_BYCOMMAND);
-		BOOL autoChkUpdate = (menuState != 0xFFFFFFFF) && ((menuState & MF_CHECKED) == MF_CHECKED) ? TRUE : FALSE;
-		subMenu.CheckMenuItem(ID_FILE_CHK_UPDATE, MF_BYCOMMAND | (autoChkUpdate ? MF_UNCHECKED : MF_CHECKED));
-		AppConfiguration::SetCheckingUpdateDisabled(autoChkUpdate);
+		UINT menuState = subMenu.GetMenuState(wID, MF_BYCOMMAND);
+		BOOL stateValue = (menuState != 0xFFFFFFFF) && ((menuState & MF_CHECKED) == MF_CHECKED) ? TRUE : FALSE;
+		subMenu.CheckMenuItem(wID, MF_BYCOMMAND | (stateValue ? MF_UNCHECKED : MF_CHECKED));
+		AppConfiguration::SetCheckingUpdateDisabled(stateValue);
+
+		return 0;
+	}
+
+	LRESULT OnExportITunes(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/)
+	{
+		m_view.ExportITunesBackup();
+
+		return 0;
+	}
+
+	LRESULT OnOpenFolder(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/, BOOL& /*bHandled*/)
+	{
+		CMenuHandle menu = GetMenu();
+		CMenuHandle subMenu = menu.GetSubMenu(0);
+		UINT menuState = subMenu.GetMenuState(wID, MF_BYCOMMAND);
+		BOOL stateValue = (menuState != 0xFFFFFFFF) && ((menuState & MF_CHECKED) == MF_CHECKED) ? TRUE : FALSE;
+		subMenu.CheckMenuItem(wID, MF_BYCOMMAND | (stateValue ? MF_UNCHECKED : MF_CHECKED));
+		AppConfiguration::SetOpenningFolderAfterExp(!stateValue);
+
+		return 0;
+	}
+
+	LRESULT OnOutputDbgLogs(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/, BOOL& /*bHandled*/)
+	{
+		CMenuHandle menu = GetMenu();
+		CMenuHandle subMenu = menu.GetSubMenu(0);
+		UINT menuState = subMenu.GetMenuState(wID, MF_BYCOMMAND);
+		BOOL stateValue = (menuState != 0xFFFFFFFF) && ((menuState & MF_CHECKED) == MF_CHECKED) ? TRUE : FALSE;
+		subMenu.CheckMenuItem(wID, MF_BYCOMMAND | (stateValue ? MF_UNCHECKED : MF_CHECKED));
+		AppConfiguration::SetOutputDebugLogs(!stateValue);
 
 		return 0;
 	}

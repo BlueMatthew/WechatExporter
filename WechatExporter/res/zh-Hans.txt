@@ -94,19 +94,19 @@
 		"value": "不能访问输出目录： %s"
 	},
 	{
-		"key": "Finding Wechat accounts...",
+		"key": "Finding WeChat accounts...",
 		"value": "查找微信登录账户..."
 	},
 	{
-		"key": "Failed to find Wechat account.",
+		"key": "Failed to find WeChat account.",
 		"value": "查找微信登录账户失败。"
 	},
 	{
-		"key": "%d Wechat account(s) found.",
+		"key": "%d WeChat account(s) found.",
 		"value": "找到 %d个账号的消息记录。"
 	},
 	{
-		"key": "Handling account: %s, Wechat Id: %s",
+		"key": "Handling account: %s, WeChat Id: %s",
 		"value": "开始处理微信账户: %s，微信号：%s"
 	},
 	{
@@ -146,7 +146,7 @@
 		"value": "等待%d张图片下载。"
 	},
 	{
-		"key": "iTunes Version: %s, iOS Version: %s, Wechat Version: %s",
+		"key": "iTunes Version: %s, iOS Version: %s, WeChat Version: %s",
 		"value": "iTunes版本：%s, iOS版本：%s, 微信版本：%s"
 	},
 	{
@@ -166,12 +166,107 @@
 		"value": "[文件: %s]"
 	},
 	{
-		"key": "Wechat Chat History",
+		"key": "WeChat Chat History",
 		"value": "微信聊天记录"
 	},
 	{
-		"key": "",
-		"value": ""
+		"key": "Play",
+		"value": "播放"
+	},
+	{
+		"key": "Press [Enter] key after inputting keywords",
+		"value": "输入关键词后按回车键"
+	},
+	{
+		"key": "Show Photos Only",
+		"value": "仅显示照片"
+	},
+	{
+		"key": "Show Videos Only",
+		"value": "仅显示视频"
+	},
+	{
+		"key": "Show All Messages",
+		"value": "显示所有消息"
+	},
+	{
+		"key": "Photos",
+		"value": "照片"
+	},
+	{
+		"key": "Videos",
+		"value": "视频"
+	},
+	{
+		"key": "All",
+		"value": "所有"
+	},
+	{
+		"key": " (WeChat ID: %s)",
+		"value": " （微信号：%s）"
+	},
+	{
+		"key": "Weixin Transfer",
+		"value": "微信转账"
+	},
+
+	{
+		"key": "Transfer_Subtype_1",
+		"value": "转账"
+	},
+	{
+		"key": "Transfer_Subtype_3",
+		"value": "已收款"
+	},
+	{
+		"key": "Transfer_Subtype_5",
+		"value": "已接收"
+	},
+	{
+		"key": "Transfer_Subtype_4",
+		"value": "已退还"
+	},
+	
+	{
+		"key": "Transfer_Subtype_8",
+		"value": "已被接收"
+	},
+	{
+		"key": "Transfer_Subtype_9",
+		"value": "已被退还"
+	},
+	{
+		"key": "Transfer_Subtype_10",
+		"value": "已过期"
+	},
+	{
+		"key": "Group_Transfer_Subtype_1",
+		"value": "向%s转账"
+	},
+	{
+		"key": "Group_Transfer_Subtype_3",
+		"value": "来自%s的转账 - 已收款"
+	},
+	{
+		"key": "Group_Transfer_Subtype_5",
+		"value": "来自%s的转账 - 已收款"
+	},
+	{
+		"key": "Group_Transfer_Subtype_4",
+		"value": "来自%s的转账 - 已退还"
+	},
+	
+	{
+		"key": "Group_Transfer_Subtype_8",
+		"value": "向%s转账 - 已被接收"
+	},
+	{
+		"key": "Group_Transfer_Subtype_9",
+		"value": "向%s转账 - 已被退还"
+	},
+	{
+		"key": "Group_Transfer_Subtype_10",
+		"value": "已过期"
 	},
 	{
 		"key": "",
@@ -181,5 +276,4 @@
 		"key": "",
 		"value": ""
 	}
-	
 ]

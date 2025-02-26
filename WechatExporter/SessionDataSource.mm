@@ -69,11 +69,15 @@
 @end
 
 @implementation SessionDataSource
+@synthesize rowInProgress = m_rowInProgress;
+@synthesize numberOfMsgExported = m_numberOfMsgExported;
 
 - (instancetype)init
 {
     if (self = [super init])
     {
+        m_rowInProgress = -1;
+        m_numberOfMsgExported = 0;
         m_usersAndSessions = NULL;
         m_indexOfSelectedUser = -1;
         m_sessions = nil;
@@ -82,8 +86,18 @@
     return self;
 }
 
+- (void)setRowInProgress:(NSInteger)rowInProgress
+{
+    if (m_rowInProgress != rowInProgress)
+    {
+        m_numberOfMsgExported = 0;
+        m_rowInProgress = rowInProgress;
+    }
+}
+
 - (void)getSelectedUserAndSessions:(std::map<std::string, std::map<std::string, void *>>&)usersAndSessions
 {
+    NSInteger row = 0;
     for (SessionItem *sessionItem in m_sessions)
     {
         if (sessionItem.checked)
@@ -97,12 +111,14 @@
                 it = usersAndSessions.insert(usersAndSessions.end(), std::pair<std::string, std::map<std::string, void *>>(usrName, std::map<std::string, void *>()));
             }
             
-            it->second.insert(std::pair<std::string, void *>(sessionUsrName, NULL));
+            it->second.insert(std::pair<std::string, void *>(sessionUsrName, (void *)row));
         }
+        
+        ++row;
     }
 }
 
-- (void)loadData:(const std::vector<std::pair<Friend, std::vector<Session>>> *)usersAndSessions withAllUsers:(BOOL)allUsers indexOfSelectedUser:(NSInteger)indexOfSelectedUser
+- (void)loadData:(const std::vector<std::pair<Friend, std::vector<Session>>> *)usersAndSessions withAllUsers:(BOOL)allUsers indexOfSelectedUser:(NSInteger)indexOfSelectedUser includesSubscription:(BOOL)includesSubscriptions
 {
     m_usersAndSessions = usersAndSessions;
     m_indexOfSelectedUser = indexOfSelectedUser;
@@ -126,9 +142,14 @@
                 continue;
             }
         }
-        
+
         for (std::vector<Session>::const_iterator it2 = it->second.cbegin(); it2 != it->second.cend(); ++it2, ++orgIndex)
         {
+            if (!includesSubscriptions && it2->isSubscription())
+            {
+                continue;
+            }
+
             SessionItem *sessionItem = [[SessionItem alloc] init];
             sessionItem.orgIndex = orgIndex;
             sessionItem.userIndex = userIndex;
@@ -142,6 +163,27 @@
             sessionItem.recordCount = it2->getRecordCount();
             sessionItem.usrName = [NSString stringWithUTF8String:it->first.getUsrName().c_str()];
             sessionItem.userDisplayName = [NSString stringWithUTF8String:it->first.getDisplayName().c_str()];
+#ifndef NDEBUG
+            sessionItem.lastMessageTime = it2->getLastMessageTime();
+#endif
+            
+            NSString *displayMsg = nil;
+            std::string msg = it2->getLastMessage();
+            if (it2->isTextMessage())
+            {
+                if (it2->hasLastMessageUserDisplayName())
+                {
+                    msg = it2->getLastMessageUserDisplayName() + ": " + msg;
+                }
+                displayMsg = [NSString stringWithUTF8String:msg.c_str()];
+            }
+            else
+            {
+                displayMsg = NSLocalizedString(@"not-text-msg", comment: "");
+            }
+            // NSLocalizedString(@"err-failed-to-parse-backup", comment: "")
+            
+            sessionItem.lastMessage = displayMsg;
             
             [sessions addObject:sessionItem];
         }
@@ -278,11 +320,22 @@
     }
     else if([identifier isEqualToString:@"columnRecordCount"])
     {
-        cellView.textField.stringValue = [NSString stringWithFormat:@"%ld", (long)sessionItem.recordCount];
+        if (row == m_rowInProgress)
+        {
+            cellView.textField.stringValue = [NSString stringWithFormat:@"%ld / %ld", (long)m_numberOfMsgExported, (long)sessionItem.recordCount];
+        }
+        else
+        {
+            cellView.textField.stringValue = [NSString stringWithFormat:@"%ld", (long)sessionItem.recordCount];
+        }
     }
     else if([identifier isEqualToString:@"columnUser"])
     {
         cellView.textField.stringValue = sessionItem.userDisplayName;
+    }
+    else if([identifier isEqualToString:@"columnLastMsg"])
+    {
+        cellView.textField.stringValue = sessionItem.lastMessage;
     }
 }
 

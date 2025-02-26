@@ -24,6 +24,8 @@
 
 @property (weak) IBOutlet NSButton *btnBackup;
 @property (weak) IBOutlet NSButton *btnOutput;
+@property (weak) IBOutlet NSButton *btnShowLogs;
+@property (weak) IBOutlet NSButton *btnBackupDevice;
 
 @property (weak) IBOutlet NSProgressIndicator *progressBar;
 @property (weak) IBOutlet NSScrollView *sclViewLogs;
@@ -32,6 +34,10 @@
 - (void)writeLog:(NSString *)log;
 - (void)onStart;
 - (void)onComplete:(BOOL)cancelled;
+
+- (void)onSessionStart:(NSString *)usrName row:(NSInteger)row;
+- (void)onSessionProgress:(NSString *)sessionUsrName row:(NSInteger)row numberOfMessages:(NSUInteger)numberOfMessages numberOfTotalMessages:(NSUInteger)numberOfTotalMessages;
+- (void)onSessionComplete:(NSString *)usrName;
 
 @end
 

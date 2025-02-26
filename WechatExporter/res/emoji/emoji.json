@@ -1,0 +1,2624 @@
+[
+    {
+        "preTag": "[",
+        "postTag": "]",
+        "keys": [
+            {
+                "key": "666",
+                "file": "Awesome"
+            },
+            {
+                "key": "Aaagh!",
+                "file": "Aaagh!"
+            },
+            {
+                "key": "Angry",
+                "file": "Angry"
+            },
+            {
+                "key": "Awesome",
+                "file": "Awesome"
+            },
+            {
+                "key": "Awkward",
+                "file": "Awkward"
+            },
+            {
+                "key": "Bah！L",
+                "file": "Bah！L"
+            },
+            {
+                "key": "Bah！R",
+                "file": "Bah！R"
+            },
+            {
+                "key": "Basketball",
+                "file": "Basketball"
+            },
+            {
+                "key": "Beckon",
+                "file": "Beckon"
+            },
+            {
+                "key": "Beer",
+                "file": "Beer"
+            },
+            {
+                "key": "Blessing",
+                "file": "Blessing"
+            },
+            {
+                "key": "Blowkiss",
+                "file": "Blowkiss"
+            },
+            {
+                "key": "Blush",
+                "file": "Blush"
+            },
+            {
+                "key": "Bomb",
+                "file": "Bomb"
+            },
+            {
+                "key": "Boring",
+                "file": "Boring"
+            },
+            {
+                "key": "Broken",
+                "file": "Broken"
+            },
+            {
+                "key": "BrokenHeart",
+                "file": "BrokenHeart"
+            },
+            {
+                "key": "Bye",
+                "file": "Bye"
+            },
+            {
+                "key": "Cake",
+                "file": "Cake"
+            },
+            {
+                "key": "Candle",
+                "file": "Candle"
+            },
+            {
+                "key": "Chick",
+                "file": "Chick"
+            },
+            {
+                "key": "Chuckle",
+                "file": "Chuckle"
+            },
+            {
+                "key": "Clap",
+                "file": "Clap"
+            },
+            {
+                "key": "Cleaver",
+                "file": "Cleaver"
+            },
+            {
+                "key": "Coffee",
+                "file": "Coffee"
+            },
+            {
+                "key": "Commando",
+                "file": "Commando"
+            },
+            {
+                "key": "Concerned",
+                "file": "Concerned"
+            },
+            {
+                "key": "CoolGuy",
+                "file": "CoolGuy"
+            },
+            {
+                "key": "Cry",
+                "file": "Cry"
+            },
+            {
+                "key": "Dagger",
+                "file": "Dagger"
+            },
+            {
+                "key": "Determined",
+                "file": "Determined"
+            },
+            {
+                "key": "Dizzy",
+                "file": "Dizzy"
+            },
+            {
+                "key": "Doge",
+                "file": "Doge"
+            },
+            {
+                "key": "Dramatic",
+                "file": "Dramatic"
+            },
+            {
+                "key": "Drool",
+                "file": "Drool"
+            },
+            {
+                "key": "Drowsy",
+                "file": "Drowsy"
+            },
+            {
+                "key": "Duh",
+                "file": "Duh"
+            },
+            {
+                "key": "Emm",
+                "file": "Emm"
+            },
+            {
+                "key": "Emm",
+                "file": "Emm"
+            },
+            {
+                "key": "Facepalm",
+                "file": "Facepalm"
+            },
+            {
+                "key": "Fight",
+                "file": "Fight"
+            },
+            {
+                "key": "Firecracker",
+                "file": "Firecracker"
+            },
+            {
+                "key": "Fireworks",
+                "file": "Fireworks"
+            },
+            {
+                "key": "Fist",
+                "file": "Fist"
+            },
+            {
+                "key": "Flushed",
+                "file": "Flushed"
+            },
+            {
+                "key": "Frown",
+                "file": "Frown"
+            },
+            {
+                "key": "Gift",
+                "file": "Gift"
+            },
+            {
+                "key": "GoForIt",
+                "file": "GoForIt"
+            },
+            {
+                "key": "Grimace",
+                "file": "Grimace"
+            },
+            {
+                "key": "Grin",
+                "file": "Grin"
+            },
+            {
+                "key": "Hammer",
+                "file": "Hammer"
+            },
+            {
+                "key": "Happy",
+                "file": "Happy"
+            },
+            {
+                "key": "Heart",
+                "file": "Heart"
+            },
+            {
+                "key": "Hey",
+                "file": "Hey"
+            },
+            {
+                "key": "Hooray",
+                "file": "Hooray"
+            },
+            {
+                "key": "Hug",
+                "file": "Hug"
+            },
+            {
+                "key": "Hungry",
+                "file": "Hungry"
+            },
+            {
+                "key": "Hurt",
+                "file": "Hurt"
+            },
+            {
+                "key": "InLove",
+                "file": "InLove"
+            },
+            {
+                "key": "Joyful",
+                "file": "Joyful"
+            },
+            {
+                "key": "JumpRope",
+                "file": "JumpRope"
+            },
+            {
+                "key": "KeepFighting",
+                "file": "KeepFighting"
+            },
+            {
+                "key": "Kiss",
+                "file": "Kiss"
+            },
+            {
+                "key": "Kotow",
+                "file": "Kotow"
+            },
+            {
+                "key": "Ladybug",
+                "file": "Ladybug"
+            },
+            {
+                "key": "Laugh",
+                "file": "Laugh"
+            },
+            {
+                "key": "Let Down",
+                "file": "Let Down"
+            },
+            {
+                "key": "LetMeSee",
+                "file": "LetMeSee"
+            },
+            {
+                "key": "Lightning",
+                "file": "Lightning"
+            },
+            {
+                "key": "Lips",
+                "file": "Lips"
+            },
+            {
+                "key": "Lol",
+                "file": "Lol"
+            },
+            {
+                "key": "Meditate",
+                "file": "Meditate"
+            },
+            {
+                "key": "Moon",
+                "file": "Moon"
+            },
+            {
+                "key": "Moue",
+                "file": "Moue"
+            },
+            {
+                "key": "Moue",
+                "file": "Moue"
+            },
+            {
+                "key": "MyBad",
+                "file": "MyBad"
+            },
+            {
+                "key": "NO",
+                "file": "Nuh-uh"
+            },
+            {
+                "key": "NO",
+                "file": "Nuh-uh"
+            },
+            {
+                "key": "NoProb",
+                "file": "NoProb"
+            },
+            {
+                "key": "NosePick",
+                "file": "NosePick"
+            },
+            {
+                "key": "Nuh-uh",
+                "file": "Nuh-uh"
+            },
+            {
+                "key": "OK",
+                "file": "OK"
+            },
+            {
+                "key": "OK",
+                "file": "OK"
+            },
+            {
+                "key": "OK",
+                "file": "OK"
+            },
+            {
+                "key": "OMG",
+                "file": "OMG"
+            },
+            {
+                "key": "Onlooker",
+                "file": "Onlooker"
+            },
+            {
+                "key": "Packet",
+                "file": "Packet"
+            },
+            {
+                "key": "Packet",
+                "file": "Packet"
+            },
+            {
+                "key": "Panic",
+                "file": "Panic"
+            },
+            {
+                "key": "Party",
+                "file": "Party"
+            },
+            {
+                "key": "Peace",
+                "file": "Peace"
+            },
+            {
+                "key": "Pig",
+                "file": "Pig"
+            },
+            {
+                "key": "PingPong",
+                "file": "PingPong"
+            },
+            {
+                "key": "Pinky",
+                "file": "Pinky"
+            },
+            {
+                "key": "Pooh-pooh",
+                "file": "Pooh-pooh"
+            },
+            {
+                "key": "Poop",
+                "file": "Poop"
+            },
+            {
+                "key": "Puke",
+                "file": "Puke"
+            },
+            {
+                "key": "Pup",
+                "file": "Pup"
+            },
+            {
+                "key": "Respect",
+                "file": "Respect"
+            },
+            {
+                "key": "Rice",
+                "file": "Rice"
+            },
+            {
+                "key": "Rich",
+                "file": "Rich"
+            },
+            {
+                "key": "RockOn",
+                "file": "RockOn"
+            },
+            {
+                "key": "Rose",
+                "file": "Rose"
+            },
+            {
+                "key": "Ruthless",
+                "file": "Ruthless"
+            },
+            {
+                "key": "Salute",
+                "file": "Fight"
+            },
+            {
+                "key": "Scold",
+                "file": "Scold"
+            },
+            {
+                "key": "Scowl",
+                "file": "Scowl"
+            },
+            {
+                "key": "Scream",
+                "file": "Scream"
+            },
+            {
+                "key": "Shake",
+                "file": "Shake"
+            },
+            {
+                "key": "Shame",
+                "file": "Shame"
+            },
+            {
+                "key": "Shhh",
+                "file": "Shhh"
+            },
+            {
+                "key": "Shocked",
+                "file": "Shocked"
+            },
+            {
+                "key": "Shrunken",
+                "file": "Shrunken"
+            },
+            {
+                "key": "Shy",
+                "file": "Shy"
+            },
+            {
+                "key": "Sick",
+                "file": "Sick"
+            },
+            {
+                "key": "Sigh",
+                "file": "Sigh"
+            },
+            {
+                "key": "Silent",
+                "file": "Silent"
+            },
+            {
+                "key": "Skull",
+                "file": "Skull"
+            },
+            {
+                "key": "Sleep",
+                "file": "Sleep"
+            },
+            {
+                "key": "Slight",
+                "file": "Slight"
+            },
+            {
+                "key": "Sly",
+                "file": "Sly"
+            },
+            {
+                "key": "Smart",
+                "file": "Smart"
+            },
+            {
+                "key": "Smile",
+                "file": "Smile"
+            },
+            {
+                "key": "Smirk",
+                "file": "Smirk"
+            },
+            {
+                "key": "Smooch",
+                "file": "Smooch"
+            },
+            {
+                "key": "Smug",
+                "file": "Smug"
+            },
+            {
+                "key": "Sob",
+                "file": "Sob"
+            },
+            {
+                "key": "Soccer",
+                "file": "Soccer"
+            },
+            {
+                "key": "Speechless",
+                "file": "Speechless"
+            },
+            {
+                "key": "Sun",
+                "file": "Sun"
+            },
+            {
+                "key": "Surprise",
+                "file": "Surprise"
+            },
+            {
+                "key": "Surrender",
+                "file": "Surrender"
+            },
+            {
+                "key": "Sweat",
+                "file": "Sweat"
+            },
+            {
+                "key": "Sweats",
+                "file": "Sweats"
+            },
+            {
+                "key": "TaiChi L",
+                "file": "TaiChi L"
+            },
+            {
+                "key": "TaiChi R",
+                "file": "TaiChi R"
+            },
+            {
+                "key": "Tea",
+                "file": "Tea"
+            },
+            {
+                "key": "TearingUp",
+                "file": "TearingUp"
+            },
+            {
+                "key": "Terror",
+                "file": "Terror"
+            },
+            {
+                "key": "ThumbsDown",
+                "file": "ThumbsDown"
+            },
+            {
+                "key": "ThumbsUp",
+                "file": "ThumbsUp"
+            },
+            {
+                "key": "Toasted",
+                "file": "Toasted"
+            },
+            {
+                "key": "Tongue",
+                "file": "Tongue"
+            },
+            {
+                "key": "Tormented",
+                "file": "Tormented"
+            },
+            {
+                "key": "Tremble",
+                "file": "Tremble"
+            },
+            {
+                "key": "Trick",
+                "file": "Trick"
+            },
+            {
+                "key": "Twirl",
+                "file": "Twirl"
+            },
+            {
+                "key": "Waddle",
+                "file": "Waddle"
+            },
+            {
+                "key": "Watermelon",
+                "file": "Watermelon"
+            },
+            {
+                "key": "Wave",
+                "file": "Bye"
+            },
+            {
+                "key": "Whimper",
+                "file": "Whimper"
+            },
+            {
+                "key": "Wilt",
+                "file": "Wilt"
+            },
+            {
+                "key": "Worship",
+                "file": "Worship"
+            },
+            {
+                "key": "Wow",
+                "file": "Wow"
+            },
+            {
+                "key": "Wrath",
+                "file": "Wrath"
+            },
+            {
+                "key": "Yawn",
+                "file": "Yawn"
+            },
+            {
+                "key": "Yeah!",
+                "file": "Yeah!"
+            },
+            {
+                "key": "[囧]",
+                "file": "Blush"
+            },
+            {
+                "key": "一言難盡",
+                "file": "Emm"
+            },
+            {
+                "key": "乒乓",
+                "file": "PingPong"
+            },
+            {
+                "key": "乒乓",
+                "file": "PingPong"
+            },
+            {
+                "key": "乱舞",
+                "file": "Meditate"
+            },
+            {
+                "key": "亂舞",
+                "file": "Meditate"
+            },
+            {
+                "key": "亲亲",
+                "file": "Kiss"
+            },
+            {
+                "key": "便便",
+                "file": "Poop"
+            },
+            {
+                "key": "便便",
+                "file": "Poop"
+            },
+            {
+                "key": "偷笑",
+                "file": "Chuckle"
+            },
+            {
+                "key": "偷笑",
+                "file": "Chuckle"
+            },
+            {
+                "key": "傲慢",
+                "file": "Smug"
+            },
+            {
+                "key": "傲慢",
+                "file": "Smug"
+            },
+            {
+                "key": "再見",
+                "file": "Bye"
+            },
+            {
+                "key": "再见",
+                "file": "Bye"
+            },
+            {
+                "key": "冷汗",
+                "file": "Blush"
+            },
+            {
+                "key": "冷汗",
+                "file": "Blush"
+            },
+            {
+                "key": "凋谢",
+                "file": "Wilt"
+            },
+            {
+                "key": "刀",
+                "file": "Dagger"
+            },
+            {
+                "key": "刀",
+                "file": "Dagger"
+            },
+            {
+                "key": "加油",
+                "file": "GoForIt"
+            },
+            {
+                "key": "加油",
+                "file": "GoForIt"
+            },
+            {
+                "key": "加油加油",
+                "file": "KeepFighting"
+            },
+            {
+                "key": "加油！",
+                "file": "KeepFighting"
+            },
+            {
+                "key": "勝利",
+                "file": "Peace"
+            },
+            {
+                "key": "勾引",
+                "file": "Beckon"
+            },
+            {
+                "key": "勾引",
+                "file": "Beckon"
+            },
+            {
+                "key": "发呆",
+                "file": "Scowl"
+            },
+            {
+                "key": "发怒",
+                "file": "Angry"
+            },
+            {
+                "key": "发抖",
+                "file": "Tremble"
+            },
+            {
+                "key": "可怜",
+                "file": "Whimper"
+            },
+            {
+                "key": "可憐",
+                "file": "Whimper"
+            },
+            {
+                "key": "右哼哼",
+                "file": "Bah！R"
+            },
+            {
+                "key": "右哼哼",
+                "file": "Bah！R"
+            },
+            {
+                "key": "右太极",
+                "file": "TaiChi R"
+            },
+            {
+                "key": "右太極",
+                "file": "TaiChi R"
+            },
+            {
+                "key": "叹气",
+                "file": "Sigh"
+            },
+            {
+                "key": "吃瓜",
+                "file": "Onlooker"
+            },
+            {
+                "key": "吃西瓜",
+                "file": "Onlooker"
+            },
+            {
+                "key": "合十",
+                "file": "Worship"
+            },
+            {
+                "key": "合十",
+                "file": "Worship"
+            },
+            {
+                "key": "吐",
+                "file": "Puke"
+            },
+            {
+                "key": "吐",
+                "file": "Puke"
+            },
+            {
+                "key": "吐舌",
+                "file": "u1F61D"
+            },
+            {
+                "key": "吓",
+                "file": "Wrath"
+            },
+            {
+                "key": "吼嘿",
+                "file": "Hey"
+            },
+            {
+                "key": "呲牙",
+                "file": "Grin"
+            },
+            {
+                "key": "呲牙",
+                "file": "Grin"
+            },
+            {
+                "key": "咒罵",
+                "file": "Scold"
+            },
+            {
+                "key": "咒骂",
+                "file": "Scold"
+            },
+            {
+                "key": "咖啡",
+                "file": "Coffee"
+            },
+            {
+                "key": "咖啡",
+                "file": "Coffee"
+            },
+            {
+                "key": "哇",
+                "file": "Wow"
+            },
+            {
+                "key": "哈欠",
+                "file": "Yawn"
+            },
+            {
+                "key": "哈欠",
+                "file": "Yawn"
+            },
+            {
+                "key": "啤酒",
+                "file": "Beer"
+            },
+            {
+                "key": "啤酒",
+                "file": "Beer"
+            },
+            {
+                "key": "嘆息",
+                "file": "Sigh"
+            },
+            {
+                "key": "嘘",
+                "file": "Shhh"
+            },
+            {
+                "key": "嘴唇",
+                "file": "Lips"
+            },
+            {
+                "key": "嘴唇",
+                "file": "Lips"
+            },
+            {
+                "key": "嘿哈",
+                "file": "Hey"
+            },
+            {
+                "key": "噓",
+                "file": "Shhh"
+            },
+            {
+                "key": "噴火",
+                "file": "Aaagh!"
+            },
+            {
+                "key": "嚇",
+                "file": "Wrath"
+            },
+            {
+                "key": "回头",
+                "file": "Dramatic"
+            },
+            {
+                "key": "回頭",
+                "file": "Dramatic"
+            },
+            {
+                "key": "囧",
+                "file": "Blush"
+            },
+            {
+                "key": "困",
+                "file": "Drowsy"
+            },
+            {
+                "key": "坏笑",
+                "file": "Trick"
+            },
+            {
+                "key": "壞笑",
+                "file": "Trick"
+            },
+            {
+                "key": "大哭",
+                "file": "Cry"
+            },
+            {
+                "key": "大哭",
+                "file": "Cry"
+            },
+            {
+                "key": "大笑",
+                "file": "Laugh"
+            },
+            {
+                "key": "天啊",
+                "file": "OMG"
+            },
+            {
+                "key": "太阳",
+                "file": "Sun"
+            },
+            {
+                "key": "太陽",
+                "file": "Sun"
+            },
+            {
+                "key": "失敬失敬",
+                "file": "Respect"
+            },
+            {
+                "key": "失望",
+                "file": "Let Down"
+            },
+            {
+                "key": "失望",
+                "file": "Let Down"
+            },
+            {
+                "key": "奋斗",
+                "file": "Determined"
+            },
+            {
+                "key": "奮鬥",
+                "file": "Determined"
+            },
+            {
+                "key": "奸笑",
+                "file": "Smirk"
+            },
+            {
+                "key": "奸笑",
+                "file": "Smirk"
+            },
+            {
+                "key": "好的",
+                "file": "NoProb"
+            },
+            {
+                "key": "委屈",
+                "file": "Shrunken"
+            },
+            {
+                "key": "委屈",
+                "file": "Shrunken"
+            },
+            {
+                "key": "害羞",
+                "file": "Shy"
+            },
+            {
+                "key": "害羞",
+                "file": "Shy"
+            },
+            {
+                "key": "小狗",
+                "file": "Pup"
+            },
+            {
+                "key": "小狗",
+                "file": "Pup"
+            },
+            {
+                "key": "小雞",
+                "file": "Chick"
+            },
+            {
+                "key": "尴尬",
+                "file": "Awkward"
+            },
+            {
+                "key": "尷尬",
+                "file": "Awkward"
+            },
+            {
+                "key": "崩潰",
+                "file": "Broken"
+            },
+            {
+                "key": "左哼哼",
+                "file": "Bah！L"
+            },
+            {
+                "key": "左哼哼",
+                "file": "Bah！L"
+            },
+            {
+                "key": "左太极",
+                "file": "TaiChi L"
+            },
+            {
+                "key": "左太極",
+                "file": "TaiChi L"
+            },
+            {
+                "key": "差劲",
+                "file": "Pinky"
+            },
+            {
+                "key": "差勁",
+                "file": "Pinky"
+            },
+            {
+                "key": "庆祝",
+                "file": "Party"
+            },
+            {
+                "key": "弱",
+                "file": "ThumbsDown"
+            },
+            {
+                "key": "弱",
+                "file": "ThumbsDown"
+            },
+            {
+                "key": "強",
+                "file": "ThumbsUp"
+            },
+            {
+                "key": "强",
+                "file": "ThumbsUp"
+            },
+            {
+                "key": "强壮",
+                "file": "u1F4AA"
+            },
+            {
+                "key": "得意",
+                "file": "CoolGuy"
+            },
+            {
+                "key": "得意",
+                "file": "CoolGuy"
+            },
+            {
+                "key": "微笑",
+                "file": "Smile"
+            },
+            {
+                "key": "微笑",
+                "file": "Smile"
+            },
+            {
+                "key": "心碎",
+                "file": "BrokenHeart"
+            },
+            {
+                "key": "心碎",
+                "file": "BrokenHeart"
+            },
+            {
+                "key": "快哭了",
+                "file": "TearingUp"
+            },
+            {
+                "key": "快哭了",
+                "file": "TearingUp"
+            },
+            {
+                "key": "怄火",
+                "file": "Aaagh!"
+            },
+            {
+                "key": "恐惧",
+                "file": "Terror"
+            },
+            {
+                "key": "恐懼",
+                "file": "Terror"
+            },
+            {
+                "key": "悠閑",
+                "file": "Commando"
+            },
+            {
+                "key": "悠闲",
+                "file": "Commando"
+            },
+            {
+                "key": "惊恐",
+                "file": "Panic"
+            },
+            {
+                "key": "惊讶",
+                "file": "Surprise"
+            },
+            {
+                "key": "愉快",
+                "file": "Joyful"
+            },
+            {
+                "key": "愉快",
+                "file": "Joyful"
+            },
+            {
+                "key": "愛你",
+                "file": "RockOn"
+            },
+            {
+                "key": "愛心",
+                "file": "Heart"
+            },
+            {
+                "key": "愛情",
+                "file": "InLove"
+            },
+            {
+                "key": "慶祝",
+                "file": "Party"
+            },
+            {
+                "key": "憨笑",
+                "file": "Laugh"
+            },
+            {
+                "key": "打脸",
+                "file": "MyBad"
+            },
+            {
+                "key": "打臉",
+                "file": "MyBad"
+            },
+            {
+                "key": "抓狂",
+                "file": "Scream"
+            },
+            {
+                "key": "抓狂",
+                "file": "Scream"
+            },
+            {
+                "key": "投降",
+                "file": "Surrender"
+            },
+            {
+                "key": "投降",
+                "file": "Surrender"
+            },
+            {
+                "key": "抠鼻",
+                "file": "NosePick"
+            },
+            {
+                "key": "抱拳",
+                "file": "Fight"
+            },
+            {
+                "key": "抱拳",
+                "file": "Fight"
+            },
+            {
+                "key": "拥抱",
+                "file": "Hug"
+            },
+            {
+                "key": "拳头",
+                "file": "Fist"
+            },
+            {
+                "key": "拳頭",
+                "file": "Fist"
+            },
+            {
+                "key": "捂脸",
+                "file": "Facepalm"
+            },
+            {
+                "key": "掩面",
+                "file": "Facepalm"
+            },
+            {
+                "key": "握手",
+                "file": "Shake"
+            },
+            {
+                "key": "握手",
+                "file": "Shake"
+            },
+            {
+                "key": "摳鼻",
+                "file": "NosePick"
+            },
+            {
+                "key": "撇嘴",
+                "file": "Grimace"
+            },
+            {
+                "key": "撇嘴",
+                "file": "Grimace"
+            },
+            {
+                "key": "擁抱",
+                "file": "Hug"
+            },
+            {
+                "key": "擦汗",
+                "file": "Speechless"
+            },
+            {
+                "key": "擦汗",
+                "file": "Speechless"
+            },
+            {
+                "key": "敲打",
+                "file": "Hammer"
+            },
+            {
+                "key": "敲打",
+                "file": "Hammer"
+            },
+            {
+                "key": "无语",
+                "file": "Duh"
+            },
+            {
+                "key": "旺柴",
+                "file": "Doge"
+            },
+            {
+                "key": "旺柴",
+                "file": "Doge"
+            },
+            {
+                "key": "晕",
+                "file": "Dizzy"
+            },
+            {
+                "key": "暈",
+                "file": "Dizzy"
+            },
+            {
+                "key": "月亮",
+                "file": "Moon"
+            },
+            {
+                "key": "月亮",
+                "file": "Moon"
+            },
+            {
+                "key": "机智",
+                "file": "Smart"
+            },
+            {
+                "key": "枯萎",
+                "file": "Wilt"
+            },
+            {
+                "key": "機智",
+                "file": "Smart"
+            },
+            {
+                "key": "歐耶",
+                "file": "Yeah!"
+            },
+            {
+                "key": "汗",
+                "file": "Sweats"
+            },
+            {
+                "key": "流汗",
+                "file": "Sweat"
+            },
+            {
+                "key": "流汗",
+                "file": "Sweat"
+            },
+            {
+                "key": "流泪",
+                "file": "Sob"
+            },
+            {
+                "key": "流淚",
+                "file": "Sob"
+            },
+            {
+                "key": "激动",
+                "file": "Hooray"
+            },
+            {
+                "key": "激動",
+                "file": "Hooray"
+            },
+            {
+                "key": "炸弹",
+                "file": "Bomb"
+            },
+            {
+                "key": "炸彈",
+                "file": "Bomb"
+            },
+            {
+                "key": "烟花",
+                "file": "Fireworks"
+            },
+            {
+                "key": "無語",
+                "file": "Duh"
+            },
+            {
+                "key": "煙花",
+                "file": "Fireworks"
+            },
+            {
+                "key": "爆竹",
+                "file": "Firecracker"
+            },
+            {
+                "key": "爆竹",
+                "file": "Firecracker"
+            },
+            {
+                "key": "爱你",
+                "file": "RockOn"
+            },
+            {
+                "key": "爱心",
+                "file": "Heart"
+            },
+            {
+                "key": "爱情",
+                "file": "InLove"
+            },
+            {
+                "key": "猪头",
+                "file": "Pig"
+            },
+            {
+                "key": "献吻",
+                "file": "Smooch"
+            },
+            {
+                "key": "獻吻",
+                "file": "Smooch"
+            },
+            {
+                "key": "玫瑰",
+                "file": "Rose"
+            },
+            {
+                "key": "玫瑰",
+                "file": "Rose"
+            },
+            {
+                "key": "瓢虫",
+                "file": "Ladybug"
+            },
+            {
+                "key": "生病",
+                "file": "Sick"
+            },
+            {
+                "key": "生病",
+                "file": "Sick"
+            },
+            {
+                "key": "甲蟲",
+                "file": "Ladybug"
+            },
+            {
+                "key": "疑問",
+                "file": "Shocked"
+            },
+            {
+                "key": "疑问",
+                "file": "Shocked"
+            },
+            {
+                "key": "疯了",
+                "file": "Tormented"
+            },
+            {
+                "key": "瘋了",
+                "file": "Tormented"
+            },
+            {
+                "key": "發",
+                "file": "Rich"
+            },
+            {
+                "key": "發",
+                "file": "Rich"
+            },
+            {
+                "key": "發呆",
+                "file": "Scowl"
+            },
+            {
+                "key": "發怒",
+                "file": "Angry"
+            },
+            {
+                "key": "發抖",
+                "file": "Tremble"
+            },
+            {
+                "key": "白眼",
+                "file": "Slight"
+            },
+            {
+                "key": "白眼",
+                "file": "Slight"
+            },
+            {
+                "key": "皱眉",
+                "file": "Concerned"
+            },
+            {
+                "key": "皺眉",
+                "file": "Concerned"
+            },
+            {
+                "key": "睡",
+                "file": "Sleep"
+            },
+            {
+                "key": "睡",
+                "file": "Sleep"
+            },
+            {
+                "key": "破涕为笑",
+                "file": "Lol"
+            },
+            {
+                "key": "破涕為笑",
+                "file": "Lol"
+            },
+            {
+                "key": "磕头",
+                "file": "Kotow"
+            },
+            {
+                "key": "磕頭",
+                "file": "Kotow"
+            },
+            {
+                "key": "礼物",
+                "file": "Gift"
+            },
+            {
+                "key": "社会社会",
+                "file": "Respect"
+            },
+            {
+                "key": "福",
+                "file": "Blessing"
+            },
+            {
+                "key": "福",
+                "file": "Blessing"
+            },
+            {
+                "key": "禮物",
+                "file": "Gift"
+            },
+            {
+                "key": "笑脸",
+                "file": "Happy"
+            },
+            {
+                "key": "笑臉",
+                "file": "Happy"
+            },
+            {
+                "key": "篮球",
+                "file": "Basketball"
+            },
+            {
+                "key": "籃球",
+                "file": "Basketball"
+            },
+            {
+                "key": "糗大了",
+                "file": "Shame"
+            },
+            {
+                "key": "累",
+                "file": "Drowsy"
+            },
+            {
+                "key": "红包",
+                "file": "Packet"
+            },
+            {
+                "key": "羞辱",
+                "file": "Shame"
+            },
+            {
+                "key": "翻白眼",
+                "file": "Boring"
+            },
+            {
+                "key": "耶",
+                "file": "Yeah!"
+            },
+            {
+                "key": "胜利",
+                "file": "Peace"
+            },
+            {
+                "key": "脸红",
+                "file": "Flushed"
+            },
+            {
+                "key": "臉紅",
+                "file": "Flushed"
+            },
+            {
+                "key": "色",
+                "file": "Drool"
+            },
+            {
+                "key": "色",
+                "file": "Drool"
+            },
+            {
+                "key": "苦涩",
+                "file": "Hurt"
+            },
+            {
+                "key": "茶",
+                "file": "Tea"
+            },
+            {
+                "key": "茶",
+                "file": "Tea"
+            },
+            {
+                "key": "菜刀",
+                "file": "Cleaver"
+            },
+            {
+                "key": "菜刀",
+                "file": "Cleaver"
+            },
+            {
+                "key": "蛋糕",
+                "file": "Cake"
+            },
+            {
+                "key": "蛋糕",
+                "file": "Cake"
+            },
+            {
+                "key": "蜡烛",
+                "file": "Candle"
+            },
+            {
+                "key": "蠟燭",
+                "file": "Candle"
+            },
+            {
+                "key": "衰",
+                "file": "Toasted"
+            },
+            {
+                "key": "衰",
+                "file": "Toasted"
+            },
+            {
+                "key": "裂开",
+                "file": "Broken"
+            },
+            {
+                "key": "西瓜",
+                "file": "Watermelon"
+            },
+            {
+                "key": "西瓜",
+                "file": "Watermelon"
+            },
+            {
+                "key": "親親",
+                "file": "Kiss"
+            },
+            {
+                "key": "調皮",
+                "file": "Tongue"
+            },
+            {
+                "key": "讓我看看",
+                "file": "LetMeSee"
+            },
+            {
+                "key": "让我看看",
+                "file": "LetMeSee"
+            },
+            {
+                "key": "调皮",
+                "file": "Tongue"
+            },
+            {
+                "key": "豬頭",
+                "file": "Pig"
+            },
+            {
+                "key": "足球",
+                "file": "Soccer"
+            },
+            {
+                "key": "足球",
+                "file": "Soccer"
+            },
+            {
+                "key": "跳繩",
+                "file": "JumpRope"
+            },
+            {
+                "key": "跳绳",
+                "file": "JumpRope"
+            },
+            {
+                "key": "跳跳",
+                "file": "Waddle"
+            },
+            {
+                "key": "跳跳",
+                "file": "Waddle"
+            },
+            {
+                "key": "轉圈",
+                "file": "Twirl"
+            },
+            {
+                "key": "转圈",
+                "file": "Twirl"
+            },
+            {
+                "key": "鄙視",
+                "file": "Pooh-pooh"
+            },
+            {
+                "key": "鄙视",
+                "file": "Pooh-pooh"
+            },
+            {
+                "key": "酷",
+                "file": "Ruthless"
+            },
+            {
+                "key": "酷",
+                "file": "Ruthless"
+            },
+            {
+                "key": "閃電",
+                "file": "Lightning"
+            },
+            {
+                "key": "閉嘴",
+                "file": "Silent"
+            },
+            {
+                "key": "闪电",
+                "file": "Lightning"
+            },
+            {
+                "key": "闭嘴",
+                "file": "Silent"
+            },
+            {
+                "key": "阴险",
+                "file": "Sly"
+            },
+            {
+                "key": "陰險",
+                "file": "Sly"
+            },
+            {
+                "key": "难过",
+                "file": "Frown"
+            },
+            {
+                "key": "難受",
+                "file": "Hurt"
+            },
+            {
+                "key": "難過",
+                "file": "Frown"
+            },
+            {
+                "key": "飛吻",
+                "file": "Blowkiss"
+            },
+            {
+                "key": "飞吻",
+                "file": "Blowkiss"
+            },
+            {
+                "key": "飯",
+                "file": "Rice"
+            },
+            {
+                "key": "饑餓",
+                "file": "Hungry"
+            },
+            {
+                "key": "饥饿",
+                "file": "Hungry"
+            },
+            {
+                "key": "饭",
+                "file": "Rice"
+            },
+            {
+                "key": "驚恐",
+                "file": "Panic"
+            },
+            {
+                "key": "驚訝",
+                "file": "Surprise"
+            },
+            {
+                "key": "骷髅",
+                "file": "Skull"
+            },
+            {
+                "key": "骷髏頭",
+                "file": "Skull"
+            },
+            {
+                "key": "鬼魂",
+                "file": "u1F47B"
+            },
+            {
+                "key": "鸡",
+                "file": "Chick"
+            },
+            {
+                "key": "鼓掌",
+                "file": "Clap"
+            },
+            {
+                "key": "鼓掌",
+                "file": "Clap"
+            }
+        ]
+    },
+    {
+        "preTag": "/",
+        "postTag": "",
+        "keys": [
+            {
+                "key": "NO",
+                "file": "Nuh-uh"
+            },
+            {
+                "key": "OK",
+                "file": "OK"
+            },
+            {
+                "key": "乒乓",
+                "file": "PingPong"
+            },
+            {
+                "key": "亲亲",
+                "file": "Kiss"
+            },
+            {
+                "key": "便便",
+                "file": "Poop"
+            },
+            {
+                "key": "偷笑",
+                "file": "Chuckle"
+            },
+            {
+                "key": "傲慢",
+                "file": "Smug"
+            },
+            {
+                "key": "再见",
+                "file": "Bye"
+            },
+            {
+                "key": "冷汗",
+                "file": "Blush"
+            },
+            {
+                "key": "凋谢",
+                "file": "Wilt"
+            },
+            {
+                "key": "刀",
+                "file": "Dagger"
+            },
+            {
+                "key": "勾引",
+                "file": "Beckon"
+            },
+            {
+                "key": "发呆",
+                "file": "Scowl"
+            },
+            {
+                "key": "发怒",
+                "file": "Angry"
+            },
+            {
+                "key": "发抖",
+                "file": "Tremble"
+            },
+            {
+                "key": "可怜",
+                "file": "Whimper"
+            },
+            {
+                "key": "可爱",
+                "file": "Joyful"
+            },
+            {
+                "key": "右哼哼",
+                "file": "Bah！R"
+            },
+            {
+                "key": "右太极",
+                "file": "TaiChi R"
+            },
+            {
+                "key": "吐",
+                "file": "Puke"
+            },
+            {
+                "key": "吓",
+                "file": "Wrath"
+            },
+            {
+                "key": "呲牙",
+                "file": "Grin"
+            },
+            {
+                "key": "咒骂",
+                "file": "Scold"
+            },
+            {
+                "key": "咖啡",
+                "file": "Coffee"
+            },
+            {
+                "key": "哈欠",
+                "file": "Yawn"
+            },
+            {
+                "key": "啤酒",
+                "file": "Beer"
+            },
+            {
+                "key": "嘘",
+                "file": "Shhh"
+            },
+            {
+                "key": "回头",
+                "file": "Dramatic"
+            },
+            {
+                "key": "困",
+                "file": "Drowsy"
+            },
+            {
+                "key": "坏笑",
+                "file": "Trick"
+            },
+            {
+                "key": "大兵",
+                "file": "Commando"
+            },
+            {
+                "key": "大哭",
+                "file": "Cry"
+            },
+            {
+                "key": "太阳",
+                "file": "Sun"
+            },
+            {
+                "key": "奋斗",
+                "file": "Determined"
+            },
+            {
+                "key": "委屈",
+                "file": "Shrunken"
+            },
+            {
+                "key": "害羞",
+                "file": "Shy"
+            },
+            {
+                "key": "尴尬",
+                "file": "Awkward"
+            },
+            {
+                "key": "左哼哼",
+                "file": "Bah！L"
+            },
+            {
+                "key": "左太极",
+                "file": "TaiChi L"
+            },
+            {
+                "key": "差劲",
+                "file": "Pinky"
+            },
+            {
+                "key": "弱",
+                "file": "ThumbsDown"
+            },
+            {
+                "key": "强",
+                "file": "ThumbsUp"
+            },
+            {
+                "key": "得意",
+                "file": "CoolGuy"
+            },
+            {
+                "key": "微笑",
+                "file": "Smile"
+            },
+            {
+                "key": "心碎",
+                "file": "BrokenHeart"
+            },
+            {
+                "key": "快哭了",
+                "file": "TearingUp"
+            },
+            {
+                "key": "怄火",
+                "file": "Aaagh!"
+            },
+            {
+                "key": "惊恐",
+                "file": "Panic"
+            },
+            {
+                "key": "惊讶",
+                "file": "Surprise"
+            },
+            {
+                "key": "憨笑",
+                "file": "Laugh"
+            },
+            {
+                "key": "抓狂",
+                "file": "Scream"
+            },
+            {
+                "key": "折磨",
+                "file": "Tormented"
+            },
+            {
+                "key": "抠鼻",
+                "file": "NosePick"
+            },
+            {
+                "key": "抱拳",
+                "file": "Fight"
+            },
+            {
+                "key": "拥抱",
+                "file": "Hug"
+            },
+            {
+                "key": "拳头",
+                "file": "Fist"
+            },
+            {
+                "key": "挥手",
+                "file": "Surrender"
+            },
+            {
+                "key": "握手",
+                "file": "Shake"
+            },
+            {
+                "key": "撇嘴",
+                "file": "Grimace"
+            },
+            {
+                "key": "擦汗",
+                "file": "Speechless"
+            },
+            {
+                "key": "敲打",
+                "file": "Hammer"
+            },
+            {
+                "key": "晕",
+                "file": "Dizzy"
+            },
+            {
+                "key": "月亮",
+                "file": "Moon"
+            },
+            {
+                "key": "流汗",
+                "file": "Sweat"
+            },
+            {
+                "key": "流泪",
+                "file": "Sob"
+            },
+            {
+                "key": "激动",
+                "file": "Hooray"
+            },
+            {
+                "key": "炸弹",
+                "file": "Bomb"
+            },
+            {
+                "key": "爱你",
+                "file": "RockOn"
+            },
+            {
+                "key": "爱心",
+                "file": "Heart"
+            },
+            {
+                "key": "爱情",
+                "file": "InLove"
+            },
+            {
+                "key": "猪头",
+                "file": "Pig"
+            },
+            {
+                "key": "献吻",
+                "file": "Smooch"
+            },
+            {
+                "key": "玫瑰",
+                "file": "Rose"
+            },
+            {
+                "key": "瓢虫",
+                "file": "Ladybug"
+            },
+            {
+                "key": "疑问",
+                "file": "Shocked"
+            },
+            {
+                "key": "白眼",
+                "file": "Slight"
+            },
+            {
+                "key": "睡",
+                "file": "Sleep"
+            },
+            {
+                "key": "磕头",
+                "file": "Kotow"
+            },
+            {
+                "key": "示爱",
+                "file": "Lips"
+            },
+            {
+                "key": "礼物",
+                "file": "Gift"
+            },
+            {
+                "key": "篮球",
+                "file": "Basketball"
+            },
+            {
+                "key": "糗大了",
+                "file": "Shame"
+            },
+            {
+                "key": "胜利",
+                "file": "Peace"
+            },
+            {
+                "key": "色",
+                "file": "Drool"
+            },
+            {
+                "key": "菜刀",
+                "file": "Cleaver"
+            },
+            {
+                "key": "蛋糕",
+                "file": "Cake"
+            },
+            {
+                "key": "街舞",
+                "file": "Meditate"
+            },
+            {
+                "key": "衰",
+                "file": "Toasted"
+            },
+            {
+                "key": "西瓜",
+                "file": "Watermelon"
+            },
+            {
+                "key": "调皮",
+                "file": "Tongue"
+            },
+            {
+                "key": "足球",
+                "file": "Soccer"
+            },
+            {
+                "key": "跳绳",
+                "file": "JumpRope"
+            },
+            {
+                "key": "跳跳",
+                "file": "Waddle"
+            },
+            {
+                "key": "转圈",
+                "file": "Twirl"
+            },
+            {
+                "key": "鄙视",
+                "file": "Pooh-pooh"
+            },
+            {
+                "key": "酷",
+                "file": "Ruthless"
+            },
+            {
+                "key": "闪电",
+                "file": "Lightning"
+            },
+            {
+                "key": "闭嘴",
+                "file": "Silent"
+            },
+            {
+                "key": "阴险",
+                "file": "Sly"
+            },
+            {
+                "key": "难过",
+                "file": "Frown"
+            },
+            {
+                "key": "飞吻",
+                "file": "Blowkiss"
+            },
+            {
+                "key": "饥饿",
+                "file": "Hungry"
+            },
+            {
+                "key": "饭",
+                "file": "Rice"
+            },
+            {
+                "key": "骷髅",
+                "file": "Skull"
+            },
+            {
+                "key": "鼓掌",
+                "file": "Clap"
+            }
+        ]
+    },
+    {
+        "preTag": "/:",
+        "postTag": "",
+        "keys": [
+            {
+                "key": "!!!",
+                "file": "Skull"
+            },
+            {
+                "key": "#-0",
+                "file": "Hooray"
+            },
+            {
+                "key": "&-(",
+                "file": "Shame"
+            },
+            {
+                "key": "&>",
+                "file": "TaiChi R"
+            },
+            {
+                "key": ",@!",
+                "file": "Toasted"
+            },
+            {
+                "key": ",@-D",
+                "file": "Joyful"
+            },
+            {
+                "key": ",@@",
+                "file": "Dizzy"
+            },
+            {
+                "key": ",@P",
+                "file": "Chuckle"
+            },
+            {
+                "key": ",@f",
+                "file": "Determined"
+            },
+            {
+                "key": ",@o",
+                "file": "Smug"
+            },
+            {
+                "key": ",@x",
+                "file": "Shhh"
+            },
+            {
+                "key": "--b",
+                "file": "Blush"
+            },
+            {
+                "key": "8*",
+                "file": "Whimper"
+            },
+            {
+                "key": "8-)",
+                "file": "CoolGuy"
+            },
+            {
+                "key": ":!",
+                "file": "Panic"
+            },
+            {
+                "key": ":\"(",
+                "file": "Cry"
+            },
+            {
+                "key": ":\"|",
+                "file": "TearingUp"
+            },
+            {
+                "key": ":$",
+                "file": "Shy"
+            },
+            {
+                "key": ":(",
+                "file": "Frown"
+            },
+            {
+                "key": ":)",
+                "file": "Smile"
+            },
+            {
+                "key": ":*",
+                "file": "Kiss"
+            },
+            {
+                "key": ":+",
+                "file": "Ruthless"
+            },
+            {
+                "key": ":,@",
+                "file": "Commando"
+            },
+            {
+                "key": ":-O",
+                "file": "Yawn"
+            },
+            {
+                "key": ":-S",
+                "file": "Scold"
+            },
+            {
+                "key": ":-|",
+                "file": "Awkward"
+            },
+            {
+                "key": ":8",
+                "file": "Tormented"
+            },
+            {
+                "key": ":<",
+                "file": "Sob"
+            },
+            {
+                "key": ":>",
+                "file": "Laugh"
+            },
+            {
+                "key": ":@",
+                "file": "Angry"
+            },
+            {
+                "key": ":B",
+                "file": "Drool"
+            },
+            {
+                "key": ":D",
+                "file": "Grin"
+            },
+            {
+                "key": ":L",
+                "file": "Sweat"
+            },
+            {
+                "key": ":O",
+                "file": "Surprise"
+            },
+            {
+                "key": ":P",
+                "file": "Tongue"
+            },
+            {
+                "key": ":Q",
+                "file": "Scream"
+            },
+            {
+                "key": ":T",
+                "file": "Puke"
+            },
+            {
+                "key": ":X",
+                "file": "Silent"
+            },
+            {
+                "key": ":Z",
+                "file": "Sleep"
+            },
+            {
+                "key": ":d",
+                "file": "Slight"
+            },
+            {
+                "key": ":g",
+                "file": "Hungry"
+            },
+            {
+                "key": ":|",
+                "file": "Scowl"
+            },
+            {
+                "key": ":~",
+                "file": "Grimace"
+            },
+            {
+                "key": "<&",
+                "file": "TaiChi L"
+            },
+            {
+                "key": "<@",
+                "file": "Bah！L"
+            },
+            {
+                "key": "<L>",
+                "file": "Blowkiss"
+            },
+            {
+                "key": "<O>",
+                "file": "Aaagh!"
+            },
+            {
+                "key": "<W>",
+                "file": "Watermelon"
+            },
+            {
+                "key": ">-|",
+                "file": "Pooh-pooh"
+            },
+            {
+                "key": "?",
+                "file": "Shocked"
+            },
+            {
+                "key": "@)",
+                "file": "Fight"
+            },
+            {
+                "key": "@>",
+                "file": "Bah！R"
+            },
+            {
+                "key": "@@",
+                "file": "Fist"
+            },
+            {
+                "key": "@x",
+                "file": "Wrath"
+            },
+            {
+                "key": "B-)",
+                "file": "Trick"
+            },
+            {
+                "key": "P-(",
+                "file": "Shrunken"
+            },
+            {
+                "key": "X-)",
+                "file": "Sly"
+            },
+            {
+                "key": "bad",
+                "file": "Pinky"
+            },
+            {
+                "key": "basketb",
+                "file": "Basketball"
+            },
+            {
+                "key": "beer",
+                "file": "Beer"
+            },
+            {
+                "key": "bome",
+                "file": "Bomb"
+            },
+            {
+                "key": "break",
+                "file": "BrokenHeart"
+            },
+            {
+                "key": "bye",
+                "file": "Bye"
+            },
+            {
+                "key": "cake",
+                "file": "Cake"
+            },
+            {
+                "key": "circle",
+                "file": "Twirl"
+            },
+            {
+                "key": "coffee",
+                "file": "Coffee"
+            },
+            {
+                "key": "dig",
+                "file": "NosePick"
+            },
+            {
+                "key": "eat",
+                "file": "Rice"
+            },
+            {
+                "key": "fade",
+                "file": "Wilt"
+            },
+            {
+                "key": "footb",
+                "file": "Soccer"
+            },
+            {
+                "key": "gift",
+                "file": "Gift"
+            },
+            {
+                "key": "handclap",
+                "file": "Clap"
+            },
+            {
+                "key": "heart",
+                "file": "Heart"
+            },
+            {
+                "key": "hiphot",
+                "file": "Meditate"
+            },
+            {
+                "key": "hug",
+                "file": "Hug"
+            },
+            {
+                "key": "jj",
+                "file": "Beckon"
+            },
+            {
+                "key": "jump",
+                "file": "Waddle"
+            },
+            {
+                "key": "kiss",
+                "file": "Smooch"
+            },
+            {
+                "key": "kn",
+                "file": "Dagger"
+            },
+            {
+                "key": "kotow",
+                "file": "Kotow"
+            },
+            {
+                "key": "ladybug",
+                "file": "Ladybug"
+            },
+            {
+                "key": "li",
+                "file": "Lightning"
+            },
+            {
+                "key": "love",
+                "file": "InLove"
+            },
+            {
+                "key": "lvu",
+                "file": "RockOn"
+            },
+            {
+                "key": "moon",
+                "file": "Moon"
+            },
+            {
+                "key": "no",
+                "file": "Nuh-uh"
+            },
+            {
+                "key": "oY",
+                "file": "Surrender"
+            },
+            {
+                "key": "ok",
+                "file": "OK"
+            },
+            {
+                "key": "oo",
+                "file": "PingPong"
+            },
+            {
+                "key": "pd",
+                "file": "Cleaver"
+            },
+            {
+                "key": "pig",
+                "file": "Pig"
+            },
+            {
+                "key": "rose",
+                "file": "Rose"
+            },
+            {
+                "key": "shake",
+                "file": "Tremble"
+            },
+            {
+                "key": "share",
+                "file": "Shake"
+            },
+            {
+                "key": "shit",
+                "file": "Poop"
+            },
+            {
+                "key": "showlove",
+                "file": "Lips"
+            },
+            {
+                "key": "skip",
+                "file": "JumpRope"
+            },
+            {
+                "key": "strong",
+                "file": "ThumbsUp"
+            },
+            {
+                "key": "sun",
+                "file": "Sun"
+            },
+            {
+                "key": "turn",
+                "file": "Dramatic"
+            },
+            {
+                "key": "v",
+                "file": "Peace"
+            },
+            {
+                "key": "weak",
+                "file": "ThumbsDown"
+            },
+            {
+                "key": "wipe",
+                "file": "Speechless"
+            },
+            {
+                "key": "xx",
+                "file": "Hammer"
+            },
+            {
+                "key": "|-)",
+                "file": "Drowsy"
+            }
+        ]
+    }
+]

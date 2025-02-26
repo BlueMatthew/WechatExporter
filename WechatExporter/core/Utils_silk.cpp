@@ -12,9 +12,13 @@
 #include <silk/SKP_Silk_SDK_API.h>
 #include <silk/SKP_Silk_SigProc_FIX.h>
 
+#include <opencore-amrnb/interf_dec.h>
+
 #ifdef _WIN32
 #include <atlstr.h>
 #endif
+
+#include "Utils.h"
 
 /* Define codec specific settings should be moved to h file */
 #define MAX_BYTES_PER_FRAME     1024
@@ -23,6 +27,11 @@
 #define FRAME_LENGTH_MS         20
 #define MAX_API_FS_KHZ          48
 #define MAX_LBRR_DELAY          2
+
+
+/* From WmfDecBytesPerFrame in dec_input_format_tab.cpp */
+const int amr_frame_sizes[] = { 12, 13, 15, 17, 19, 20, 26, 31, 5, 6, 5, 5, 0, 0, 0, 0 };
+
 
 #ifdef _SYSTEM_IS_BIG_ENDIAN
 /* Function to convert a little endian int16 to a */
@@ -75,9 +84,10 @@ unsigned long GetHighResolutionTime() /* O: time in usec*/
 /* Seed for the random number generator, which is used for simulating packet loss */
 static SKP_int32 rand_seed = 1;
 
-bool silkToPcm(const std::string& silkPath, std::vector<unsigned char>& pcmData)
+bool silkToPcm(const std::string& silkPath, std::vector<unsigned char>& pcmData, bool& isSilk, std::string* error/* = NULL*/)
 {
     pcmData.clear();
+    isSilk = false;
     
 #ifdef ENABLE_AUDIO_CONVERTION
     unsigned long tottime, starttime;
@@ -112,33 +122,67 @@ bool silkToPcm(const std::string& silkPath, std::vector<unsigned char>& pcmData)
     
     std::unique_ptr<FILE, decltype(std::fclose) *> file(bitInFile, std::fclose);
     
-    if( bitInFile == NULL ) {
+    if( bitInFile == NULL )
+    {
+        if (NULL != error)
+        {
+            error->assign("Failed to open file: " + silkPath);
+        }
         return false;
     }
 
     /* Check Silk header */
     {
         char header_buf[ 50 ];
-        fread(header_buf, sizeof(char), 1, bitInFile);
-        header_buf[ strlen( "" ) ] = '\0'; /* Terminate with a null character */
-        if( strcmp( header_buf, "" ) != 0 ) {
+        if (fread(header_buf, sizeof(char), 1, bitInFile) != 1)
+        {
+            fclose(bitInFile);
+            if (NULL != error)
+            {
+                error->assign("Can't read header: " + silkPath);
+            }
+            return false;
+        }
+        // header_buf[ strlen( "" ) ] = '\0'; /* Terminate with a null character */
+        if( header_buf[0] != 0x02 )
+        {
            counter = fread( header_buf, sizeof( char ), strlen( "!SILK_V3" ), bitInFile );
            header_buf[ strlen( "!SILK_V3" ) ] = '\0'; /* Terminate with a null character */
            if( strcmp( header_buf, "!SILK_V3" ) != 0 ) {
                /* Non-equal strings */
-               printf( "SILK Error: Wrong Header %s: %s\n", silkPath.c_str(), header_buf );
+               if (NULL != error)
+               {
+                   error->assign("SILK Error: Wrong Header " + silkPath + ": " + toHex(header_buf, strlen( "!SILK_V3" )));
+               }
+               // printf( "SILK Error: Wrong Header %s: %s\n", silkPath.c_str(), header_buf );
                // exit( 0 );
+               fclose(bitInFile);
                return false;
            }
-        } else {
-           counter = fread( header_buf, sizeof( char ), strlen( "#!SILK_V3" ), bitInFile );
-           header_buf[ strlen( "#!SILK_V3" ) ] = '\0'; /* Terminate with a null character */
-           if( strcmp( header_buf, "#!SILK_V3" ) != 0 ) {
-               /* Non-equal strings */
-               printf( "SILK Error: Wrong Header %s: %s\n", silkPath.c_str(), header_buf );
-               // exit( 0 );
-               return false;
-           }
+            else
+            {
+                isSilk = true;
+            }
+        }
+        else
+        {
+            counter = fread( header_buf, sizeof( char ), strlen( "#!SILK_V3" ), bitInFile );
+            header_buf[ strlen( "#!SILK_V3" ) ] = '\0'; /* Terminate with a null character */
+            if( strcmp( header_buf, "#!SILK_V3" ) != 0 ) {
+                /* Non-equal strings */
+                if (NULL != error)
+                {
+                    error->assign("SILK Error: Wrong Header " + silkPath + ": " + toHex(header_buf, strlen( "!SILK_V3" )));
+                }
+                // printf( "SILK Error: Wrong Header %s: %s\n", silkPath.c_str(), header_buf );
+                // exit( 0 );
+                fclose(bitInFile);
+                return false;
+            }
+            else
+            {
+                isSilk = true;
+            }
         }
     }
 
@@ -302,6 +346,10 @@ bool silkToPcm(const std::string& silkPath, std::vector<unsigned char>& pcmData)
         /* Check if the received totBytes is valid */
         if (totBytes < 0 || totBytes > sizeof(payload))
         {
+            if (NULL != error)
+            {
+                *error += "\rPackets decoded:             " + std::to_string(totPackets);
+            }
             // fprintf( stderr, "\rPackets decoded:             %d", totPackets );
             return false;
         }
@@ -351,6 +399,10 @@ bool silkToPcm(const std::string& silkPath, std::vector<unsigned char>& pcmData)
                 /* Decode 20 ms */
                 ret = SKP_Silk_SDK_Decode( psDec, &DecControl, 0, payloadToDec, nBytes, outPtr, &len );
                 if( ret ) {
+                    if (NULL != error)
+                    {
+                        *error += "\nSKP_Silk_SDK_Decode returned " + std::to_string(ret);
+                    }
                     // printf( "\nSKP_Silk_SDK_Decode returned %d", ret );
                 }
 
@@ -372,6 +424,10 @@ bool silkToPcm(const std::string& silkPath, std::vector<unsigned char>& pcmData)
             for( i = 0; i < DecControl.framesPerPacket; i++ ) {
                 ret = SKP_Silk_SDK_Decode( psDec, &DecControl, 1, payloadToDec, nBytes, outPtr, &len );
                 if( ret ) {
+                    if (NULL != error)
+                    {
+                        *error += "\nSKP_Silk_Decode returned " + std::to_string(ret);
+                    }
                     // printf( "\nSKP_Silk_Decode returned %d", ret );
                 }
                 outPtr  += len;
@@ -400,6 +456,10 @@ bool silkToPcm(const std::string& silkPath, std::vector<unsigned char>& pcmData)
         /* Check if the received totBytes is valid */
         if (totBytes < 0 || totBytes > sizeof(payload))
         {
+            if (NULL != error)
+            {
+                *error += "\rPackets decoded:              " + std::to_string(totPackets);
+            }
             // fprintf( stderr, "\rPackets decoded:              %d", totPackets );
             return false;
         }
@@ -422,10 +482,10 @@ bool silkToPcm(const std::string& silkPath, std::vector<unsigned char>& pcmData)
     return true;
 }
 
-bool silkToPcm(const std::string& silkPath, const std::string& pcmPath)
+bool silkToPcm(const std::string& silkPath, const std::string& pcmPath, bool& isSilk, std::string* error/* = NULL*/)
 {
     std::vector<unsigned char> pcmData;
-    bool result = silkToPcm(silkPath, pcmData);
+    bool result = silkToPcm(silkPath, pcmData, isSilk, error);
     if (result)
     {
         result = writeFile(pcmPath, pcmData);
@@ -433,3 +493,90 @@ bool silkToPcm(const std::string& silkPath, const std::string& pcmPath)
     return result;
 }
 
+size_t skipAmrnbHeader(FILE* fp)
+{
+    const char szFileHeader[] = "#!AMR\n";
+    size_t headerLen = strlen(szFileHeader);
+    
+    unsigned char cData[32];
+    size_t bytesRead = fread(cData, (size_t)1, headerLen, fp);
+    if (bytesRead < headerLen || strncmp((const char *)cData, szFileHeader, bytesRead) != 0)
+    {
+        fseek(fp, 0, SEEK_SET);
+        return 0;
+    }
+    
+    return headerLen;
+}
+
+bool amrToPcm(const std::string& amrPath, std::vector<unsigned char>& pcmData, std::string* error/* = NULL*/)
+{
+#ifdef _WIN32
+    CA2W pszW(amrPath.c_str(), CP_UTF8);
+    FILE *fp = _wfopen((LPCWSTR)pszW, L"rb" );
+#else
+    FILE *fp = fopen(amrPath.c_str(), "rb" );
+#endif
+    if (NULL == fp)
+    {
+        return false;
+    }
+
+    skipAmrnbHeader(fp);
+    
+    void *amrnb_dec = Decoder_Interface_init();
+    if (NULL == amrnb_dec)
+    {
+        fclose(fp);
+        return false;
+    }
+        
+    uint8_t buffer[500], littleendian[320], *ptr;
+    int16_t outbuffer[160];
+    size_t n = 0;
+    
+    while (1)
+    {
+        int size, i;
+        
+        /* Read the mode byte */
+        n = fread(buffer, 1, 1, fp);
+        if (n <= 0)
+            break;
+        /* Find the packet size */
+        size = amr_frame_sizes[(buffer[0] >> 3) & 0x0f];
+        
+        n = fread(buffer + 1, 1, size, fp);
+        if (n != size)
+            break;
+
+        /* Decode the packet */
+        Decoder_Interface_Decode(amrnb_dec, buffer, outbuffer, 0);
+
+        /* Convert to little endian and write to wav */
+        ptr = littleendian;
+        for (i = 0; i < 160; i++)
+        {
+            *ptr++ = (outbuffer[i] >> 0) & 0xff;
+            *ptr++ = (outbuffer[i] >> 8) & 0xff;
+        }
+        pcmData.insert(pcmData.end(), littleendian, littleendian + 320);
+    }
+        
+    Decoder_Interface_exit(amrnb_dec);
+    
+    fclose(fp);
+    
+    return true;
+}
+
+bool amrToPcm(const std::string& amrPath, const std::string& pcmPath, std::string* error/* = NULL*/)
+{
+    std::vector<unsigned char> pcmData;
+    bool result = amrToPcm(amrPath, pcmData, error);
+    if (result)
+    {
+        result = writeFile(pcmPath, pcmData);
+    }
+    return result;
+}

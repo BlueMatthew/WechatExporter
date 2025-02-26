@@ -1,0 +1,174 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hh;hpp;hxx;hm;inl;inc;ipp;xsd</Extensions>
+    </Filter>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="core">
+      <UniqueIdentifier>{1c08ec05-7c7c-4054-8d71-e0d198fe35a3}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\WechatExporter\core\AsyncExecutor.cpp">
+      <Filter>core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\WechatExporter\core\AsyncTask.cpp">
+      <Filter>core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\WechatExporter\core\Downloader.cpp">
+      <Filter>core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\WechatExporter\core\Exporter.cpp">
+      <Filter>core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\WechatExporter\core\FileSystem.cpp">
+      <Filter>core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\WechatExporter\core\IDeviceBackup.cpp">
+      <Filter>core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\WechatExporter\core\ITunesParser.cpp">
+      <Filter>core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\WechatExporter\core\MessageParser.cpp">
+      <Filter>core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\WechatExporter\core\RawMessage.cpp">
+      <Filter>core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\WechatExporter\core\ResManager.cpp">
+      <Filter>core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\WechatExporter\core\TaskManager.cpp">
+      <Filter>core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\WechatExporter\core\Updater.cpp">
+      <Filter>core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\WechatExporter\core\Utils.cpp">
+      <Filter>core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\WechatExporter\core\Utils_audio.cpp">
+      <Filter>core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\WechatExporter\core\Utils_md5.cpp">
+      <Filter>core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\WechatExporter\core\Utils_protobuf.cpp">
+      <Filter>core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\WechatExporter\core\Utils_silk.cpp">
+      <Filter>core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\WechatExporter\core\Utils_thread.cpp">
+      <Filter>core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\WechatExporter\core\WechatParser.cpp">
+      <Filter>core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\WechatExporter\core\XmlParser.cpp">
+      <Filter>core</Filter>
+    </ClCompile>
+    <ClCompile Include="WechatExporterCmd.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\WechatExporter\core\Template.cpp">
+      <Filter>core</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\WechatExporter\core\AsyncExecutor.h">
+      <Filter>core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\WechatExporter\core\AsyncTask.h">
+      <Filter>core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\WechatExporter\core\Downloader.h">
+      <Filter>core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\WechatExporter\core\endianness.h">
+      <Filter>core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\WechatExporter\core\ExportContext.h">
+      <Filter>core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\WechatExporter\core\Exporter.h">
+      <Filter>core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\WechatExporter\core\ExportNotifier.h">
+      <Filter>core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\WechatExporter\core\FileSystem.h">
+      <Filter>core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\WechatExporter\core\IDeviceBackup.h">
+      <Filter>core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\WechatExporter\core\ITunesParser.h">
+      <Filter>core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\WechatExporter\core\Logger.h">
+      <Filter>core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\WechatExporter\core\MbdbReader.h">
+      <Filter>core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\WechatExporter\core\MessageParser.h">
+      <Filter>core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\WechatExporter\core\MMKVReader.h">
+      <Filter>core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\WechatExporter\core\PdfConverter.h">
+      <Filter>core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\WechatExporter\core\RawMessage.h">
+      <Filter>core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\WechatExporter\core\ResManager.h">
+      <Filter>core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\WechatExporter\core\semaphore.h">
+      <Filter>core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\WechatExporter\core\TaskManager.h">
+      <Filter>core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\WechatExporter\core\Updater.h">
+      <Filter>core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\WechatExporter\core\Utils.h">
+      <Filter>core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\WechatExporter\core\WechatObjects.h">
+      <Filter>core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\WechatExporter\core\WechatParser.h">
+      <Filter>core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\WechatExporter\core\WechatSource.h">
+      <Filter>core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\WechatExporter\core\XmlParser.h">
+      <Filter>core</Filter>
+    </ClInclude>
+    <ClInclude Include="Core.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\WechatExporter\core\Template.h">
+      <Filter>core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\WechatExporter\core\ExportOption.h">
+      <Filter>core</Filter>
+    </ClInclude>
+  </ItemGroup>
+</Project>

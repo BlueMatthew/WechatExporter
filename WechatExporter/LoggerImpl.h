@@ -17,16 +17,39 @@ class LoggerImpl : public Logger
 {
 protected:
     __weak ViewController *m_viewController;
-
+    NSLock *m_lock;
+    char m_logFile[1024];
+    
 public:
     LoggerImpl(ViewController* viewController)
     {
         m_viewController = viewController;
+        m_lock = [[NSLock alloc] init];
     }
     
     ~LoggerImpl()
     {
         m_viewController = nil;
+        m_lock = nil;
+    }
+    
+    void setLogPath(const char* logPath)
+    {
+#if !defined(NDEBUG) || defined(DBG_PERF)
+        [m_lock lock];
+        strcpy(m_logFile, logPath);
+        if (!endsWith(logPath, DIR_SEP_STR))
+        {
+            strcat(m_logFile, DIR_SEP_STR);
+        }
+        strcat(m_logFile, "log.txt");
+        FILE *file = fopen(m_logFile, "w");
+        if (NULL != file)
+        {
+            fclose(file);
+        }
+        [m_lock unlock];
+#endif
     }
     
     void write(const std::string& log)
@@ -35,6 +58,22 @@ public:
         std::string timeString = getTimestampString(false, true) + ": ";
 #else
         std::string timeString = getTimestampString() + ": ";
+#endif
+        
+#if !defined(NDEBUG) || defined(DBG_PERF)
+        [m_lock lock];
+        if (strlen(m_logFile) > 0)
+        {
+            FILE *file = fopen(m_logFile, "a");
+            if (NULL != file)
+            {
+                fputs(timeString.c_str(), file);
+                fputs(log.c_str(), file);
+                fputs("\r", file);
+                fclose(file);
+            }
+        }
+        [m_lock unlock];
 #endif
 
         __block NSString *logString = [NSString stringWithUTF8String:(timeString + log).c_str()];
@@ -51,8 +90,8 @@ public:
     
     void debug(const std::string& log)
     {
-#if !defined(NDEBUG) || defined(DBG_PERF)
         write(log);
+#if !defined(NDEBUG) || defined(DBG_PERF)
         NSString *logString = [NSString stringWithUTF8String:log.c_str()];
         NSLog(@"%@", logString);
 #endif

@@ -14,6 +14,8 @@
 #include <cassert>
 #endif
 #include "WechatObjects.h"
+#include "ExportOption.h"
+#include "ResManager.h"
 #include "Downloader.h"
 #include "TaskManager.h"
 #include "ITunesParser.h"
@@ -21,74 +23,11 @@
 #include "XmlParser.h"
 #include "Utils.h"
 
-enum SessionParsingOption
-{
-    SPO_IGNORE_AVATAR = 1 << 0,
-    SPO_IGNORE_AUDIO = 1 << 1,
-    SPO_IGNORE_IMAGE = 1 << 2,
-    SPO_IGNORE_VIDEO = 1 << 3,
-    SPO_IGNORE_EMOJI = 1 << 4,
-    SPO_IGNORE_FILE = 1 << 5,
-    SPO_IGNORE_CARD = 1 << 6,
-    SPO_IGNORE_SHARING = 1 << 7,
-    SPO_IGNORE_HTML_ENC = 1 << 8,
-    SPO_TEXT_MODE = 0xFFFF,
-	SPO_PDF_MODE = 1 << 16,
-    
-    SPO_USING_REMOTE_EMOJI = 1 << 19,
-    SPO_DESC = 1 << 20,
-    SPO_ICON_IN_SESSION = 1 << 21,     // Put Head Icon and Emoji files in the folder of session
-    SPO_SYNC_LOADING = 1 << 22,
-    SPO_SUPPORT_FILTER = 1 << 23,
-    
-    SPO_OUTPUT_DBG_LOGS = 1 << 29,
-    SPO_INCREMENTAL_EXP = 1 << 30,
-	
-	SPO_END
-};
-
-struct WXMSG
-{
-    int createTime;
-    std::string content;
-    int des;
-    int type;
-    std::string msgId;
-    int64_t msgIdValue;
-};
-
-struct WXAPPMSG
-{
-    const WXMSG *msg;
-    int appMsgType;
-    std::string appId;
-    std::string appName;
-    std::string localAppIcon;
-};
-
-struct WXFWDMSG
-{
-    const WXMSG *msg;
-    std::string usrName;
-    std::string displayName;
-    std::string portrait;
-    std::string portraitLD;
-    std::string dataType;
-    std::string subType;
-    std::string dataId;
-    std::string dataFormat;
-    std::string msgTime;
-    std::string srcMsgTime;
-#if !defined(NDEBUG) || defined(DBG_PERF)
-    std::string rawMessage;
-#endif
-};
-
 class TemplateValues
 {
 private:
-    std::string m_name;
     std::map<std::string, std::string> m_values;
+    std::string m_name;
     
 public:
     using const_iterator = std::map<std::string, std::string>::const_iterator;
@@ -135,6 +74,11 @@ public:
     void clearName()
     {
         m_name.clear();
+    }
+    
+    const std::map<std::string, std::string>& getValues() const
+    {
+        return m_values;
     }
 };
 
@@ -277,9 +221,11 @@ public:
     static const int APPMSGTYPE_CARD_TICKET = 16;
     static const int APPMSGTYPE_REALTIME_LOCATION = 17;
     static const int APPMSGTYPE_FWD_MSG = 19;
+    static const int APPMSGTYPE_NOTE = 24;
     static const int APPMSGTYPE_CHANNEL_CARD = 50;
     static const int APPMSGTYPE_CHANNELS = 51;
     static const int APPMSGTYPE_REFER = 57;
+    static const int APPMSGTYPE_PAT = 62;
     static const int APPMSGTYPE_TRANSFERS = 2000;
     static const int APPMSGTYPE_RED_ENVELOPES = 2001;
     static const int APPMSGTYPE_READER_TYPE = 100001;
@@ -296,7 +242,7 @@ public:
     static const int FWDMSG_DATATYPE_CHANNELS = 22;
     static const int FWDMSG_DATATYPE_CHANNEL_CARD = 26;
     
-    MessageParser(const ITunesDb& iTunesDb, const ITunesDb& iTunesDbShare, TaskManager& taskManager, Friends& friends, Friend myself, int options, const std::string& resPath, const std::string& outputPath, std::function<std::string(const std::string&)>& localeFunc);
+    MessageParser(const ITunesDb& iTunesDb, const ITunesDb& iTunesDbShare, TaskManager& taskManager, Friends& friends, Friend myself, const ExportOption& options, const std::string& resPath, const std::string& outputPath, const ResManager& resManager);
     
     bool parse(WXMSG& msg, const Session& session, std::vector<TemplateValues>& tvs) const;
     
@@ -304,76 +250,84 @@ public:
     bool copyPortraitIcon(const Session* session, const std::string& usrName, const std::string& usrNameHash, const std::string& portraitUrl, const std::string& portraitUrlLD, const std::string& destPath) const;
     bool copyPortraitIcon(const Session* session, const Friend& f, const std::string& destPath) const;
     
+    std::string getError() const
+    {
+        return m_error;
+    }
+    bool hasError() const
+    {
+        return !m_error.empty();
+    }
 protected:
     
-    void parsePortrait(const WXMSG& msg, const Session& session, const std::string& senderId, TemplateValues& tv) const;
+    bool parsePortrait(const WXMSG& msg, const Session& session, const std::string& senderId, TemplateValues& tv) const;
     
-    void parseText(const WXMSG& msg, const Session& session, TemplateValues& tv) const;
-    void parseImage(const WXMSG& msg, const Session& session, TemplateValues& tv) const;
-    void parseVoice(const WXMSG& msg, const Session& session, TemplateValues& tv) const;
-    void parsePushMail(const WXMSG& msg, const Session& session, TemplateValues& tv) const;
-    void parseVideo(const WXMSG& msg, const Session& session, std::string& senderId, TemplateValues& tv) const;
-    void parseEmotion(const WXMSG& msg, const Session& session, TemplateValues& tv) const;
-    void parseAppMsg(const WXMSG& msg, const Session& session, std::string& senderId, std::string& fwdMsg, std::string& fwdMsgTitle, TemplateValues& tv) const;
-    void parseCall(const WXMSG& msg, const Session& session, TemplateValues& tv) const;
-    void parseLocation(const WXMSG& msg, const Session& session, TemplateValues& tv) const;
-    void parseStatusNotify(const WXMSG& msg, const Session& session, TemplateValues& tv) const;
-    void parsePossibleFriend(const WXMSG& msg, const Session& session, TemplateValues& tv) const;
-    void parseVerification(const WXMSG& msg, const Session& session, TemplateValues& tv) const;
-    void parseCard(const WXMSG& msg, const Session& session, TemplateValues& tv) const;
-    void parseNotice(const WXMSG& msg, const Session& session, TemplateValues& tv) const;  // 64
-    void parseSysNotice(const WXMSG& msg, const Session& session, TemplateValues& tv) const;   // 9999
-    void parseSystem(const WXMSG& msg, const Session& session, TemplateValues& tv) const;
+    bool parseText(const WXMSG& msg, const Session& session, TemplateValues& tv) const;
+    bool parseImage(const WXMSG& msg, const Session& session, TemplateValues& tv) const;
+    bool parseVoice(const WXMSG& msg, const Session& session, TemplateValues& tv) const;
+    bool parsePushMail(const WXMSG& msg, const Session& session, TemplateValues& tv) const;
+    bool parseVideo(const WXMSG& msg, const Session& session, std::string& senderId, TemplateValues& tv) const;
+    bool parseEmotion(const WXMSG& msg, const Session& session, TemplateValues& tv) const;
+    bool parseAppMsg(const WXMSG& msg, const Session& session, std::string& senderId, std::string& fwdMsg, std::string& fwdMsgTitle, TemplateValues& tv) const;
+    bool parseCall(const WXMSG& msg, const Session& session, TemplateValues& tv) const;
+    bool parseLocation(const WXMSG& msg, const Session& session, TemplateValues& tv) const;
+    bool parseStatusNotify(const WXMSG& msg, const Session& session, TemplateValues& tv) const;
+    bool parsePossibleFriend(const WXMSG& msg, const Session& session, TemplateValues& tv) const;
+    bool parseVerification(const WXMSG& msg, const Session& session, TemplateValues& tv) const;
+    bool parseCard(const WXMSG& msg, const Session& session, TemplateValues& tv) const;
+    bool parseNotice(const WXMSG& msg, const Session& session, TemplateValues& tv) const;  // 64
+    bool parseSysNotice(const WXMSG& msg, const Session& session, TemplateValues& tv) const;   // 9999
+    bool parseSystem(const WXMSG& msg, const Session& session, TemplateValues& tv) const;
     
     // APP MSG
-    void parseAppMsgText(const WXAPPMSG& appMsg, const XmlParser& xmlParser, const Session& session, TemplateValues& tv) const;
-    void parseAppMsgImage(const WXAPPMSG& appMsg, const XmlParser& xmlParser, const Session& session, TemplateValues& tv) const;
-    void parseAppMsgAudio(const WXAPPMSG& appMsg, const XmlParser& xmlParser, const Session& session, TemplateValues& tv) const;
-    void parseAppMsgVideo(const WXAPPMSG& appMsg, const XmlParser& xmlParser, const Session& session, TemplateValues& tv) const;
-    void parseAppMsgEmotion(const WXAPPMSG& appMsg, const XmlParser& xmlParser, const Session& session, TemplateValues& tv) const;
-    void parseAppMsgUrl(const WXAPPMSG& appMsg, const XmlParser& xmlParser, const Session& session, TemplateValues& tv) const;
-    void parseAppMsgAttachment(const WXAPPMSG& appMsg, const XmlParser& xmlParser, const Session& session, TemplateValues& tv) const;
-    void parseAppMsgOpen(const WXAPPMSG& appMsg, const XmlParser& xmlParser, const Session& session, TemplateValues& tv) const;
-    void parseAppMsgEmoji(const WXAPPMSG& appMsg, const XmlParser& xmlParser, const Session& session, TemplateValues& tv) const;
-    void parseAppMsgRtLocation(const WXAPPMSG& appMsg, const XmlParser& xmlParser, const Session& session, TemplateValues& tv) const;
-    void parseAppMsgFwdMsg(const WXAPPMSG& appMsg, const XmlParser& xmlParser, const Session& session, std::string& fwdMsg, std::string& fwdMsgTitle, TemplateValues& tv) const;
-    void parseAppMsgCard(const WXAPPMSG& appMsg, const XmlParser& xmlParser, const Session& session, TemplateValues& tv) const;
-    void parseAppMsgChannelCard(const WXAPPMSG& appMsg, const XmlParser& xmlParser, const Session& session, TemplateValues& tv) const;
-    void parseAppMsgChannels(const WXAPPMSG& appMsg, const XmlParser& xmlParser, const Session& session, TemplateValues& tv) const;
-    void parseAppMsgRefer(const WXAPPMSG& appMsg, const XmlParser& xmlParser, const Session& session, TemplateValues& tv) const;
-    void parseAppMsgTransfer(const WXAPPMSG& appMsg, const XmlParser& xmlParser, const Session& session, TemplateValues& tv) const;
-    void parseAppMsgRedPacket(const WXAPPMSG& appMsg, const XmlParser& xmlParser, const Session& session, TemplateValues& tv) const;
-    void parseAppMsgReaderType(const WXAPPMSG& appMsg, const XmlParser& xmlParser, const Session& session, TemplateValues& tv) const;
-    void parseAppMsgUnknownType(const WXAPPMSG& appMsg, const XmlParser& xmlParser, const Session& session, TemplateValues& tv) const;
-    void parseAppMsgDefault(const WXAPPMSG& appMsg, const XmlParser& xmlParser, const Session& session, TemplateValues& tv) const;
+    bool parseAppMsgText(const WXAPPMSG& appMsg, const XmlParser& xmlParser, const Session& session, TemplateValues& tv) const;
+    bool parseAppMsgImage(const WXAPPMSG& appMsg, const XmlParser& xmlParser, const Session& session, TemplateValues& tv) const;
+    bool parseAppMsgAudio(const WXAPPMSG& appMsg, const XmlParser& xmlParser, const Session& session, TemplateValues& tv) const;
+    bool parseAppMsgVideo(const WXAPPMSG& appMsg, const XmlParser& xmlParser, const Session& session, TemplateValues& tv) const;
+    bool parseAppMsgEmotion(const WXAPPMSG& appMsg, const XmlParser& xmlParser, const Session& session, TemplateValues& tv) const;
+    bool parseAppMsgUrl(const WXAPPMSG& appMsg, const XmlParser& xmlParser, const Session& session, TemplateValues& tv) const;
+    bool parseAppMsgAttachment(const WXAPPMSG& appMsg, const XmlParser& xmlParser, const Session& session, TemplateValues& tv) const;
+    bool parseAppMsgOpen(const WXAPPMSG& appMsg, const XmlParser& xmlParser, const Session& session, TemplateValues& tv) const;
+    bool parseAppMsgEmoji(const WXAPPMSG& appMsg, const XmlParser& xmlParser, const Session& session, TemplateValues& tv) const;
+    bool parseAppMsgRtLocation(const WXAPPMSG& appMsg, const XmlParser& xmlParser, const Session& session, TemplateValues& tv) const;
+    bool parseAppMsgFwdMsg(const WXAPPMSG& appMsg, const XmlParser& xmlParser, const Session& session, std::string& fwdMsg, std::string& fwdMsgTitle, TemplateValues& tv) const;
+    bool parseAppMsgCard(const WXAPPMSG& appMsg, const XmlParser& xmlParser, const Session& session, TemplateValues& tv) const;
+    bool parseAppMsgChannelCard(const WXAPPMSG& appMsg, const XmlParser& xmlParser, const Session& session, TemplateValues& tv) const;
+    bool parseAppMsgChannels(const WXAPPMSG& appMsg, const XmlParser& xmlParser, const Session& session, TemplateValues& tv) const;
+    bool parseAppMsgRefer(const WXAPPMSG& appMsg, const XmlParser& xmlParser, const Session& session, TemplateValues& tv) const;
+    bool parseAppMsgTransfer(const WXAPPMSG& appMsg, const XmlParser& xmlParser, const Session& session, TemplateValues& tv) const;
+    bool parseAppMsgRedPacket(const WXAPPMSG& appMsg, const XmlParser& xmlParser, const Session& session, TemplateValues& tv) const;
+    bool parseAppMsgPat(const WXAPPMSG& appMsg, const XmlParser& xmlParser, const Session& session, TemplateValues& tv) const;
+    bool parseAppMsgReaderType(const WXAPPMSG& appMsg, const XmlParser& xmlParser, const Session& session, TemplateValues& tv) const;
+    bool parseAppMsgNote(const WXAPPMSG& appMsg, const XmlParser& xmlParser, const Session& session, TemplateValues& tv) const;
+    bool parseAppMsgUnknownType(const WXAPPMSG& appMsg, const XmlParser& xmlParser, const Session& session, TemplateValues& tv) const;
+    bool parseAppMsgDefault(const WXAPPMSG& appMsg, const XmlParser& xmlParser, const Session& session, TemplateValues& tv) const;
 
     // FORWARDEWD MSG
-    void parseFwdMsgText(const WXFWDMSG& fwdMsg, const XmlParser& xmlParser, xmlNodePtr itemNode, const Session& session, TemplateValues& tv) const;
-    void parseFwdMsgImage(const WXFWDMSG& fwdMsg, const XmlParser& xmlParser, xmlNodePtr itemNode, const Session& session, TemplateValues& tv) const;
-    void parseFwdMsgVideo(const WXFWDMSG& fwdMsg, const XmlParser& xmlParser, xmlNodePtr itemNode, const Session& session, TemplateValues& tv) const;
-    void parseFwdMsgLink(const WXFWDMSG& fwdMsg, const XmlParser& xmlParser, xmlNodePtr itemNode, const Session& session, TemplateValues& tv) const;
-    void parseFwdMsgLocation(const WXFWDMSG& fwdMsg, const XmlParser& xmlParser, xmlNodePtr itemNode, const Session& session, TemplateValues& tv) const;
-    void parseFwdMsgAttach(const WXFWDMSG& fwdMsg, const XmlParser& xmlParser, xmlNodePtr itemNode, const Session& session, TemplateValues& tv) const;
-    void parseFwdMsgCard(const WXFWDMSG& fwdMsg, const XmlParser& xmlParser, xmlNodePtr itemNode, const Session& session, TemplateValues& tv) const;
-    void parseFwdMsgNestedFwdMsg(const WXFWDMSG& fwdMsg, const XmlParser& xmlParser, xmlNodePtr itemNode, const Session& session, std::string& nestedFwdMsg, std::string& nestedFwdMsgTitle, TemplateValues& tv) const;
-    void parseFwdMsgMiniProgram(const WXFWDMSG& fwdMsg, const XmlParser& xmlParser, xmlNodePtr itemNode, const Session& session, TemplateValues& tv) const;
-    void parseFwdMsgChannels(const WXFWDMSG& fwdMsg, const XmlParser& xmlParser, xmlNodePtr itemNode, const Session& session, TemplateValues& tv) const;
-    void parseFwdMsgChannelCard(const WXFWDMSG& fwdMsg, const XmlParser& xmlParser, xmlNodePtr itemNode, const Session& session, TemplateValues& tv) const;
+    bool parseFwdMsgText(const WXFWDMSG& fwdMsg, const XmlParser& xmlParser, xmlNodePtr itemNode, const Session& session, TemplateValues& tv) const;
+    bool parseFwdMsgImage(const WXFWDMSG& fwdMsg, const XmlParser& xmlParser, xmlNodePtr itemNode, const Session& session, TemplateValues& tv) const;
+    bool parseFwdMsgVideo(const WXFWDMSG& fwdMsg, const XmlParser& xmlParser, xmlNodePtr itemNode, const Session& session, TemplateValues& tv) const;
+    bool parseFwdMsgLink(const WXFWDMSG& fwdMsg, const XmlParser& xmlParser, xmlNodePtr itemNode, const Session& session, TemplateValues& tv) const;
+    bool parseFwdMsgLocation(const WXFWDMSG& fwdMsg, const XmlParser& xmlParser, xmlNodePtr itemNode, const Session& session, TemplateValues& tv) const;
+    bool parseFwdMsgAttach(const WXFWDMSG& fwdMsg, const XmlParser& xmlParser, xmlNodePtr itemNode, const Session& session, TemplateValues& tv) const;
+    bool parseFwdMsgCard(const WXFWDMSG& fwdMsg, const XmlParser& xmlParser, xmlNodePtr itemNode, const Session& session, TemplateValues& tv) const;
+    bool parseFwdMsgNestedFwdMsg(const WXFWDMSG& fwdMsg, const XmlParser& xmlParser, xmlNodePtr itemNode, const Session& session, std::string& nestedFwdMsg, std::string& nestedFwdMsgTitle, TemplateValues& tv) const;
+    bool parseFwdMsgMiniProgram(const WXFWDMSG& fwdMsg, const XmlParser& xmlParser, xmlNodePtr itemNode, const Session& session, TemplateValues& tv) const;
+    bool parseFwdMsgChannels(const WXFWDMSG& fwdMsg, const XmlParser& xmlParser, xmlNodePtr itemNode, const Session& session, TemplateValues& tv) const;
+    bool parseFwdMsgChannelCard(const WXFWDMSG& fwdMsg, const XmlParser& xmlParser, xmlNodePtr itemNode, const Session& session, TemplateValues& tv) const;
     
     // Implementation
-    void parseImage(const std::string& sessionPath, const std::string& sessionAssertsPath, const std::string& src, const std::string& srcPre, const std::string& dest, const std::string& srcThumb, const std::string& destThumb, TemplateValues& tv) const;
-    void parseVideo(const std::string& sessionPath, const std::string& sessionAssertsPath, const std::string& src, const std::string& dest, const std::string& srcThumb, const std::string& destThumb, const std::string& width, const std::string& height, TemplateValues& tv) const;
-    void parseFile(const std::string& sessionPath, const std::string& sessionAssertsPath, const std::string& src, const std::string& dest, const std::string& fileName, TemplateValues& tv) const;
-    void parseCard(const Session& session, const std::string& sessionPath, const std::string& portraitDir, const std::string& cardMessage, TemplateValues& tv) const;
-    void parseChannelCard(const Session& session, const std::string& portraitDir, const std::string& usrName, const std::string& avatar, const std::string& avatarLD, const std::string& name, TemplateValues& tv) const;
-    void parseChannels(const std::string& msgId, const XmlParser& xmlParser, xmlNodePtr parentNode, const std::string& finderFeedXPath, const Session& session, TemplateValues& tv) const;
+    bool parseImage(const std::string& sessionPath, const std::string& sessionAssetsPath, const std::string& sessionAssetsUrlPath, const std::string& src, const std::string& srcHdOrPre, const std::string& dest, const std::string& srcThumb, const std::string& destThumb, TemplateValues& tv) const;
+    bool parseVideo(const std::string& sessionPath, const std::string& sessionAssetsPath, const std::string& sessionAssetsUrlPath, const std::string& src, const std::string& srcRaw, const std::string& dest, const std::string& srcThumb, const std::string& destThumb, const std::string& width, const std::string& height, TemplateValues& tv) const;
+    bool parseFile(const std::string& sessionPath, const std::string& sessionAssetsPath, const std::string& sessionAssetsUrlPath, const std::string& src, const std::string& dest, const std::string& fileName, TemplateValues& tv) const;
+    bool parseCard(const Session& session, const std::string& sessionPath, const std::string& portraitDir, const std::string& portraitUrlDir, const std::string& cardMessage, TemplateValues& tv) const;
+    bool parseChannelCard(const Session& session, const std::string& portraitDir, const std::string& portraitUrlDir, const std::string& usrName, const std::string& avatar, const std::string& avatarLD, const std::string& name, TemplateValues& tv) const;
+    bool parseChannels(const std::string& msgId, const XmlParser& xmlParser, xmlNodePtr parentNode, const std::string& finderFeedXPath, const Session& session, TemplateValues& tv) const;
     bool parseForwardedMsgs(const Session& session, const WXMSG& msg, const std::string& title, const std::string& message, std::vector<TemplateValues>& tvs) const;
     
     std::string getDisplayTime(int ms) const;
-    std::string getLocaleString(const std::string& key) const
-    {
-        return m_localFunction(key);
-    }
+    
+    std::string getMemberDisplayName(const std::string& usrName, const Session& session) const;
     
     void ensureDirectoryExisted(const std::string& path) const
     {
@@ -384,22 +338,23 @@ protected:
     }
     
     void ensureDefaultPortraitIconExisted(const std::string& portraitPath) const;
+    
+    static bool removeSupportUrl(std::string& url);
 protected:
     const ITunesDb& m_iTunesDb;
     const ITunesDb& m_iTunesDbShare;
-    // Downloader& m_downloader;
+    const ResManager& m_resManager;
     TaskManager& m_taskManager;
 
     Friends& m_friends;
     Friend m_myself;
-    int m_options;
+    ExportOption m_options;
     
     const std::string m_resPath;
     const std::string m_outputPath;
     std::string m_userBase;
+    mutable std::string m_error;
 
-    std::function<std::string(const std::string&)> m_localFunction;
-    
 protected:
 #ifndef USING_ASYNC_TASK_FOR_MP3
     mutable std::vector<unsigned char> m_pcmData;  // buffer

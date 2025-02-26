@@ -32,8 +32,8 @@ typedef NS_ENUM(NSInteger, OUTPUT_FORMAT)
 + (void)setSavingInSession:(BOOL)savingInSession;
 + (BOOL)getSavingInSession;
 
-+ (void)setAsyncLoading:(BOOL)asyncLoading;
-+ (BOOL)getAsyncLoading;
++ (void)setSyncLoading;
++ (BOOL)getSyncLoading;
 
 + (void)setIncrementalExporting:(BOOL)incrementalExp;
 + (BOOL)getIncrementalExporting;
@@ -53,12 +53,34 @@ typedef NS_ENUM(NSInteger, OUTPUT_FORMAT)
 + (void)setCheckingUpdateDisabled:(BOOL)disabled;
 + (BOOL)isCheckingUpdateDisabled;
 
-+ (void)setLoadingDataOnScroll; // YES
-+ (void)setLoadingDataOnScroll:(BOOL)loadingDataOnScroll;
++ (void)setLoadingDataOnScroll;
 + (BOOL)getLoadingDataOnScroll;
+
++ (void)setNormalPagination;
++ (BOOL)getNormalPagination;
++ (void)setPaginationOnYear;
++ (BOOL)getPaginationOnYear;
++ (void)setPaginationOnMonth;
++ (BOOL)getPaginationOnMonth;
 
 + (void)setSupportingFilter:(BOOL)supportingFilter;
 + (BOOL)getSupportingFilter;
+
++ (void)setOutputDebugLogs:(BOOL)dbgLogs;
++ (BOOL)outputDebugLogs;
+
++ (void)setIncludingSubscriptions:(BOOL)includingSubscriptions;
++ (BOOL)includeSubscriptions;
+
++ (void)setOpenningFolderAfterExp:(BOOL)openningFolderAfterExp;
++ (BOOL)getOpenningFolderAfterExp;
+
++ (void)setSkipGuide:(BOOL)skipGuide;
++ (BOOL)getSkipGuide;
+
++ (void)upgrade;
++ (uint64_t)buildOptions;
+
 
 @end
 

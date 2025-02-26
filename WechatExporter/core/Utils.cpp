@@ -13,6 +13,7 @@
 #include <iomanip>
 #include <fstream>
 #include <algorithm>
+#include <string>
 #include <codecvt>
 #include <locale>
 #include <cstdio>
@@ -35,18 +36,30 @@
 #include <curl/curl.h>
 #include "FileSystem.h"
 
-void replaceAll(std::string& input, const std::string& search, const std::string& replace)
+#ifdef _WIN32
+#include <Rpc.h>
+#else
+#include <uuid/uuid.h>
+#endif
+
+
+int replaceAll(std::string& input, const std::string& search, const std::string& replace)
 {
+    int matched = 0;
     size_t pos = 0;
     while((pos = input.find(search, pos)) != std::string::npos)
     {
         input.replace(pos, search.length(), replace);
-         pos += replace.length();
+        pos += replace.length();
+        ++matched;
     }
+    
+    return matched;
 }
 
-void replaceAll(std::string& input, const std::vector<std::pair<std::string, std::string>>& pairs)
+int replaceAll(std::string& input, const std::vector<std::pair<std::string, std::string>>& pairs)
 {
+    int matched = 0;
     for (std::vector<std::pair<std::string, std::string>>::const_iterator it = pairs.cbegin(); it != pairs.cend(); ++it)
     {
         size_t pos = 0;
@@ -54,8 +67,11 @@ void replaceAll(std::string& input, const std::vector<std::pair<std::string, std
         {
             input.replace(pos, it->first.length(), it->second);
             pos += it->second.length();
+            ++matched;
         }
     }
+    
+    return matched;
 }
 
 std::string replaceAll(const std::string& input, const std::string& search, const std::string& replace)
@@ -91,6 +107,20 @@ bool startsWith(const std::string& str, const std::string& prefix, int pos/* = 0
 bool startsWith(const std::string& str, std::string::value_type ch)
 {
     return !str.empty() && str[0] == ch;
+}
+
+std::string toUpper(const std::string& str)
+{
+    std::string res = str;
+    std::transform(res.begin(), res.end(), res.begin(), ::toupper);
+    return res;
+}
+
+std::string toLower(const std::string& str)
+{
+    std::string res = str;
+    std::transform(res.begin(), res.end(), res.begin(), ::tolower);
+    return res;
 }
 
 std::vector<std::string> split(const std::string& str, const std::string& delimiter)
@@ -138,7 +168,7 @@ std::string join(std::vector<std::string>::const_iterator b, std::vector<std::st
 std::string safeHTML(const std::string& s)
 {
     static std::vector<std::pair<std::string, std::string>> replaces =
-    { {"&", "&amp;"}, {" ", "&nbsp;"}, {"<", "&lt;"}, {">", "&gt;"}, {"\r\n", "<br/>"}, {"\r", "<br/>"}, {"\n", "<br/>"} };
+    { {"&", "&amp;"}, /*{" ", "&nbsp;"}, */{"<", "&lt;"}, {">", "&gt;"}, {"\r\n", "<br/>"}, {"\r", "<br/>"}, {"\n", "<br/>"} };
     return replaceAll(s, replaces);
 }
 
@@ -163,15 +193,28 @@ std::string removeCdata(const std::string& str)
     return str;
 }
 
-std::string fromUnixTime(unsigned int unixtime)
+std::string fromUnixTime(unsigned int unixtime, bool localTime/* = true*/)
 {
-    std::uint32_t time_date_stamp = unixtime;
-    std::time_t temp = time_date_stamp;
-    std::tm* t = std::localtime(&temp);
-    std::stringstream ss; // or if you're going to print, just input directly into the output stream
-    ss << std::put_time(t, "%Y-%m-%d %H:%M:%S");
+    std::time_t ts = unixtime;
+    std::tm* t1 = std::localtime(&ts);
+    if (!localTime)
+    {
+        std::time_t local_secs = std::mktime(t1);
+
+        struct tm *t2 = gmtime(&ts);
+        std::time_t gmt_secs = mktime(t2);
+        
+        ts -= gmt_secs - local_secs;
+        t1 = std::localtime(&ts);
+    }
     
-    return ss.str();
+    char buf[30] = { 0 };
+	std::strftime(buf, 30, "%Y-%m-%d %H:%M:%S", t1);
+
+    // std::stringstream ss; // or if you're going to print, just input directly into the output stream
+    // ss << std::put_time(t, "%Y-%m-%d %H:%M:%S");
+
+    return std::string(buf);
 }
 
 uint32_t getUnixTimeStamp()
@@ -298,8 +341,6 @@ std::string utf8ToLocalAnsi(const std::string& utf8Str)
 
 void updateFileTime(const std::string& path, time_t mtime)
 {
-    
-
 #ifdef _WIN32
     CW2T pszT(CA2W(path.c_str(), CP_UTF8));
 	struct _stat st;
@@ -331,9 +372,8 @@ bool deleteFile(const std::string& fileName)
 }
 */
 
-int openSqlite3ReadOnly(const std::string& path, sqlite3 **ppDb)
+int openSqlite3Database(const std::string& path, sqlite3 **ppDb, bool readOnly/* = true*/)
 {
-    std::string sep(1, DIR_SEP);
     std::string encodedPath;
 #ifdef _WIN32
     TCHAR szDriver[_MAX_DRIVE] = { 0 };
@@ -357,7 +397,7 @@ int openSqlite3ReadOnly(const std::string& path, sqlite3 **ppDb)
     encodedPath = normalizePath(path);
 #endif
 
-    std::vector<std::string> parts = split(encodedPath, sep);
+    std::vector<std::string> parts = split(encodedPath, DIR_SEP_STR);
     std::vector<std::string> encodedParts;
     encodedPath.reserve(parts.size() + 1);
 
@@ -376,7 +416,7 @@ int openSqlite3ReadOnly(const std::string& path, sqlite3 **ppDb)
 
         curl_easy_cleanup(curl);
 
-        encodedPath = join(encodedParts, sep.c_str());
+        encodedPath = join(encodedParts, DIR_SEP_STR);
     }
 
 #ifdef _WIN32
@@ -384,36 +424,109 @@ int openSqlite3ReadOnly(const std::string& path, sqlite3 **ppDb)
     {
         if (_tcslen(szDir) > 0 && szDir[0] == DIR_SEP)
         {
-            encodedPath = sep + encodedPath;
+            encodedPath = DIR_SEP_STR + encodedPath;
         }
     }
     else
     {
         CW2A pszU8(CT2W(szDriver), CP_UTF8);
-        encodedPath = (LPCSTR)pszU8 + sep + encodedPath;
+		encodedPath = std::string((LPCSTR)pszU8) + DIR_SEP_STR + encodedPath;
     }
 #else
-    if (startsWith(path, sep))
+    if (startsWith(path, DIR_SEP_STR))
     {
-        encodedPath = sep + encodedPath;
+        encodedPath = DIR_SEP_STR + encodedPath;
     }
 #endif
-    
-    std::string pathWithQuery = "file:" + encodedPath;
+
+#ifdef _WIN32
+    std::string pathWithQuery = "file:///" + encodedPath;
+#else
+	std::string pathWithQuery = "file://" + encodedPath;
+#endif
     // std::string pathWithQuery = "file:" + path;
-    pathWithQuery += "?immutable=1&mode=ro";
-    
-    // return sqlite3_open_v2(path.c_str(), ppDb, SQLITE_OPEN_READONLY, NULL);
-    return sqlite3_open_v2(pathWithQuery.c_str(), ppDb, SQLITE_OPEN_READONLY | SQLITE_OPEN_URI, NULL);
+    pathWithQuery += readOnly ? "?immutable=1&mode=ro" : "?mode=rwc";
+
+    return sqlite3_open_v2(pathWithQuery.c_str(), ppDb, readOnly ? (SQLITE_OPEN_READONLY | SQLITE_OPEN_URI) : (SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE | SQLITE_OPEN_URI), NULL);
+}
+
+
+bool isBigEndian()
+{
+    short int number = 0x1;
+    char *numPtr = (char*)&number;
+    return (numPtr[0] != 1);
+}
+
+template<typename T>
+T swapEndian(T u)
+{
+    union ET
+    {
+        T u;
+        unsigned char u8[sizeof(T)];
+    } src, dest;
+
+    src.u = u;
+
+    for (size_t i = 0; i < sizeof(T); ++i)
+        dest.u8[i] = src.u8[sizeof(T) - i - 1];
+
+    return dest.u;
 }
 
 int GetBigEndianInteger(const unsigned char* data, int startIndex/* = 0*/)
 {
-    return (data[startIndex] << 24)
+    if (isBigEndian())
+    {
+        return *((int *)(data + startIndex));
+    }
+    
+#ifndef NDEBUG
+    int aa =  (data[startIndex] << 24)
          | (data[startIndex + 1] << 16)
          | (data[startIndex + 2] << 8)
          | data[startIndex + 3];
+    
+    int bb = swapEndian(*((int *)(data + startIndex)));
+    if (aa == bb)
+    {
+        aa = bb;
+    }
+#endif
+    return swapEndian(*((int *)&data[startIndex]));
 }
+
+int16_t bigEndianToNative(int16_t n)
+{
+    return isBigEndian() ? n : swapEndian(n);
+}
+
+int32_t bigEndianToNative(int32_t n)
+{
+    return isBigEndian() ? n : swapEndian(n);
+}
+
+int64_t bigEndianToNative(int64_t n)
+{
+    return isBigEndian() ? n : swapEndian(n);
+}
+
+uint16_t bigEndianToNative(uint16_t n)
+{
+    return isBigEndian() ? n : swapEndian(n);
+}
+
+uint32_t bigEndianToNative(uint32_t n)
+{
+    return isBigEndian() ? n : swapEndian(n);
+}
+
+uint64_t bigEndianToNative(uint64_t n)
+{
+    return isBigEndian() ? n : swapEndian(n);
+}
+
 
 int GetLittleEndianInteger(const unsigned char* data, int startIndex/* = 0*/)
 {
@@ -442,43 +555,24 @@ std::string encodeUrl(const std::string& url)
     return encodedUrl;
 }
 
-long long diff_tm(struct tm *a, struct tm *b) {
-    return a->tm_sec - b->tm_sec
-        + 60LL * (a->tm_min - b->tm_min)
-        + 3600LL * (a->tm_hour - b->tm_hour)
-        + 86400LL * (a->tm_yday - b->tm_yday)
-        + (a->tm_year - 70) * 31536000LL
-        - (a->tm_year - 69) / 4 * 86400LL
-        + (a->tm_year - 1) / 100 * 86400LL
-        - (a->tm_year + 299) / 400 * 86400LL
-        - (b->tm_year - 70) * 31536000LL
-        + (b->tm_year - 69) / 4 * 86400LL
-        - (b->tm_year - 1) / 100 * 86400LL
-        + (b->tm_year + 299) / 400 * 86400LL;
-}
-
-std::string utcToLocal(const std::string& utcTime)
+std::string decodeUrl(const std::string& url)
 {
-    struct std::tm tp;
-    std::istringstream ss(utcTime);
-    ss >> std::get_time(&tp, "%Y-%m-%dT%H:%M:%SZ");
-    tp.tm_isdst = -1;
-    time_t utc = mktime(&tp);
-    struct std::tm e0 = { 0 };
-    e0.tm_year = tp.tm_year;
-    e0.tm_mday = tp.tm_mday;
-    e0.tm_mon = tp.tm_mon;
-    e0.tm_hour = tp.tm_hour;
-    e0.tm_isdst = -1;
-    std::time_t pseudo = mktime(&e0);
-    struct std::tm e1 = *gmtime(&pseudo);
-    e0.tm_sec += utc - diff_tm(&e1, &e0);
-    time_t local = e0.tm_sec;
-    struct tm localt = *localtime(&local);
-    char buf[30] = { 0 };
-    strftime(buf, 30, "%Y-%m-%d %H:%M:%S", &localt);
-
-    return std::string(buf);
+    std::string decodedUrl = url;
+    CURL *curl = curl_easy_init();
+    if(curl)
+    {
+        int outlength = 0;
+        char *output = curl_easy_unescape(curl, url.c_str(), static_cast<int>(url.size()), &outlength);
+        if(output)
+        {
+            decodedUrl = output;
+            curl_free(output);
+        }
+        
+        curl_easy_cleanup(curl);
+    }
+    
+    return decodedUrl;
 }
 
 std::string getTimestampString(bool includingYMD/* = false*/, bool includingMs/* = false*/)
@@ -489,8 +583,8 @@ std::string getTimestampString(bool includingYMD/* = false*/, bool includingMs/*
 
     std::time_t tt;
     tt = system_clock::to_time_t ( currentTime );
-    auto timeinfo = localtime (&tt);
-    strftime (buffer, 80, includingYMD ? "%F %H:%M:%S" : "%H:%M:%S", timeinfo);
+	auto timeinfo = localtime (&tt);
+	strftime (buffer, 80, includingYMD ? "%F %H:%M:%S" : "%H:%M:%S", timeinfo);
     if (includingMs)
     {
         auto transformed = currentTime.time_since_epoch().count() / 1000000;
@@ -504,4 +598,43 @@ std::string getTimestampString(bool includingYMD/* = false*/, bool includingMs/*
 bool isNumber(const std::string &s)
 {
     return !s.empty() && std::all_of(s.begin(), s.end(), ::isdigit);
+}
+
+
+std::string makeUuid()
+{
+#ifdef WIN32
+    UUID uuid;
+    UuidCreate ( &uuid );
+
+	RPC_CSTR str = NULL;
+    UuidToStringA ( &uuid, &str );
+
+    std::string s((LPCSTR)CW2A(CA2W((LPCSTR)str), CP_UTF8));
+
+    RpcStringFreeA(&str);
+#else
+    uuid_t uuid;
+    uuid_generate_random ( uuid );
+    char s[37];
+    uuid_unparse ( uuid, s );
+#endif
+    return s;
+}
+
+std::string toHex(unsigned char* data, size_t length)
+{
+    std::stringstream stream;
+    stream << std::setfill ('0') << std::hex;
+    
+    for (int idx = 0; idx < length; idx++)
+    {
+        stream << std::setw(2) << ((unsigned int) data[idx]);
+    }
+    return stream.str();
+}
+
+std::string toHex(char* data, size_t length)
+{
+    return toHex((unsigned char *)data, length);
 }

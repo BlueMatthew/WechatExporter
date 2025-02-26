@@ -76,7 +76,7 @@ struct AttributeHandler
             return true;
         }
         
-        return true;
+        return false;
     }
 };
 

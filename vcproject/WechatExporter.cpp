@@ -7,9 +7,13 @@
 #include <atlctrls.h>
 #include <atlctrlx.h>
 #include <atldlgs.h>
+#include "ToolTipButton.h"
 
 #include "resource.h"
 
+#include "Core.h"
+
+#include "BackupDlg.h"
 #include "View.h"
 #include "aboutdlg.h"
 #include "MainFrm.h"
@@ -55,6 +59,23 @@ int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE /*hPrevInstance*/, LPTSTR lp
 
 	hRes = _Module.Init(NULL, hInstance);
 	ATLASSERT(SUCCEEDED(hRes));
+
+	TCHAR buffer[MAX_PATH] = { 0 };
+	DWORD dwRet = GetModuleFileName(NULL, buffer, MAX_PATH);
+	if (dwRet > 0)
+	{
+		if (PathRemoveFileSpec(buffer))
+		{
+			PathAppend(buffer, TEXT("Dlls"));
+			SetDllDirectory(buffer);
+		}
+	}
+#ifndef NDEBUG
+	else
+	{
+		assert(false);
+	}
+#endif
 
 	int nRet = Run(lpstrCmdLine, nCmdShow);
 

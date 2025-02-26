@@ -47,7 +47,20 @@
                                 <modifierMask key="keyEquivalentModifierMask"/>
                                 <menu key="submenu" title="File" autoenablesItems="NO" id="yFn-8R-v2s">
                                     <items>
-                                        <menuItem title="Check Update Automatically" state="on" identifier="updater" id="Pyu-qm-bT0" userLabel="Update">
+                                        <menuItem title="Check Update Automatically" state="on" identifier="updater" id="0eV-Ry-IfP" userLabel="Update">
+                                            <modifierMask key="keyEquivalentModifierMask"/>
+                                            <connections>
+                                                <action selector="fileMenuItemClick:" target="Voe-Tx-rLC" id="xct-X6-Tm8"/>
+                                            </connections>
+                                        </menuItem>
+                                        <menuItem isSeparatorItem="YES" id="4FA-3H-oyN"/>
+                                        <menuItem title="Open the Folder After Exporting" identifier="openFolder" id="TWh-AV-CCF" userLabel="OpenFolder">
+                                            <modifierMask key="keyEquivalentModifierMask"/>
+                                            <connections>
+                                                <action selector="fileMenuItemClick:" target="Voe-Tx-rLC" id="ogW-Y1-xTE"/>
+                                            </connections>
+                                        </menuItem>
+                                        <menuItem title="Output Detailed Logs" identifier="outputDbgLogs" id="Pyu-qm-bT0" userLabel="Logs">
                                             <modifierMask key="keyEquivalentModifierMask"/>
                                             <connections>
                                                 <action selector="fileMenuItemClick:" target="Voe-Tx-rLC" id="JLp-9y-Hr3"/>
@@ -85,29 +98,47 @@
                                 <modifierMask key="keyEquivalentModifierMask"/>
                                 <menu key="submenu" title="Options" autoenablesItems="NO" id="uG2-8c-wjP">
                                     <items>
-                                        <menuItem title="From Newer To Earlier" identifier="descOrder" id="GbO-lL-BLb" userLabel="DescOrder">
+                                        <menuItem title="From Newer To Earlier" identifier="descOrder" id="eJH-AO-QUD" userLabel="DescOrder">
                                             <modifierMask key="keyEquivalentModifierMask"/>
                                             <connections>
-                                                <action selector="optionsMenuItemClick:" target="Voe-Tx-rLC" id="MEP-ZQ-Zdq"/>
+                                                <action selector="optionsMenuItemClick:" target="Voe-Tx-rLC" id="bmE-bp-yvx"/>
                                             </connections>
                                         </menuItem>
-                                        <menuItem title="Save Avatar/Emoji in Chat Folder" state="on" identifier="savingInSessionFolder" id="tGU-e5-isp" userLabel="SavingInSession">
+                                        <menuItem title="Save Avatar/Emoji in Chat Folder" state="on" hidden="YES" identifier="savingInSessionFolder" id="tGU-e5-isp" userLabel="SavingInSession">
                                             <modifierMask key="keyEquivalentModifierMask"/>
                                             <connections>
                                                 <action selector="optionsMenuItemClick:" target="Voe-Tx-rLC" id="Ak2-Wp-Nxc"/>
                                             </connections>
                                         </menuItem>
-                                        <menuItem isSeparatorItem="YES" id="qwf-hH-tEU"/>
-                                        <menuItem title="Load Messages Asynchronously(HTML Mode)" state="on" identifier="asyncLoading" id="WOF-ft-ZWq" userLabel="AsyncLoading">
+                                        <menuItem isSeparatorItem="YES" id="cxg-sZ-JjI"/>
+                                        <menuItem title="Asynchronous Loading for HTML  Format" hidden="YES" id="WOF-ft-ZWq" userLabel="AsyncLoading">
                                             <modifierMask key="keyEquivalentModifierMask"/>
                                             <connections>
                                                 <action selector="optionsMenuItemClick:" target="Voe-Tx-rLC" id="2yw-ca-llR"/>
                                             </connections>
                                         </menuItem>
-                                        <menuItem title="Load Messages On Scrolling" identifier="loadingOnScroll" id="c4Q-qP-ppM" userLabel="LoadOnScroll">
+                                        <menuItem title="Load Messages on Scrolling" state="on" identifier="asyncLoadingOnScroll" id="c4Q-qP-ppM" userLabel="LoadOnScroll">
                                             <modifierMask key="keyEquivalentModifierMask"/>
                                             <connections>
                                                 <action selector="optionsMenuItemClick:" target="Voe-Tx-rLC" id="zuW-td-SIh"/>
+                                            </connections>
+                                        </menuItem>
+                                        <menuItem title="Normal Pagination (Every 1000 Messages)" identifier="asyncPagerNormal" id="Ygm-65-QSG">
+                                            <modifierMask key="keyEquivalentModifierMask"/>
+                                            <connections>
+                                                <action selector="optionsMenuItemClick:" target="Voe-Tx-rLC" id="MG1-Vl-fgK"/>
+                                            </connections>
+                                        </menuItem>
+                                        <menuItem title="Pagination Based on Year" identifier="asyncPagerYear" id="91m-8a-U1P">
+                                            <modifierMask key="keyEquivalentModifierMask"/>
+                                            <connections>
+                                                <action selector="optionsMenuItemClick:" target="Voe-Tx-rLC" id="aU3-uy-zps"/>
+                                            </connections>
+                                        </menuItem>
+                                        <menuItem title="Pagination Based on Month" identifier="asyncPagerMonth" id="QlU-BX-D1D">
+                                            <modifierMask key="keyEquivalentModifierMask"/>
+                                            <connections>
+                                                <action selector="optionsMenuItemClick:" target="Voe-Tx-rLC" id="295-GE-eQy"/>
                                             </connections>
                                         </menuItem>
                                         <menuItem isSeparatorItem="YES" id="bTu-p0-ZCF"/>
@@ -122,6 +153,12 @@
                                             <modifierMask key="keyEquivalentModifierMask"/>
                                             <connections>
                                                 <action selector="optionsMenuItemClick:" target="Voe-Tx-rLC" id="HQe-Oy-Na5"/>
+                                            </connections>
+                                        </menuItem>
+                                        <menuItem title="Including Subscriptions" hidden="YES" identifier="includingSubscriptions" id="GbO-lL-BLb" userLabel="Subscriptions">
+                                            <modifierMask key="keyEquivalentModifierMask"/>
+                                            <connections>
+                                                <action selector="optionsMenuItemClick:" target="Voe-Tx-rLC" id="MEP-ZQ-Zdq"/>
                                             </connections>
                                         </menuItem>
                                     </items>
@@ -251,14 +288,14 @@
                                 </popUpButtonCell>
                             </popUpButton>
                             <scrollView fixedFrame="YES" autohidesScrollers="YES" horizontalLineScroll="19" horizontalPageScroll="10" verticalLineScroll="19" verticalPageScroll="10" usesPredominantAxisScrolling="NO" translatesAutoresizingMaskIntoConstraints="NO" id="pql-rp-pLF">
-                                <rect key="frame" x="12" y="48" width="413" height="206"/>
+                                <rect key="frame" x="12" y="48" width="618" height="206"/>
                                 <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                                 <clipView key="contentView" drawsBackground="NO" copiesOnScroll="NO" id="zyz-bc-zu0">
-                                    <rect key="frame" x="1" y="0.0" width="411" height="205"/>
+                                    <rect key="frame" x="1" y="0.0" width="616" height="190"/>
                                     <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                     <subviews>
                                         <tableView verticalHuggingPriority="750" allowsExpansionToolTips="YES" columnAutoresizingStyle="lastColumnOnly" alternatingRowBackgroundColors="YES" columnSelection="YES" multipleSelection="NO" autosaveColumns="NO" rowSizeStyle="automatic" headerView="wdC-HO-Vvc" viewBased="YES" id="J2V-fs-LwZ">
-                                            <rect key="frame" x="0.0" y="0.0" width="411" height="180"/>
+                                            <rect key="frame" x="0.0" y="0.0" width="899" height="165"/>
                                             <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                             <size key="intercellSpacing" width="3" height="2"/>
                                             <color key="backgroundColor" name="controlBackgroundColor" catalog="System" colorSpace="catalog"/>
@@ -292,7 +329,7 @@
                                                         </tableCellView>
                                                     </prototypeCellViews>
                                                 </tableColumn>
-                                                <tableColumn identifier="columnName" editable="NO" width="192" minWidth="40" maxWidth="1000" id="8FB-hv-fkB">
+                                                <tableColumn identifier="columnName" editable="NO" width="256" minWidth="40" maxWidth="1000" id="8FB-hv-fkB">
                                                     <tableHeaderCell key="headerCell" lineBreakMode="truncatingTail" borderStyle="border" title="Name">
                                                         <color key="textColor" name="headerTextColor" catalog="System" colorSpace="catalog"/>
                                                         <color key="backgroundColor" name="headerColor" catalog="System" colorSpace="catalog"/>
@@ -305,11 +342,11 @@
                                                     <tableColumnResizingMask key="resizingMask" resizeWithTable="YES" userResizable="YES"/>
                                                     <prototypeCellViews>
                                                         <tableCellView id="lR5-LQ-1Qd">
-                                                            <rect key="frame" x="24" y="1" width="192" height="17"/>
+                                                            <rect key="frame" x="24" y="1" width="256" height="17"/>
                                                             <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                                             <subviews>
                                                                 <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" horizontalCompressionResistancePriority="250" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="Jim-uO-w4w">
-                                                                    <rect key="frame" x="0.0" y="1" width="192" height="16"/>
+                                                                    <rect key="frame" x="0.0" y="1" width="256" height="16"/>
                                                                     <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMinY="YES" flexibleMaxY="YES"/>
                                                                     <textFieldCell key="cell" lineBreakMode="truncatingTail" sendsActionOnEndEditing="YES" title="Table View Cell" id="fos-aD-v3q">
                                                                         <font key="font" usesAppearanceFont="YES"/>
@@ -324,7 +361,7 @@
                                                         </tableCellView>
                                                     </prototypeCellViews>
                                                 </tableColumn>
-                                                <tableColumn identifier="columnRecordCount" width="64" minWidth="10" maxWidth="3.4028234663852886e+38" id="bsY-Rr-JHi">
+                                                <tableColumn identifier="columnRecordCount" width="96" minWidth="10" maxWidth="3.4028234663852886e+38" id="bsY-Rr-JHi">
                                                     <tableHeaderCell key="headerCell" lineBreakMode="truncatingTail" borderStyle="border" alignment="left" title="Number of Msgs">
                                                         <color key="textColor" name="headerTextColor" catalog="System" colorSpace="catalog"/>
                                                         <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
@@ -337,11 +374,11 @@
                                                     <tableColumnResizingMask key="resizingMask" resizeWithTable="YES" userResizable="YES"/>
                                                     <prototypeCellViews>
                                                         <tableCellView id="qEb-Tp-Qka">
-                                                            <rect key="frame" x="219" y="1" width="64" height="17"/>
+                                                            <rect key="frame" x="283" y="1" width="96" height="17"/>
                                                             <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                                             <subviews>
                                                                 <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" horizontalCompressionResistancePriority="250" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="lYR-ar-9XO">
-                                                                    <rect key="frame" x="0.0" y="1" width="64" height="16"/>
+                                                                    <rect key="frame" x="0.0" y="1" width="96" height="16"/>
                                                                     <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMinY="YES" flexibleMaxY="YES"/>
                                                                     <textFieldCell key="cell" lineBreakMode="truncatingTail" sendsActionOnEndEditing="YES" title="Table View Cell" id="qJ3-t0-qJh">
                                                                         <font key="font" usesAppearanceFont="YES"/>
@@ -356,7 +393,39 @@
                                                         </tableCellView>
                                                     </prototypeCellViews>
                                                 </tableColumn>
-                                                <tableColumn identifier="columnUser" width="123" minWidth="10" maxWidth="3.4028234663852886e+38" id="mqg-xB-lDI">
+                                                <tableColumn identifier="columnLastMsg" width="384" minWidth="40" maxWidth="3.4028234663852886e+38" id="hIY-8j-rpO" userLabel="Last Msg">
+                                                    <tableHeaderCell key="headerCell" lineBreakMode="truncatingTail" borderStyle="border" alignment="left" title="Last Message">
+                                                        <color key="textColor" name="headerTextColor" catalog="System" colorSpace="catalog"/>
+                                                        <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                                                    </tableHeaderCell>
+                                                    <textFieldCell key="dataCell" lineBreakMode="truncatingTail" selectable="YES" editable="YES" alignment="left" title="Text Cell" id="CrY-ui-CpL">
+                                                        <font key="font" metaFont="system"/>
+                                                        <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
+                                                        <color key="backgroundColor" name="controlBackgroundColor" catalog="System" colorSpace="catalog"/>
+                                                    </textFieldCell>
+                                                    <tableColumnResizingMask key="resizingMask" resizeWithTable="YES" userResizable="YES"/>
+                                                    <prototypeCellViews>
+                                                        <tableCellView id="9Mg-vi-1eQ">
+                                                            <rect key="frame" x="382" y="1" width="384" height="17"/>
+                                                            <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                                                            <subviews>
+                                                                <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" horizontalCompressionResistancePriority="250" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="xHM-Sg-n34">
+                                                                    <rect key="frame" x="0.0" y="1" width="384" height="16"/>
+                                                                    <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMinY="YES" flexibleMaxY="YES"/>
+                                                                    <textFieldCell key="cell" lineBreakMode="truncatingTail" sendsActionOnEndEditing="YES" title="Table View Cell" id="sWr-dF-dlL">
+                                                                        <font key="font" usesAppearanceFont="YES"/>
+                                                                        <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
+                                                                        <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
+                                                                    </textFieldCell>
+                                                                </textField>
+                                                            </subviews>
+                                                            <connections>
+                                                                <outlet property="textField" destination="xHM-Sg-n34" id="5GB-En-lll"/>
+                                                            </connections>
+                                                        </tableCellView>
+                                                    </prototypeCellViews>
+                                                </tableColumn>
+                                                <tableColumn identifier="columnUser" width="128" minWidth="10" maxWidth="3.4028234663852886e+38" id="mqg-xB-lDI">
                                                     <tableHeaderCell key="headerCell" lineBreakMode="truncatingTail" borderStyle="border" alignment="left" title="Wechat Account">
                                                         <color key="textColor" name="headerTextColor" catalog="System" colorSpace="catalog"/>
                                                         <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
@@ -369,11 +438,11 @@
                                                     <tableColumnResizingMask key="resizingMask" resizeWithTable="YES" userResizable="YES"/>
                                                     <prototypeCellViews>
                                                         <tableCellView id="BcU-k8-Igt">
-                                                            <rect key="frame" x="286" y="1" width="123" height="17"/>
+                                                            <rect key="frame" x="769" y="1" width="128" height="17"/>
                                                             <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                                             <subviews>
                                                                 <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" horizontalCompressionResistancePriority="250" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="DFJ-Vc-mZN">
-                                                                    <rect key="frame" x="0.0" y="1" width="123" height="16"/>
+                                                                    <rect key="frame" x="0.0" y="1" width="128" height="16"/>
                                                                     <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMinY="YES" flexibleMaxY="YES"/>
                                                                     <textFieldCell key="cell" lineBreakMode="truncatingTail" sendsActionOnEndEditing="YES" title="Table View Cell" id="5Mi-xr-dCf">
                                                                         <font key="font" usesAppearanceFont="YES"/>
@@ -393,16 +462,16 @@
                                     </subviews>
                                     <nil key="backgroundColor"/>
                                 </clipView>
-                                <scroller key="horizontalScroller" hidden="YES" wantsLayer="YES" verticalHuggingPriority="750" horizontal="YES" id="adY-Ee-7bA">
-                                    <rect key="frame" x="1" y="118" width="238" height="16"/>
+                                <scroller key="horizontalScroller" wantsLayer="YES" verticalHuggingPriority="750" horizontal="YES" id="adY-Ee-7bA">
+                                    <rect key="frame" x="1" y="190" width="616" height="15"/>
                                     <autoresizingMask key="autoresizingMask"/>
                                 </scroller>
                                 <scroller key="verticalScroller" hidden="YES" wantsLayer="YES" verticalHuggingPriority="750" doubleValue="1" horizontal="NO" id="OzV-b0-sAV">
                                     <rect key="frame" x="224" y="17" width="15" height="102"/>
                                     <autoresizingMask key="autoresizingMask"/>
                                 </scroller>
-                                <tableHeaderView key="headerView" id="wdC-HO-Vvc">
-                                    <rect key="frame" x="0.0" y="0.0" width="411" height="25"/>
+                                <tableHeaderView key="headerView" wantsLayer="YES" id="wdC-HO-Vvc">
+                                    <rect key="frame" x="0.0" y="0.0" width="899" height="25"/>
                                     <autoresizingMask key="autoresizingMask"/>
                                 </tableHeaderView>
                             </scrollView>
@@ -445,19 +514,19 @@ Gw
                                     <font key="font" metaFont="system"/>
                                 </buttonCell>
                             </button>
-                            <scrollView fixedFrame="YES" borderType="none" autohidesScrollers="YES" horizontalLineScroll="10" horizontalPageScroll="10" verticalLineScroll="10" verticalPageScroll="10" hasHorizontalScroller="NO" translatesAutoresizingMaskIntoConstraints="NO" id="Mkn-sk-kD7">
-                                <rect key="frame" x="433" y="48" width="197" height="235"/>
+                            <scrollView hidden="YES" fixedFrame="YES" borderType="none" autohidesScrollers="YES" horizontalLineScroll="10" horizontalPageScroll="10" verticalLineScroll="10" verticalPageScroll="10" hasHorizontalScroller="NO" translatesAutoresizingMaskIntoConstraints="NO" id="Mkn-sk-kD7">
+                                <rect key="frame" x="12" y="48" width="618" height="206"/>
                                 <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                                 <clipView key="contentView" drawsBackground="NO" copiesOnScroll="NO" id="jiT-mv-qJD">
-                                    <rect key="frame" x="0.0" y="0.0" width="197" height="235"/>
+                                    <rect key="frame" x="0.0" y="0.0" width="618" height="206"/>
                                     <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                     <subviews>
                                         <textView editable="NO" importsGraphics="NO" richText="NO" verticallyResizable="YES" textCompletion="NO" id="09Z-23-gCi">
-                                            <rect key="frame" x="0.0" y="0.0" width="197" height="235"/>
+                                            <rect key="frame" x="0.0" y="0.0" width="618" height="206"/>
                                             <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                             <color key="textColor" name="textColor" catalog="System" colorSpace="catalog"/>
                                             <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
-                                            <size key="minSize" width="197" height="235"/>
+                                            <size key="minSize" width="618" height="206"/>
                                             <size key="maxSize" width="618" height="10000000"/>
                                             <color key="insertionPointColor" name="textColor" catalog="System" colorSpace="catalog"/>
                                         </textView>
@@ -472,18 +541,35 @@ Gw
                                     <autoresizingMask key="autoresizingMask"/>
                                 </scroller>
                             </scrollView>
+                            <button verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="Kgc-dQ-c8D">
+                                <rect key="frame" x="542" y="255" width="96" height="32"/>
+                                <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                                <buttonCell key="cell" type="push" title="Show Logs" bezelStyle="rounded" alignment="center" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="WmO-MK-b5O">
+                                    <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
+                                    <font key="font" metaFont="system"/>
+                                </buttonCell>
+                            </button>
+                            <button hidden="YES" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="8bu-eG-BOn">
+                                <rect key="frame" x="312" y="7" width="130" height="32"/>
+                                <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                                <buttonCell key="cell" type="push" title="Backup Device" bezelStyle="rounded" alignment="center" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="3sn-TB-2UJ">
+                                    <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
+                                    <font key="font" metaFont="system"/>
+                                </buttonCell>
+                            </button>
                         </subviews>
                     </view>
                     <connections>
                         <outlet property="btnBackup" destination="8gl-oS-xn6" id="ykX-mi-M09"/>
+                        <outlet property="btnBackupDevice" destination="8bu-eG-BOn" id="Cxy-vH-TgJ"/>
                         <outlet property="btnCancel" destination="kaB-gl-s4B" id="pBJ-1v-c4B"/>
                         <outlet property="btnExport" destination="c7I-ig-uay" id="L8d-sU-cTy"/>
-                        <outlet property="btnOutput" destination="ybQ-bI-p2r" id="pAc-FC-1zh"/>
+                        <outlet property="btnOutput" destination="ybQ-bI-p2r" id="PLg-jN-ozw"/>
                         <outlet property="btnQuit" destination="ZAV-Dz-fdD" id="Kfh-6w-xj4"/>
+                        <outlet property="btnShowLogs" destination="Kgc-dQ-c8D" id="PBX-v1-ITi"/>
                         <outlet property="btnToggleAll" destination="yOo-KU-sM8" id="RX5-S3-gcr"/>
                         <outlet property="lblITunes" destination="Kpd-TD-eLh" id="uWI-3i-BEz"/>
                         <outlet property="popupBackup" destination="FYs-pu-LFe" id="Z34-x5-0Me"/>
-                        <outlet property="popupSessions" destination="mwI-Gk-UmA" id="jSI-RQ-ib8"/>
                         <outlet property="popupUsers" destination="mwI-Gk-UmA" id="cu6-0h-a2o"/>
                         <outlet property="progressBar" destination="VMi-pK-9Z0" id="O1p-nX-RQW"/>
                         <outlet property="sclSessions" destination="pql-rp-pLF" id="trV-0t-r84"/>
