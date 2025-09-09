@@ -12,6 +12,8 @@
 #define PROCESSOR "PPC"
 #elif defined(__i386__) || defined(__x86_64__)
 #define PROCESSOR "Intel"
+#elif defined(__arm64__)
+#define PROCESSOR "ARM64"
 #else
 #error Unknown architecture
 #endif

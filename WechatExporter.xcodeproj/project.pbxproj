@@ -368,6 +368,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
+				ARCHS = arm64;
 				CLANG_ANALYZER_LOCALIZABILITY_NONLOCALIZED = YES;
 				CLANG_ANALYZER_NONNULL = YES;
 				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
@@ -418,11 +419,12 @@
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				HEADER_SEARCH_PATHS = /usr/local/include/;
 				LIBRARY_SEARCH_PATHS = /usr/local/lib;
-				MACOSX_DEPLOYMENT_TARGET = 10.10;
+				MACOSX_DEPLOYMENT_TARGET = 10.15;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;
 				SDKROOT = macosx;
+				VALID_ARCHS = arm64;
 			};
 			name = Debug;
 		};
@@ -430,6 +432,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
+				ARCHS = arm64;
 				CLANG_ANALYZER_LOCALIZABILITY_NONLOCALIZED = YES;
 				CLANG_ANALYZER_NONNULL = YES;
 				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
@@ -474,17 +477,20 @@
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				HEADER_SEARCH_PATHS = /usr/local/include/;
 				LIBRARY_SEARCH_PATHS = /usr/local/lib;
-				MACOSX_DEPLOYMENT_TARGET = 10.10;
+				MACOSX_DEPLOYMENT_TARGET = 10.15;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
 				SDKROOT = macosx;
+				VALID_ARCHS = arm64;
 			};
 			name = Release;
 		};
 		343F6127252322D600FFE085 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ARCHS = arm64;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
 				CODE_SIGN_ENTITLEMENTS = WechatExporter/WechatExporter.entitlements;
 				CODE_SIGN_IDENTITY = "-";
 				CODE_SIGN_STYLE = Automatic;
@@ -500,31 +506,43 @@
 				HEADER_SEARCH_PATHS = (
 					/usr/local/include/,
 					"${SDKROOT}/usr/include/libxml2/",
+					/opt/homebrew/Cellar/lame/3.100/include,
+					/opt/homebrew/include,
+					/Users/caoye/git/WechatExporter/jsoncpp/include,
+					"/opt/homebrew/opt/protobuf@21/include",
 				);
 				INFOPLIST_FILE = WechatExporter/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
-				MACOSX_DEPLOYMENT_TARGET = 10.10;
+				LIBRARY_SEARCH_PATHS = (
+					/usr/local/lib,
+					"/opt/homebrew/opt/protobuf@21/lib",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 10.15;
 				MARKETING_VERSION = 1.9.0;
+				OTHER_CPLUSPLUSFLAGS = "$(OTHER_CFLAGS)";
 				OTHER_LDFLAGS = (
 					"-L/usr/local/lib",
-					"-lprotobufd",
-					"-ljsoncpp",
-					"-lmp3lame",
-					"-lSKP_SILK_SDK",
-					"-lplist-2.0",
+					/opt/homebrew/lib/libmp3lame.a,
+					/opt/homebrew/lib/libSKP_SILK_SDK.a,
+					"/opt/homebrew/lib/libplist-2.0.a",
+					"/opt/homebrew/opt/protobuf@21/lib/libprotobuf.a",
+					/Users/caoye/git/WechatExporter/jsoncpp/build/lib/libjsoncpp.a,
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = org.wakin.WechatExporter;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				VALID_ARCHS = arm64;
 			};
 			name = Debug;
 		};
 		343F6128252322D600FFE085 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ARCHS = arm64;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
 				CODE_SIGN_ENTITLEMENTS = WechatExporter/WechatExporter.entitlements;
 				CODE_SIGN_IDENTITY = "-";
 				CODE_SIGN_STYLE = Automatic;
@@ -539,24 +557,34 @@
 				HEADER_SEARCH_PATHS = (
 					/usr/local/include/,
 					"${SDKROOT}/usr/include/libxml2/",
+					/opt/homebrew/Cellar/lame/3.100/include,
+					/opt/homebrew/include,
+					/Users/caoye/git/WechatExporter/jsoncpp/include,
+					"/opt/homebrew/opt/protobuf@21/include",
 				);
 				INFOPLIST_FILE = WechatExporter/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
-				MACOSX_DEPLOYMENT_TARGET = 10.10;
+				LIBRARY_SEARCH_PATHS = (
+					/usr/local/lib,
+					"/opt/homebrew/opt/protobuf@21/lib",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 10.15;
 				MARKETING_VERSION = 1.9.0;
+				OTHER_CPLUSPLUSFLAGS = "$(OTHER_CFLAGS)";
 				OTHER_LDFLAGS = (
 					"-L/usr/local/lib",
-					"-lprotobuf",
-					"-ljsoncpp",
-					"-lmp3lame",
-					"-lSKP_SILK_SDK",
-					"-lplist-2.0",
+					/opt/homebrew/lib/libmp3lame.a,
+					/opt/homebrew/lib/libSKP_SILK_SDK.a,
+					"/opt/homebrew/lib/libplist-2.0.a",
+					"/opt/homebrew/opt/protobuf@21/lib/libprotobuf.a",
+					/Users/caoye/git/WechatExporter/jsoncpp/build/lib/libjsoncpp.a,
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = org.wakin.WechatExporter;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				VALID_ARCHS = arm64;
 			};
 			name = Release;
 		};

@@ -162,6 +162,25 @@ bool XmlParser::getNodeAttributeValue(xmlNodePtr node, const std::string& attrib
 
 XmlParser::XmlParser(const std::string& xml, bool noError/* = false*/) : m_doc(NULL), m_xpathCtx(NULL)
 {
+    // Check if the data looks like valid XML before attempting to parse
+    // Skip if empty or doesn't start with '<' (likely binary data)
+    if (xml.empty() || xml[0] != '<') {
+        return;
+    }
+    
+    // Additional check: look for common XML patterns
+    // If the string contains too many non-printable characters, it's likely binary
+    int nonPrintableCount = 0;
+    for (size_t i = 0; i < std::min(xml.size(), size_t(100)); ++i) {
+        if (xml[i] < 32 && xml[i] != '\t' && xml[i] != '\n' && xml[i] != '\r') {
+            nonPrintableCount++;
+        }
+    }
+    // If more than 10% of the first 100 characters are non-printable, likely binary
+    if (nonPrintableCount > 10) {
+        return;
+    }
+
     int options = XML_PARSE_RECOVER;
     if (noError)
     {

@@ -17,12 +17,31 @@ bool getXmlNodeValue(const std::string& xml, const std::string& xpath, std::stri
 	bool result = false;
 	value.clear();
 
+	// Check if the data looks like valid XML before attempting to parse
+	// Skip if empty or doesn't start with '<' (likely binary data)
+	if (xml.empty() || xml[0] != '<') {
+		return false;
+	}
+	
+	// Additional check: look for common XML patterns
+	// If the string contains too many non-printable characters, it's likely binary
+	int nonPrintableCount = 0;
+	for (size_t i = 0; i < std::min(xml.size(), size_t(100)); ++i) {
+		if (xml[i] < 32 && xml[i] != '\t' && xml[i] != '\n' && xml[i] != '\r') {
+			nonPrintableCount++;
+		}
+	}
+	// If more than 10% of the first 100 characters are non-printable, likely binary
+	if (nonPrintableCount > 10) {
+		return false;
+	}
+
 	xmlDocPtr doc = NULL;
 	xmlXPathContextPtr xpathCtx = NULL;
 	xmlXPathObjectPtr xpathObj = NULL;
 	xmlNodeSetPtr xpathNodes = NULL;
 
-	doc = xmlParseMemory(xml.c_str(), static_cast<int>(xml.size()));
+	doc = xmlReadMemory(xml.c_str(), static_cast<int>(xml.size()), NULL, NULL, XML_PARSE_NOERROR | XML_PARSE_NOWARNING);
 	if (doc == NULL) { goto end; }
 
 	xpathCtx = xmlXPathNewContext(doc);
@@ -57,12 +76,31 @@ bool getXmlNodeAttributeValue(const std::string& xml, const std::string& xpath, 
 	bool result = false;
 	value.clear();
 
+	// Check if the data looks like valid XML before attempting to parse
+	// Skip if empty or doesn't start with '<' (likely binary data)
+	if (xml.empty() || xml[0] != '<') {
+		return false;
+	}
+	
+	// Additional check: look for common XML patterns
+	// If the string contains too many non-printable characters, it's likely binary
+	int nonPrintableCount = 0;
+	for (size_t i = 0; i < std::min(xml.size(), size_t(100)); ++i) {
+		if (xml[i] < 32 && xml[i] != '\t' && xml[i] != '\n' && xml[i] != '\r') {
+			nonPrintableCount++;
+		}
+	}
+	// If more than 10% of the first 100 characters are non-printable, likely binary
+	if (nonPrintableCount > 10) {
+		return false;
+	}
+
 	xmlDocPtr doc = NULL;
 	xmlXPathContextPtr xpathCtx = NULL;
 	xmlXPathObjectPtr xpathObj = NULL;
 	xmlNodeSetPtr xpathNodes = NULL;
 
-	doc = xmlParseMemory(xml.c_str(), static_cast<int>(xml.size()));
+	doc = xmlReadMemory(xml.c_str(), static_cast<int>(xml.size()), NULL, NULL, XML_PARSE_NOERROR | XML_PARSE_NOWARNING);
 	if (doc == NULL) { goto end; }
 
 	xpathCtx = xmlXPathNewContext(doc);

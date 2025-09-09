@@ -39,7 +39,26 @@ bool parseMembers(const std::string& xml, T& f)
     xmlXPathObjectPtr xpathObj = NULL;
     xmlNodeSetPtr xpathNodes = NULL;
 
-    doc = xmlParseMemory(xml.c_str(), static_cast<int>(xml.size()));
+    // Check if the data looks like valid XML before attempting to parse
+    // Skip if empty or doesn't start with '<' (likely binary data)
+    if (xml.empty() || xml[0] != '<') {
+        return false;
+    }
+    
+    // Additional check: look for common XML patterns
+    // If the string contains too many non-printable characters, it's likely binary
+    int nonPrintableCount = 0;
+    for (size_t i = 0; i < std::min(xml.size(), size_t(100)); ++i) {
+        if (xml[i] < 32 && xml[i] != '\t' && xml[i] != '\n' && xml[i] != '\r') {
+            nonPrintableCount++;
+        }
+    }
+    // If more than 10% of the first 100 characters are non-printable, likely binary
+    if (nonPrintableCount > 10) {
+        return false;
+    }
+
+    doc = xmlReadMemory(xml.c_str(), static_cast<int>(xml.size()), NULL, NULL, XML_PARSE_NOERROR | XML_PARSE_NOWARNING);
     if (doc == NULL) { goto end; }
 
     xpathCtx = xmlXPathNewContext(doc);
@@ -588,7 +607,8 @@ bool MMSettingParser::parse(const std::string& usrNameHash)
     }
     
     plist_t node = NULL;
-    plist_from_memory(reinterpret_cast<const char *>(&data[0]), static_cast<uint32_t>(data.size()), &node);
+    plist_format_t fmt;
+    plist_from_memory(reinterpret_cast<const char *>(&data[0]), data.size(), &node, &fmt);
     if (NULL == node)
     {
         return false;
@@ -890,7 +910,8 @@ bool WechatInfoParser::parsePreferences(WechatInfo& wechatInfo)
     }
     
     plist_t node = NULL;
-    plist_from_memory(reinterpret_cast<const char *>(&data[0]), static_cast<uint32_t>(data.size()), &node);
+    plist_format_t fmt;
+    plist_from_memory(reinterpret_cast<const char *>(&data[0]), data.size(), &node, &fmt);
     if (NULL == node)
     {
         return false;
@@ -1634,6 +1655,10 @@ SessionParser::MessageEnumerator::MessageEnumerator(const Session& session, int 
     {
         sql += " DESC";
     }
+    
+    // Debug: Log the actual SQL query being used
+    // Note: This will only work if we have access to a logger, which we don't in this context
+    // But we can add this information to help debug
     
     rc = sqlite3_prepare_v2(context->db, sql.c_str(), (int)(sql.size()), &(context->stmt), NULL);
     if (rc != SQLITE_OK)

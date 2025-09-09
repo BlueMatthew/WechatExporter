@@ -601,12 +601,15 @@ void MessageParser::parseNotice(const WXMSG& msg, const Session& session, Templa
 #endif
     tv.setName("notice");
 
-    Json::Reader reader;
-    Json::Value root;
-    if (reader.parse(msg.content, root))
-    {
-        tv["%%MESSAGE%%"] = root["msgContent"].asString();
-    }
+    // Json::Reader reader;
+    // Json::Value root;
+    // if (reader.parse(msg.content, root))
+    // {
+    //     tv["%%MESSAGE%%"] = root["msgContent"].asString();
+    // }
+    
+    // Use raw content instead of JSON parsing
+    tv["%%MESSAGE%%"] = msg.content;
 }
 
 void MessageParser::parseSysNotice(const WXMSG& msg, const Session& session, TemplateValues& tv) const

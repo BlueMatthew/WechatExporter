@@ -440,7 +440,11 @@ unsigned int ITunesDb::parseModifiedTime(const std::vector<unsigned char>& data)
     }
     uint64_t val = 0;
     plist_t node = NULL;
-    plist_from_memory(reinterpret_cast<const char *>(&data[0]), static_cast<uint32_t>(data.size()), &node);
+    plist_format_t fmt;
+    plist_from_memory(reinterpret_cast<const char*>(&data[0]),
+                      data.size(),
+                      &node,
+                      &fmt);
     if (NULL != node)
     {
         plist_t lastModified = plist_access_path(node, 3, "$objects", 1, "LastModified");
@@ -697,7 +701,8 @@ bool ManifestParser::parse(const std::string& path, BackupManifest& manifest) co
     if (readFile(fileName, data))
     {
         plist_t node = NULL;
-        plist_from_memory(reinterpret_cast<const char *>(&data[0]), static_cast<uint32_t>(data.size()), &node);
+        plist_format_t fmt;
+        plist_from_memory(reinterpret_cast<const char *>(&data[0]), data.size(), &node, &fmt);
         if (NULL != node)
         {
             plist_t isEncryptedNode = plist_access_path(node, 1, "IsEncrypted");

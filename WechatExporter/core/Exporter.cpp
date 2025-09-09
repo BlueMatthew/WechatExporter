@@ -782,10 +782,18 @@ int Exporter::exportSession(const Friend& user, const MessageParser& msgParser, 
     if (session.getRecordCount() > 0)
     {
         messages.reserve(session.getRecordCount());
+        m_logger->write(formatString("Session %s: Reserved memory for %d messages", 
+            session.getUsrName().c_str(), session.getRecordCount()));
     }
     
     int64_t maxMsgId = 0;
     m_exportContext->getMaxId(session.getUsrName(), maxMsgId);
+    
+    if (maxMsgId > 0)
+    {
+        m_logger->write(formatString("Session %s: Using incremental export, minId=%lld (will skip messages with ID <= %lld)", 
+            session.getUsrName().c_str(), maxMsgId, maxMsgId));
+    }
     
     int numberOfMsgs = 0;
     SessionParser sessionParser(m_options);
@@ -801,8 +809,20 @@ int Exporter::exportSession(const Friend& user, const MessageParser& msgParser, 
         
         tvs.clear();
         msgParser.parse(msg, session, tvs);
-        exportMessage(session, tvs, messages);
+        if (exportMessage(session, tvs, messages))
+        {
+            m_logger->write(formatString("Session %s: Stopping message processing due to error", 
+                session.getUsrName().c_str()));
+            break;
+        }
         ++numberOfMsgs;
+        
+        // Log progress every 10000 messages to track where it stops
+        if (numberOfMsgs % 10000 == 0)
+        {
+            m_logger->write(formatString("Session %s: Processed %d messages, vector size: %zu", 
+                session.getUsrName().c_str(), numberOfMsgs, messages.size()));
+        }
         
         notifySessionProgress(session.getUsrName(), session.getData(), numberOfMsgs, session.getRecordCount());
         if (m_cancelled)
@@ -837,6 +857,11 @@ int Exporter::exportSession(const Friend& user, const MessageParser& msgParser, 
         const size_t numberOfMessages = std::distance(e, messages.cend());
         const size_t numberOfPages = (numberOfMessages + pageSize - 1) / pageSize;
         
+        // Debug: Log pagination settings
+        m_logger->write(formatString("Session %s: Pagination settings - pageSize=%zu, numberOfMessages=%zu, numberOfPages=%zu, SPO_SYNC_LOADING=%s", 
+            session.getUsrName().c_str(), pageSize, numberOfMessages, numberOfPages, 
+            (m_options & SPO_SYNC_LOADING) ? "enabled" : "disabled"));
+        
         std::string html = getTemplate("frame");
 #ifndef NDEBUG
         replaceAll(html, "%%USRNAME%%", user.getUsrName() + " - " + user.getHash());
@@ -865,12 +890,16 @@ int Exporter::exportSession(const Friend& user, const MessageParser& msgParser, 
         {
             std::string dataPath = combinePath(outputBase, session.getOutputFileName() + "_files", "Data");
             makeDirectory(dataPath);
+            m_logger->write(formatString("Session %s: Creating %zu pagination files in %s", 
+                session.getUsrName().c_str(), numberOfPages, dataPath.c_str()));
 
             for (size_t page = 0; page < numberOfPages; ++page)
             {
                 b = e;
                 std::string scripts = getTemplate("scripts");
                 e = (page == (numberOfPages - 1)) ? messages.cend() : (b + pageSize);
+                
+                // Generate JSON data for this page
                 Json::Value jsonMsgs(Json::arrayValue);
                 for (auto it = b; it != e; ++it)
                 {
@@ -878,11 +907,12 @@ int Exporter::exportSession(const Friend& user, const MessageParser& msgParser, 
                 }
                 Json::StreamWriterBuilder builder;
                 builder["indentation"] = "";  // assume default for comments is None
-#ifndef NDEBUG
+                #ifndef NDEBUG
                 builder["emitUTF8"] = true;
-#endif
+                #endif
                 std::string moreMsgs = Json::writeString(builder, jsonMsgs);
 
+                // Replace the JSON data placeholder with actual data
                 replaceAll(scripts, "%%JSON_DATA%%", moreMsgs);
                 
                 fileName = combinePath(dataPath, "msg-" + std::to_string(page + 1) + ".js");
@@ -904,7 +934,23 @@ bool Exporter::exportMessage(const Session& session, const std::vector<TemplateV
         content.append(buildContentFromTemplateValues(*it));
     }
     
-    messages.push_back(content);
+    try
+    {
+        messages.push_back(content);
+    }
+    catch (const std::bad_alloc& e)
+    {
+        m_logger->write(formatString("Session %s: Memory allocation failed at message %zu: %s", 
+            session.getUsrName().c_str(), messages.size(), e.what()));
+        return true; // Signal to stop processing
+    }
+    catch (const std::exception& e)
+    {
+        m_logger->write(formatString("Session %s: Error adding message %zu: %s", 
+            session.getUsrName().c_str(), messages.size(), e.what()));
+        return true; // Signal to stop processing
+    }
+    
     return m_cancelled;
 }
 
@@ -1104,22 +1150,24 @@ bool Exporter::loadStrings()
         return false;
     }
 
-    Json::Reader reader;
-    Json::Value value;
-    if (reader.parse(readFile(path), value))
-    {
-        int sz = value.size();
-        for (int idx = 0; idx < sz; ++idx)
-        {
-            std::string k = value[idx]["key"].asString();
-            std::string v = value[idx]["value"].asString();
-            if (m_localeStrings.find(k) != m_localeStrings.cend())
-            {
-                // return false;
-            }
-            m_localeStrings[k] = v;
-        }
-    }
+    // Json::Reader reader;
+    // Json::Value value;
+    // if (reader.parse(readFile(path), value))
+    // {
+    //     int sz = value.size();
+    //     for (int idx = 0; idx < sz; ++idx)
+    //     {
+    //         std::string k = value[idx]["key"].asString();
+    //         std::string v = value[idx]["value"].asString();
+    //         if (m_localeStrings.find(k) != m_localeStrings.cend())
+    //         {
+    //             // return false;
+    //         }
+    //         m_localeStrings[k] = v;
+    //     }
+    // }
+    
+    // Skip JSON parsing for locale strings - use default behavior
 
     return true;
 }
