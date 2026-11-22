@@ -33,6 +33,7 @@
     std::vector<std::pair<Friend, std::vector<Session>>> m_usersAndSessions;
     
     SessionDataSource   *m_dataSource;
+    NSSearchField *m_sessionSearch;
     
     NSIndexSet *m_columns;
     NSColor *m_orgTextColor;
@@ -212,6 +213,21 @@
     self.tblSessions.dataSource = m_dataSource;
     self.tblSessions.delegate = self;
 
+    // Add a search row above the table, retaining the existing autoresizing layout.
+    NSRect tableFrame = self.sclSessions.frame;
+    tableFrame.size.height -= 32;
+    self.sclSessions.frame = tableFrame;
+    m_sessionSearch = [[NSSearchField alloc] initWithFrame:NSMakeRect(
+        NSMinX(tableFrame), NSMaxY(tableFrame) + 6, NSWidth(tableFrame), 24)];
+    m_sessionSearch.autoresizingMask = NSViewWidthSizable | NSViewMinYMargin;
+    m_sessionSearch.placeholderString = NSLocalizedString(@"search-sessions", nil);
+    m_sessionSearch.toolTip = NSLocalizedString(@"search-sessions-hint", nil);
+    m_sessionSearch.sendsSearchStringImmediately = YES;
+    m_sessionSearch.sendsWholeSearchString = NO;
+    m_sessionSearch.target = self;
+    m_sessionSearch.action = @selector(searchSessions:);
+    [self.sclSessions.superview addSubview:m_sessionSearch];
+
     self.txtboxOutput.stringValue = [AppConfiguration getLastOrDefaultOutputDir];
 
 #ifdef NDEBUG
@@ -365,7 +381,7 @@
         self.txtViewLogs.string = @"";
         // Clear Users and Sessions
         [m_dataSource loadData:&m_usersAndSessions withAllUsers:YES indexOfSelectedUser:-1 includesSubscription:[AppConfiguration includeSubscriptions]];
-        [self.tblSessions reloadData];
+        [self searchSessions:m_sessionSearch];
         
         if (self.popupBackup.indexOfSelectedItem == -1 || self.popupBackup.indexOfSelectedItem >= m_manifests.size())
         {
@@ -396,7 +412,7 @@
         }
         [m_dataSource loadData:&m_usersAndSessions withAllUsers:allUsers indexOfSelectedUser:indexOfSelectedItem includesSubscription:[AppConfiguration includeSubscriptions]];
         self.btnToggleAll.state = NSControlStateValueOn;
-        [self.tblSessions reloadData];
+        [self searchSessions:m_sessionSearch];
     }
 }
 
@@ -447,6 +463,15 @@
     {
         
     }
+}
+
+- (void)searchSessions:(id)sender
+{
+    [m_dataSource filterSessions:m_sessionSearch.stringValue];
+    [m_dataSource tableView:self.tblSessions sortDescriptorsDidChange:@[]];
+    self.btnToggleAll.state = [m_dataSource selectionState];
+    if ([self.tblSessions numberOfRows] > 0)
+        [self.tblSessions scrollRowToVisible:0];
 }
 
 - (void)toggleAllSessions:(id)sender
@@ -851,6 +876,7 @@
     [self.btnOutput setEnabled:enabled];
     [self.btnBackup setEnabled:enabled];
     [self.btnExport setEnabled:enabled];
+    m_sessionSearch.enabled = enabled;
     [self.btnCancel setEnabled:!enabled && cancellable];
     [self.btnCancel setHidden:enabled];
     [self.btnQuit setHidden:!enabled];

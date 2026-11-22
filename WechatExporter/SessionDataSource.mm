@@ -65,6 +65,7 @@
     const std::vector<std::pair<Friend, std::vector<Session>>> *m_usersAndSessions;
     NSInteger m_indexOfSelectedUser;
     NSArray<SessionItem *> *m_sessions;
+    NSArray<SessionItem *> *m_allSessions;
 }
 @end
 
@@ -97,6 +98,7 @@
 
 - (void)getSelectedUserAndSessions:(std::map<std::string, std::map<std::string, void *>>&)usersAndSessions
 {
+    // Export visible results only; row contexts must match the filtered table.
     NSInteger row = 0;
     for (SessionItem *sessionItem in m_sessions)
     {
@@ -123,6 +125,7 @@
     m_usersAndSessions = usersAndSessions;
     m_indexOfSelectedUser = indexOfSelectedUser;
     m_sessions = nil;
+    m_allSessions = nil;
     
     if (!allUsers && indexOfSelectedUser == -1)
     {
@@ -189,7 +192,34 @@
         }
     }
     
+    m_allSessions = sessions;
     m_sessions = sessions;
+}
+
+// Keep the same SessionItem objects so clearing a search preserves check states.
+- (void)filterSessions:(NSString *)query
+{
+    NSString *term = [query stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]];
+    if (term.length == 0)
+    {
+        m_sessions = m_allSessions;
+        return;
+    }
+    m_sessions = [m_allSessions filteredArrayUsingPredicate:[NSPredicate predicateWithBlock:^BOOL(SessionItem *item, NSDictionary *bindings) {
+        return (item.displayName != nil && [item.displayName rangeOfString:term options:NSCaseInsensitiveSearch].location != NSNotFound) ||
+               (item.sessionUsrName != nil && [item.sessionUsrName rangeOfString:term options:NSCaseInsensitiveSearch].location != NSNotFound);
+    }]];
+}
+
+- (NSControlStateValue)selectionState
+{
+    if (m_sessions.count == 0) return NSControlStateValueOff;
+    BOOL checked = m_sessions.firstObject.checked;
+    for (SessionItem *item in m_sessions)
+    {
+        if (item.checked != checked) return NSControlStateValueMixed;
+    }
+    return checked ? NSControlStateValueOn : NSControlStateValueOff;
 }
 
 - (void)checkAllSessions:(BOOL)checked
@@ -316,7 +346,8 @@
     }
     else if([identifier isEqualToString:@"columnName"])
     {
-        cellView.textField.stringValue = sessionItem.displayName;
+        // Invalid UTF-8 can produce nil; AppKit text fields require a non-nil string.
+        cellView.textField.stringValue = sessionItem.displayName ?: @"";
     }
     else if([identifier isEqualToString:@"columnRecordCount"])
     {
@@ -331,11 +362,11 @@
     }
     else if([identifier isEqualToString:@"columnUser"])
     {
-        cellView.textField.stringValue = sessionItem.userDisplayName;
+        cellView.textField.stringValue = sessionItem.userDisplayName ?: @"";
     }
     else if([identifier isEqualToString:@"columnLastMsg"])
     {
-        cellView.textField.stringValue = sessionItem.lastMessage;
+        cellView.textField.stringValue = sessionItem.lastMessage ?: @"";
     }
 }
 
