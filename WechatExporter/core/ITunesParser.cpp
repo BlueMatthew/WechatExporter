@@ -14,7 +14,7 @@
 #include <sys/types.h>
 #include <sqlite3.h>
 #include <algorithm>
-#include <plist/plist.h>
+#include "PlistCompat.h"
 #include <libxml/tree.h>
 #include <libxml/parser.h>
 
@@ -657,7 +657,7 @@ unsigned int ITunesDb::parseModifiedTime(const std::vector<unsigned char>& data)
     }
     uint64_t val = 0;
     plist_t node = NULL;
-    plist_from_memory(reinterpret_cast<const char *>(&data[0]), static_cast<uint32_t>(data.size()), &node);
+    parsePlistMemory(reinterpret_cast<const char *>(&data[0]), static_cast<uint32_t>(data.size()), &node);
     if (NULL != node)
     {
         plist_t lastModified = plist_access_path(node, 3, "$objects", 1, "LastModified");
@@ -688,7 +688,7 @@ bool ITunesDb::parseFileInfo(const ITunesFile* file)
     
     uint64_t val = 0;
     plist_t node = NULL;
-    plist_from_memory(reinterpret_cast<const char *>(&file->blob[0]), static_cast<uint32_t>(file->blob.size()), &node);
+    parsePlistMemory(reinterpret_cast<const char *>(&file->blob[0]), static_cast<uint32_t>(file->blob.size()), &node);
     if (NULL != node)
     {
         plist_t lastModifiedNode = plist_access_path(node, 3, "$objects", 1, "LastModified");
@@ -1143,7 +1143,7 @@ bool ManifestParser::parse(const std::string& path, BackupItem& manifest) const
     if (readFile(fileName, data))
     {
         plist_t node = NULL;
-        plist_from_memory(reinterpret_cast<const char *>(&data[0]), static_cast<uint32_t>(data.size()), &node);
+        parsePlistMemory(reinterpret_cast<const char *>(&data[0]), static_cast<uint32_t>(data.size()), &node);
         if (NULL != node)
         {
             plist_t isEncryptedNode = plist_access_path(node, 1, "IsEncrypted");
@@ -1177,7 +1177,7 @@ bool ManifestParser::parseInfoPlist(const std::string& backupIdPath, BackupItem&
     std::string fileName = combinePath(backupIdPath, "Info.plist");
     std::string contents = readFile(fileName);
     plist_t node = NULL;
-    plist_from_memory(contents.c_str(), static_cast<uint32_t>(contents.size()), &node);
+    parsePlistMemory(contents.c_str(), static_cast<uint32_t>(contents.size()), &node);
     if (NULL == node)
     {
         return false;
@@ -1286,7 +1286,7 @@ bool ManifestParser::parseInfoPlist(const std::string& backupIdPath, BackupItem&
 bool ManifestParser::parseITunesMetadata(const std::string& metadata, BackupItem::AppInfo& appInfo)
 {
     plist_t node = NULL;
-    plist_from_memory(metadata.c_str(), static_cast<uint32_t>(metadata.size()), &node);
+    parsePlistMemory(metadata.c_str(), static_cast<uint32_t>(metadata.size()), &node);
     if (NULL == node)
     {
         return false;

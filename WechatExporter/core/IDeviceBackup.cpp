@@ -26,7 +26,7 @@
 #endif
 
 
-#include <plist/plist.h>
+#include "PlistCompat.h"
 #include <libimobiledevice/libimobiledevice.h>
 #include <libimobiledevice/lockdown.h>
 #include <libimobiledevice/installation_proxy.h>
@@ -96,10 +96,11 @@ void usleep(__int64 usec)
 }
 #endif
 
-enum plist_format_t
+// Use an application-specific name to avoid newer libplist typedefs.
+enum BackupPlistFormat
 {
-    PLIST_FORMAT_XML,
-    PLIST_FORMAT_BINARY
+    BACKUP_PLIST_FORMAT_XML,
+    BACKUP_PLIST_FORMAT_BINARY
 };
 
 std::string formatDiskSize(uint64_t size)
@@ -124,7 +125,7 @@ std::string formatDiskSize(uint64_t size)
     return std::string(buf);
 }
 
-int writePlistFile(plist_t plist, const std::string& filename, enum plist_format_t format)
+int writePlistFile(plist_t plist, const std::string& filename, enum BackupPlistFormat format)
 {
     char *buffer = NULL;
     uint32_t length;
@@ -132,9 +133,9 @@ int writePlistFile(plist_t plist, const std::string& filename, enum plist_format
     if (!plist || filename.empty())
         return 0;
 
-    if (format == PLIST_FORMAT_XML)
+    if (format == BACKUP_PLIST_FORMAT_XML)
         plist_to_xml(plist, &buffer, &length);
-    else if (format == PLIST_FORMAT_BINARY)
+    else if (format == BACKUP_PLIST_FORMAT_BINARY)
         plist_to_bin(plist, &buffer, &length);
     else
         return 0;
@@ -156,7 +157,7 @@ int readPlistFile(plist_t *plist, const std::string& filename)
         return 0;
     }
 
-    plist_from_memory((const char *)&buffer[0], (uint32_t)buffer.size(), plist);
+    parsePlistMemory((const char *)&buffer[0], (uint32_t)buffer.size(), plist);
 
     return 1;
 }
@@ -1780,7 +1781,7 @@ public:
     void handleProcessMessage(plist_t message, int& operation_ok, int& result_code, const std::string outputDir)
     {
 #ifndef NDEBUG
-        writePlistFile(message, combinePath(outputDir, "dbg", "error.plist"), PLIST_FORMAT_XML);
+        writePlistFile(message, combinePath(outputDir, "dbg", "error.plist"), BACKUP_PLIST_FORMAT_XML);
 #endif
         plist_t node_tmp = plist_array_get_item(message, 1);
         if (!PLIST_IS_DICT(node_tmp)) {
@@ -2295,7 +2296,7 @@ public:
         }
         
         fs::deleteFile(info_path);
-        writePlistFile(infoPlist, info_path.c_str(), PLIST_FORMAT_XML);
+        writePlistFile(infoPlist, info_path.c_str(), BACKUP_PLIST_FORMAT_XML);
         
         plist_free(infoPlist);
         infoPlist = NULL;
@@ -2376,7 +2377,7 @@ public:
 #else
                 std::string filePath = combinePath(outputPath, "dbg", "org", fileName);
 #endif
-                writePlistFile(message, filePath, PLIST_FORMAT_XML);
+                writePlistFile(message, filePath, BACKUP_PLIST_FORMAT_XML);
 #endif
                 
                 if (!strcmp(dlmsg, "DLMessageDownloadFiles")) {
