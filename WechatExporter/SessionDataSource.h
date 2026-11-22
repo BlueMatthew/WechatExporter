@@ -52,6 +52,8 @@
 - (void)bindCellView:(NSTableCellView *)cellView atRow:(NSInteger)row andColumnId:(NSString *)identifier;
 - (NSControlStateValue)updateCheckStateAtRow:(NSInteger)row;
 - (void)checkAllSessions:(BOOL)checked;
+- (void)filterSessions:(NSString *)query;
+- (NSControlStateValue)selectionState;
 
 @end
 

@@ -19,7 +19,7 @@
 #include <libxml/tree.h>
 #include <libxml/xpath.h>
 #include <json/json.h>
-#include <plist/plist.h>
+#include "PlistCompat.h"
 
 #include "WechatObjects.h"
 #include "RawMessage.h"
@@ -539,7 +539,7 @@ bool MMSettingParser::parse(const std::string& usrNameHash)
     }
     
     plist_t node = NULL;
-    plist_from_memory(reinterpret_cast<const char *>(&data[0]), static_cast<uint32_t>(data.size()), &node);
+    parsePlistMemory(reinterpret_cast<const char *>(&data[0]), static_cast<uint32_t>(data.size()), &node);
     if (NULL == node)
     {
         return false;
@@ -899,7 +899,7 @@ bool FriendsParser::parseFriendTags(ITunesDb *iTunesDb, const std::string& uidHa
     }
     
     plist_t node = NULL;
-    plist_from_memory(reinterpret_cast<const char *>(&data[0]), static_cast<uint32_t>(data.size()), &node);
+    parsePlistMemory(reinterpret_cast<const char *>(&data[0]), static_cast<uint32_t>(data.size()), &node);
     if (NULL == node)
     {
         return false;
@@ -1023,7 +1023,7 @@ bool WechatInfoParser::parsePreferences(WechatInfo& wechatInfo)
     }
     
     plist_t node = NULL;
-    plist_from_memory(reinterpret_cast<const char *>(&data[0]), static_cast<uint32_t>(data.size()), &node);
+    parsePlistMemory(reinterpret_cast<const char *>(&data[0]), static_cast<uint32_t>(data.size()), &node);
     if (NULL == node)
     {
         return false;

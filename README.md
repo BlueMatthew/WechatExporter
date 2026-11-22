@@ -29,6 +29,14 @@
   
 [点击链接可打开网页：https://src.wakin.org/github/wxexp/demo/](https://src.wakin.org/github/wxexp/demo/)
 
+## macOS 会话搜索
+
+读取备份后，可在列表上方输入联系人／群聊名称或微信 ID 进行部分匹配搜索（不区分大小写）。清空搜索可恢复全部会话，已有勾选状态会保留。
+
+**搜索期间，全选和导出仅作用于当前搜索结果。** 如需导出全部已勾选会话，请先清空搜索。导出期间搜索框禁用，以保持进度与列表行对应。
+
+开发者可运行 `bash script/test_session_search.sh` 验证搜索、勾选保留及筛选后的导出映射。此测试使用 macOS 系统框架，无需安装完整应用的第三方依赖。
+
 ## 模版修改
 解压目录下的res\templates(MacOS版本位于Contents\Resources\res)子目录里存放了输出聊天记录的html页面模版，其中通过两个%包含起来的字符串，譬如，%%NAME%%，不要修改之外，其它页面内容和格式都可以自行调整。  
   

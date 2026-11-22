@@ -30,3 +30,6 @@
 "no-prev-exp-found" = "There is no previous exporting in output directory and [Incremental Exporting] will be ignored.";
 "prev-exp-found" = "The previous exporting at %@ found, will reuse previous options.";
 "invld-inc-exp-for-multi-users" = "Incremental Exporting will be invalid for multiple WeChat accounts as for wrong design. \rPlease choose another directory for exporting.";
+
+"search-sessions" = "Search name or WeChat ID";
+"search-sessions-hint" = "Only checked conversations in the current results are exported. Clear search to show all conversations.";
